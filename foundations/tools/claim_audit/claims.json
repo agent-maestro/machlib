@@ -6680,6 +6680,51 @@
         "evRel_dropLast",
         "all_coeffs_evZero_of_shorter'"
       ]
+    },
+    {
+      "_comment": "The concat split for dcoeffs, with the running index. Zero hypotheses. This is the one where a wrong index would be silent until coeff_identity failed to match two steps later, so registering it pins the index arithmetic rather than just the split.",
+      "id": "bipev-dcoeffs-concat-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "for `dcoeffs QQ D j (Ls ++ [L])` the appended entry is at index `j + |Ls|`, not `j`."
+      ],
+      "module": "MachLib.BipevDcoeffsShape",
+      "theorem": "MachLib.dcoeffs_concat",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "dcoeffs",
+        "pnsum"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "Equal length of the two families the elimination consumes in lockstep. Zero hypotheses. Registered to pin the pattern claim: this is the third family needing shape lemmas its defining module did not provide.",
+      "id": "bipev-dcoeffs-length-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**a recursive family gets used in lockstep with another one before it gets used alone**, so\nits shape lemmas are due at the first pairing, not at its definition."
+      ],
+      "module": "MachLib.BipevDcoeffsShape",
+      "theorem": "MachLib.dcoeffs_length",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "dcoeffs"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

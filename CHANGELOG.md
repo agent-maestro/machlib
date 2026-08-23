@@ -5,6 +5,35 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (ay)
+
+### `BipevDcoeffsShape` — the same two facts, for the other family
+
+The elimination consumes `Ms` and `dcoeffs QQ D 0 Ms` **in lockstep**, so it needs them to have
+equal length; and the drop needs both split at their last coefficient. Neither was stated when
+`dcoeffs` was defined, because `BipevClearedDeriv` only ever *evaluated* it — nothing there asked
+about its shape.
+
+### The running index is the whole content
+
+`dcoeffs` carries a running index, so splitting off the last coefficient must say which index it
+lands at: for `dcoeffs QQ D j (Ls ++ [L])` the appended entry is at index `j + |Ls|`, not `j`. Getting that wrong would produce a coefficient with the wrong
+multiple of `D`, which would then fail to match `coeff_identity` — whose entire point is that the
+multiple is `m − j`. The error would have surfaced as a mismatched `pnsum` argument two steps later,
+which is exactly the kind of thing that is cheap here and expensive if found during the final
+assembly.
+
+### A pattern, now on its third instance
+
+`bipev`, `elimCoeffs`, `dcoeffs` — three recursive families in a row where the composition needed a
+length lemma and a concat lemma that the defining module had no reason to prove. Stating it:
+**a recursive family gets used in lockstep with another one before it gets used alone**, so
+its shape lemmas are due at the first pairing, not at its definition.
+
+Gates: build 695 jobs, aggregator 692/998, consistency PASS, claims 331, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-23 (ax)
 
 ### `BipevElimDrop` — the predicted argument-matching slip, and it was exactly that
