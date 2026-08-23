@@ -6912,6 +6912,56 @@
         "pev"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The arc's final statement, at the germ. hypotheses_count 11 = the ten structural ones of proper_relation_impossible plus EvEqF. proof_uses pins that it really routes through the top-level theorem rather than re-deriving anything.",
+      "id": "bipev-germ-relation-impossible-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**The germ form.** No relation holds eventually for *any* function agreeing with `P/Q` on a\ntail — the germ, not the formula, is what the statement is about."
+      ],
+      "module": "MachLib.BipevGerm",
+      "theorem": "MachLib.germ_relation_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 11,
+      "proof_uses": [
+        "properRel_congr",
+        "proper_relation_impossible"
+      ]
+    },
+    {
+      "_comment": "The claim IS the forbid list: every HasDerivAt axiom in the corpus is named, so if a future proof of this transfer ever reached for the derivative route the gate goes red. That is the whole content of the prose, made decidable.",
+      "id": "bipev-evrel-congr-no-derivative-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`hasDerivAt_of_agrees_on_tail` **is not needed**. `EvRel S Ls` mentions `S` exactly once, as\n`exp (S x)`, pointwise, so two functions agreeing on a tail have the same relations by\nintersecting two tails and nothing else. `evRel_congr`'s footprint contains no `HasDerivAt`\naxiom of any kind."
+      ],
+      "module": "MachLib.BipevGerm",
+      "theorem": "MachLib.evRel_congr",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.HasDerivAt_add",
+        "MachLib.Real.HasDerivAt_comp",
+        "MachLib.Real.HasDerivAt_congr",
+        "MachLib.Real.HasDerivAt_const",
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.HasDerivAt_id",
+        "MachLib.Real.HasDerivAt_inv",
+        "MachLib.Real.HasDerivAt_mul",
+        "MachLib.Real.HasDerivAt_unique"
+      ],
+      "conclusion_mentions": [
+        "EvRel"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

@@ -334,13 +334,20 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   #   ⇒ no sorryAx, no natCast, no Khovanskii axiom
   ```
 
-  **What it still assumes.** One thing: that the relation is about `S` *literally*
-  `pev P · (1/pev Q)`. A germ merely agreeing with it on a tail is carried by
-  `hasDerivAt_of_agrees_on_tail`, kept deliberately separate so each hypothesis names its own
-  tail. That is bookkeeping about which tail, not a mathematical gap. The other assumption the
-  composition needed — a nonzero coefficient below the top — is **discharged**:
-  `exists_nonzero_lower_coeff` gets it from properness alone, without minimality, because
-  `exp` is positive.
+  **And at the germ, not just the formula.** `germ_relation_impossible` (`MachLib.BipevGerm`)
+  says the same for *any* `S` agreeing with `pev P · (1/pev Q)` on a tail. The transfer needs
+  **no derivative**: `EvRel S Ls` mentions `S` exactly once, as `exp (S x)`, pointwise, so two
+  functions agreeing on a tail have the same relations by intersecting two tails.
+  `evRel_congr`'s footprint contains no `HasDerivAt` axiom of any kind, and the claim
+  registry forbids all ten of them so it stays that way.
+
+  **Four predictions, all overshot.** Every step of this arc was predicted, in a docstring or a
+  commit, to need a heavier tool than it did: minimal degree (predicted well-founded
+  recursion, took a `Nat` budget), nontriviality (predicted a transcendence input, took an
+  order count), the nonzero lower coefficient (predicted minimality and a descent, took
+  `exp_pos`), the germ transfer (predicted a derivative transfer, took two tails). The
+  prediction is made while looking at the *statement*; the lighter tool only becomes visible
+  once the surrounding lemmas exist.
 
   **The second characteristic-zero input, and its price.** The count needs `q ∤ (m−j)·1`.
   Over `Real` that is a *theorem*, not a hypothesis: `not_Pdvd_pnsum_one'` derives it from

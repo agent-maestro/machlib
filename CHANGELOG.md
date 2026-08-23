@@ -5,6 +5,40 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bd)
+
+### The last stated assumption, discharged
+
+**The germ form.** No relation holds eventually for *any* function agreeing with `P/Q` on a
+tail — the germ, not the formula, is what the statement is about. `germ_relation_impossible`
+(`MachLib.BipevGerm`) takes `EvEqF S (pev P · (1/pev Q))` and eleven structural hypotheses to
+`False`.
+
+### The predicted tool was not merely heavier — it was unnecessary
+
+Every place in this arc that named the germ gap said it would be carried by
+`hasDerivAt_of_agrees_on_tail`, the derivative transfer built in `BipevTail`. `hasDerivAt_of_agrees_on_tail` **is not needed**. `EvRel S Ls` mentions `S` exactly once, as
+`exp (S x)`, pointwise, so two functions agreeing on a tail have the same relations by
+intersecting two tails and nothing else. `evRel_congr`'s footprint contains no `HasDerivAt`
+axiom of any kind.
+
+The reason is that the differentiation happens *after* the relation has been moved onto the literal
+rational function, where `hasDerivAt_ratFn` already applies. The germ only ever needs to reach that
+function, and reaching it is pointwise.
+
+Fourth prediction in this arc that overshot, and the first where the predicted tool was not needed
+at all rather than merely oversized. `hasDerivAt_of_agrees_on_tail` remains correct; the arc does
+not consume it, and saying so is cheaper than leaving a reader to assume it is load-bearing.
+
+  minimal degree   predicted well-founded recursion  took a `Nat` budget
+  nontriviality    predicted a transcendence input   took an order count
+  lower coeff      predicted minimality + descent    took `exp_pos`
+  germ transfer    predicted a derivative transfer   took two tails
+
+Gates: build **700 jobs**, aggregator **697 of 1003** modules reachable, consistency PASS, claims
+341, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bc)
 
 ### The top-level theorem
