@@ -5,6 +5,61 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ao)
+
+### `BipevMinimal` — step 1, and the well-founded recursion was not needed
+
+`BipevExpDeriv`'s docstring calls for "a well-founded induction on the degree, on relations rather
+than on lists", and entry (an) flagged this as the only step in the arc needing genuine well-founded
+recursion rather than a fuel budget.
+
+**That was wrong.** "Minimal degree" is the least element of a nonempty
+set of naturals, and the well-ordering of `ℕ` *is* a budget: strong induction on a degree bound
+gives it directly. No custom well-founded relation, no termination measure on
+relations, nothing the other twenty-two modules had not already done.
+
+The argument in one line: given a relation of length `≤ n+1`, either some relation has length `≤ n`
+— recurse — or none does, in which case the one in hand is already minimal. `Classical.em` decides
+which, **on a statement about naturals rather than about relations**, which is why nothing about
+relations is needed.
+
+### Genericity as a cost measurement
+
+`exists_minimal_length` is stated for an arbitrary predicate on lists over an arbitrary type. It
+mentions neither `bipev` nor `exp` nor `Real`, and its footprint is `propext`, `Classical.choice`,
+`Quot.sound` — **Lean core alone, zero `MachLib.Real` axioms.**
+
+That is not tidiness. A minimal-degree lemma phrased in terms of relations would have *looked* like
+it needed something about relations; stating it generically makes visible that it needs nothing at
+all. The same move that made `ord_pmul_norm` delete hypotheses, applied to a whole statement.
+
+### The specialization's footprint says something the generic lemma cannot
+
+`exists_minimal_rel` carries `leR` and `exp` — the *symbols* its statement mentions — and **no order
+reasoning axioms at all**: `lt_total`, `lt_trans_ax`, `le_iff_lt_or_eq`, `add_lt_add_left` are absent,
+as is `HasDerivAt`. So the argument uses no order reasoning, only the order *vocabulary* `EvRel`
+needs to say "on a tail". The registered claim forbids exactly those four, which makes the
+distinction checkable. (It was first written forbidding `leR` itself, by copying the generic lemma's
+list; the auditor rejected that, correctly — a tail is an order notion and `leR` is unavoidable in
+the statement.)
+
+### The predicate needs its second clause
+
+`ProperRel` requires both that the relation holds and that its leading coefficient is not eventually
+zero. Without the second clause "minimal degree" is vacuous — padding with zero
+coefficients would make every degree achievable.
+
+### All three steps are built
+
+`BipevExpDeriv` listed minimal degree, elimination, and nontriviality. Nontriviality — which that
+docstring called "where a transcendence input is genuinely required" — was the pole-order count and
+needed no transcendence. Elimination became coefficient algebra once denominators were cleared.
+Minimal degree needed a `Nat` budget. **None of the three needed what the docstring predicted.**
+
+Gates: build 685 jobs, aggregator 682/988, consistency PASS, claims 312, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 222 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (an)
 
 ### `BipevElim` — elimination, and it is **coefficient algebra now**

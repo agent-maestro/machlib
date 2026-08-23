@@ -6223,6 +6223,50 @@
       "proof_uses": [
         "bipev_elim"
       ]
+    },
+    {
+      "_comment": "Minimal degree, generically. forbid_axioms is unusually broad on purpose -- exp, HasDerivAt, ltR, leR and natCast are ALL in scope through this module's imports, and the CHANGELOG's claim is that the lemma needs none of them. Its footprint is Lean core alone, so every entry here is a live discriminator. hypotheses_count 2, read off #check.",
+      "id": "bipev-minimal-length-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "\"Minimal degree\" is the least element of a nonempty\nset of naturals, and the well-ordering of `ℕ` *is* a budget: strong induction on a degree bound\ngives it directly."
+      ],
+      "module": "MachLib.BipevMinimal",
+      "theorem": "MachLib.exists_minimal_length",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The relation-specific form. forbid_axioms was FIRST written with ltR/leR by copying the generic lemma's list, and the auditor rejected it: EvRel says the relation holds ON A TAIL, which is inherently an order notion, so leR is in the statement and unavoidable. Corrected to forbid the order REASONING axioms -- lt_total, lt_trans_ax, le_iff_lt_or_eq, add_lt_add_left -- which are all absent. That is the sharper claim: the argument uses no order reasoning, only the order vocabulary its statement mentions. Also pins ProperRel's second clause, without which minimal degree is vacuous.",
+      "id": "bipev-minimal-rel-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Without the second clause \"minimal degree\" is vacuous — padding with zero\ncoefficients would make every degree achievable."
+      ],
+      "module": "MachLib.BipevMinimal",
+      "theorem": "MachLib.exists_minimal_rel",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.lt_total",
+        "MachLib.Real.lt_trans_ax",
+        "MachLib.Real.le_iff_lt_or_eq",
+        "MachLib.Real.add_lt_add_left"
+      ],
+      "conclusion_mentions": [
+        "ProperRel"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "exists_minimal_length"
+      ]
     }
   ]
 }
