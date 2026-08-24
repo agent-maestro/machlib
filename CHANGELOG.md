@@ -5,6 +5,63 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (bu)
+
+### `CrossIdentities` — what the `a = b` case needs that the others did not
+
+```
+psub_padd_padd            (A+B) − (C+E) = (A−C) + (B−E)            syntactic
+peq_pmul_regroup          the two inner factors of a 4-product swap
+peq_dtop_cross            at EQUAL indices the D terms cancel: Q²·(uv' − u'v)
+peq_cross_common_factor   W(cA, cB) ≈ c²·W(A,B)
+exists_common_ord_split   a common q-power off both, leaving lowest terms at q
+```
+
+Algebra spine 301 → **310** theorems, 0 leaking.
+
+### The asymmetry between the two counts, stated once
+
+`cleared_relation_impossible` consumes the two `q`-adic factorisations **separately**;
+`no_rational_logarithm_scaled` consumes a fraction **in lowest terms**, because its `q ∣ D` branch
+runs `ord_deriv_cross`, which needs one side coprime to `q` to pin the order exactly. A lower bound
+is not enough there — with `ord α = a` and `ord β = b` both positive, `ord_cross_lower` gives only
+`a + b + r ≤ r + 2a`, i.e. `b ≤ a`, and no contradiction. **That is the entire reason `a = b` costs
+this module and `a ≤ b` cost nothing.**
+
+### The `q'` term does not survive
+
+Taking a common factor off means transporting the equation, and the transport is
+`peq_cross_common_factor`. Expanding `W(cA, cB)` produces `c·c'·A·B` **twice, with opposite signs**,
+and those cancel identically — before any divisibility argument starts. So the transport is an
+unconditional identity, not an order estimate, and the split needs no hypothesis about `c` beyond
+what `exists_ord_factor` already gives.
+
+### `peq_dtop_cross` versus `coeff_identity`
+
+`coeff_identity` is the `m ≠ j` statement of the same four-term split, and it says what follows when
+the difference **vanishes**. The `a = b` case cannot use it — there the difference is not zero, it is
+`K·α²`. The lemma needed is the one that says what the difference **is**, and at equal indices that
+is `Q²·(uv' − u'v)` with no multiple of `D` left over.
+
+### `Pdvd_pscale` already existed, one brick after the same mistake
+
+`Pdvd_pscale` is at `PolyPoleOrder.lean:88`. I declared it here anyway and **three of my four proof
+lines were identical to the original** — the brick immediately after the one whose changelog entry
+was about exactly this failure. Knowing the rule did not fire the rule.
+
+So it stops being a rule and becomes a mechanical pre-flight: before the first proof, grep every
+identifier the module intends to **declare** — not the ones it intends to use — against the whole
+tree, and again before committing. Note what does *not* catch it: `lake build <module>` passes,
+because a clash in a module this one does not import stays invisible until the aggregator imports
+both. The other six names in this module were checked that way and are unique.
+
+Only the reverse direction was new here (`Pdvd_of_pscale_neg`), and it needs no `1/c`: scaling by
+`−1` twice is the identity.
+
+Gates: build **715 jobs**, aggregator **712 of 1018** modules reachable, consistency PASS, claims
+**373**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **310**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (bt)
 
 ### `RelCoeffsLand` — two of the three top coefficients are impossible

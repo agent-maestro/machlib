@@ -395,6 +395,7 @@ import MachLib.RatLogRelation
 import MachLib.BipolyLead
 import MachLib.RelCoeffsLead
 import MachLib.RelCoeffsLand
+import MachLib.CrossIdentities
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

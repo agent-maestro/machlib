@@ -7701,6 +7701,115 @@
         "pscale"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The homogeneity transport. hypotheses_count 0 is the claim -- the q' terms cancel IDENTICALLY, so no hypothesis about c is needed. If a future proof needed one (say c != 0) the count would move and the 'unconditional identity, not an order estimate' sentence would be false.",
+      "id": "cross-homogeneity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Expanding `W(cA, cB)` produces `c·c'·A·B` **twice, with opposite signs**,\nand those cancel identically — before any divisibility argument starts. So the transport is an\nunconditional identity, not an order estimate"
+      ],
+      "module": "MachLib.CrossIdentities",
+      "theorem": "MachLib.peq_cross_common_factor",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pderiv",
+        "pmul"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "peq_pderiv_pmul",
+        "psub_padd_padd",
+        "peq_pmul_swap_outer"
+      ]
+    },
+    {
+      "_comment": "The equal-index cancellation. hypotheses_count 0 distinguishes it from coeff_identity, which has two (j <= m and the vanishing). proof_uses peq_T2 and peq_T4 -- the two D-terms whose equality IS the cancellation; if the proof stopped going through both, the 'no multiple of D left over' claim would no longer be established the way the prose says.",
+      "id": "cross-dtop-equal-index-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The lemma needed is the one that says what the difference **is**, and at equal indices that\nis `Q²·(uv' − u'v)` with no multiple of `D` left over."
+      ],
+      "module": "MachLib.CrossIdentities",
+      "theorem": "MachLib.peq_dtop_cross",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pnsum",
+        "pderiv"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "psub_padd_padd",
+        "peq_T2",
+        "peq_T4"
+      ]
+    },
+    {
+      "_comment": "The common-power split, the lemma the asymmetry between the two counts forces. hypotheses_count 3 -- irreducibility and the two nonvanishings, no pole data and no coprimality: the split works for ANY pair. conclusion_mentions Pdvd because the lowest-terms clause is the whole output; a conclusion that only gave the two factorisations would be exists_ord_factor twice and would not license the prose.",
+      "id": "cross-common-split-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`cleared_relation_impossible` consumes the two `q`-adic factorisations **separately**;\n`no_rational_logarithm_scaled` consumes a fraction **in lowest terms**, because its `q ∣ D` branch\nruns `ord_deriv_cross`, which needs one side coprime to `q` to pin the order exactly."
+      ],
+      "module": "MachLib.CrossIdentities",
+      "theorem": "MachLib.exists_common_ord_split",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "ppow",
+        "PEq"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "exists_ord_factor",
+        "peq_ppow_add"
+      ]
+    },
+    {
+      "_comment": "The duplication finding, bound to the theorem that already existed -- same pattern as bipolylead-dcoeffs-dup-changelog one arc earlier, which is itself the point: this is the SECOND time in two bricks. The module field names where the original lives, so if it moved the prose would fail rather than quietly become wrong.",
+      "id": "cross-pdvd-pscale-dup-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`Pdvd_pscale` is at `PolyPoleOrder.lean:88`. I declared it here anyway and **three of my four proof\nlines were identical to the original**"
+      ],
+      "module": "MachLib.PolyPoleOrder",
+      "theorem": "MachLib.Pdvd_pscale",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "pscale"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
