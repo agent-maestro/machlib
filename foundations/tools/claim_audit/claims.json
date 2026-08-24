@@ -7471,6 +7471,63 @@
         "MachLib.Real.HasDerivAt_log_pos",
         "MachLib.Real.log"
       ]
+    },
+    {
+      "_comment": "The leading-coefficient law -- the whole point of the module. hypotheses_count 0 is load-bearing TWICE: it pins that the law is unconditional (the prose's claim), and it pins that the alpha/mu nonvanishing pair was DROPPED rather than carried, which is the design decision the prose argues for. If a future proof re-adds them the count goes to 2 and this fires. forbid_axioms names order and analysis because the module is spine-eligible; the whole-module spine check in AxiomLedger is the stronger guard, this is the per-claim one.",
+      "id": "bipolylead-bimul-concat-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`bimul (A₀ ++ [α]) (M₀ ++ [μ]) = D ++ [pmul α μ]`** — the coefficient of the top power of `E` in a\nproduct is `pmul` of the two leading coefficients, as a statement about *lists*.",
+        "`pmul_concat_normal` carries `α ≠ 0` and `μ ≠ 0` **and does not use them** — the concat shape holds\nfor any coefficients, and the hypotheses are there because the intended reading is about canonical\npolynomials. `bimul_concat` drops them."
+      ],
+      "module": "MachLib.BipolyLead",
+      "theorem": "MachLib.bimul_concat",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "bimul",
+        "pmul"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "bimul_concat_left",
+        "biadd_concat_right",
+        "bishift_biscale_concat",
+        "bimul_length"
+      ]
+    },
+    {
+      "_comment": "The duplication finding, bound to the theorem that ALREADY existed. This entry is what makes the prose 'already exist in BipevDcoeffsShape' checkable: the module field names where, and the auditor resolves the theorem there. If dcoeffs_concat were ever moved or deleted, this claim fails and the changelog paragraph would have to be rewritten rather than quietly becoming false.",
+      "id": "bipolylead-dcoeffs-dup-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Both `dcoeffs` shape lemmas the sweep needs — `dcoeffs_concat` and `dcoeffs_length` — already exist\nin `BipevDcoeffsShape`, written for the elimination arc three commits ago."
+      ],
+      "module": "MachLib.BipevDcoeffsShape",
+      "theorem": "MachLib.dcoeffs_concat",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "dcoeffs",
+        "pnsum"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "pnsum",
+        "pderiv"
+      ]
     }
   ]
 }

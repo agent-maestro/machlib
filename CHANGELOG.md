@@ -5,6 +5,53 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (br)
+
+### `BipolyLead` — the leading coefficient of a bipoly, syntactically
+
+**`bimul (A₀ ++ [α]) (M₀ ++ [μ]) = D ++ [pmul α μ]`** — the coefficient of the top power of `E` in a
+product is `pmul` of the two leading coefficients, as a statement about *lists*. The coefficient
+sweep has to read `A_α·B_β` off `relCoeffs`; `Bipoly`'s four evaluation laws cannot do that, because
+a value at a point says nothing about which list entry it came from.
+
+Every lemma here is a transcription of its `PolyMulDegree` original with `padd` for `+`, `pmul` for
+`·` and `[]` for `0` — `biadd_nil_right`, `biadd_length_le/ge`, `biadd_assoc`, `biadd_concat_right`,
+`biadd_nil_singleton`, `biscale_length/concat`, `bishift_*`, `bimul_length`, `bimul_concat_left`,
+`bimul_concat`, `bisub_concat_right`. Where the univariate proof rewrites with `add_zero` this one
+rewrites with `padd_nil_right`, and that is the whole difference. Algebra spine 258 → **278**
+theorems, 0 leaking.
+
+### One hypothesis pair dropped rather than carried
+
+`pmul_concat_normal` carries `α ≠ 0` and `μ ≠ 0` **and does not use them** — the concat shape holds
+for any coefficients, and the hypotheses are there because the intended reading is about canonical
+polynomials. `bimul_concat` drops them.
+
+The zero-divisor question does not disappear; it moves to the caller, where `pnorm (pmul α μ) ≠ []`
+has to be argued from `pnorm α ≠ []` and `pnorm μ ≠ []` — and that is `pmul_eq_nil_cancel`'s job, not
+a shape lemma's. Carrying the pair would have looked stronger, proved the same thing, and hidden
+which lemma owns the absence of zero divisors. Registered as `hypotheses_count: 0`.
+
+### `dcoeffs_concat` was already written, and the module system said so
+
+Both `dcoeffs` shape lemmas the sweep needs — `dcoeffs_concat` and `dcoeffs_length` — already exist
+in `BipevDcoeffsShape`, written for the elimination arc three commits ago. They were re-proved here
+verbatim and the duplicate was caught by **`import failed, environment already contains
+'MachLib.dcoeffs_concat._proof_1_1'`** — the module system, not review, not the gates.
+
+Worth recording as the cost it was. `BipevDcoeffsShape`'s own docstring says a recursive family gets
+its shape lemmas *at the first pairing*, and this is the sweep pairing with `dcoeffs` for the second
+time. The lesson is narrower than "search first": the lemmas were filed under the *consumer* that
+first needed them (`Bipev…`), not under the family they describe (`dcoeffs`), so a search by family
+name found the definition and missed the shape.
+
+Removing them also keeps this module clear of `BipevClearedDeriv`, whose import would have carried
+`exp` into a module the algebra spine checks for field axioms only.
+
+Gates: build **712 jobs**, aggregator **709 of 1015** modules reachable, consistency PASS, claims
+**363**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **278**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bq)
 
 ### `RatLogRelation` — the caller, and the coefficients come out nil
