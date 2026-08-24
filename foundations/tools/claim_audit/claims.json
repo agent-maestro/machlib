@@ -8130,6 +8130,46 @@
       "proof_uses": [
         "bipev_bitrim"
       ]
+    },
+    {
+      "_comment": "The witness. hypotheses_count 0 IS the claim -- the length-two proper relation exists for EVERY germ with no side condition, which is why the hmin quantifier collapses. If someone added a hypothesis here the collapse argument would no longer be universal.",
+      "id": "minscope-witness-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**every germ has a proper relation of length two** — `−u + 1·u = 0`, leading coefficient the constant\n`1`."
+      ],
+      "module": "MachLib.MinimalityScope",
+      "theorem": "MachLib.gProperRel_witness",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "GProperRel"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The scope theorem. It concludes m = 0 from hmin plus the two shape hypotheses -- the SAME shape hypotheses minimal_expRel_identity takes, which is what makes this a statement about that theorem's instantiations rather than an unrelated fact. hypotheses_count 3 pins that no extra assumption is smuggled in.",
+      "id": "minscope-m-zero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "So `hmin` caps `cs.length` at two, and since `cs.length = m + 2` in\n`minimal_expRel_identity`'s shape, **`m = 0`**.",
+        "What is *not* delivered is the generality the `m` suggests. A reader of `positive_branch_impossible`\nwould take it to cover relations of every degree; it covers degree one, because **no hypothesis set\ncontaining that `hmin` admits anything else**"
+      ],
+      "module": "MachLib.MinimalityScope",
+      "theorem": "MachLib.expRel_minimality_forces_m_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "m"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "minimality_forces_length_two"
+      ]
     }
   ]
 }

@@ -5,6 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (ca)
+
+### `MinimalityScope` — the arc runs at `m = 0` and nowhere else
+
+`minimal_grel_identity` carries `hmin : ∀ ns, GProperRel u ns → cs.length ≤ ns.length`, with `ns`
+ranging over **arbitrary** germ-coefficient lists. That quantifier is far stronger than it looks:
+**every germ has a proper relation of length two** — `−u + 1·u = 0`, leading coefficient the constant
+`1`. So `hmin` caps `cs.length` at two, and since `cs.length = m + 2` in
+`minimal_expRel_identity`'s shape, **`m = 0`**.
+
+Proved, not observed: `gProperRel_witness`, `minimality_forces_length_two`,
+`expRel_minimality_forces_m_zero`.
+
+### This narrows the scope and does not weaken the result
+
+Nothing proved becomes false. At `m = 0` the relation is `c₁·L + c₀ = 0` with `c₁` not eventually
+zero — i.e. **`log S ∉ R(x)(e^S)`**, which is exactly what the branch needed. Steps 2 and 3 of the
+(bf) decomposition are delivered together in one theorem, and (bz)'s headline stands.
+
+What is *not* delivered is the generality the `m` suggests. A reader of `positive_branch_impossible`
+would take it to cover relations of every degree; it covers degree one, because **no hypothesis set
+containing that `hmin` admits anything else** — the whole `m`-indexed apparatus (`natMul (m+1) 1`,
+`relK Q D m`, the `(m+1)` in the identity) is live only at `m = 0`.
+
+### Why the theorems keep the `m`
+
+Removing it would mean restating `minimal_grel_identity` and four modules above it. The generality is
+**free** — it costs nothing to carry and the proofs are no harder — and if `hmin` is ever weakened to
+range over relations with coefficients in a fixed class, the `m` becomes live with no rewrite.
+**Carrying it is cheap; claiming it is not**, which is what this module exists to prevent.
+
+Found by asking whether `positive_branch_impossible`'s hypotheses are dischargeable *before* building
+the next brick on top of them — the check that "a green build says TRUE, not the one you need".
+
+Gates: build **720 jobs**, aggregator **717 of 1023** modules reachable, consistency PASS, claims
+**387**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (bz)
 
 ### `PositiveBranch` — the `S > 0` branch, closed end to end
