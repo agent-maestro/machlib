@@ -7044,6 +7044,35 @@
         "EvZeroF"
       ],
       "hypotheses_count": 4
+    },
+    {
+      "_comment": "Step 2's workhorse. The whole point of the prose is that this is field-axiom-only, so forbid_axioms names the fully-qualified order and analysis axioms -- fully-qualified because a bare 'exp' would match the theorem's own name, no_rational_exponential.",
+      "id": "poly-no-rational-exponential-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**No nonzero rational function satisfies `a' = k·S'·a`** (`k·1 ≠ 0`, `S` with a zero or pole at\nthe irreducible `q`). The solutions are `a = c·e^(kS)`, so this is the transcendence input the\ncoefficient sweep needs — and it is obtained by an order count, not from the relation theorem,\nso the module stays field-axiom-only."
+      ],
+      "module": "MachLib.PolyExpDeriv",
+      "theorem": "MachLib.no_rational_exponential",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 13,
+      "proof_uses": [
+        "ord_deriv_cross",
+        "ord_cross_lower",
+        "ord_le_of_dvd",
+        "ord_pmul_norm",
+        "exists_ord_factor"
+      ]
     }
   ]
 }

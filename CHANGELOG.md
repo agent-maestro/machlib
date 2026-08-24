@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bh)
+
+### `PolyExpDeriv` — the workhorse of step 2
+
+**No nonzero rational function satisfies `a' = k·S'·a`** (`k·1 ≠ 0`, `S` with a zero or pole at
+the irreducible `q`). The solutions are `a = c·e^(kS)`, so this is the transcendence input the
+coefficient sweep needs — and it is obtained by an order count, not from the relation theorem,
+so the module stays field-axiom-only.
+
+Cleared of denominators: `(N'D − ND')·Q² ≈ k·(P'Q − PQ')·(N·D)`, verified symbolically to be exactly
+`(a' − k·S'·a)·D²Q²` before any Lean was written. Thirteen hypotheses; `algebraSpineModules` goes
+250 → **253**, 0 leaking.
+
+### Why not route it through the closed theorem
+
+`proper_relation_impossible` already says `e^(kS)` is not a rational germ. Using it would first need
+`a' = kS'a ⟹ a = c·e^(kS)` — antiderivative uniqueness, which is analysis plus a constant of
+integration to chase. The direct count is cheaper **and lands somewhere better**: it stays inside
+`algebraFootprint`, where the relation theorem cannot go (that one needs `exp` and the order axioms).
+
+### The squared denominator is what makes this the easier count
+
+Both branches collapse to `r + 1 ≤ 0`, and the term that does it is the `2(r+1)` from `Q²` against
+the right side's `r`. `no_rational_logarithm` carries only `P·Q` there and needs the exact left-hand
+order in one branch; this one gets a strict inequality in both. **The algebraically easier of the two
+is the analytically harder one** — worth recording, because the intuition runs the other way.
+
+### One direction error, and the shape of it
+
+`ord_le_of_dvd` was applied with the two sides swapped: the right order divides the left, giving
+`r + c + 1 ≤ c + 2r + 2` — true, and therefore no contradiction. The larger order is the one that
+must be shown to divide, so it is the *left* exact factorisation that goes in. `omega` caught it
+immediately; the counterexample it printed named `c` and `r` with no constraints, which is the
+signature of a comparison stated in the harmless direction.
+
+### A checking note
+
+An ad-hoc footprint check for the substring `exp` reported a hit — on the theorem's own name,
+`no_rational_exponential`. The claim registry does not have this problem because it forbids
+**fully-qualified** names (`MachLib.Real.exp`), which cannot occur inside an unrelated identifier.
+That is what the convention is for.
+
+Gates: build **703 jobs**, aggregator **700 of 1006** modules reachable, consistency PASS, claims
+345, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + **253** algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bg)
 
 ### `GermRelation` — the descent over arbitrary germ coefficients
