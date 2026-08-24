@@ -5,6 +5,55 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bs)
+
+### `RelCoeffsLead` — the top coefficient, in three cases
+
+`relCoeffs_nil_ratLog` says *every* coefficient of the rearrangement is the zero polynomial. The
+argument needs **one** — the coefficient of the highest surviving power of `E` — because that one's
+vanishing is an equation between the two leading coefficients. With `a = |As|`, `b = |Bs|` and
+`Cd = As ++ [α]`, `Cd₁ = Bs ++ [β]`:
+
+```
+a > b   index 2a     α·(K·α)                                K = (m+1)·Q·D
+a < b   index a+b    α·(P·β*) − (P·α*)·β
+a = b   index 2a     α·(P·β* + K·α) − (P·α*)·β
+```
+
+with `α* = Q²·α' + a·D·α` the trailing entry of `dcoeffs`. **These are three different equations,
+not three instances of one.** `K·α` reaches the top only when `Cd` is at least as long as `Cd₁`,
+which is why `a > b` collapses to a single product and `a < b` never sees `K`.
+
+Each reading is the same three steps — split the inner sum, multiply, subtract — and the only thing
+that varies is which `bisub` lemma applies, decided by whether the two products come out the same
+length. Four more `Bipoly` shape lemmas were needed for that and went into `BipolyLead`:
+`biadd_concat_left` and `biadd_concat_both` (with their `bisub` corollaries). `biadd` recurses on its
+first argument, so `_left` is a separate induction rather than a `comm` rewrite, and `_both` is the
+equal-length case neither one-sided lemma covers — each of those needs a strict gap.
+
+Algebra spine 278 → **296** theorems, 0 leaking: the readings are pure list arithmetic, so the module
+is field-axiom-only even though `relCoeffs` was defined in a module full of `exp`.
+
+### `dtop` is a definition so that two expressions become one
+
+`α*` is written `dtop Q D a α`. Not for brevity — it is *the same expression* as the bracket
+`coeff_identity` consumes, `padd (pmul QQ (pderiv v)) (pnsum m (pmul D v))`. Naming it is what makes
+the `a < b` reading and that theorem's hypothesis a single term rather than two that have to be
+reconciled at the join. This is the second time in the arc that a naming decision has done the work
+of a lemma.
+
+### The readings carry `pmul [0 - 1]`, not `psub`
+
+`bisub` produces `padd x (pmul [0 - 1] y)`, and `psub x y` is `padd x (pscale (0 - 1) y)`. The two
+agree — `pmul_singleton` — but only for `y ≠ []`, and manufacturing that side condition is exactly
+what a shape layer should not do. The readings therefore state what falls out, and the conversion is
+paid by the caller that already has `P ≠ []` in hand. Same discipline as `bimul_concat` dropping its
+unused nonvanishing pair.
+
+Gates: build **713 jobs**, aggregator **710 of 1016** modules reachable, consistency PASS, claims
+**366**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **296**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (br)
 
 ### `BipolyLead` — the leading coefficient of a bipoly, syntactically

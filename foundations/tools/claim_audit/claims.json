@@ -7528,6 +7528,97 @@
         "pnsum",
         "pderiv"
       ]
+    },
+    {
+      "_comment": "The a > b reading -- the case that collapses to a single product. hypotheses_count 1 pins that the ONLY hypothesis is the degree comparison: no nonvanishing, no pole data, nothing about P or Q. That is the prose's claim that this is a shape layer. proof_uses names bisub_concat_left specifically, because which bisub lemma applies IS the case distinction -- if a refactor made all three use the same one, the three-different-equations claim would be false and this would fire.",
+      "id": "relcoeffs-top-gt-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**These are three different equations,\nnot three instances of one.** `K·α` reaches the top only when `Cd` is at least as long as `Cd₁`,\nwhich is why `a > b` collapses to a single product and `a < b` never sees `K`."
+      ],
+      "module": "MachLib.RelCoeffsLead",
+      "theorem": "MachLib.relCoeffs_top_gt",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "relCoeffs",
+        "relK"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "inner_gt",
+        "relCoeffs_T2",
+        "bisub_concat_left",
+        "relCoeffs_unfold"
+      ]
+    },
+    {
+      "_comment": "The a < b reading -- the one that feeds coeff_identity. conclusion_mentions dtop is what makes the naming claim checkable: the prose says dtop IS coeff_identity's bracket, and if the conclusion stopped mentioning dtop the join would have been reconciled some other way. proof_uses bisub_concat_both, the equal-length lemma, contrasting with the gt reading's bisub_concat_left.",
+      "id": "relcoeffs-top-lt-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**These are three different equations,\nnot three instances of one.** `K·α` reaches the top only when `Cd` is at least as long as `Cd₁`,\nwhich is why `a > b` collapses to a single product and `a < b` never sees `K`.",
+        "`α*` is written `dtop Q D a α`. Not for brevity — it is *the same expression* as the bracket\n`coeff_identity` consumes, `padd (pmul QQ (pderiv v)) (pnsum m (pmul D v))`.",
+        "`bisub` produces `padd x (pmul [0 - 1] y)`, and `psub x y` is `padd x (pscale (0 - 1) y)`. The two\nagree — `pmul_singleton` — but only for `y ≠ []`"
+      ],
+      "module": "MachLib.RelCoeffsLead",
+      "theorem": "MachLib.relCoeffs_top_lt",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "relCoeffs",
+        "dtop",
+        "pmul"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "inner_lt",
+        "relCoeffs_T2",
+        "bisub_concat_both",
+        "relCoeffs_unfold"
+      ]
+    },
+    {
+      "_comment": "The a = b reading -- both terms reach the top, which is why this case lands on the logarithmic count rather than the exponential one. conclusion_mentions relK AND dtop: the surviving K term is exactly what distinguishes this from the a < b reading, so a conclusion that lost relK would be the wrong equation.",
+      "id": "relcoeffs-top-eq-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**These are three different equations,\nnot three instances of one.** `K·α` reaches the top only when `Cd` is at least as long as `Cd₁`,\nwhich is why `a > b` collapses to a single product and `a < b` never sees `K`."
+      ],
+      "module": "MachLib.RelCoeffsLead",
+      "theorem": "MachLib.relCoeffs_top_eq",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "relCoeffs",
+        "relK",
+        "dtop"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "inner_eq",
+        "relCoeffs_T2",
+        "bisub_concat_both",
+        "relCoeffs_unfold"
+      ]
     }
   ]
 }

@@ -144,6 +144,49 @@ theorem biadd_concat_right : ∀ (X Y : List (List Real)), X.length ≤ Y.length
           show padd A B :: biadd As (Bs ++ [v]) = (padd A B :: biadd As Bs) ++ [v]
           rw [ih Bs (by simpa using h) v]; rfl
 
+/-- The mirror image: `biadd` absorbs a trailing coefficient from the **left** side when the left is
+the longer one. `biadd` is not syntactically symmetric — it recurses on its first argument — so this
+is a separate induction rather than a `comm` rewrite. -/
+theorem biadd_concat_left : ∀ (X Y : List (List Real)), Y.length ≤ X.length →
+    ∀ v : List Real, biadd (X ++ [v]) Y = biadd X Y ++ [v] := by
+  intro X
+  induction X with
+  | nil =>
+      intro Y h v
+      cases Y with
+      | nil => rfl
+      | cons B Bs => exact absurd h (by simp)
+  | cons A As ih =>
+      intro Y h v
+      cases Y with
+      | nil =>
+          show (A :: (As ++ [v])) = biadd (A :: As) [] ++ [v]
+          rw [biadd_nil_right]; rfl
+      | cons B Bs =>
+          show padd A B :: biadd (As ++ [v]) Bs = (padd A B :: biadd As Bs) ++ [v]
+          rw [ih Bs (by simpa using h) v]; rfl
+
+/-- Equal lengths: both trailing coefficients sit at the same index, so they `padd`. This is the
+case the `deg Cd = deg Cd1` branch of the sweep runs on, and the one neither `_left` nor `_right`
+covers — each of those needs a strict gap. -/
+theorem biadd_concat_both : ∀ (X Y : List (List Real)), X.length = Y.length →
+    ∀ (x y : List Real), biadd (X ++ [x]) (Y ++ [y]) = biadd X Y ++ [padd x y] := by
+  intro X
+  induction X with
+  | nil =>
+      intro Y h x y
+      cases Y with
+      | nil => rfl
+      | cons B Bs => exact absurd h (by simp)
+  | cons A As ih =>
+      intro Y h x y
+      cases Y with
+      | nil => exact absurd h (by simp)
+      | cons B Bs =>
+          show padd A B :: biadd (As ++ [x]) (Bs ++ [y])
+              = (padd A B :: biadd As Bs) ++ [padd x y]
+          rw [ih Bs (by simpa using h) x y]; rfl
+
 /-- `biadd L [[]] = L` for nonempty `L` — the base case of the product induction. The bivariate zero
 coefficient is `[]`, so the singleton to absorb is `[[]]`, not `[0]`. -/
 theorem biadd_nil_singleton : ∀ L : List (List Real), L ≠ [] → biadd L [[]] = L := by
@@ -269,5 +312,19 @@ theorem bisub_concat_right : ∀ (X Y : List (List Real)), X.length ≤ Y.length
   show biadd X (biscale [0 - 1] (Y ++ [v])) = biadd X (biscale [0 - 1] Y) ++ [pmul [0 - 1] v]
   rw [biscale_concat]
   exact biadd_concat_right X (biscale [0 - 1] Y) (by rw [biscale_length]; exact h) _
+
+theorem bisub_concat_left : ∀ (X Y : List (List Real)), Y.length ≤ X.length →
+    ∀ v : List Real, bisub (X ++ [v]) Y = bisub X Y ++ [v] := by
+  intro X Y h v
+  show biadd (X ++ [v]) (biscale [0 - 1] Y) = biadd X (biscale [0 - 1] Y) ++ [v]
+  exact biadd_concat_left X (biscale [0 - 1] Y) (by rw [biscale_length]; exact h) v
+
+theorem bisub_concat_both : ∀ (X Y : List (List Real)), X.length = Y.length →
+    ∀ (x y : List Real),
+      bisub (X ++ [x]) (Y ++ [y]) = bisub X Y ++ [padd x (pmul [0 - 1] y)] := by
+  intro X Y h x y
+  show biadd (X ++ [x]) (biscale [0 - 1] (Y ++ [y])) = _
+  rw [biscale_concat]
+  exact biadd_concat_both X (biscale [0 - 1] Y) (by rw [biscale_length]; exact h) x (pmul [0 - 1] y)
 
 end MachLib
