@@ -5,6 +5,59 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (bz)
+
+### `PositiveBranch` — the `S > 0` branch, closed end to end
+
+**`positive_branch_impossible`**: for `S = P/Q` with a pole at the irreducible `q` and positive on a
+tail, `log S` satisfies **no** minimal relation with coefficients in `R(x)[e^S]`. Seventeen
+hypotheses — the pole data, the branch's positivity, the relation's shape — and it compiled first
+try, like the dispatcher before it.
+
+```
+GEvRel (log ∘ S) (expCoeffs S Cs)            the hypothesis
+      ↓  Cs ↦ Cs.map bitrim                  expCoeffs literally unchanged (bw)
+relCoeffs_nil_ratLog (bq)                     every coefficient nil
+      ↓  bitrim_split on Cd and Cd₁
+sweep_impossible / sweep_impossible_nil_second (bx, by)
+```
+
+That is step 3 of the branch's three-step decomposition, opened in (bf): `log S ∈ R(x)(e^S)` +
+`e^S` transcendental ⟹ contradiction. Steps 1 and 2 are unchanged and step 1 remains the one that
+needs a new representation.
+
+### Properness, and the fifth arm that does not exist
+
+`minimal_expRel_identity` asks for minimality **among proper relations**; it never asks the relation
+at hand to be proper. That is deliberate and it suffices for the identity — but **not** for the
+sweep: if `Cd` were the zero germ, every coefficient of `relCoeffs` would be nil for trivial reasons
+and nothing would follow.
+
+So this theorem takes `¬ EvZeroF` of the top coefficient — `GProperRel`'s second clause — and that
+one hypothesis is exactly what makes `bitrim Cd ≠ []`. The fifth arm the sweep would otherwise have
+needed is not written because the hypothesis removes it, not because it was overlooked.
+
+### The trim is a rewrite, not a transport
+
+`expCoeffs S (Cs.map bitrim) = expCoeffs S Cs` is an **equality of lists of functions**, so `hmin`,
+`hrel`, `hCs`, `hlen0` and `hCd1` all transfer by `rw` and `List.map_append`/`List.getElem?_map`.
+Five hypotheses moved across a normalisation without a single congruence lemma. That is the payoff
+from (bw)'s decision to trim before the identity rather than after.
+
+### The arc, measured end to end
+
+Nine bricks (bq…bz) from the two clearing conditions to the closed branch. Build **710 → 719 jobs**,
+algebra spine **258 → 325** theorems (0 leaking throughout), claims **358 → 385**, AxiomLedger
+**242 pinned, unchanged at every step** — the whole branch added no axioms.
+
+`no_rational_exponential`, sized in (bf) as step 2's workhorse and expected to be called once per
+coefficient, is called **zero times**: the `a < b` case routes through `cleared_relation_impossible`,
+which the *other* branch already had.
+
+Gates: build **719 jobs**, aggregator **716 of 1022** modules reachable, consistency PASS, claims
+**385**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (by)
 
 ### The fourth arm — `Cd₁` is the zero germ, and the sweep is complete

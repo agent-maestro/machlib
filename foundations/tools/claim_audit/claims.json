@@ -8080,6 +8080,56 @@
         "top_gt_impossible",
         "relCoeffs_top_of_nil_second"
       ]
+    },
+    {
+      "_comment": "The branch, closed. proof_uses names the whole chain: the caller, the trim split, and BOTH sweep arms -- if either arm dropped out the theorem would be covering fewer cases than the prose says. hypotheses_count 17 pins the interface; the seventeenth is hCdne, the properness clause whose absence would make the sweep vacuous, so a drop to 16 is exactly the failure this entry guards.",
+      "id": "positive-branch-closed-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`positive_branch_impossible`**: for `S = P/Q` with a pole at the irreducible `q` and positive on a\ntail, `log S` satisfies **no** minimal relation with coefficients in `R(x)[e^S]`.",
+        "So this theorem takes `¬ EvZeroF` of the top coefficient — `GProperRel`'s second clause — and that\none hypothesis is exactly what makes `bitrim Cd ≠ []`."
+      ],
+      "module": "MachLib.PositiveBranch",
+      "theorem": "MachLib.positive_branch_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "GEvRel",
+        "expCoeffs",
+        "EvZeroF",
+        "Pdvd"
+      ],
+      "hypotheses_count": 17,
+      "proof_uses": [
+        "relCoeffs_nil_ratLog",
+        "bitrim_split",
+        "sweep_impossible",
+        "sweep_impossible_nil_second",
+        "bitrim_ne_nil_of_not_evZero"
+      ]
+    },
+    {
+      "_comment": "The properness-to-nonnil step, one line and load-bearing. hypotheses_count 1: nothing but the not-eventually-zero clause is needed, which is the prose's claim that this single hypothesis removes the fifth arm.",
+      "id": "positive-branch-properness-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "So this theorem takes `¬ EvZeroF` of the top coefficient — `GProperRel`'s second clause — and that\none hypothesis is exactly what makes `bitrim Cd ≠ []`."
+      ],
+      "module": "MachLib.PositiveBranch",
+      "theorem": "MachLib.bitrim_ne_nil_of_not_evZero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "bitrim"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "bipev_bitrim"
+      ]
     }
   ]
 }
