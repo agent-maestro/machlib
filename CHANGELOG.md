@@ -5,6 +5,41 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bn)
+
+### `Bipoly` — the second level of polynomial arithmetic
+
+**Bivariate polynomial arithmetic** on `List (List Real)`: `biadd`, `biscale`, `bimul`, `bisub`,
+with `bipev (bimul A B) x y = bipev A x y * bipev B x y` and its three siblings. The same
+construction as `padd`/`pmul`/`psub` one level up — the coefficient ring is `List Real` instead
+of `Real`, so `padd` replaces `+` and `pmul` replaces `*`.
+
+Four definitions, four evaluation laws, every proof mirroring its univariate original. Field-axiom
+only: `algebraSpineModules` goes 254 → **258**, 0 leaking.
+
+### Why a second set of definitions rather than a coefficient-ring abstraction
+
+`pmul`, `pnorm`, `Pdvd` and the whole Euclid spine are written concretely for `List Real`, not over
+an abstract ring — MachLib has no algebraic hierarchy, by design. So a second level means a second
+set of definitions.
+
+That is the cheap side of the trade here: **four definitions and four lemmas, against introducing a
+ring class and re-instantiating twenty modules.** The rearrangement needs the *arithmetic* and none
+of the divisibility theory, so the abstraction would have been paid for and not used. If a third
+level ever appears, or if the second level needs `Pdvd`, the trade flips and should be re-made
+rather than extended.
+
+### What it is for
+
+The `S > 0` identity `c_d·(c_(d−1)' + v·m·c_d) − c_d'·c_(d−1) ≈ 0` must be rearranged into a
+*single* relation in `e^S` before `all_coeffs_nil_of_relation` (bl) can make it syntactic. That
+rearrangement is products and sums of `R[x][T]` polynomials, which is exactly this layer — plus one
+clearing of denominators by `P·Q²`, since `v = S'/S` and `c'` both carry rational coefficients.
+
+Gates: build **708 jobs**, aggregator **705 of 1011** modules reachable, consistency PASS, claims
+354, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + **258** algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bm)
 
 ### `GermExpCoeff` — instantiating the identity at coefficients in `R(x)[E]`

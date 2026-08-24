@@ -7267,6 +7267,33 @@
       "proof_uses": [
         "hasDerivAt_bipev_exp"
       ]
+    },
+    {
+      "_comment": "The bivariate product law -- the one that carries the work. hypotheses_count 0 pins that it is unconditional, and forbid_axioms names the order and analysis axioms because the whole point is that this layer is spine-eligible: pure arithmetic, no divisibility theory, nothing about Real being ordered.",
+      "id": "bipoly-bimul-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Bivariate polynomial arithmetic** on `List (List Real)`: `biadd`, `biscale`, `bimul`, `bisub`,\nwith `bipev (bimul A B) x y = bipev A x y * bipev B x y` and its three siblings. The same\nconstruction as `padd`/`pmul`/`psub` one level up — the coefficient ring is `List Real` instead\nof `Real`, so `padd` replaces `+` and `pmul` replaces `*`."
+      ],
+      "module": "MachLib.Bipoly",
+      "theorem": "MachLib.bipev_bimul",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "bipev",
+        "bimul"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "bipev_biadd",
+        "bipev_biscale"
+      ]
     }
   ]
 }
