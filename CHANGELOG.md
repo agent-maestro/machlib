@@ -5,6 +5,36 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (by)
+
+### The fourth arm — `Cd₁` is the zero germ, and the sweep is complete
+
+`relCoeffs_top_of_nil_second` and `sweep_impossible_nil_second`. **All four arms of the sweep now
+exist as theorems**: the three degree comparisons (bx) and the case where `Cd₁` trims away entirely.
+
+The subtracted product does **not** vanish when `Cd₁ = []` — `bimul X [] = replicate |X| []` — so it
+is a run of `[]` entries of length `a+1` against `T₁`'s `2a+1`:
+
+* `a ≥ 1`: a strict gap, `bisub_concat_left`, top is `α·(K·α)` **exactly**;
+* `a = 0`: the two coincide, `bisub_concat_both`, and the top picks up a `pmul [0-1] []` tail.
+
+That tail is `List.replicate 1 0`, so `pnorm_padd_replicate` erases it. Both branches therefore give
+a top **`PEq` to** `α·(K·α)` rather than equal to it — and that is enough, because
+`top_gt_impossible` consumes `pnorm _ = []`, which is `PEq`-invariant. **The arm costs a reading and
+no new landing**, exactly as (bx) predicted from the shape of `bimul_nil_right`.
+
+### The `PEq` was the right output type, and it was decided before the proof
+
+Stating the reading as an equality would have forced the `a = 0` corner to be normalised away inside
+the reading — which cannot be done, since `padd X [0] = X` needs `X ≠ []`. Returning a `PEq` moves
+that corner to where it costs nothing, because the consumer was already `pnorm`-based. This is the
+same decision as (bs)'s readings carrying `pmul [0 - 1]` instead of `psub`: **state what falls out,
+and let the consumer's own invariance absorb it.**
+
+Gates: build **718 jobs**, aggregator **715 of 1021** modules reachable, consistency PASS, claims
+**383**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (bx)
 
 ### `RelCoeffsSweep` — the sweep chooses its case

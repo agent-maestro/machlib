@@ -8024,6 +8024,62 @@
         "pnorm"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The fourth reading. hypotheses_count 0: it holds for every As and alpha with no side condition, which is what a PEq output buys -- an equality version would have needed X != [] for the a = 0 corner. proof_uses names BOTH bisub lemmas, because the two-branch split IS the content; a proof through only one of them would mean the a = 0 corner had been assumed away.",
+      "id": "sweep-fourth-reading-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**All four arms of the sweep now\nexist as theorems**: the three degree comparisons (bx) and the case where `Cd₁` trims away entirely.",
+        "Both branches therefore give\na top **`PEq` to** `α·(K·α)` rather than equal to it — and that is enough, because\n`top_gt_impossible` consumes `pnorm _ = []`, which is `PEq`-invariant.",
+        "Stating the reading as an equality would have forced the `a = 0` corner to be normalised away inside\nthe reading — which cannot be done, since `padd X [0] = X` needs `X ≠ []`."
+      ],
+      "module": "MachLib.RelCoeffsSweep",
+      "theorem": "MachLib.relCoeffs_top_of_nil_second",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "relCoeffs",
+        "PEq",
+        "relK"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "bisub_concat_left",
+        "bisub_concat_both",
+        "pnorm_padd_replicate",
+        "bimul_nil_right"
+      ]
+    },
+    {
+      "_comment": "The fourth arm of the dispatcher. proof_uses top_gt_impossible and NOTHING else from the landing layer -- that is the prose's claim that the arm costs a reading and no new landing. hypotheses_count 12 is one fewer than sweep_impossible's 13, the missing one being beta's nonvanishing, which has no beta to be about.",
+      "id": "sweep-fourth-arm-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**All four arms of the sweep now\nexist as theorems**: the three degree comparisons (bx) and the case where `Cd₁` trims away entirely."
+      ],
+      "module": "MachLib.RelCoeffsSweep",
+      "theorem": "MachLib.sweep_impossible_nil_second",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "relCoeffs",
+        "Pdvd",
+        "pnorm"
+      ],
+      "hypotheses_count": 12,
+      "proof_uses": [
+        "top_gt_impossible",
+        "relCoeffs_top_of_nil_second"
+      ]
     }
   ]
 }

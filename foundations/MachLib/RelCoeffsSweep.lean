@@ -116,4 +116,91 @@ theorem sweep_impossible {q P Q D : List Real} {m : Nat}
     exact top_le_impossible hq hPd hPn hQn hQne hQd hchar hcharN rfl (Nat.le_of_lt hgt)
       hαn hβn hPne (not_Pdvd_pnsum_one' hq (by omega)) (pnorm_top_of_all_nil hZ hnil)
 
+/-! ## The fourth arm: `Cd₁` is the zero germ
+
+The subtracted product does **not** vanish when `Cd₁ = []` — `bimul X [] = replicate |X| []` — so it
+is a run of `[]` entries of length `a+1` against `T₁`'s `2a+1`. For `a ≥ 1` that is a strict gap and
+the top is `α·(K·α)` exactly; at `a = 0` the two coincide and the top picks up a `pmul [0-1] []`
+tail, which is `pnorm`-nil. Both give a top **`PEq` to** `α·(K·α)`, and `top_gt_impossible` consumes
+`pnorm _ = []`, which is `PEq`-invariant — so the arm costs a reading and no new landing. -/
+
+theorem relCoeffs_top_of_nil_second {P Q D : List Real} {m : Nat}
+    {As : List (List Real)} {α : List Real} :
+    ∃ (Z : List (List Real)) (t : List Real),
+      relCoeffs P Q D m (As ++ [α]) [] = Z ++ [t]
+        ∧ PEq t (pmul α (pmul (relK Q D m) α)) := by
+  obtain ⟨Z1, hZ1⟩ := bimul_concat As (biscale (relK Q D m) As) α (pmul (relK Q D m) α)
+  have hl1 : Z1.length = As.length + (biscale (relK Q D m) As).length := by
+    have h := bimul_length (As ++ [α]) (biscale (relK Q D m) As ++ [pmul (relK Q D m) α])
+      (by simp) (by simp)
+    rw [hZ1] at h
+    simp at h
+    omega
+  have hT1 : bimul (As ++ [α])
+      (biadd (biscale P (dcoeffs (pmul Q Q) D 0 [])) (biscale (relK Q D m) (As ++ [α])))
+      = Z1 ++ [pmul α (pmul (relK Q D m) α)] := by
+    show bimul (As ++ [α]) (biadd [] (biscale (relK Q D m) (As ++ [α]))) = _
+    show bimul (As ++ [α]) (biscale (relK Q D m) (As ++ [α])) = _
+    rw [biscale_concat]; exact hZ1
+  have hT2 : bimul (biscale P (dcoeffs (pmul Q Q) D 0 (As ++ [α]))) []
+      = List.replicate (As.length + 1) [] := by
+    rw [bimul_nil_right, biscale_dcoeffs_length]
+    simp
+  rw [relCoeffs_unfold, hT1, hT2]
+  rw [biscale_length] at hl1
+  by_cases hA : As.length = 0
+  · -- both sides have length one: the tails add, and the added one is `pnorm`-nil
+    have hz : Z1 = [] := List.eq_nil_of_length_eq_zero (by rw [hl1, hA])
+    have hrep : List.replicate (As.length + 1) ([] : List Real) = [] ++ [([] : List Real)] := by
+      rw [hA]; rfl
+    refine ⟨bisub [] [], padd (pmul α (pmul (relK Q D m) α)) (pmul [0 - 1] []), ?_, ?_⟩
+    · rw [hz, hrep]
+      exact bisub_concat_both [] [] rfl _ _
+    · show pnorm (padd (pmul α (pmul (relK Q D m) α)) (pmul [0 - 1] []))
+          = pnorm (pmul α (pmul (relK Q D m) α))
+      rw [pmul_nil_right]
+      have h := pnorm_padd_replicate ([(0 : Real) - 1]).length
+        (pmul α (pmul (relK Q D m) α)) []
+      rw [List.nil_append, padd_nil_right] at h
+      exact h
+  · -- a strict gap: the subtracted run never reaches the top
+    refine ⟨bisub Z1 (List.replicate (As.length + 1) []), pmul α (pmul (relK Q D m) α),
+      ?_, PEq.refl _⟩
+    refine bisub_concat_left _ _ ?_ _
+    rw [List.length_replicate, hl1]
+    omega
+
+/-- **The fourth arm of the dispatcher.** -/
+theorem sweep_impossible_nil_second {q P Q D : List Real} {m : Nat}
+    {As : List (List Real)} {α : List Real}
+    (hq : PIrred q)
+    (hPd : ¬ Pdvd q P) (hPn : PNormal P)
+    (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
+    (hchar : ∀ r : Nat, DerivCoprime q r)
+    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hDdef : D = psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))
+    (hαn : pnorm α ≠ [])
+    (hkd : ¬ Pdvd q (pnsum (m + 1) [(1 : Real)]))
+    (hnil : ∀ A : List Real, A ∈ relCoeffs P Q D m (As ++ [α]) [] → pnorm A = []) :
+    False := by
+  subst hDdef
+  have hQnn : pnorm Q ≠ [] := by rw [pnorm_eq_self _ hQn]; exact hQne
+  have hkn : pnorm (pnsum (m + 1) [(1 : Real)]) ≠ [] := pnorm_ne_nil_of_not_Pdvd hkd
+  have hDn : pnorm (psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) ≠ [] := by
+    obtain ⟨r, Qt, _, _, hQtd, hQfac⟩ :=
+      exists_ord_factor Q.length q Q hq hQn hQne (Nat.le_refl _)
+    cases r with
+    | zero => exact absurd (Pdvd_of_peq (PEq.trans hQfac (peq_pmul_one_left Qt)).symm hQd) hQtd
+    | succ r' =>
+        obtain ⟨Ec, hEcd, hEc⟩ :=
+          ord_deriv_cross hq hPd hQtd (hchar (r' + 1)) hPn (hcharN (r' + 1)) hQfac
+        intro hz
+        refine pnorm_ne_nil_of_not_Pdvd hEcd (pmul_nil_cancel' (pnorm_ppow_ne_nil hq r') ?_)
+        refine PEq.trans hEc.symm ?_
+        show pnorm (psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) = pnorm ([] : List Real)
+        rw [hz]; rfl
+  obtain ⟨Z, t, hZ, ht⟩ := relCoeffs_top_of_nil_second (P := P) (Q := Q)
+    (D := psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) (m := m) (As := As) (α := α)
+  exact top_gt_impossible hαn hQnn hDn hkn (Eq.trans ht.symm (pnorm_top_of_all_nil hZ hnil))
+
 end MachLib
