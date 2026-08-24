@@ -7973,6 +7973,57 @@
       "proof_uses": [
         "bitrim_normal"
       ]
+    },
+    {
+      "_comment": "The dispatcher. proof_uses names ALL SIX pieces -- the three readings and the three landings -- which is the prose's claim that each case is closed by its own landing. If a refactor collapsed two cases into one, a name would drop out and this fires. hypotheses_count 13 pins the interface; it does NOT include a Cd1-nonempty hypothesis because the trimmed-away arm is a separate theorem that does not exist yet, and the changelog says so.",
+      "id": "sweep-dispatcher-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`sweep_impossible`**: given a relation whose two top coefficients both survive trimming, the three\nreadings are selected by `Nat.lt_trichotomy` on `|Bs|` against `|As|` and each is closed by its own\nlanding.",
+        "`sweep_impossible` assumes **both** top coefficients survive trimming. The remaining arm is\n`bitrim Cd₁ = []` — `Cd₁` the zero germ."
+      ],
+      "module": "MachLib.RelCoeffsSweep",
+      "theorem": "MachLib.sweep_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "relCoeffs",
+        "Pdvd",
+        "pnorm"
+      ],
+      "hypotheses_count": 13,
+      "proof_uses": [
+        "relCoeffs_top_gt",
+        "relCoeffs_top_eq",
+        "relCoeffs_top_lt",
+        "top_gt_impossible",
+        "top_eq_impossible",
+        "top_le_impossible"
+      ]
+    },
+    {
+      "_comment": "The one-line side condition. hypotheses_count 1 and a conclusion about pnorm: the claim is that non-divisibility ALONE gives nonvanishing, with no irreducibility or normality needed.",
+      "id": "sweep-nonzero-from-notdvd-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`pnorm X ≠ []` from `¬ Pdvd q X` — everything divides the zero polynomial, so a non-divisibility\n  hypothesis *already says* the thing is nonzero."
+      ],
+      "module": "MachLib.RelCoeffsSweep",
+      "theorem": "MachLib.pnorm_ne_nil_of_not_Pdvd",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "pnorm"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

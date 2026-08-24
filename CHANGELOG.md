@@ -5,6 +5,53 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (bx)
+
+### `RelCoeffsSweep` — the sweep chooses its case
+
+**`sweep_impossible`**: given a relation whose two top coefficients both survive trimming, the three
+readings are selected by `Nat.lt_trichotomy` on `|Bs|` against `|As|` and each is closed by its own
+landing. Thirteen hypotheses, and the proof compiled first try — which is the point: every piece it
+composes was shaped for exactly this join.
+
+```
+Bs.length < As.length   relCoeffs_top_gt  →  top_gt_impossible
+Bs.length = As.length   relCoeffs_top_eq  →  top_eq_impossible
+As.length < Bs.length   relCoeffs_top_lt  →  top_le_impossible
+```
+
+### The side conditions are discharged here, not assumed
+
+Every landing carries its nonvanishing and characteristic-zero inputs as hypotheses so the algebra
+could stay inside the spine. This module is outside the spine and pays them:
+
+* `pnorm X ≠ []` from `¬ Pdvd q X` — everything divides the zero polynomial, so a non-divisibility
+  hypothesis *already says* the thing is nonzero. One line, and it covers `P` and `(m+1)·1`.
+* `pnorm D ≠ []` from `ord_deriv_cross`'s witness `Ec`, which is coprime to `q` and therefore
+  nonzero; cancelling `q^r` transfers that to `D`.
+* `¬ Pdvd q ((b−a)·1)` from `not_Pdvd_pnsum_one'`, which proves `n·1 > 0` and **costs the order
+  axioms** — exactly why the landings did not discharge it themselves.
+
+`expCoeffs_map_bitrim` also lands here rather than in `BipolyTrim`, for the reason (bw) measured: it
+mentions `exp`, and the ledger convicts it inside the spine.
+
+### What is still open
+
+`sweep_impossible` assumes **both** top coefficients survive trimming. The remaining arm is
+`bitrim Cd₁ = []` — `Cd₁` the zero germ. `bimul_nil_right` is proved here (`bimul X [] =
+List.replicate X.length []`), which is the shape that arm needs: the subtracted product does not
+vanish, it becomes a run of `[]` entries of length `a+1`. Against `T₁`'s `2a+1` that splits at
+`a = 0`, and both sub-cases give a top `PEq` to `α·(K·α)`, so `top_gt_impossible` covers both — but
+the reading lemma itself is **not written**. Nothing above depends on it; it is a fourth arm of the
+dispatcher, not a gap in the three that exist.
+
+Beyond that: the top-level `S > 0` statement, which instantiates `RatLogRelation`'s caller against
+this dispatcher.
+
+Gates: build **718 jobs**, aggregator **715 of 1021** modules reachable, consistency PASS, claims
+**381**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (bw)
 
 ### `BipolyTrim` — trailing zero coefficients, stripped
