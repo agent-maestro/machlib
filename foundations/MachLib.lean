@@ -391,6 +391,7 @@ import MachLib.GermExpCoeff
 import MachLib.Bipoly
 import MachLib.BipevRearrange
 import MachLib.RatLogDeriv
+import MachLib.RatLogRelation
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

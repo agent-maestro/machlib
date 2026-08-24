@@ -5,6 +5,51 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bq)
+
+### `RatLogRelation` — the caller, and the coefficients come out nil
+
+**`S = P/Q` and `u = log ∘ S` go in; `pnorm A = []` comes out** for every coefficient of the
+rearrangement. Every module from `GermRelation` down to `BipevRearrange` is stated for an *arbitrary*
+germ with its clearing conditions carried as hypotheses; this is the only module in the chain that
+knows `S` is literally `P/Q`, and it is three `exact`s and the tail bookkeeping between them.
+
+That it *is* only that is the point. The clearing conditions were shaped to compose — `S'·Q² = D`
+and `v·(P·Q²) = Q·D` rather than "`S` is `P/Q`" — and this module is the receipt for that shape.
+
+### One positivity hypothesis, not two nonvanishing ones
+
+`ratLogDeriv_cleared` wants `pev Q x ≠ 0` **and** `pev P x ≠ 0`. The branch's defining hypothesis
+already gives the second: `0 < P·(1/Q)` forces `P ≠ 0`, since a product with a zero factor is `0`.
+So `ratLogDeriv_cleared_on_tail` is bypassed in favour of the pointwise form and `¬ EvZeroF (pev P)`
+never has to be supplied — **`evRel_relCoeffs_ratLog` takes 7 hypotheses, not 8**, and the one
+removed is the one a caller would have found hardest to produce. Registered as a count, so re-adding
+it fails the gate instead of passing unnoticed.
+
+### `MachLib.Real.log` cannot appear in an axiom footprint
+
+Registered yesterday on `ratLogDeriv_cleared` to pin *"the footprint contains no `log`"*. It does not
+pin that. `Real.log` is a `noncomputable def`, not an axiom, so the token matches only the unrelated
+`log10` axioms. The way `log` actually enters a footprint is through its **definition** —
+`Classical.choose (exp_surj x h)` — so **`MachLib.Real.exp_surj` is the token that discriminates**,
+and it is now in the forbid list.
+
+Measured both ways rather than argued: `exp_surj` is **absent** from `ratLogDeriv_cleared`'s
+footprint (22 axioms) and **present** in `hasDerivAt_ratLog`'s (31). The old list would not have
+fired on the one theorem in its own module that violates the claim — a guard that cannot convict its
+own specimen.
+
+The neighbouring question, checked at the same time: of **31 distinct forbid tokens across 358
+claims**, exactly one other matches nothing in the environment — `zero_count_bound_classical`, in 10
+claims. That one is **correct as it stands**: the axiom was deleted on 2026-07-15, and those claims
+are retirement guards, which are supposed to match nothing until someone reintroduces it. Checked
+before reporting, because a forbid that matches nothing is a defect only when the property it names
+can still occur.
+
+Gates: build **711 jobs**, aggregator **708 of 1014** modules reachable, consistency PASS, claims
+**361**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + 258
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bp)
 
 ### `RatLogDeriv` — the two clearing conditions, discharged

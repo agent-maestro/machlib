@@ -7346,7 +7346,7 @@
       ]
     },
     {
-      "_comment": "The second clearing condition. hypotheses_count 2 pins that exactly the two nonvanishing conditions are needed and nothing else; forbid_axioms makes the sign-blindness claim decidable, since ltR/leR/log/HasDerivAt are what a sign or analytic argument would cite.",
+      "_comment": "The second clearing condition. hypotheses_count 2 pins that exactly the two nonvanishing conditions are needed and nothing else; forbid_axioms makes the sign-blindness claim decidable, since ltR/leR/HasDerivAt are what a sign or analytic argument would cite. MachLib.Real.log is a noncomputable def, NOT an axiom, so that token can only ever match the unrelated log10 axioms -- MachLib.Real.exp_surj is the token that carries the 'no log' half, because log is DEFINED as Classical.choose (exp_surj x h). Measured both ways: exp_surj is absent from ratLogDeriv_cleared's footprint (22 axioms) and present in hasDerivAt_ratLog's (31), so the guard convicts a real specimen in its own module.",
       "id": "ratlog-cleared-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -7361,6 +7361,7 @@
         "MachLib.Real.ltR",
         "MachLib.Real.leR",
         "MachLib.Real.log",
+        "MachLib.Real.exp_surj",
         "MachLib.Real.exp",
         "MachLib.Real.HasDerivAt",
         "MachLib.Real.HasDerivAt_log_pos"
@@ -7396,6 +7397,79 @@
         "HasDerivAt_comp",
         "HasDerivAt_log_pos",
         "hasDerivAt_ratFn"
+      ]
+    },
+    {
+      "_comment": "The caller. hypotheses_count 7 is the load-bearing obligation: it pins that the P-nonvanishing hypothesis is NOT among them, which is what the prose claims. proof_uses pins the composition the prose credits -- both halves of RatLogDeriv plus the two germ-layer theorems.",
+      "id": "ratlog-caller-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`S = P/Q` and `u = log ∘ S` go in; `pnorm A = []` comes out** for every coefficient of the\nrearrangement.",
+        "`ratLogDeriv_cleared` wants `pev Q x ≠ 0` **and** `pev P x ≠ 0`. The branch's defining hypothesis\nalready gives the second: `0 < P·(1/Q)` forces `P ≠ 0`, since a product with a zero factor is `0`.",
+        "**`evRel_relCoeffs_ratLog` takes 7 hypotheses, not 8**"
+      ],
+      "module": "MachLib.RatLogRelation",
+      "theorem": "MachLib.evRel_relCoeffs_ratLog",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "EvRel",
+        "relCoeffs"
+      ],
+      "hypotheses_count": 7,
+      "proof_uses": [
+        "minimal_expRel_identity",
+        "evRel_relCoeffs",
+        "ratFnDeriv_cleared_on_tail",
+        "ratLogDeriv_cleared",
+        "hasDerivAt_ratLog"
+      ]
+    },
+    {
+      "_comment": "The syntactic landing. conclusion_mentions is pnorm alone, because that IS the conclusion (pnorm A = []); relCoeffs sits in the membership hypothesis, so claiming it here would be the unused-hypothesis attack. 16 hypotheses = the 9 pole conditions + positivity + minimality + the relation + the three shape equations + the membership.",
+      "id": "ratlog-nil-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`S = P/Q` and `u = log ∘ S` go in; `pnorm A = []` comes out** for every coefficient of the\nrearrangement."
+      ],
+      "module": "MachLib.RatLogRelation",
+      "theorem": "MachLib.relCoeffs_nil_ratLog",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "pnorm"
+      ],
+      "hypotheses_count": 16,
+      "proof_uses": [
+        "all_coeffs_nil_of_relation",
+        "evRel_relCoeffs_ratLog"
+      ]
+    },
+    {
+      "_comment": "The forbid-token audit itself. Registered against hasDerivAt_ratLog because that theorem is the FIRING SPECIMEN for the fix: it is the theorem in the same module that genuinely uses log. proof_uses pins that its PROOF TERM names MachLib.Real.log -- the def -- which is precisely why the def's own axiom trail (exp_surj) and not the name `MachLib.Real.log` is what a footprint can see. The contrast is with the sibling claim ratlog-cleared-changelog, which forbids exp_surj on ratLogDeriv_cleared; the pair is decidable in both directions. Note the registry has no require_axioms, so the PRESENCE of exp_surj here is pinned only indirectly, via this proof_uses obligation.",
+      "id": "ratlog-logtoken-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`Real.log` is a `noncomputable def`, not an axiom, so the token matches only the unrelated\n`log10` axioms."
+      ],
+      "module": "MachLib.RatLogRelation",
+      "theorem": "MachLib.hasDerivAt_ratLog",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "HasDerivAt",
+        "ratLogDeriv"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "MachLib.Real.HasDerivAt_log_pos",
+        "MachLib.Real.log"
       ]
     }
   ]
