@@ -7619,6 +7619,88 @@
         "bisub_concat_both",
         "relCoeffs_unfold"
       ]
+    },
+    {
+      "_comment": "The a > b landing. hypotheses_count 5 is the whole claim: FIVE hypotheses, none of them pole data and none of them P. The registry has no negative proof_uses, so 'no transcendence lemma' is pinned by the count and by forbid_axioms, not by a check that the hard theorems are absent -- if someone routed this through cleared_relation_impossible the count would jump and this would fire.",
+      "id": "relcoeffs-gt-nothing-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`a > b` needs nothing.** The top coefficient is `(m+1)·Q·D·α²` with **no `P` in it**, so the whole\ncase is: a product of nonzero polynomials is not zero. Four `pmul_eq_nil_cancel`s."
+      ],
+      "module": "MachLib.RelCoeffsLand",
+      "theorem": "MachLib.top_gt_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "statement_mentions": [
+        "relK",
+        "pnorm"
+      ],
+      "hypotheses_count": 5,
+      "proof_uses": [
+        "pmul_nil_cancel",
+        "pnorm_pmul_ne_nil"
+      ]
+    },
+    {
+      "_comment": "The a <= b landing. proof_uses is the composition obligation and carries the prose's whole point: the proof really does go through coeff_identity and cleared_relation_impossible, the OTHER branch's machinery, plus exists_ord_factor applied per polynomial. forbid_axioms pins the field-axiom-only claim per-theorem; the whole-module spine check in AxiomLedger is the stronger guard.",
+      "id": "relcoeffs-le-landing-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`a ≤ b` is the other branch's landing, reused verbatim.** Cancelling `P` turns the coefficient into\n`coeff_identity`'s hypothesis — the same expression, not a matching one — and that yields exactly\n`cleared_relation_impossible`'s `hident`.",
+        "In particular\n`cleared_relation_impossible` takes the two `q`-adic factorisations **separately** rather than a\nlowest-terms pair, so `α` and `β` need no common-factor reduction"
+      ],
+      "module": "MachLib.RelCoeffsLand",
+      "theorem": "MachLib.top_le_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "statement_mentions": [
+        "dtop",
+        "Pdvd",
+        "pnsum"
+      ],
+      "hypotheses_count": 15,
+      "proof_uses": [
+        "coeff_identity",
+        "cleared_relation_impossible",
+        "exists_ord_factor",
+        "pmul_nil_cancel"
+      ]
+    },
+    {
+      "_comment": "The unconditional singleton law. hypotheses_count 0 is the claim -- pmul_singleton has one (Y != []) and this has none, which is exactly why RelCoeffsLead could leave its readings carrying pmul [0-1]. If a future edit added the side condition back, the count fires and the (bs) refusal would no longer be paid for.",
+      "id": "relcoeffs-singleton-uncond-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`pmul_singleton` needs `Y ≠ []`. At `Y = []` the two sides are `[0]` and `[]` — different as lists,\nequal after `pnorm`."
+      ],
+      "module": "MachLib.RelCoeffsLand",
+      "theorem": "MachLib.peq_pmul_singleton_left",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pmul",
+        "pscale"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

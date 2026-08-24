@@ -562,7 +562,8 @@ def algebraSpineModules : List Name := [
   `MachLib.PolyExpDeriv,
   `MachLib.Bipoly,
   `MachLib.BipolyLead,
-  `MachLib.RelCoeffsLead]
+  `MachLib.RelCoeffsLead,
+  `MachLib.RelCoeffsLand]
 
 /-- **The only axioms an algebra-spine theorem may cite** — Lean's core, the `Real` carrier and the
 *field* axioms. Nothing ordered (`ltR`, `leR`, `lt_total`, `lt_trans_ax`, `lt_irrefl_ax`,

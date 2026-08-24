@@ -5,6 +5,56 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (bt)
+
+### `RelCoeffsLand` — two of the three top coefficients are impossible
+
+```
+a > b   α·(K·α) ≈ 0             four cancellations, and no transcendence lemma at all
+a ≤ b   α·(P·β*) ≈ (P·α*)·β     cancel P, then coeff_identity, then the pole count
+```
+
+**`a > b` needs nothing.** The top coefficient is `(m+1)·Q·D·α²` with **no `P` in it**, so the whole
+case is: a product of nonzero polynomials is not zero. Four `pmul_eq_nil_cancel`s. Worth noticing how
+little it costs — the case that *looks* like it should need the hard theorem needs none of it,
+because the degree gap already removed every term that could cancel against `K·α²`.
+
+**`a ≤ b` is the other branch's landing, reused verbatim.** Cancelling `P` turns the coefficient into
+`coeff_identity`'s hypothesis — the same expression, not a matching one — and that yields exactly
+`cleared_relation_impossible`'s `hident`. Nothing about either was built for this case. In particular
+`cleared_relation_impossible` takes the two `q`-adic factorisations **separately** rather than a
+lowest-terms pair, so `α` and `β` need no common-factor reduction: `exists_ord_factor` is applied to
+each independently and the two exponents never have to be compared.
+
+### `a ≤ b`, not `a < b`
+
+`coeff_identity` wants `j ≤ m`; strictness enters only through `¬ Pdvd q ((b−a)·1)`, which is a
+hypothesis. So the theorem is stated at `a ≤ b` and the hypothesis does the work honestly — at
+`a = b` the multiplier is `pnsum 0 [1] = []`, every irreducible divides it, and the hypothesis is
+simply unavailable. Nothing in this module has to know that, which is why `a = b` gets its own
+landing rather than a special case inside this one.
+
+### Both landings are field-axiom-only
+
+Algebra spine 296 → **301** theorems, 0 leaking. The two cases that close the transcendence argument
+are **algebra**: no `ltR`, no `leR`, no `exp`, no `HasDerivAt`. Every nonvanishing and
+characteristic-zero input is carried as a hypothesis rather than discharged — `not_Pdvd_pnsum_one'`
+would discharge the last one, but it proves `n·1 > 0` and costs the order axioms, so paying it here
+would take the module out of the spine for one line. The assembly pays it, where the order axioms are
+already present.
+
+### `[c]·Y ≈ c·Y`, unconditionally
+
+`pmul_singleton` needs `Y ≠ []`. At `Y = []` the two sides are `[0]` and `[]` — different as lists,
+equal after `pnorm`. That is exactly the gap `PEq` exists to close, so the `PEq` form needs no
+hypothesis, and it is what lets `RelCoeffsLead`'s readings keep carrying `pmul [0 - 1]` instead of
+manufacturing a `≠ []` side condition one layer too early. The refusal in (bs) is paid for here, in
+one lemma.
+
+Gates: build **714 jobs**, aggregator **711 of 1017** modules reachable, consistency PASS, claims
+**369**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **301**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bs)
 
 ### `RelCoeffsLead` — the top coefficient, in three cases
