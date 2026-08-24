@@ -8261,6 +8261,53 @@
       "proof_uses": [
         "minimal_grel_identity_in"
       ]
+    },
+    {
+      "_comment": "The restricted R(x)[E] identity. hypotheses_count 9 against the original's 7 -- the delta of exactly two matches the germ layer's, which is the prose's claim that this level added nothing of its own. proof_uses pins that it really delegates to minimal_grel_identity_in rather than re-deriving.",
+      "id": "expidclass-restricted-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`minimal_expRel_identity_in` is `minimal_expRel_identity` with\n`Pr` threaded: **nine hypotheses against the original's seven**, the same delta of two as one level\ndown, and the body is unchanged",
+        "**The fourth module is not.** No concrete class has been supplied, and until one is —\ngerms of the form (rational in `x`)·(polynomial in `E`), with minimality dischargeable inside it —\n`positive_branch_impossible` remains a degree-one statement."
+      ],
+      "module": "MachLib.ExpCoeffIdentityClass",
+      "theorem": "MachLib.minimal_expRel_identity_in",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "expCoeffs",
+        "gscaleSub",
+        "GProperRel"
+      ],
+      "hypotheses_count": 9,
+      "proof_uses": [
+        "minimal_grel_identity_in"
+      ]
+    },
+    {
+      "_comment": "The subsumption at this level. hypotheses_count 7 matches minimal_expRel_identity's own interface, so the recovered statement is the same one and not a weaker variant.",
+      "id": "expidclass-subsumes-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`minimal_expRel_identity_in` is `minimal_expRel_identity` with\n`Pr` threaded: **nine hypotheses against the original's seven**, the same delta of two as one level\ndown, and the body is unchanged"
+      ],
+      "module": "MachLib.ExpCoeffIdentityClass",
+      "theorem": "MachLib.minimal_expRel_identity_unrestricted",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "expCoeffs",
+        "dbipevExp",
+        "natMul"
+      ],
+      "hypotheses_count": 7,
+      "proof_uses": [
+        "minimal_expRel_identity_in"
+      ]
     }
   ]
 }

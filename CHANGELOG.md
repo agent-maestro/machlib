@@ -5,6 +5,37 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cd)
+
+### `ExpCoeffIdentityClass` — the `R(x)[E]` instantiation, restricted
+
+Third of the four modules (ca) named. `minimal_expRel_identity_in` is `minimal_expRel_identity` with
+`Pr` threaded: **nine hypotheses against the original's seven**, the same delta of two as one level
+down, and the body is unchanged — the three added hypotheses pass straight to
+`minimal_grel_identity_in`. `minimal_expRel_identity_unrestricted` recovers the existing theorem as
+the `Pr := fun _ => True` instance.
+
+At the germ layer the split obligation is about `gscaleSub cd dtop cs₀ ds₀`; here `cd` is
+`fun x => bipev Cd x (e^(S x))` and `cs₀` is `expCoeffs S Cs₀`, so it is spelled out in those terms
+and still quantified over the split.
+
+### Three modules of transcription, and the one with content
+
+All three of (cb), (cc) and (cd) are the same move: add `Pr`, add two obligations, pass them down,
+recover the old statement as the `True` instance. Each compiled on the first or second attempt
+because nothing about the proofs changed — the hypothesis was always too strong, and weakening a
+hypothesis that is used once is mechanical.
+
+**The fourth module is not.** No concrete class has been supplied, and until one is —
+germs of the form (rational in `x`)·(polynomial in `E`), with minimality dischargeable inside it —
+`positive_branch_impossible` remains a degree-one statement. Three modules of scaffolding buy
+nothing on their own; that is worth saying plainly rather than reporting three green bricks as
+progress toward a result they do not yet deliver.
+
+Gates: build **723 jobs**, aggregator **720 of 1026** modules reachable, consistency PASS, claims
+**393**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (cc)
 
 ### `GermIdentityClass` — the weakening carried up to the identity
