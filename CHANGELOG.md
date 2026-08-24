@@ -5,6 +5,38 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bp)
+
+### `RatLogDeriv` — the two clearing conditions, discharged
+
+**`(S'/S)·P·Q² = Q·D`** — `BipevRearrange`'s second clearing condition, discharged. It follows
+from `S'·Q² = D` by one field identity, `(1/(p·(1/q)))·p = q`, and that identity is where the
+two nonvanishing hypotheses live. **Both are paid here and neither propagates.**
+
+`hasDerivAt_ratLog` supplies the derivative itself (`HasDerivAt_comp` against `HasDerivAt_log_pos`),
+and the two tail forms are what `evRel_relCoeffs` (bo) consumes directly.
+
+### `S > 0` enters **only** at differentiability. `log` is totalised, so it is differentiable only
+where its argument is positive — and that is the sole use of the branch's defining hypothesis.
+The clearing algebra is sign-blind: `ratLogDeriv_cleared`'s footprint contains no `ltR`, no
+`leR`, no `log`, no `HasDerivAt` of any kind.
+
+That is worth pinning rather than merely observing. The branch is *named* for a sign condition, so
+the natural expectation is that the sign is load-bearing throughout; it is not. Everything after this
+module is sign-blind, and the registry now forbids the order and analysis axioms on
+`ratLogDeriv_cleared` so a future proof cannot quietly reintroduce them.
+
+### `conv_lhs` again
+
+`conv_lhs => rw [← key]` — not a tactic here. The fix is the corpus's standing idiom: state the
+rewritten form as its own `have` and `rw [← step, key]` through it. That is the second missing-tactic
+substitution in this arc and the same shape as the first (`set`, `add_lt_add_right`, `by_contra`):
+reach for the equation, not the navigation.
+
+Gates: build **710 jobs**, aggregator **707 of 1013** modules reachable, consistency PASS, claims
+358, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 258 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bo)
 
 ### `BipevRearrange` — the germ identity becomes a relation in `e^S`

@@ -7344,6 +7344,59 @@
         "bipev_bimul",
         "bipev_bisub"
       ]
+    },
+    {
+      "_comment": "The second clearing condition. hypotheses_count 2 pins that exactly the two nonvanishing conditions are needed and nothing else; forbid_axioms makes the sign-blindness claim decidable, since ltR/leR/log/HasDerivAt are what a sign or analytic argument would cite.",
+      "id": "ratlog-cleared-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`(S'/S)·P·Q² = Q·D`** — `BipevRearrange`'s second clearing condition, discharged. It follows\nfrom `S'·Q² = D` by one field identity, `(1/(p·(1/q)))·p = q`, and that identity is where the\ntwo nonvanishing hypotheses live. **Both are paid here and neither propagates.**",
+        "`S > 0` enters **only** at differentiability. `log` is totalised, so it is differentiable only\nwhere its argument is positive — and that is the sole use of the branch's defining hypothesis.\nThe clearing algebra is sign-blind: `ratLogDeriv_cleared`'s footprint contains no `ltR`, no\n`leR`, no `log`, no `HasDerivAt` of any kind."
+      ],
+      "module": "MachLib.RatLogDeriv",
+      "theorem": "MachLib.ratLogDeriv_cleared",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.log",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.HasDerivAt_log_pos"
+      ],
+      "conclusion_mentions": [
+        "ratLogDeriv",
+        "pev"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "ratFn_deriv_cleared"
+      ]
+    },
+    {
+      "_comment": "The differentiability half, kept as its own claim so the contrast is registered: this one DOES cite HasDerivAt_log_pos, and proof_uses says so. If the two ever merged, the sign-blindness claim above would become false and its forbid list would fire.",
+      "id": "ratlog-hasderiv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`S > 0` enters **only** at differentiability. `log` is totalised, so it is differentiable only\nwhere its argument is positive — and that is the sole use of the branch's defining hypothesis.\nThe clearing algebra is sign-blind: `ratLogDeriv_cleared`'s footprint contains no `ltR`, no\n`leR`, no `log`, no `HasDerivAt` of any kind."
+      ],
+      "module": "MachLib.RatLogDeriv",
+      "theorem": "MachLib.hasDerivAt_ratLog",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "HasDerivAt",
+        "ratLogDeriv"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "HasDerivAt_comp",
+        "HasDerivAt_log_pos",
+        "hasDerivAt_ratFn"
+      ]
     }
   ]
 }
