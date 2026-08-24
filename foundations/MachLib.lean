@@ -389,6 +389,7 @@ import MachLib.BipevGerm
 import MachLib.BipevAllZero
 import MachLib.GermExpCoeff
 import MachLib.Bipoly
+import MachLib.BipevRearrange
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

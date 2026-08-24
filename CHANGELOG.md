@@ -5,6 +5,43 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bo)
+
+### `BipevRearrange` — the germ identity becomes a relation in `e^S`
+
+**`relCoeffs` evaluates to `P·Q²` times the identity**, so the identity vanishing on a tail makes
+`relCoeffs` a relation there — whatever `P` and `Q` happen to do. That is the input
+`all_coeffs_nil_of_relation` consumes.
+
+Two pieces of the identity carry **rational** coefficients: `dbipevExp`, whose coefficients involve
+`S'`, and the factor `v = S'/S`. Both clear against `P·Q²`:
+
+```
+Q²·c'        = bipev (dcoeffs Q² D 0 C) x (e^S)      -- bipev_cleared_deriv at j = 0
+P·Q²·(S'/S)  = Q·D                                   -- since S = P/Q and D = P'Q − PQ'
+```
+
+so one factor clears the whole identity, and what remains is `Bipoly` (bn) — three `bimul`, two
+`biscale`, one `biadd`, one `bisub`.
+
+### The two hypotheses are the **clearing conditions**, `S'·Q² = D` and `v·(P·Q²) = Q·D`, not the
+statement that `S` is literally `P/Q`. **No division is performed here, so none has to be
+justified here** — the module carries no nonvanishing side conditions at all.
+
+This is the discipline that made `bipev_cleared_deriv` take `S'·pev QQ x = pev D x` as a hypothesis
+rather than constructing `S'`, reused one level up. The caller, which does know `S = P/Q` on a tail,
+discharges both — and it is the caller that owns the `pev Q x ≠ 0` obligation, where it belongs.
+
+### The index-0 corner
+
+`bipev_cleared_deriv` carries a correction term `natMul j (pev D x) · bipev Ls`, needed because the
+naive form does not induct. At `j = 0` it vanishes, and `bipev_dcoeffs_zero` is that instance —
+three lines, and the only place this arc needs the family at all.
+
+Gates: build **709 jobs**, aggregator **706 of 1012** modules reachable, consistency PASS, claims
+356, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 258 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bn)
 
 ### `Bipoly` — the second level of polynomial arithmetic

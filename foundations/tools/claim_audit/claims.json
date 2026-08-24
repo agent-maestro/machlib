@@ -7294,6 +7294,56 @@
         "bipev_biadd",
         "bipev_biscale"
       ]
+    },
+    {
+      "_comment": "The rearrangement landing on all_coeffs_nil_of_relation's input. proof_uses pins the evaluation law and the tail intersection; hypotheses_count 3 pins that only the two clearing conditions and the identity are needed -- no nonvanishing hypothesis.",
+      "id": "bipev-relcoeffs-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`relCoeffs` evaluates to `P·Q²` times the identity**, so the identity vanishing on a tail makes\n`relCoeffs` a relation there — whatever `P` and `Q` happen to do. That is the input\n`all_coeffs_nil_of_relation` consumes."
+      ],
+      "module": "MachLib.BipevRearrange",
+      "theorem": "MachLib.evRel_relCoeffs",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "EvRel",
+        "relCoeffs"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "bipev_relCoeffs",
+        "three_tails"
+      ]
+    },
+    {
+      "_comment": "The no-division claim. forbid_axioms names mul_inv/divR/div_def: if this module ever performed a division to clear denominators it would cite one of them, and the prose would be false. hypotheses_count 2 pins that the clearing conditions are the ONLY hypotheses -- adding a nonvanishing one would move it.",
+      "id": "bipev-relcoeffs-nodivision-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The two hypotheses are the **clearing conditions**, `S'·Q² = D` and `v·(P·Q²) = Q·D`, not the\nstatement that `S` is literally `P/Q`. **No division is performed here, so none has to be\njustified here** — the module carries no nonvanishing side conditions at all."
+      ],
+      "module": "MachLib.BipevRearrange",
+      "theorem": "MachLib.bipev_relCoeffs",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.mul_inv",
+        "MachLib.Real.divR",
+        "MachLib.Real.div_def"
+      ],
+      "conclusion_mentions": [
+        "bipev",
+        "relCoeffs"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "bipev_dcoeffs_zero",
+        "bipev_bimul",
+        "bipev_bisub"
+      ]
     }
   ]
 }
