@@ -7194,6 +7194,28 @@
         "ord_pmul_norm",
         "exists_ord_factor"
       ]
+    },
+    {
+      "_comment": "The transcendence bridge. proof_uses pins BOTH halves: the descent it reuses and the impossibility theorem that makes the minimality hypothesis vacuous. If either were reached only transitively the six-line proof would be doing something other than advertised.",
+      "id": "bipev-all-coeffs-nil-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Every coefficient of a relation in `e^S` is the zero polynomial** — no properness hypothesis,\nbecause the theorem is exactly that properness is impossible. This is \"`e^S` is transcendental\"\nin the shape the `S > 0` sweep consumes: it turns a germ identity in `e^S` into an identity\nbetween the syntactic coefficient polynomials."
+      ],
+      "module": "MachLib.BipevAllZero",
+      "theorem": "MachLib.all_coeffs_nil_of_relation",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "pnorm"
+      ],
+      "hypotheses_count": 11,
+      "proof_uses": [
+        "all_coeffs_evZero_of_relation",
+        "pnorm_eq_nil_of_evZero"
+      ]
     }
   ]
 }

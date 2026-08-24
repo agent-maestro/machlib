@@ -386,6 +386,7 @@ import MachLib.BipevElimLink
 import MachLib.BipevComposition
 import MachLib.BipevNonzeroCoeff
 import MachLib.BipevGerm
+import MachLib.BipevAllZero
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

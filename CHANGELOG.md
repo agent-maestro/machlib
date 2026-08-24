@@ -5,6 +5,36 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bl)
+
+### `BipevAllZero` — the transcendence bridge, six lines
+
+**Every coefficient of a relation in `e^S` is the zero polynomial** — no properness hypothesis,
+because the theorem is exactly that properness is impossible. This is "`e^S` is transcendental"
+in the shape the `S > 0` sweep consumes: it turns a germ identity in `e^S` into an identity
+between the syntactic coefficient polynomials.
+
+### The vacuous minimality
+
+`all_coeffs_evZero_of_shorter` takes `hmin : ∀ Ns, ProperRel S Ns → Ms.length ≤ Ns.length`. With
+`proper_relation_impossible` in hand that hypothesis holds **vacuously, for any `Ms` whatever** — so
+take `Ms` longer than the relation and the descent runs with nothing to descend against. No new
+induction and no new machinery: `List.replicate (Ls.length + 1) []` and `absurd`.
+
+The descent was written to need only a *bound* to descend against, not a genuine minimal element.
+That was not foresight — it was the shape the original proof happened to take — but it is why this
+corollary is six lines instead of a module.
+
+### Where the generalisation paid back
+
+`GermRelation` (bg) generalised the descent off `pev` for the germ layer. The design note there said
+the four descent lemmas never inspect `pev`; **this commit spends that observation in the polynomial
+layer it started in**, which is the direction generalisations usually do *not* pay back.
+
+Gates: build **706 jobs**, aggregator **703 of 1009** modules reachable, consistency PASS, claims
+351, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 254 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bk)
 
 ### `no_rational_logarithm_scaled` — generalised *beside*, and the old one is now a corollary
