@@ -7,9 +7,9 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **935 `.lean` files** (622 top-level + 313 in subdirectories) /
-**~186 k lines** / **7 072 theorems**, re-exported through the aggregator
-**`foundations/MachLib.lean`** (537 imports) — a module not reachable from there is **invisible to
+material). `foundations/MachLib/` holds **1 022 `.lean` files** (706 top-level + 316 in subdirectories) /
+**~227 k lines** / **7 887 theorems**, re-exported through the aggregator
+**`foundations/MachLib.lean`** (624 imports) — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 (Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
 commands, do not trust the figure. An earlier revision said 5 851 theorems by an unrecorded method —
@@ -56,12 +56,12 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 626 jobs, ~3 s warm
+lake build                                     # 719 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "242 axioms pinned; 57 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 154 claims resolve against #print axioms"
+python3 tools/claim_audit/claim_audit.py       # "all 385 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
