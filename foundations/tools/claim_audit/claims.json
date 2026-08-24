@@ -7920,6 +7920,59 @@
       "proof_uses": [
         "peq_dtop_cross"
       ]
+    },
+    {
+      "_comment": "The evaluation invariance -- the whole reason the trim can happen before the identity. hypotheses_count 0: it holds for EVERY list, with no normality or nonvanishing side condition, which is what makes the transfer a rewrite rather than a transport.",
+      "id": "bitrim-value-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`bipev (bitrim L) = bipev L` pointwise, so `expCoeffs S (Cs.map bitrim) = expCoeffs S Cs` as a list\nof **functions** — and `expCoeffs` is exactly a `map` into functions, so the relation, its minimality\nand its length transfer untouched.",
+        "`bitrim_split` is the shape the readings consume; `bipev_bitrim` is why it is free."
+      ],
+      "module": "MachLib.BipolyTrim",
+      "theorem": "MachLib.bipev_bitrim",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "bipev",
+        "bitrim"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "bipev_biconsN"
+      ]
+    },
+    {
+      "_comment": "The shape the three readings consume. conclusion_mentions pnorm because the DISJUNCTION's second arm is the whole content -- a version concluding only `bitrim L = As ++ [alpha]` without the nonvanishing would be List.dropLast_concat_getLast and would license nothing.",
+      "id": "bitrim-split-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`bitrim_split` is the shape the readings consume; `bipev_bitrim` is why it is free."
+      ],
+      "module": "MachLib.BipolyTrim",
+      "theorem": "MachLib.bitrim_split",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "bitrim",
+        "pnorm"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "bitrim_normal"
+      ]
     }
   ]
 }

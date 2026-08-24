@@ -565,7 +565,8 @@ def algebraSpineModules : List Name := [
   `MachLib.RelCoeffsLead,
   `MachLib.RelCoeffsLand,
   `MachLib.CrossIdentities,
-  `MachLib.RelCoeffsEqCase]
+  `MachLib.RelCoeffsEqCase,
+  `MachLib.BipolyTrim]
 
 /-- **The only axioms an algebra-spine theorem may cite** — Lean's core, the `Real` carrier and the
 *field* axioms. Nothing ordered (`ltR`, `leR`, `lt_total`, `lt_trans_ax`, `lt_irrefl_ax`,
@@ -663,6 +664,9 @@ run_cmd do
           newLegacySites := nm :: newLegacySites
   unless newLegacySites.isEmpty do
     logError m!"AxiomLedger: {newLegacySites.length} NEW call site(s) of a discharged legacy axiom (use the _proved corollary instead): {newLegacySites}"
-  logInfo m!"AxiomLedger OK: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking); legacy axiom call sites pinned to {legacyAxiomCallSiteAllowlist.length} (0 new); {algebra.length} algebra-spine theorems field-axiom-checked ({algebraLeakCount} leaking)."
+  -- The verdict is READ OFF the message log, not re-derived from the counters above: a check added
+  -- later cannot forget to update it, and a summary line cannot say OK while an error was logged.
+  let failed := (← get).messages.hasErrors
+  logInfo m!"AxiomLedger {if failed then "FAIL" else "OK"}: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking); legacy axiom call sites pinned to {legacyAxiomCallSiteAllowlist.length} (0 new); {algebra.length} algebra-spine theorems field-axiom-checked ({algebraLeakCount} leaking)."
 
 end AxiomLedger

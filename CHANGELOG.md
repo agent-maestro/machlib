@@ -5,6 +5,69 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (bw)
+
+### `BipolyTrim` — trailing zero coefficients, stripped
+
+The three readings all want `Cd = As ++ [α]` with `pnorm α ≠ []`, and nothing supplies it: `Cd`
+arrives through `hCs : Cs = Cs₀ ++ [Cd]`, and properness says only that the **germ** is not
+eventually zero, not that the top `E`-coefficient survives.
+
+`biconsN`/`bitrim`/`BiNormal` are `pconsN`/`pnorm`/`PNormal` one level up, with the coefficient
+ring's zero test `pnorm _ = []` in place of `_ = 0` — the same transcription `BipolyLead` made from
+`PolyMulDegree`. `bitrim_split` is the shape the readings consume; `bipev_bitrim` is why it is free.
+Algebra spine 318 → **325** theorems, 0 leaking.
+
+### Trim before the identity, not after
+
+`bipev (bitrim L) = bipev L` pointwise, so `expCoeffs S (Cs.map bitrim) = expCoeffs S Cs` as a list
+of **functions** — and `expCoeffs` is exactly a `map` into functions, so the relation, its minimality
+and its length transfer untouched. The trim can therefore happen where `Cs` is chosen, before
+`minimal_expRel_identity` is ever invoked.
+
+Doing it afterwards would mean transporting the germ identity through the trim: the same fact **plus
+a derivative**, since `dbipevExp` would also have to be shown insensitive to a trailing zero
+coefficient. Trimming first costs one evaluation lemma; trimming last would cost two, and the second
+is about a derivative rather than a value.
+
+### The transfer lemma is deliberately *not* in this module — measured, not assumed
+
+`expCoeffs S (Cs.map bitrim) = expCoeffs S Cs` is two lines, and it mentions `exp`. Putting it here
+was tried and the ledger convicted it:
+
+```
+error: AxiomLedger: algebra-spine theorem MachLib.expCoeffs_map_bitrim footprint
+LEAKS 1 axiom(s) beyond algebraFootprint (field+classical only): [MachLib.Real.exp]
+```
+
+So it moves to the assembly, which is outside the spine anyway. Same trade as `BipolyLead` refusing
+the `dcoeffs` shape lemmas: the layer stays algebraic and the caller pays one line of transport.
+
+### The ledger's summary line said `OK` while the run failed
+
+Running that specimen surfaced a reporting defect. `AxiomLedger` ends in an **unconditional**
+`logInfo "AxiomLedger OK: …"`, so with the leak present it printed
+
+```
+AxiomLedger OK: … 326 algebra-spine theorems field-axiom-checked (1 leaking).
+```
+
+The exit code was **1** — the gate fails closed, and nothing was ever mis-gated. But the last line,
+which is what a human or an agent reads, said `OK` while reporting `1 leaking`. This repo already has
+the rule that a clean-looking column can be a broken column; this was the summary version of it.
+
+The verdict is now **read off the message log** — `(← get).messages.hasErrors` — rather than
+re-derived from the counters. That matters for more than tidiness: a check added later cannot forget
+to update the verdict, because the verdict is not a separate computation. Bound to evidence, not to
+a literal.
+
+Demonstrated both ways rather than argued: with the leak, `AxiomLedger FAIL … (1 leaking)`, exit 1;
+without it, `AxiomLedger OK … 325 … (0 leaking)`, exit 0.
+
+Gates: build **717 jobs**, aggregator **714 of 1020** modules reachable, consistency PASS, claims
+**379**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (bv)
 
 ### `RelCoeffsEqCase` — the third case, and the sweep's three readings are all closed
