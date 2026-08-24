@@ -7216,6 +7216,57 @@
         "all_coeffs_evZero_of_relation",
         "pnorm_eq_nil_of_evZero"
       ]
+    },
+    {
+      "_comment": "The instantiation. proof_uses pins all four links -- the general identity plus the three shape facts computed here -- so that a future rewrite cannot quietly re-derive the identity instead of instantiating it. hypotheses_count 7 pins the drop from ten: es's split, length and entry are computed, not assumed.",
+      "id": "germ-expcoeff-identity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**The identity at `R(x)[E]` coefficients.** A minimal relation for `u` whose coefficients are\npolynomials in `e^S` forces the same two-coefficient identity, now written entirely in `bipev`\nand `dbipevExp` — **no germ variables left in the coefficients.**"
+      ],
+      "module": "MachLib.GermExpCoeff",
+      "theorem": "MachLib.minimal_expRel_identity",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.mul_inv",
+        "MachLib.Real.divR",
+        "MachLib.Real.div_def"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF",
+        "bipev",
+        "dbipevExp"
+      ],
+      "hypotheses_count": 7,
+      "proof_uses": [
+        "minimal_grel_identity",
+        "gDerivAt_expCoeffs",
+        "expCoeffs_concat",
+        "expCoeffsD_concat"
+      ]
+    },
+    {
+      "_comment": "The claim is that this costs a map and nothing more: one hypothesis (S's derivative at the point) and a direct invocation of hasDerivAt_bipev_exp. If it ever needed its own induction over the coefficient structure, hypotheses_count or proof_uses would move.",
+      "id": "germ-expcoeff-deriv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Supplying `GDerivAt` for these coefficients is a **map over a list and nothing more**, because\n`hasDerivAt_bipev_exp` already differentiates exactly this shape and `dbipevExp` is its\nderivative in value form."
+      ],
+      "module": "MachLib.GermExpCoeff",
+      "theorem": "MachLib.gDerivAt_expCoeffs",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "GDerivAt",
+        "expCoeffs"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "hasDerivAt_bipev_exp"
+      ]
     }
   ]
 }

@@ -5,6 +5,38 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bm)
+
+### `GermExpCoeff` — instantiating the identity at coefficients in `R(x)[E]`
+
+**The identity at `R(x)[E]` coefficients.** A minimal relation for `u` whose coefficients are
+polynomials in `e^S` forces the same two-coefficient identity, now written entirely in `bipev`
+and `dbipevExp` — **no germ variables left in the coefficients.** Seven hypotheses, down from
+`minimal_grel_identity`'s ten: three of them (`es`'s split, its length, its entry) are *computed*
+here rather than assumed, because the derivative list is `Cs.map dbipevExp` and its shape follows
+from `Cs`'s.
+
+### Supplying `GDerivAt` for these coefficients is a **map over a list and nothing more**, because
+`hasDerivAt_bipev_exp` already differentiates exactly this shape and `dbipevExp` is its
+derivative in value form.
+
+A decision made for brick four pays off here. `dbipevExp` was kept in **value** form rather than as
+a coefficient family, on the stated grounds that the differentiated relation's coefficients involve
+`S'`, which is rational rather than polynomial, and a `List (List Real)` would hide that. That is
+exactly why the instantiation is `Cs.map` and not a re-derivation: the value form composes with an
+arbitrary germ-coefficient theorem, the family form would not have.
+
+### What this deliberately does not do
+
+It does not turn the germ identity into a **syntactic** one. That is `all_coeffs_nil_of_relation`'s
+job (bl), and it needs the identity rearranged into a relation in `e^S` first — whose coefficients
+are products of the `Cⱼ`. That step is polynomial bookkeeping over `R(x)[E]`, not analysis, and it is
+the next piece.
+
+Gates: build **707 jobs**, aggregator **704 of 1010** modules reachable, consistency PASS, claims
+353, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 254 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bl)
 
 ### `BipevAllZero` — the transcendence bridge, six lines
