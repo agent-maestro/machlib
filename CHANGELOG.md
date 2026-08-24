@@ -5,6 +5,46 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cc)
+
+### `GermIdentityClass` — the weakening carried up to the identity
+
+`minimal_grel_identity_in`: the two-coefficient identity with `hmin` restricted to a class `Pr`, and
+`minimal_grel_identity_unrestricted` recovering the existing theorem as the `Pr := fun _ => True`
+instance. Twelve hypotheses against the original's ten — the two added are the closure obligation and
+the split obligation, and nothing else changed in the proof.
+
+### The closure obligation is stated *at the split*, not abstractly
+
+`minimal_grel_identity` obtains `ds₀` and `dtop` **inside** its proof, by splitting `gdrel v cs es`.
+A caller cannot name them, so demanding `Pr (gscaleSub cd dtop cs₀ ds₀)` outright would be
+unusable. The hypothesis is universally quantified over the split instead:
+
+```
+hPrd : ∀ ds₀ dtop, gdrel v cs es = ds₀ ++ [dtop] → Pr (gscaleSub cd dtop cs₀ ds₀)
+```
+
+which a caller discharges without knowing which split occurs, because there is only one. Same
+discipline as `BipevRearrange` taking the clearing conditions rather than the model: **say what must
+hold of the thing, not which thing it is.**
+
+### Two `private` lemmas restated rather than un-privatised
+
+`split_last` and `evZeroF_congr` are `private` in `GermDerivEntry`. Both are eight lines and both are
+restated here. Un-privatising them would widen that module's interface to serve a generalisation
+living outside it — the cost of a duplicate is two small proofs; the cost of the alternative is a
+permanent interface change made for a caller's convenience.
+
+### Still not done
+
+`minimal_expRel_identity` — the `R(x)[E]`-coefficient instantiation — takes the unrestricted `hmin`,
+and **no concrete class has been supplied**. `positive_branch_impossible` remains degree-one until
+both land. Two of the four modules named in (ca) are now through.
+
+Gates: build **722 jobs**, aggregator **719 of 1025** modules reachable, consistency PASS, claims
+**391**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (cb)
 
 ### `GermRelationClass` — minimality restricted to a class, where the obstruction actually sits

@@ -8213,6 +8213,54 @@
       "proof_uses": [
         "all_gcoeffs_evZero_of_shorter_in"
       ]
+    },
+    {
+      "_comment": "The restricted identity. hypotheses_count 12 against the original's 10 -- the delta of exactly two IS the prose's claim that only the closure and split obligations were added and the proof is otherwise unchanged. A third addition would mean the generalisation cost more than stated.",
+      "id": "germidclass-restricted-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`minimal_grel_identity_in`: the two-coefficient identity with `hmin` restricted to a class `Pr`, and\n`minimal_grel_identity_unrestricted` recovering the existing theorem as the `Pr := fun _ => True`\ninstance.",
+        "The hypothesis is universally quantified over the split instead:",
+        "`minimal_expRel_identity` — the `R(x)[E]`-coefficient instantiation — takes the unrestricted `hmin`,\nand **no concrete class has been supplied**."
+      ],
+      "module": "MachLib.GermIdentityClass",
+      "theorem": "MachLib.minimal_grel_identity_in",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "gscaleSub",
+        "gdrel",
+        "GProperRel"
+      ],
+      "hypotheses_count": 12,
+      "proof_uses": [
+        "all_gcoeffs_evZero_of_shorter_in"
+      ]
+    },
+    {
+      "_comment": "The subsumption, one level up. hypotheses_count 10 matches minimal_grel_identity's own interface, so the recovered theorem is the SAME statement and not a weaker one; proof_uses pins that it goes through the general form rather than re-proving.",
+      "id": "germidclass-subsumes-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`minimal_grel_identity_in`: the two-coefficient identity with `hmin` restricted to a class `Pr`, and\n`minimal_grel_identity_unrestricted` recovering the existing theorem as the `Pr := fun _ => True`\ninstance."
+      ],
+      "module": "MachLib.GermIdentityClass",
+      "theorem": "MachLib.minimal_grel_identity_unrestricted",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "GProperRel",
+        "EvZeroF",
+        "natMul"
+      ],
+      "hypotheses_count": 10,
+      "proof_uses": [
+        "minimal_grel_identity_in"
+      ]
     }
   ]
 }
