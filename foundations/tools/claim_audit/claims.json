@@ -8170,6 +8170,49 @@
       "proof_uses": [
         "minimality_forces_length_two"
       ]
+    },
+    {
+      "_comment": "The restricted descent. hypotheses_count 7 counts the whole telescope -- hdrop, hmin, and the five binders of the budgeted form (n, es, Pr es, length bound, GEvRel, strict-shorter). What matters is which CLOSURE appears among them: dropLast only, nothing about gscaleSub, which is the prose's claim about where the recursion moves. A second closure obligation would move the count.",
+      "id": "germclass-restricted-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "So it may be restricted to any class closed under `dropLast`, and the proof is unchanged.\n`all_gcoeffs_evZero_of_shorter_in` is that version, with the class a **parameter** `Pr` so the\nclosure obligation stays with whoever instantiates it.",
+        "**Until that lands, `positive_branch_impossible` is still a degree-one statement**"
+      ],
+      "module": "MachLib.GermRelationClass",
+      "theorem": "MachLib.all_gcoeffs_evZero_of_shorter_in",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "GProperRel",
+        "GEvRel",
+        "EvZeroF"
+      ],
+      "hypotheses_count": 7
+    },
+    {
+      "_comment": "The subsumption. proof_uses the general form -- that IS the claim that the old statement is a corollary and not a sibling; if someone re-proved it independently this fires. hypotheses_count 4 is the unrestricted interface (hmin, hrel, hlt, plus the membership binder), i.e. NO closure obligation survives instantiation at Pr := True.",
+      "id": "germclass-subsumes-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`all_gcoeffs_evZero_of_shorter_unrestricted` derives the existing statement as the\n`Pr := fun _ => True` instance. The general form **subsumes** the specific one rather than sitting\nbeside it"
+      ],
+      "module": "MachLib.GermRelationClass",
+      "theorem": "MachLib.all_gcoeffs_evZero_of_shorter_unrestricted",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "statement_mentions": [
+        "GProperRel",
+        "EvZeroF"
+      ],
+      "hypotheses_count": 4,
+      "proof_uses": [
+        "all_gcoeffs_evZero_of_shorter_in"
+      ]
     }
   ]
 }

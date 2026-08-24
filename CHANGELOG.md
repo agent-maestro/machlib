@@ -5,6 +5,42 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cb)
+
+### `GermRelationClass` — minimality restricted to a class, where the obstruction actually sits
+
+(ca) showed `hmin` forces `m = 0`. The cause is that **`hmin` is far stronger than its use**: it is
+applied in exactly *one* place — `all_gcoeffs_evZero_of_shorter` — and there only to the derived
+relation and its `dropLast` truncations, never to an arbitrary germ list.
+
+So it may be restricted to any class closed under `dropLast`, and the proof is unchanged.
+`all_gcoeffs_evZero_of_shorter_in` is that version, with the class a **parameter** `Pr` so the
+closure obligation stays with whoever instantiates it.
+
+### Not two versions of one theorem
+
+`all_gcoeffs_evZero_of_shorter_unrestricted` derives the existing statement as the
+`Pr := fun _ => True` instance. The general form **subsumes** the specific one rather than sitting
+beside it — which is the reason to add a module instead of editing `GermRelation` in place, and the
+answer to the standing objection that generalising beside leaves two things and no benefit.
+
+### What this does *not* do, stated plainly
+
+`minimal_grel_identity` and `minimal_expRel_identity` still take the unrestricted `hmin`. Threading
+`Pr` through them, and instantiating it at a class for which minimality is *dischargeable*, is the
+remaining work. **Until that lands, `positive_branch_impossible` is still a degree-one statement** —
+this module removes the obstruction at the only place it sits; it does not by itself widen anything.
+
+For the `S > 0` arc the class that closes is germs of the form *(rational in `x`)·(polynomial in
+`E`)* — `R(x)(E)`, not `R(x)[E]`, because the derivative coefficients carry `S'`, which is rational.
+`gscaleSub` forms `cd·dⱼ − dtop·cⱼ`, products and differences, so that class is closed under both the
+`gscaleSub` step and `dropLast`; and a minimal-length relation within it exists by
+`exists_minimal_length` (`BipevMinimal`) and **is** an `expCoeffs` image.
+
+Gates: build **721 jobs**, aggregator **718 of 1024** modules reachable, consistency PASS, claims
+**389**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (ca)
 
 ### `MinimalityScope` — the arc runs at `m = 0` and nowhere else

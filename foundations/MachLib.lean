@@ -401,6 +401,7 @@ import MachLib.BipolyTrim
 import MachLib.RelCoeffsSweep
 import MachLib.PositiveBranch
 import MachLib.MinimalityScope
+import MachLib.GermRelationClass
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry
