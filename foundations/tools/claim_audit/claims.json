@@ -7810,6 +7810,116 @@
         "pscale"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The third landing. proof_uses carries the prose's chain: the two reduction steps, the common split, and the logarithmic count -- if any dropped out the 'lands on no_rational_logarithm_scaled' claim would be false. hypotheses_count 15 matches top_le_impossible's 15, which is itself informative: the a = b case needs no MORE inputs than a <= b despite costing two extra modules.",
+      "id": "eqcase-landing-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**All three top coefficients of `relCoeffs` are now impossible as theorems** — `top_gt_impossible`,\n`top_le_impossible` (bt) and `top_eq_impossible` (here).",
+        "With `Dd = −α₁` the square kills the sign on the right and\n`N'·Dd − N·Dd'` flips exactly once on the left."
+      ],
+      "module": "MachLib.RelCoeffsEqCase",
+      "theorem": "MachLib.top_eq_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "statement_mentions": [
+        "dtop",
+        "relK",
+        "Pdvd"
+      ],
+      "hypotheses_count": 15,
+      "proof_uses": [
+        "eq_case_identity",
+        "eq_case_reduced",
+        "exists_common_ord_split",
+        "no_rational_logarithm_scaled",
+        "Pdvd_of_pscale_neg"
+      ]
+    },
+    {
+      "_comment": "The two-cancellation step. proof_uses peq_cross_common_factor is what makes the homogeneity claim checkable -- the c^2 comes off because the cross-difference is degree-two homogeneous, not by an order estimate. conclusion_mentions pmul P and Q separately would not distinguish P*Q from P*Q^2, so the claim about WHICH count this lands on is carried by the prose plus the landing's proof_uses, not by this entry.",
+      "id": "eqcase-reduced-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**That surviving `Q` is what makes the\nresult `P·Q` rather than `P·Q²`**, i.e. the logarithmic count's shape rather than the exponential\none's. The two counts differ by exactly the `Q` that this case fails to cancel."
+      ],
+      "module": "MachLib.RelCoeffsEqCase",
+      "theorem": "MachLib.eq_case_reduced",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pnsum",
+        "pderiv"
+      ],
+      "hypotheses_count": 5,
+      "proof_uses": [
+        "peq_cross_common_factor",
+        "peq_cancel_left"
+      ]
+    },
+    {
+      "_comment": "The sign lemma. hypotheses_count 0 AND an Eq conclusion rather than a PEq one: the prose claims it is an EQUALITY, which is the interesting part -- a PEq would have needed pnorm reasoning and would not have collapsed the double scale syntactically.",
+      "id": "eqcase-sign-swap-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`psub_pscale_neg` is the whole sign argument in one line: negating both sides of a difference **swaps\nthem**, and it is an *equality*, because `(−1)·(−1) = 1` collapses the double scale and `padd_comm`\ndoes the rest."
+      ],
+      "module": "MachLib.RelCoeffsEqCase",
+      "theorem": "MachLib.psub_pscale_neg",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "psub",
+        "pscale"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The reading cleared. hypotheses_count 2 -- the vanishing coefficient and pnorm P != [], nothing else: no pole data, no q. proof_uses peq_dtop_cross is the load-bearing one, since the equal-index cancellation of the D terms is what leaves Q^2 alone against the cross-difference.",
+      "id": "eqcase-identity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**All three top coefficients of `relCoeffs` are now impossible as theorems** — `top_gt_impossible`,\n`top_le_impossible` (bt) and `top_eq_impossible` (here)."
+      ],
+      "module": "MachLib.RelCoeffsEqCase",
+      "theorem": "MachLib.eq_case_identity",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "relK",
+        "pderiv"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "peq_dtop_cross"
+      ]
     }
   ]
 }

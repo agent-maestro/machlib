@@ -5,6 +5,51 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (bv)
+
+### `RelCoeffsEqCase` — the third case, and the sweep's three readings are all closed
+
+```
+eq_case_identity    the reading, cleared:  P·Q²·(βα' − β'α) ≈ α·K·α
+eq_case_reduced     the same after q^(2s) and one Q come off
+top_eq_impossible   no_rational_logarithm_scaled closes it
+```
+
+**All three top coefficients of `relCoeffs` are now impossible as theorems** — `top_gt_impossible`,
+`top_le_impossible` (bt) and `top_eq_impossible` (here). Algebra spine 310 → **318**, 0 leaking: the
+whole sweep, both counts included, cites nothing but the field axioms.
+
+### Two cancellations, and the order matters
+
+First `c² = q^(2s)`: it sits on both sides because the cross-difference is homogeneous of degree two
+(`peq_cross_common_factor`) and `α²` obviously is. Then a **single** `Q` — the left carries `Q²` and
+the right carries `K = (m+1)·Q·D`, so exactly one survives. **That surviving `Q` is what makes the
+result `P·Q` rather than `P·Q²`**, i.e. the logarithmic count's shape rather than the exponential
+one's. The two counts differ by exactly the `Q` that this case fails to cancel.
+
+### The sign goes on the denominator
+
+`no_rational_logarithm_scaled` wants `(N'·Dd − N·Dd')·(P·Q) ≈ k·D·(Dd·Dd)`; the reduced equation is
+`(α₁'β₁ − α₁β₁')·(P·Q) ≈ (m+1)·D·α₁²`. With `Dd = −α₁` the square kills the sign on the right and
+`N'·Dd − N·Dd'` flips exactly once on the left. Taking `N = −β₁` instead would have needed `PNormal`
+of a scaled polynomial; this way only `hDne` and `hlow` see the scale, and both reduce to
+`Pdvd_pscale` — which already existed.
+
+`psub_pscale_neg` is the whole sign argument in one line: negating both sides of a difference **swaps
+them**, and it is an *equality*, because `(−1)·(−1) = 1` collapses the double scale and `padd_comm`
+does the rest.
+
+### What is left
+
+The three cases are closed; nothing yet *chooses* between them. That needs `Cd` and `Cd₁` written as
+`As ++ [α]` and `Bs ++ [β]` with `pnorm α ≠ []` and `pnorm β ≠ []` — a trimming step, since
+properness only says the *germ* is not eventually zero, not that the top `E`-coefficient survives —
+plus the fourth case where `Cd₁` trims away entirely, which behaves like `a > b`.
+
+Gates: build **716 jobs**, aggregator **713 of 1019** modules reachable, consistency PASS, claims
+**377**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **318**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (bu)
 
 ### `CrossIdentities` — what the `a = b` case needs that the others did not
