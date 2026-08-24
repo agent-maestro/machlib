@@ -5,6 +5,51 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bj)
+
+### `GermDerivEntry` — step 1's identity, assembled
+
+**The identity a minimal germ-coefficient relation forces on its top two coefficients:**
+`c_d·(c_(d−1)' + v·d·c_d) − c_d'·c_(d−1) ≈ 0`, which rearranges to
+`d·v·c_d² = c_d'·c_(d−1) − c_d·c_(d−1)'`. **No division appears anywhere in reaching it.**
+
+`minimal_grel_identity` (`MachLib.GermDerivEntry`), ten hypotheses. With `v = L'` and coefficients in
+`R(x)[E]` this is the `S > 0` branch's target identity, and it is reached with no field, no quotient,
+no resultant and no monic normalisation.
+
+### The chain, and where each link came from
+
+`gEvRel_gdrel` (bi) differentiates the relation → `gdrel_getElem`/`gdrel_getElem_top` read off the
+two entries that matter → `gcancel_top` (bg) drops the degree without dividing →
+`all_gcoeffs_evZero_of_shorter'` (bg) kills every coefficient of what is left →
+`gscaleSub_getElem` picks out the top one.
+
+### `gyd`'s trailing zero is what keeps `gdrel_length` equal to `cs.length` — the formal `y`-derivative
+of a degree-`n` polynomial has degree `n−1`, recorded as a zero in the top slot rather than by
+shortening the list. That equal length is exactly `gcancel_top`'s hypothesis.
+
+That is the design paying off twice: the trailing zero was put there so `gdrel` would be
+length-preserving, and it is *also* what makes the top entry come out as plain `c_d'` with no
+correction term.
+
+### Values, not functions
+
+Every entry lemma concludes `∃ b, … = some b ∧ ∀ x, b x = …` rather than naming the function
+literally. Two coefficient germs that agree everywhere are equal only by `funext`, and the caller
+needs the *values* — the identity being extracted is a pointwise equation on a tail. Cheaper, and
+closer to what is consumed.
+
+### Two small errors, both from the same habit
+
+`List.length_dropLast` left `n + 1 - 1 = n`, which needs `omega` — `Nat` subtraction does not
+simplify itself. And `rw [this] at hbt` produced `some dtop = some bt`, so the injection was in the
+opposite direction to the one written. Both are the cost of writing the whole assembly before
+compiling any of it; both took one line to fix.
+
+Gates: build **705 jobs**, aggregator **702 of 1008** modules reachable, consistency PASS, claims
+349, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 253 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bi)
 
 ### `GermDeriv` — differentiating a germ-coefficient relation

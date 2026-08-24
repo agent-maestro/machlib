@@ -7118,6 +7118,57 @@
         "gydiff"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "Step 1's identity. The 'no division' part of the prose is what forbid_axioms makes decidable: mul_inv, divR and div_def are what a quotient would cite. hypotheses_count 10 pins the shape -- two tail-differentiability, minimality, the relation, two splits, two lengths, two entries.",
+      "id": "germ-minimal-identity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**The identity a minimal germ-coefficient relation forces on its top two coefficients:**\n`c_d·(c_(d−1)' + v·d·c_d) − c_d'·c_(d−1) ≈ 0`, which rearranges to\n`d·v·c_d² = c_d'·c_(d−1) − c_d·c_(d−1)'`. **No division appears anywhere in reaching it.**"
+      ],
+      "module": "MachLib.GermDerivEntry",
+      "theorem": "MachLib.minimal_grel_identity",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.exp",
+        "MachLib.Real.mul_inv",
+        "MachLib.Real.divR",
+        "MachLib.Real.div_def"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF",
+        "natMul"
+      ],
+      "hypotheses_count": 10,
+      "proof_uses": [
+        "gEvRel_gdrel",
+        "gcancel_top",
+        "all_gcoeffs_evZero_of_shorter'",
+        "gdrel_getElem",
+        "gdrel_getElem_top",
+        "gscaleSub_getElem"
+      ]
+    },
+    {
+      "_comment": "The trailing zero. The claim is that the top entry is plain e_n with no correction term, so conclusion_mentions pins gdrel and the hypotheses_count 2 pins that only the index fact and the length are needed -- nothing about the coefficients.",
+      "id": "germ-gdrel-top-entry-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`gyd`'s trailing zero is what keeps `gdrel_length` equal to `cs.length` — the formal `y`-derivative\nof a degree-`n` polynomial has degree `n−1`, recorded as a zero in the top slot rather than by\nshortening the list. That equal length is exactly `gcancel_top`'s hypothesis."
+      ],
+      "module": "MachLib.GermDerivEntry",
+      "theorem": "MachLib.gdrel_getElem_top",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "gdrel"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
