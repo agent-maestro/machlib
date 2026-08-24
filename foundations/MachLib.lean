@@ -408,6 +408,7 @@ import MachLib.ClassMinimality
 import MachLib.GermCleared
 import MachLib.GermClearedStep
 import MachLib.GermClearedDrel
+import MachLib.GermClearedRatLog
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

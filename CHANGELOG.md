@@ -5,6 +5,51 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (ch)
+
+### `GermClearedRatLog` — `hPrd` at the branch's own germs
+
+(cg) discharged `hPrd` against three *abstract* clearing hypotheses. This supplies them for the
+germs the `S > 0` branch actually has — `S = P/Q`, `u = log ∘ S` — so nothing about the class is
+left parameterised by the time a caller sees it. `clearsToExp_hPrd_ratLog` takes **only**
+`¬ EvZeroF (pev Q)` and `¬ EvZeroF (pev P)`, both of which the branch already carries.
+
+The three hypotheses map onto lemmas that already existed:
+
+| abstract hypothesis | discharged by |
+| --- | --- |
+| `S'·pev QQ = pev Dn` | `ratFn_deriv_cleared`, at `QQ = Q²` |
+| `v·pev (W·QQ) = pev Nv` | `ratLogDeriv_cleared`, at `W = P`, `Nv = Q·Dn` |
+| `¬ EvZeroF (pev (W·QQ))` | `not_evZeroF_pmul` |
+
+That they line up is not luck — the invariant in (cf) was shaped to match what `RatLogDeriv` and
+`BipevRatFn` already prove. `W = P` is **forced**, not chosen: `v` clears by `P·Q²`, `S'` clears by
+`Q²`, and `Q²` divides `P·Q²`, so the common denominator is the larger and the surplus `P` rides
+along on the `S'` side inside `biscale`.
+
+### The one lemma the corpus was missing
+
+`not_evZeroF_pmul` — a product of polynomials neither of which is eventually zero is not eventually
+zero. `pev_dichotomy` and `pev_ne_zero_on_tail` were both present but there was no product form.
+Stated through `EvNonvanish`, where it is two lines, rather than by re-running the dichotomy: this
+is the second time (cf) `EvNonvanish` has paid for itself, and both times because it is the
+formulation that composes under multiplication.
+
+`clearsToExp_hPrd_ratLog` cites no `HasDerivAt`, no `Real.log` and no `sorryAx`.
+
+### What remains for degree `d`
+
+Only threading and assembly, no new invariant. `relCoeffs_nil_ratLog` and
+`positive_branch_impossible` still take the **unrestricted** `hmin`, so `Pr` has to be threaded
+through those two the way (cb)–(cd) threaded it through the three above them — transcription, since
+neither inspects `hmin` beyond passing it down. Then `exists_minimal_hmin` supplies the restricted
+`hmin` from the witness, `exists_expCoeffs_of_clears` turns the minimal member into an `expCoeffs`
+image, and the existing `m`-general sweep finishes.
+
+Gates: build **728 jobs**, aggregator **725 of 1031** modules reachable, consistency PASS, claims
+**400**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + 325
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (cg)
 
 ### `GermClearedStep` + `GermClearedDrel` — `hPrd` discharged, and the identity instantiated

@@ -8416,6 +8416,21 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "id": "hprd-ratlog-concrete-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "clearsToExp_hPrd_ratLog",
+        "cites no `HasDerivAt`, no `Real.log` and no `sorryAx`"
+      ],
+      "module": "MachLib.GermClearedRatLog",
+      "theorem": "MachLib.clearsToExp_hPrd_ratLog",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log"
+      ]
     }
   ]
 }
