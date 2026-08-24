@@ -8352,6 +8352,40 @@
       "proof_uses": [
         "exists_minimal_hmin"
       ]
+    },
+    {
+      "id": "clears-wlog-no-analysis-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "exists_expCoeffs_of_clears",
+        "no `HasDerivAt`, no `Real.log`, no `exp_pos`, no `exp_add`, and no `sorryAx`"
+      ],
+      "module": "MachLib.GermCleared",
+      "theorem": "MachLib.exists_expCoeffs_of_clears",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log",
+        "exp_pos",
+        "exp_add"
+      ]
+    },
+    {
+      "id": "clears-hdrop-discharged-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "clearsToExp_dropLast",
+        "closes the first closure obligation"
+      ],
+      "module": "MachLib.GermCleared",
+      "theorem": "MachLib.clearsToExp_dropLast",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log",
+        "exp_pos",
+        "exp_add"
+      ]
     }
   ]
 }

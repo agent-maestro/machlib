@@ -5,6 +5,80 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cf)
+
+### `GermCleared` — the admissible class, and the WLOG that removes the obstruction
+
+(ce) reduced the fourth module to *supply a class, prove it closed under `dropLast` and under the
+`gscaleSub` step, and exhibit one proper relation in it*, and named what was left as genuinely hard:
+`minimal_expRel_identity_in` wants its relation to be an `expCoeffs` image, and the minimal member of
+a class need not be one. This module supplies the class and closes two of the three obligations.
+
+```
+ClearsToExp S fs  :=  ∃ D Cs, EvNonvanish D ∧ GEvEq (gscale D fs) (expCoeffs S Cs)
+```
+
+**One** common denominator `D` clears the **whole** coefficient vector to an `expCoeffs` image. One
+`D` outside the list, not one per entry: `gcancel_top` compares entries against each other, so
+per-entry denominators do not survive the leading-coefficient reasoning.
+
+### The obstruction was a scaling lemma, not a construction
+
+`exists_expCoeffs_of_clears` is the module's point. If `fs` is a proper relation in the class then
+`gscale D fs` **is** an `expCoeffs` image, has the **same length**, is still a relation
+(`gbipev (gscale D fs) = D · gbipev fs`), and is still proper. Same length means it is still minimal
+among class members — so a minimal member may be *replaced* by an `expCoeffs` image, and
+`minimal_expRel_identity_in` gets the shape it asks for with nothing weakened.
+
+The theorem carries **no analysis**: `exists_expCoeffs_of_clears` cites no `HasDerivAt`, no
+`Real.log`, no `exp_pos`, no `exp_add`, and no `sorryAx` — it never differentiates, and uses nothing
+about `exp` beyond its being a function. Registered with the claim auditor.
+
+### `EvNonvanish`, and why `¬ EvZeroF` is not enough
+
+The denominator must be non-zero **on a tail**, which is strictly stronger than *not eventually
+zero*. Germ multiplication has zero divisors — two germs neither of which is eventually zero can
+have an eventually-zero product, by being supported on interleaved tails — and `GProperRel`'s second
+clause is `¬ EvZeroF` of the top coefficient. Under the weaker reading, clearing can destroy
+properness and every leading-coefficient fact with it. `not_evZeroF_mul` is the one place the extra
+strength is spent, and it is false for `¬ EvZeroF`.
+
+Nothing is lost by asking for the stronger form: the denominators that actually arise are `pev`s of
+polynomials, and `pev_dichotomy` has no third case, so `evNonvanish_pev` upgrades `¬ EvZeroF` to
+`EvNonvanish` for free.
+
+### `hdrop` is discharged; the `gscaleSub` step is not
+
+`clearsToExp_dropLast` closes the first closure obligation — same denominator, one fewer numerator —
+and `clearsToExp_expCoeffs` supplies the witness `exists_minimal_hmin` asks for, with `D = 1`.
+
+**Not attempted here:** `hPrd`, the `gscaleSub` step. That is where `S' = (P'Q − PQ')/Q²` enters, and
+where the denominator must be shown to *multiply* rather than proliferate — `gscaleSub` forms
+products and differences, so a common `Q`-power should survive, but that is a claim about `bimul`
+and `bisub` numerators and it is not proved here. It is the one remaining obligation between this
+class and a degree-`d` `positive_branch_impossible`.
+
+### The bootstrap the arc had not named
+
+`MinimalityScope.gProperRel_witness` puts `[−u, 1]` — a proper relation of length two — in reach of
+*every* germ, and that is what caps the unrestricted arc at `m = 0`. A restricted `hmin` is worth
+nothing if the class still contains it, and `clears_witness_forces_algebraic` says exactly what
+excluding it costs: `[−u, 1] ∈ ClearsToExp S` forces `D·u` to be a `bipev` in `e^S`, i.e.
+`u ∈ R(x)(e^S)`. For `u = log ∘ S` that is what the **already-closed degree-one theorem refutes**.
+
+So the `m = 0` collapse is not an obstacle this class routes around — the degree-one result is the
+thing that lifts it. Worth recording because the arc has been treating `m = 0` purely as a defect.
+
+### Not added to the algebra spine, deliberately
+
+`algebraFootprint` is an allow-list that excludes the ordered axioms and everything analytic.
+`GermCleared` legitimately cites `leR`/`ltR` — every statement in it is eventual — and `Real.exp`,
+via `expCoeffs`. Adding it to `algebraSpineModules` would mean widening that allow-list, which is
+the deny-list creep its own docstring warns about. The algebra-spine count stays at 325 for the
+right reason, not because the module was overlooked.
+
+Gates: build **725 jobs**, aggregator **722 of 1028** modules reachable, consistency PASS, claims **397**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + 325 algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (ce)
 
 ### `ClassMinimality` — `hmin` costs one witness, not a construction

@@ -405,6 +405,7 @@ import MachLib.GermRelationClass
 import MachLib.GermIdentityClass
 import MachLib.ExpCoeffIdentityClass
 import MachLib.ClassMinimality
+import MachLib.GermCleared
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry
