@@ -7073,6 +7073,51 @@
         "ord_pmul_norm",
         "exists_ord_factor"
       ]
+    },
+    {
+      "_comment": "The relation-derivative. hypotheses_count 3 pins that no extra regularity crept in beyond the two tail-differentiability hypotheses and the relation itself. proof_uses names the tail transfer and the uniqueness step, which are the two places an error would hide.",
+      "id": "germ-deriv-relation-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**The derivative of a relation is a relation, of the same length.** `gEvRel_gdrel`: a relation\nvanishes on a tail, so its derivative vanishes strictly inside, and `gdrel_length` gives the\nequal length that `gcancel_top` requires."
+      ],
+      "module": "MachLib.GermDeriv",
+      "theorem": "MachLib.gEvRel_gdrel",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.exp"
+      ],
+      "conclusion_mentions": [
+        "GEvRel",
+        "gdrel"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "hasDerivAt_of_agrees_on_tail",
+        "gbipev_hasDerivAt",
+        "gbipev_gdrel"
+      ]
+    },
+    {
+      "_comment": "The index-free derivative formula. forbid natCast because an index-carrying construction is exactly what would introduce it -- so the gate makes the 'no index' claim decidable rather than stylistic.",
+      "id": "germ-deriv-index-free-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The **index** is what is avoidable, not the list. `gydiff (c :: cs) = gbipev cs + y·gydiff cs`\nproves the derivative formula with no index anywhere, and the same identity builds the list as\none shift and one addition — no `natMul`, no degree-carrying auxiliary recursion."
+      ],
+      "module": "MachLib.GermDeriv",
+      "theorem": "MachLib.gbipev_hasDerivAt",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.exp"
+      ],
+      "conclusion_mentions": [
+        "HasDerivAt",
+        "gydiff"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

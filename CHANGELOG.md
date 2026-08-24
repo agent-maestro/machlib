@@ -5,6 +5,51 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bi)
+
+### `GermDeriv` — differentiating a germ-coefficient relation
+
+The remaining structural piece of the `S > 0` branch's step 1.
+
+```
+d/dx  Σⱼ cⱼ(x)·u(x)ʲ  =  Σⱼ cⱼ'(x)·u(x)ʲ  +  u'(x)·Σⱼ j·cⱼ(x)·u(x)^(j−1)
+```
+
+`gbipev_hasDerivAt` proves it for arbitrary `u` and arbitrary differentiable germ coefficients, by
+one lockstep induction over the coefficient list and its derivative list. **The derivative of a relation is a relation, of the same length.** `gEvRel_gdrel`: a relation
+vanishes on a tail, so its derivative vanishes strictly inside, and `gdrel_length` gives the
+equal length that `gcancel_top` requires.
+
+### The **index** is what is avoidable, not the list. `gydiff (c :: cs) = gbipev cs + y·gydiff cs`
+proves the derivative formula with no index anywhere, and the same identity builds the list as
+one shift and one addition — no `natMul`, no degree-carrying auxiliary recursion.
+
+So this is a **partial** instance of the arc's recurring "the tool was heavier than needed" pattern,
+and the module docstring now says so — the first draft claimed the list itself fell away, which is
+wrong: `gcancel_top` consumes lists, and `gyd` is one. Only the index bookkeeping went.
+
+### `GDerivAt` is structural, for the same reason
+
+The coefficient-derivative hypothesis could be stated by index (`cs[j]? = some c → …`). It is stated
+by structural recursion on the two lists instead, because the proof is a lockstep induction and an
+index-based statement would have to be re-derived into that shape at every step.
+
+### Lengths one-sided, again
+
+`gadd_length_of_le` rather than a `Nat.max` equation — `omega` treats `Nat.max` as opaque, the same
+reason `padd_length_le`/`padd_length_ge` exist. `gyd` preserves length (its top entry is the
+trailing zero), which is precisely `gcancel_top`'s equal-length hypothesis.
+
+### Step 1's remaining piece
+
+Everything is now in place except identifying `gdrel`'s **entries** — specifically that its top is
+`c_d'` and its `(d−1)`-st is `c_{d−1}' + v·d·c_d`. That is what turns `gcancel_top`'s output into the
+identity `c_d·W' = c_d'·W`. Bookkeeping, not mathematics, and deliberately not started here.
+
+Gates: build **704 jobs**, aggregator **701 of 1007** modules reachable, consistency PASS, claims
+347, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 253 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bh)
 
 ### `PolyExpDeriv` — the workhorse of step 2
