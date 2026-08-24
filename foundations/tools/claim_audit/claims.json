@@ -6964,7 +6964,7 @@
       "hypotheses_count": 2
     },
     {
-      "_comment": "The bottom of the S>0 branch. forbid_axioms carries the interesting part: this is pure polynomial algebra, so ltR/leR/exp/HasDerivAt must all be absent -- it is why the module could join algebraSpineModules. proof_uses pins both order instruments, the exact one and the lower bound, since dropping the exact one is the mistake that would make the count vacuous.",
+      "_comment": "The k=1 instance. proof_uses was repointed in (bk): this theorem's proof became a three-line corollary of no_rational_logarithm_scaled, so the five order lemmas it previously invoked directly are now reached only transitively. The gate would have fired on all five -- proof_uses is a positive obligation. The statement did not move and hypotheses_count is still 11.",
       "id": "poly-no-rational-logarithm-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -6985,11 +6985,7 @@
       ],
       "hypotheses_count": 11,
       "proof_uses": [
-        "ord_deriv_cross",
-        "ord_cross_lower",
-        "ord_le_of_dvd",
-        "ord_pmul_norm",
-        "exists_ord_factor"
+        "no_rational_logarithm_scaled"
       ]
     },
     {
@@ -7169,6 +7165,35 @@
         "gdrel"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The general form, carrying the k factor the S>0 sweep needs. The five order lemmas repointed off the k=1 corollary now live here, where they are genuinely direct. hypotheses_count 12 = the original 11 plus the char-0 hypothesis on k.",
+      "id": "poly-no-rational-logarithm-scaled-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`k·S'/S` is not the derivative of a rational function**, for `k·1 ≠ 0`. The count does not\nnotice the `k` — `k·1` is a unit at `q`, contributing order `0` — which is why this is the\ngeneral statement and `no_rational_logarithm` is its `k = 1` instance rather than the reverse."
+      ],
+      "module": "MachLib.PolyLogDeriv",
+      "theorem": "MachLib.no_rational_logarithm_scaled",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 12,
+      "proof_uses": [
+        "ord_deriv_cross",
+        "ord_cross_lower",
+        "ord_le_of_dvd",
+        "ord_pmul_norm",
+        "exists_ord_factor"
+      ]
     }
   ]
 }

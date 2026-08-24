@@ -1,4 +1,5 @@
 import MachLib.PolyPoleCount
+import MachLib.PolyConstDvd
 
 /-!
 # `S'/S` is never a rational derivative
@@ -45,18 +46,27 @@ private theorem rhs_ne_zero {q X W : List Real} {b : Nat} (hq : PIrred q)
   have : b + 1 ≤ b := ord_le_of_dvd hq (Pdvd_of_peq hz Pdvd_zero) hW hWd
   omega
 
-/-- **`S'/S` is not the derivative of a rational function.** `S = P/Q` with `q ∤ P` and
-`q^(r+1) ‖ Q` — a genuine pole at `q` — and `N/D` any candidate primitive in lowest terms at `q`. -/
-theorem no_rational_logarithm {q P Q Qt N D : List Real} (hq : PIrred q)
+/-- **`k·S'/S` is not the derivative of a rational function**, for `k·1 ≠ 0`. `S = P/Q` with `q ∤ P`
+and `q^(r+1) ‖ Q` — a genuine pole at `q` — and `N/D` any candidate primitive in lowest terms at `q`.
+
+The `k` is what the `S > 0` coefficient sweep needs: it lands on `w' = −m·S'/S` for the degree `m` of
+the relation, not on `w' = S'/S`. The count does not notice — `k·1` is a unit at `q`, contributing
+order `0` — which is why this is the general statement and `no_rational_logarithm` is its `k = 1`
+instance rather than the other way round. -/
+theorem no_rational_logarithm_scaled {q P Q Qt N D : List Real} (hq : PIrred q)
     (hchar : ∀ r : Nat, DerivCoprime q r)
     (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P) (hNn : PNormal N)
-    {r : Nat}
+    {r k : Nat}
     (hQ : PEq Q (pmul (ppow q (r + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
+    (hkd : ¬ Pdvd q (pnsum k [1]))
     (hDne : pnorm D ≠ []) (hlow : Pdvd q D → ¬ Pdvd q N)
     (hident : PEq (pmul (psub (pmul (pderiv N) D) (pmul N (pderiv D))) (pmul P Q))
-                  (pmul (psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) (pmul D D))) :
+                  (pmul (pmul (pnsum k [1])
+                          (psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))) (pmul D D))) :
     False := by
+  have hk0 : PEq (pnsum k [1]) (pmul (ppow q 0) (pnsum k [1])) :=
+    (peq_pmul_one_left (pnsum k [1])).symm
   -- `ord_q(P'Q − PQ') = r`, exactly. Used by both branches.
   obtain ⟨Ec, hEcd, hEc⟩ := ord_deriv_cross hq hPd hQtd (hchar (r + 1)) hPn (hcharN (r + 1)) hQ
   have hP0 : PEq P (pmul (ppow q 0) P) := (peq_pmul_one_left P).symm
@@ -76,7 +86,8 @@ theorem no_rational_logarithm {q P Q Qt N D : List Real} (hq : PIrred q)
         obtain ⟨W₂, hW₂d, _, hW₂⟩ := ord_pmul_norm hq hEnd hEn hW₁d hW₁
         -- RIGHT: ord_q(D·D) = 2(c+1) exactly, so ord_q(RHS) = r + 2(c+1)
         obtain ⟨W₃, hW₃d, _, hW₃⟩ := ord_pmul_norm hq hDtd hD hDtd hD
-        obtain ⟨W₄, hW₄d, _, hW₄⟩ := ord_pmul_norm hq hEcd hEc hW₃d hW₃
+        obtain ⟨Wk, hWkd, _, hWk⟩ := ord_pmul_norm hq hkd hk0 hEcd hEc
+        obtain ⟨W₄, hW₄d, _, hW₄⟩ := ord_pmul_norm hq hWkd hWk hW₃d hW₃
         -- both sides exact and equal: the right order divides the left
         have hdvd := Pdvd_of_peq hident (Pdvd_ppow_of_peq hW₄)
         have hle := ord_le_of_dvd hq hdvd hW₂ hW₂d
@@ -85,7 +96,8 @@ theorem no_rational_logarithm {q P Q Qt N D : List Real} (hq : PIrred q)
     have hD0 : PEq D (pmul (ppow q 0) D) := (peq_pmul_one_left D).symm
     -- RIGHT: ord_q(D·D) = 0 exactly, so ord_q(RHS) = r exactly
     obtain ⟨W₃, hW₃d, _, hW₃⟩ := ord_pmul_norm hq hDd hD0 hDd hD0
-    obtain ⟨W₄, hW₄d, _, hW₄⟩ := ord_pmul_norm hq hEcd hEc hW₃d hW₃
+    obtain ⟨Wk, hWkd, _, hWk⟩ := ord_pmul_norm hq hkd hk0 hEcd hEc
+    obtain ⟨W₄, hW₄d, _, hW₄⟩ := ord_pmul_norm hq hWkd hWk hW₃d hW₃
     have hPQ : Pdvd (ppow q (0 + (r + 1))) (pmul P Q) :=
       Pdvd_ppow_pmul (Pdvd_one P) (Pdvd_ppow_of_peq hQ)
     rcases Classical.em (PEq N []) with hNz | hNz
@@ -106,5 +118,27 @@ theorem no_rational_logarithm {q P Q Qt N D : List Real} (hq : PIrred q)
         Pdvd_ppow_pmul (ord_cross_lower hN hD0) hPQ
       have hle := ord_le_of_dvd hq (Pdvd_of_peq hident.symm hLeft) hW₄ hW₄d
       omega
+
+/-- **`S'/S` is not the derivative of a rational function** — the `k = 1` instance.
+
+Kept as its own name because it is the statement the analytic argument quotes; the generalisation
+was added *beside* it rather than replacing it, and this is now the three-line corollary. -/
+theorem no_rational_logarithm {q P Q Qt N D : List Real} (hq : PIrred q)
+    (hchar : ∀ r : Nat, DerivCoprime q r)
+    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hPd : ¬ Pdvd q P) (hPn : PNormal P) (hNn : PNormal N)
+    {r : Nat}
+    (hQ : PEq Q (pmul (ppow q (r + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
+    (hDne : pnorm D ≠ []) (hlow : Pdvd q D → ¬ Pdvd q N)
+    (hident : PEq (pmul (psub (pmul (pderiv N) D) (pmul N (pderiv D))) (pmul P Q))
+                  (pmul (psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) (pmul D D))) :
+    False := by
+  refine no_rational_logarithm_scaled (k := 1) hq hchar hcharN hPd hPn hNn hQ hQtd ?_ hDne hlow ?_
+  · -- `q ∤ 1`: an irreducible has degree ≥ 1, so it divides no unit
+    rw [pnsum_one]
+    exact not_Pdvd_const hq (by rw [pnorm_specimen_canonical]; simp) (by simp)
+  · refine PEq.trans hident (peq_pmul ?_ (PEq.refl (pmul D D)))
+    rw [pnsum_one]
+    exact (peq_pmul_one_left _).symm
 
 end MachLib

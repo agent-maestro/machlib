@@ -5,6 +5,45 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bk)
+
+### `no_rational_logarithm_scaled` — generalised *beside*, and the old one is now a corollary
+
+**`k·S'/S` is not the derivative of a rational function**, for `k·1 ≠ 0`. The count does not
+notice the `k` — `k·1` is a unit at `q`, contributing order `0` — which is why this is the
+general statement and `no_rational_logarithm` is its `k = 1` instance rather than the reverse.
+
+The `S > 0` coefficient sweep lands on `w' = −m·S'/S` for the relation's degree `m`, not on
+`w' = S'/S`, so the `k` is needed. Three extra lines in the proof — one `ord_pmul_norm` per branch —
+and `no_rational_logarithm` becomes a three-line corollary discharging `q ∤ 1` via `not_Pdvd_const`.
+
+### The registry caught the consequence, which is the point of `proof_uses`
+
+`poly-no-rational-logarithm-changelog` pinned five direct invocations: `ord_deriv_cross`,
+`ord_cross_lower`, `ord_le_of_dvd`, `ord_pmul_norm`, `exists_ord_factor`. After the rewrite the proof
+directly invokes **none** of them — only `no_rational_logarithm_scaled` and `not_Pdvd_const`.
+`proof_uses` is a *positive* obligation, so all five would have failed. The claim is repointed to
+`no_rational_logarithm_scaled`, and the five now sit on the general theorem where they are actually
+used.
+
+That is the composition check doing exactly what it exists for: the *statement* did not move,
+`hypotheses_count` is still 11, and prose about the statement is still true — but the proof became
+someone else's, and the registry insists on knowing.
+
+### Why beside rather than in place
+
+The `k = 1` form is what the analytic argument quotes, so it keeps its own name. The generalisation
+went beside it in the same commit as the cleanup — the failure mode recorded earlier in this corpus
+is generalising and *deferring* the tidy-up, which leaves two proofs to drift apart. Here there is
+one proof and one corollary.
+
+Spine 253 → **254**, 0 leaking; the scaled theorem is field-axiom-only for the same reason as the
+original, with `¬ Pdvd q (pnsum k [1])` carried as a hypothesis rather than discharged.
+
+Gates: build **705 jobs**, aggregator **702 of 1008** modules reachable, consistency PASS, claims
+350, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + **254** algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bj)
 
 ### `GermDerivEntry` — step 1's identity, assembled
