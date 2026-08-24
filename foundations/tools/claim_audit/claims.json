@@ -8386,6 +8386,36 @@
         "exp_pos",
         "exp_add"
       ]
+    },
+    {
+      "id": "hprd-closure-is-algebra-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "clearsToExp_hPrd",
+        "no `HasDerivAt`, no `Real.log`, no `exp_pos`, no `exp_add`, and no `sorryAx`"
+      ],
+      "module": "MachLib.GermClearedDrel",
+      "theorem": "MachLib.clearsToExp_hPrd",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log",
+        "exp_pos",
+        "exp_add"
+      ]
+    },
+    {
+      "id": "identity-instantiated-at-class-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "minimal_expRel_identity_cleared",
+        "three clearing facts and no closure obligations"
+      ],
+      "module": "MachLib.GermClearedDrel",
+      "theorem": "MachLib.minimal_expRel_identity_cleared",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

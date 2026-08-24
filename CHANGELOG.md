@@ -5,6 +5,80 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cg)
+
+### `GermClearedStep` + `GermClearedDrel` — `hPrd` discharged, and the identity instantiated
+
+(cf) supplied the class and closed `hdrop`; this closes the third and last obligation, and then
+instantiates the identity theorem at the class so the composition is gated rather than merely
+plausible.
+
+### The denominator does not grow — the step is not symmetric
+
+Going in, the expectation (stated in (ce)) was that `gscaleSub` forms products, so denominators
+multiply. They do not. The step's shape is
+
+```
+gscaleSub cd dtop cs₀ ds₀     entry j  =  cd·(ds₀)ⱼ  −  dtop·(cs₀)ⱼ
+```
+
+and `cd`, `cs₀` come from `expCoeffs` — they are `bipev`s already, denominator `1`. Only `dtop` and
+`ds₀` come from `gdrel` and carry a denominator. **Each product has exactly one dirty factor**, so a
+single `pev G` clears both terms and comes out unchanged:
+
+```
+pev G · (cd·dⱼ − b·cⱼ)  =  cd·(pev G·dⱼ) − (pev G·b)·cⱼ  =  bipev (bisub (bimul A Dⱼ) (bimul Bt Cⱼ))
+```
+
+`gsubNum` is that family and `gEvEq_gscaleSub_cleared` is the theorem. This matters for the arc and
+not only for the proof: had denominators multiplied, each descent step would raise the `Q`-power and
+the class would have needed a denominator *bound* to survive a degree-`d` descent. It needs none.
+The `Q`-power is fixed once, by the producer, and never moves again.
+
+### One denominator covers both sources
+
+`gdrel v cs es = gadd es (gscale v (gyd cs))` has two sources of denominator, and they differ:
+`es` carries `S'`, cleared by `Q²` (`BipevClearedDeriv.bipev_cleared_deriv_zero`); `gscale v (gyd cs)`
+carries `v = (log ∘ S)'`, cleared by `P·Q²` (`RatLogDeriv.ratLogDeriv_cleared`). Because `Q²`
+divides `P·Q²`, **one denominator covers both** — no least common multiple is computed anywhere. That
+is why the statements are shaped as `pmul W QQ`: the `v` side fixes the denominator and the surplus
+factor `W` is absorbed into the `S'` side's numerator by `biscale`.
+
+### The closure obligation is algebra, not analysis
+
+`clearsToExp_hPrd` cites **no `HasDerivAt`, no `Real.log`, no `exp_pos`, no `exp_add`, and no
+`sorryAx`** — despite being a statement about a *differentiated* relation. The reason is a design
+decision made four modules ago: `dbipevExp` is a **definition**, and `bipev_cleared_deriv` is an
+algebraic identity about that definition. The analysis — that `dbipevExp` *is* the derivative — lives
+in `hasDerivAt_bipev_exp` and is never invoked here. Registered with the claim auditor.
+
+### Syntactic mirrors, and why they are only `GEvEq`
+
+`gadd`, `gyd` and `gscale` act on germ lists; their numerators need counterparts one level up.
+`cadd` and `cyd` mirror the recursions **pattern for pattern**, including `gadd`'s asymmetric
+off-length cases, so no length hypothesis appears anywhere below. They do *not* commute with
+`expCoeffs` on the nose — `gadd` gives `bipev A x E + bipev B x E` where `cadd` gives
+`bipev (biadd A B) x E`, equal pointwise but not definitionally — so every statement is up to
+`GEvEq`, which is what the class is stated with in any case.
+
+### The instantiation is a theorem, not a probe
+
+`minimal_expRel_identity_cleared` is `minimal_expRel_identity_in` at `Pr := ClearsToExp S`, with
+`hdrop := clearsToExp_dropLast` and `hPrd := clearsToExp_hPrd` supplied. A caller now supplies
+**three clearing facts and no closure obligations**: the denominator is not eventually zero, `S'`
+clears by `QQ`, `v` clears by `W·QQ`.
+
+This is stated as a theorem deliberately. An abstraction that is never instantiated is not known to
+be the *useful* one — a green build says `True`, not "the one you need" — and the composition was
+first checked as a throwaway `example`, which gates nothing once the file is deleted.
+
+### What remains
+
+Step 5: take the minimal member, run the descent, and contradict minimality — i.e. assemble a
+degree-`d` `positive_branch_impossible` from `exists_minimal_hmin`, `exists_expCoeffs_of_clears` and
+this identity. The obligations are discharged; what is left is the assembly and the sweep, which
+already exists at `m = 0`.
+
 ## [Unreleased] — 2026-08-24 (cf)
 
 ### `GermCleared` — the admissible class, and the WLOG that removes the obstruction
