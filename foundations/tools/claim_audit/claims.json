@@ -8308,6 +8308,50 @@
       "proof_uses": [
         "minimal_expRel_identity_in"
       ]
+    },
+    {
+      "_comment": "The witness-to-hmin step. hypotheses_count 2 IS the claim -- membership and properness of a single relation, nothing about the class's structure. If a closure hypothesis were needed the count would move and the 'minimality was never the hard part' sentence would be false.",
+      "id": "classmin-witness-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Two hypotheses.** Given *any* proper relation in the class, there is a shortest one, and its\nminimality statement is `hmin`'s exact shape.",
+        "Before: *supply a class and discharge minimality inside it.* After: **supply a class, prove it closed\nunder `dropLast` and under the `gscaleSub` step, and exhibit one proper relation in it.**",
+        "**Not attempted here**, and it is\nthe last thing between the parameterisation and a degree-`d` `positive_branch_impossible`."
+      ],
+      "module": "MachLib.ClassMinimality",
+      "theorem": "MachLib.exists_minimal_hmin",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "GProperRel"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "exists_minimal_length"
+      ]
+    },
+    {
+      "_comment": "The unrestricted reading, kept as the check that the conjunction did not lose the old case. Read against MinimalityScope's witness it pins WHY the unrestricted hmin forced m = 0: a shortest proper relation always exists and is always length two.",
+      "id": "classmin-unrestricted-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Two hypotheses.** Given *any* proper relation in the class, there is a shortest one, and its\nminimality statement is `hmin`'s exact shape."
+      ],
+      "module": "MachLib.ClassMinimality",
+      "theorem": "MachLib.exists_minimal_hmin_unrestricted",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "GProperRel"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "exists_minimal_hmin"
+      ]
     }
   ]
 }

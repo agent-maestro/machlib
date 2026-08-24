@@ -5,6 +5,53 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (ce)
+
+### `ClassMinimality` — `hmin` costs one witness, not a construction
+
+(cb)–(cd) made minimality a parameter. That is worth nothing unless the restricted `hmin` can be
+produced, and this says what it costs:
+
+```
+exists_minimal_hmin :
+  Pr ms → GProperRel u ms →
+    ∃ cs, Pr cs ∧ GProperRel u cs ∧ ∀ ns, Pr ns → GProperRel u ns → cs.length ≤ ns.length
+```
+
+**Two hypotheses.** Given *any* proper relation in the class, there is a shortest one, and its
+minimality statement is `hmin`'s exact shape. `exists_minimal_length'` (`BipevMinimal`) does the
+work; the content is applying it to the **conjunction** `Pr ∧ GProperRel` rather than to either
+alone.
+
+### Why the conjunction, and not two applications
+
+Minimising `Pr` first and then `GProperRel` inside it gives the shortest member of the class — which
+need not be proper — and then a shortest proper relation *among lists of that length*. That is not
+the shortest proper member, and it is not what `hmin` compares against. The conjunction is the
+statement wanted.
+
+### What this reduces the fourth module to
+
+Before: *supply a class and discharge minimality inside it.* After: **supply a class, prove it closed
+under `dropLast` and under the `gscaleSub` step, and exhibit one proper relation in it.** The
+minimality obligation disappears — it was never the hard part, it only looked like one.
+
+What remains genuinely hard is the other direction: `minimal_expRel_identity_in` wants `cs` to be an
+`expCoeffs` image, and the minimal member of a class need not be one. A class whose members all clear
+to `expCoeffs` images over a common denominator would settle it — `gscaleSub` forms products and
+differences, so denominators multiply and numerators stay `Bipoly`. **Not attempted here**, and it is
+the last thing between the parameterisation and a degree-`d` `positive_branch_impossible`.
+
+### A consistency check falls out
+
+`exists_minimal_hmin_unrestricted` — every germ with a proper relation has a shortest one — sits
+against (ca)'s finding that every germ has a proper relation of **length two**. The two agree: the
+unrestricted minimum is always exactly 2, which is why the unrestricted `hmin` forced `m = 0`.
+
+Gates: build **724 jobs**, aggregator **721 of 1027** modules reachable, consistency PASS, claims
+**395**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + **325**
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (cd)
 
 ### `ExpCoeffIdentityClass` — the `R(x)[E]` instantiation, restricted
