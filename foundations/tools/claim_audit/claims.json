@@ -8608,6 +8608,55 @@
         "sorryAx",
         "HasDerivAt"
       ]
+    },
+    {
+      "id": "zero-bound-ray-bridge-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "eventually_nonzero_of_uniformZeroBound",
+        "**no `HasDerivAt`, no `Real.log`, no `Real.exp`**"
+      ],
+      "module": "MachLib.EMLZeroBoundRay",
+      "theorem": "MachLib.eventually_nonzero_of_uniformZeroBound",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log",
+        "Real.exp",
+        "analytic_finite_zeros",
+        "zero_count_bound_classical"
+      ]
+    },
+    {
+      "id": "uniform-zero-bound-specimen-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "uniformZeroBound_specimen",
+        "one genuine zero, bound `1`"
+      ],
+      "module": "MachLib.EMLZeroBoundRay",
+      "theorem": "MachLib.uniformZeroBound_specimen",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log",
+        "Real.exp"
+      ]
+    },
+    {
+      "id": "onequery-debt-one-antecedent-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "oneQueryDichotomy_of_uniformBounds",
+        "one precisely-shaped antecedent"
+      ],
+      "module": "MachLib.EMLZeroBoundRay",
+      "theorem": "MachLib.oneQueryDichotomy_of_uniformBounds",
+      "forbid_axioms": [
+        "sorryAx",
+        "analytic_finite_zeros",
+        "zero_count_bound_classical"
+      ]
     }
   ]
 }

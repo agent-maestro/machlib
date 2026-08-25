@@ -5,6 +5,78 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cq)
+
+### `EMLZeroBoundRay` — the missing bridge, and `OneQueryDichotomy`'s debt in one statement
+
+(cp) established that `OneQueryDichotomy` is a **zero-counting** question, and that the corpus's
+zero-counting arc has the wrong statement shape. This supplies the bridge and states the residue
+exactly.
+
+### The shape mismatch, precisely
+
+`chain2_khovanskii_bound_unconditional` and its siblings read
+
+```
+∀ (a b : Real), a < b → … → ∃ N, ∀ zeros, zeros.Nodup →
+  (∀ z ∈ zeros, a < z ∧ z < b ∧ f z = 0) → zeros.length ≤ N
+```
+
+`N` is quantified **inside** `a b`, so as written the bound may depend on the interval — and
+`BipolyNoOscillation` needs non-vanishing on a **ray**. A per-interval bound does not give that:
+zeros could accumulate towards infinity with finitely many in each compact piece.
+
+### Uniformity is the entire difference
+
+```
+eventually_nonzero_of_uniformZeroBound : UniformZeroBound f N → ∃ Y, 1 ≤ Y ∧ ∀ x, Y ≤ x → f x ≠ 0
+```
+
+If one `N` works for *every* interval, a function that keeps returning to zero can be milked for
+`N + 1` distinct zeros — and they all sit inside a single interval, contradicting the bound. The
+proof builds that sequence explicitly (`pickZero`, strictly increasing by construction) and the
+witness list by recursion, since `List.Nodup.map` does not exist without Mathlib.
+
+**It is chain-independent.** The footprint cites **no `HasDerivAt`, no `Real.log`, no `Real.exp`** —
+pure order and combinatorics, nothing about `f` beyond the bound. So it cannot be wrong for
+chain-shape reasons, which is exactly the property wanted after (cp)'s regime-split misfire.
+
+### The whole debt, in one statement
+
+```
+oneQueryDichotomy_of_uniformBounds :
+  (∀ N P Q, ¬ EvZeroF (N(x,F(P/Q))) → ∃ K, UniformZeroBound (N(x,F(P/Q))) K)
+    → OneQueryDichotomy, for every FCtx
+```
+
+So the residue is **one precisely-shaped antecedent**: for germs not eventually zero, a zero bound
+with `K` quantified *before* the interval. That is one quantifier reordering away from what the
+unconditional chain results already prove — a statement-level gap, not a gap in the mathematics,
+since Khovanskii bounds are uniform in nature.
+
+### Two vacuity traps, both avoided rather than discovered
+
+**The naive composite is false.** *Every* such germ having a uniform bound fails immediately at
+`N = []`, whose germ is identically zero and has no bound at all. Stated that way the theorem would
+have been **vacuous** — the exact defect this session spent most of its length repairing elsewhere.
+Conditioning on `¬ EvZeroF` is what makes the antecedent satisfiable: the germs that admit a bound
+are precisely the ones not eventually zero.
+
+**`UniformZeroBound` needed a firing specimen**, or the bridge could be a theorem about an empty
+hypothesis. `uniformZeroBound_specimen` gives `x − 1` — one genuine zero, bound `1` — and
+`specimen_eventually_nonzero` fires the bridge on it.
+
+### Still open
+
+`OneQueryDichotomy` remains **open**, and no `UniformZeroBound` is proved here for any germ of the
+form `N(x, F(P/Q))`. What changed is that the debt is now a single named antecedent instead of "apply
+Khovanskii somehow", and its distance from the existing results is measurable: a quantifier
+reordering, a chain shape that includes a totalised `log`, and a reducibility side condition.
+
+Gates: build **734 jobs**, aggregator **731 of 1037**, consistency PASS, claims **415**, obligations
+18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted,
+witness audit 36 (pinned set).
+
 ## [Unreleased] — 2026-08-25 (cp)
 
 ### CORRECTION — `OneQueryDichotomy` is zero-counting, not transcendence

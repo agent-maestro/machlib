@@ -414,6 +414,7 @@ import MachLib.GermClearedDescent
 import MachLib.GermClearedSpecimen
 import MachLib.EMLSignReduction
 import MachLib.EMLOneQueryNormalForm
+import MachLib.EMLZeroBoundRay
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry
