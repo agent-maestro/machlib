@@ -199,4 +199,26 @@ theorem euclid_lemma {q a b : List Real} (hq : PIrred q) (ha : PNormal a)
       exact peq_pmul_singleton_right hgne c
     exact hnd (Pdvd_trans (Pdvd_of_associate hqne hcne hassoc') hga)
 
+/-! ## Euclid's lemma without the normality side condition
+
+`euclid_lemma` asks its multiplicand to be canonical. That is a genuine restriction and not a
+harmless one: the arc's canonical multiplicand is `pnsum (r+1) (pderiv q)`, and `pderiv` is
+**length-preserving** (`pderiv_length`), so it always carries a trailing zero and is *never*
+`PNormal`. Carrying the hypothesis anywhere it reaches that term makes the statement vacuous.
+
+The hypothesis is also unnecessary. `Pdvd` is defined through `pnorm`, and `pnorm_pmul_left` says
+`pmul` sees only the normal form of its left argument — so the whole statement is already invariant
+under normalising `a`, and the canonical case implies the general one. -/
+
+/-- **Euclid's lemma, with no condition on `a`.** `euclid_lemma` applied to `pnorm a`; every step is
+a `pnorm` identity that already existed. -/
+theorem euclid_lemma' {q a b : List Real} (hq : PIrred q)
+    (hnd : ¬ Pdvd q a) (hab : Pdvd q (pmul a b)) : Pdvd q b := by
+  refine euclid_lemma hq (pnorm_normal a) ?_ ?_
+  · intro h
+    obtain ⟨M, hMn, hM⟩ := h
+    exact hnd ⟨M, hMn, by rw [← pnorm_idem a]; exact hM⟩
+  · obtain ⟨M, hMn, hM⟩ := hab
+    exact ⟨M, hMn, by rw [← pnorm_pmul_left a b]; exact hM⟩
+
 end MachLib

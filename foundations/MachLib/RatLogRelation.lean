@@ -91,8 +91,7 @@ that is what the pole at `q` buys. -/
 theorem relCoeffs_nil_ratLog {q P Q : List Real}
     {Cs Cs₀ : List (List (List Real))} {Cd Cd1 : List (List Real)} {m : Nat}
     (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
     (hQz : ¬ EvZeroF (pev Q))
@@ -106,7 +105,7 @@ theorem relCoeffs_nil_ratLog {q P Q : List Real}
     ∀ A : List Real,
       A ∈ relCoeffs P Q (psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) m Cd Cd1 →
         pnorm A = [] :=
-  all_coeffs_nil_of_relation hq hchar hcharN hPd hPn hQn hQne hQd hQz
+  all_coeffs_nil_of_relation hq hchar hPd hPn hQn hQne hQd hQz
     (evRel_relCoeffs_ratLog hQz hpos hmin hrel hCs hlen0 hCd1)
 
 end MachLib

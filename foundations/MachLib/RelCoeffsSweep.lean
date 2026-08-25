@@ -77,8 +77,7 @@ theorem sweep_impossible {q P Q D : List Real} {m : Nat}
     (hq : PIrred q)
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hDdef : D = psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))
     (hαn : pnorm α ≠ []) (hβn : pnorm β ≠ [])
     (hkd : ¬ Pdvd q (pnsum (m + 1) [(1 : Real)]))
@@ -96,7 +95,7 @@ theorem sweep_impossible {q P Q D : List Real} {m : Nat}
     | zero => exact absurd (Pdvd_of_peq (PEq.trans hQfac (peq_pmul_one_left Qt)).symm hQd) hQtd
     | succ r' =>
         obtain ⟨Ec, hEcd, hEc⟩ :=
-          ord_deriv_cross hq hPd hQtd (hchar (r' + 1)) hPn (hcharN (r' + 1)) hQfac
+          ord_deriv_cross hq hPd hQtd (hchar r') hPn hQfac
         intro hz
         refine pnorm_ne_nil_of_not_Pdvd hEcd (pmul_nil_cancel' (pnorm_ppow_ne_nil hq r') ?_)
         refine PEq.trans hEc.symm ?_
@@ -109,11 +108,11 @@ theorem sweep_impossible {q P Q D : List Real} {m : Nat}
   · -- `a = b`: the logarithmic count
     obtain ⟨Z, hZ⟩ := relCoeffs_top_eq (P := P) (m := m) heq.symm
     rw [heq] at hZ
-    exact top_eq_impossible hq hPd hPn hQn hQne hQd hchar hcharN rfl hαn hβn hPne hQnn hkd
+    exact top_eq_impossible hq hPd hPn hQn hQne hQd hchar rfl hαn hβn hPne hQnn hkd
       (pnorm_top_of_all_nil hZ hnil)
   · -- `a < b`: the exponential count, through the other branch's landing
     obtain ⟨Z, hZ⟩ := relCoeffs_top_lt (P := P) (m := m) hgt
-    exact top_le_impossible hq hPd hPn hQn hQne hQd hchar hcharN rfl (Nat.le_of_lt hgt)
+    exact top_le_impossible hq hPd hPn hQn hQne hQd hchar rfl (Nat.le_of_lt hgt)
       hαn hβn hPne (not_Pdvd_pnsum_one' hq (by omega)) (pnorm_top_of_all_nil hZ hnil)
 
 /-! ## The fourth arm: `Cd₁` is the zero germ
@@ -176,8 +175,7 @@ theorem sweep_impossible_nil_second {q P Q D : List Real} {m : Nat}
     (hq : PIrred q)
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hDdef : D = psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))
     (hαn : pnorm α ≠ [])
     (hkd : ¬ Pdvd q (pnsum (m + 1) [(1 : Real)]))
@@ -193,7 +191,7 @@ theorem sweep_impossible_nil_second {q P Q D : List Real} {m : Nat}
     | zero => exact absurd (Pdvd_of_peq (PEq.trans hQfac (peq_pmul_one_left Qt)).symm hQd) hQtd
     | succ r' =>
         obtain ⟨Ec, hEcd, hEc⟩ :=
-          ord_deriv_cross hq hPd hQtd (hchar (r' + 1)) hPn (hcharN (r' + 1)) hQfac
+          ord_deriv_cross hq hPd hQtd (hchar r') hPn hQfac
         intro hz
         refine pnorm_ne_nil_of_not_Pdvd hEcd (pmul_nil_cancel' (pnorm_ppow_ne_nil hq r') ?_)
         refine PEq.trans hEc.symm ?_

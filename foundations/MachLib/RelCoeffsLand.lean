@@ -92,8 +92,7 @@ theorem top_le_impossible {q P Q D α β : List Real} {a b : Nat}
     (hq : PIrred q)
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hDdef : D = psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))
     (hab : a ≤ b)
     (hαn : pnorm α ≠ []) (hβn : pnorm β ≠ []) (hPne : pnorm P ≠ [])
@@ -130,7 +129,7 @@ theorem top_le_impossible {q P Q D α β : List Real} {a b : Nat}
   obtain ⟨l, βt, _, _, hβtd, hβfac⟩ :=
     exists_ord_factor (pnorm β).length q (pnorm β) hq (pnorm_normal β) hβn (Nat.le_refl _)
   subst hDdef
-  exact cleared_relation_impossible hq hPd hPn hQn hQne hQd hchar hcharN
+  exact cleared_relation_impossible hq hPd hPn hQn hQne hQd hchar
     (PEq.trans (pnorm_idem α).symm hαfac) hαtd
     (PEq.trans (pnorm_idem β).symm hβfac) hβtd hNd h5
 

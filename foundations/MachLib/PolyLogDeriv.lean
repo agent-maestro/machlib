@@ -54,8 +54,7 @@ the relation, not on `w' = S'/S`. The count does not notice — `k·1` is a unit
 order `0` — which is why this is the general statement and `no_rational_logarithm` is its `k = 1`
 instance rather than the other way round. -/
 theorem no_rational_logarithm_scaled {q P Q Qt N D : List Real} (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P) (hNn : PNormal N)
     {r k : Nat}
     (hQ : PEq Q (pmul (ppow q (r + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
@@ -68,7 +67,7 @@ theorem no_rational_logarithm_scaled {q P Q Qt N D : List Real} (hq : PIrred q)
   have hk0 : PEq (pnsum k [1]) (pmul (ppow q 0) (pnsum k [1])) :=
     (peq_pmul_one_left (pnsum k [1])).symm
   -- `ord_q(P'Q − PQ') = r`, exactly. Used by both branches.
-  obtain ⟨Ec, hEcd, hEc⟩ := ord_deriv_cross hq hPd hQtd (hchar (r + 1)) hPn (hcharN (r + 1)) hQ
+  obtain ⟨Ec, hEcd, hEc⟩ := ord_deriv_cross hq hPd hQtd (hchar r) hPn hQ
   have hP0 : PEq P (pmul (ppow q 0) P) := (peq_pmul_one_left P).symm
   rcases Classical.em (Pdvd q D) with hDd | hDd
   · -- ── q ∣ D: the left order must be pinned, not bounded ────────────────────
@@ -81,7 +80,7 @@ theorem no_rational_logarithm_scaled {q P Q Qt N D : List Real} (hq : PIrred q)
     | succ c =>
         -- LEFT: ord_q(N'D − ND') = c exactly, and ord_q(P·Q) = r+1 exactly
         obtain ⟨En, hEnd, hEn⟩ :=
-          ord_deriv_cross hq hNd hDtd (hchar (c + 1)) hNn (hcharN (c + 1)) hD
+          ord_deriv_cross hq hNd hDtd (hchar c) hNn hD
         obtain ⟨W₁, hW₁d, _, hW₁⟩ := ord_pmul_norm hq hPd hP0 hQtd hQ
         obtain ⟨W₂, hW₂d, _, hW₂⟩ := ord_pmul_norm hq hEnd hEn hW₁d hW₁
         -- RIGHT: ord_q(D·D) = 2(c+1) exactly, so ord_q(RHS) = r + 2(c+1)
@@ -124,8 +123,7 @@ theorem no_rational_logarithm_scaled {q P Q Qt N D : List Real} (hq : PIrred q)
 Kept as its own name because it is the statement the analytic argument quotes; the generalisation
 was added *beside* it rather than replacing it, and this is now the three-line corollary. -/
 theorem no_rational_logarithm {q P Q Qt N D : List Real} (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P) (hNn : PNormal N)
     {r : Nat}
     (hQ : PEq Q (pmul (ppow q (r + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
@@ -133,7 +131,7 @@ theorem no_rational_logarithm {q P Q Qt N D : List Real} (hq : PIrred q)
     (hident : PEq (pmul (psub (pmul (pderiv N) D) (pmul N (pderiv D))) (pmul P Q))
                   (pmul (psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) (pmul D D))) :
     False := by
-  refine no_rational_logarithm_scaled (k := 1) hq hchar hcharN hPd hPn hNn hQ hQtd ?_ hDne hlow ?_
+  refine no_rational_logarithm_scaled (k := 1) hq hchar hPd hPn hNn hQ hQtd ?_ hDne hlow ?_
   · -- `q ∤ 1`: an irreducible has degree ≥ 1, so it divides no unit
     rw [pnsum_one]
     exact not_Pdvd_const hq (by rw [pnorm_specimen_canonical]; simp) (by simp)

@@ -51,8 +51,7 @@ last one, `hCdne`, is `GProperRel`'s second clause: without it the sweep has not
 theorem positive_branch_impossible {q P Q : List Real}
     {Cs Cs₀ : List (List (List Real))} {Cd Cd1 : List (List Real)} {m : Nat}
     (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
     (hQz : ¬ EvZeroF (pev Q))
@@ -69,7 +68,7 @@ theorem positive_branch_impossible {q P Q : List Real}
   -- the trimmed family: `expCoeffs` is literally unchanged, so every relation hypothesis transfers
   have hnil := relCoeffs_nil_ratLog (q := q) (P := P) (Q := Q)
     (Cs := Cs.map bitrim) (Cs₀ := Cs₀.map bitrim) (Cd := bitrim Cd) (Cd1 := bitrim Cd1) (m := m)
-    hq hchar hcharN hPd hPn hQn hQne hQd hQz hpos
+    hq hchar hPd hPn hQn hQne hQd hQz hpos
     (by rw [expCoeffs_map_bitrim]; exact hmin)
     (by rw [expCoeffs_map_bitrim]; exact hrel)
     (by rw [hCs, List.map_append]; rfl)
@@ -80,8 +79,8 @@ theorem positive_branch_impossible {q P Q : List Real}
   · rw [hAs] at hnil
     rcases bitrim_split Cd1 with hC1z | ⟨Bs, β, hBs, hβn⟩
     · rw [hC1z] at hnil
-      exact sweep_impossible_nil_second hq hPd hPn hQn hQne hQd hchar hcharN rfl hαn hkd hnil
+      exact sweep_impossible_nil_second hq hPd hPn hQn hQne hQd hchar rfl hαn hkd hnil
     · rw [hBs] at hnil
-      exact sweep_impossible hq hPd hPn hQn hQne hQd hchar hcharN rfl hαn hβn hkd hnil
+      exact sweep_impossible hq hPd hPn hQn hQne hQd hchar rfl hαn hβn hkd hnil
 
 end MachLib

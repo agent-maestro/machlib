@@ -5,6 +5,102 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (ci)
+
+### VOID — `positive_branch_impossible` was **vacuous**, and so was everything built on it
+
+**Object of this void:** the registered claim `positive-branch-closed-changelog`, and every
+statement in this changelog and in `CLAUDE.md` that reads `positive_branch_impossible` as having
+established `log(P/Q) ∉ R(x)(e^(P/Q))`. It did not. It is a true theorem with a **contradictory
+hypothesis set**, so it carried no information about any germ.
+
+This was found by trying to build a satisfiability specimen — not by any gate. Two hypotheses were
+unsatisfiable:
+
+**1. `hchar : ∀ r : Nat, DerivCoprime q r` — false at `r = 0`, for every `q`.**
+`DerivCoprime q 0` unfolds to `¬ Pdvd q (pnsum 0 (pderiv q))` = `¬ Pdvd q []`, and every polynomial
+divides the zero polynomial. Machine-checked: `False` follows from `hchar` alone.
+
+**2. `hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q))` — false at every `r ≥ 1`, for every `q`.**
+`pnsum 1 Z = Z`, so at `r = 1` this asserts `PNormal (pderiv q)`. But `pderiv` is
+**length-preserving** (`pderiv_length`), and a derivative drops degree — so `pderiv` always pads with
+a trailing zero and is never canonical. `pderiv [a,b] = [b, 0]`. Machine-checked at
+`q = x`, `x²+1`, `x³+x²+x+1`.
+
+Neither is detectable by any gate here. The claim auditor pins axiom footprints; the obligation
+ledger pins open/discharged rows; the build checks provability. **A vacuous theorem passes all
+three.** The one thing that would have caught it — instantiating the hypotheses — had never been
+done: `positive_branch_impossible` had no caller and no specimen in the entire corpus.
+
+### The repairs
+
+**`hchar`: weakened to `∀ r, DerivCoprime q (r + 1)`.** Proof-neutral. Every consumption site
+already applied it at a successor (`hchar (r+1)`, `hchar (c+1)`, `hchar (r'+1)`); index `0` was
+consumed nowhere; `PolyDerivShort` only ever *produces* `DerivCoprime q (k+1)`. 18 binder sites, 7
+application sites, whole corpus rebuilds unchanged.
+
+**`hcharN`: deleted outright.** Not weakened — *deleted*, because it was never needed.
+It fed exactly **one** `euclid_lemma` call, as the `PNormal a` argument. `euclid_lemma'` drops that
+side condition entirely:
+
+```
+euclid_lemma' (hq : PIrred q) (hnd : ¬ Pdvd q a) (hab : Pdvd q (pmul a b)) : Pdvd q b
+```
+
+proved by applying `euclid_lemma` to `pnorm a`. Sound because `Pdvd` is *defined* through `pnorm`
+and `pnorm_pmul_left` says `pmul` sees only the normal form of its left argument — so the statement
+was already invariant under normalising `a`, and the canonical case implies the general one. 18
+binder sites removed across 15 files, nothing else changed.
+
+The hypothesis was not just unsatisfiable, it was **decorative**.
+
+### The specimen — what makes the arc non-vacuous
+
+`GermClearedSpecimen` exhibits `q = x`, `P = 1`, `Q = x`, hence `S = 1/x` and the germ `log(1/x)`,
+and discharges every surviving hypothesis:
+
+* `pIrred_X : PIrred [0,1]` — the **first `PIrred` construction in the corpus**. `PEq` is
+  `pnorm`-equality and both sides are canonical, so the factorisation is a literal list equation and
+  `pmul_length` closes it: `2 = a + b − 1` with `a, b ≥ 1` forces a constant factor.
+* `derivCoprime_X` — `pderiv [0,1] = [1+0, 0]`, the very trailing zero that made `hcharN`
+  unsatisfiable, normalises to the constant `1`; so this reduces to `q ∤ (r+1)·1`, already proved by
+  `not_Pdvd_pnsum_one'` from irreducibility alone.
+* the rest by evaluation (`pev [0,1] x = x`, `pev [1] x = 1`).
+
+```
+no_proper_cleared_relation_inv_x :
+  ClearsToExp (1/x) fs → GProperRel (log(1/x)) fs → False
+```
+
+**No pole hypotheses at all** — they are discharged, not assumed. This is the artifact that makes
+the whole arc say something, and it is a standing gate: if a future edit makes a hypothesis
+unsatisfiable again, this file stops compiling, which is exactly what did not happen for the two
+defects above.
+
+### Step 5, and the degree-`d` result
+
+`GermClearedBranch` threads `Pr` through the last two layers still taking the unrestricted `hmin`
+(`relCoeffs_nil_ratLog`, `positive_branch_impossible`) — transcription, since neither inspects it.
+`GermClearedDescent` then assembles: `exists_minimal_hmin` produces a shortest relation *in the
+class*, `exists_expCoeffs_of_clears` replaces it by an `expCoeffs` image of the same length, and the
+existing `m`-general sweep finishes. `no_proper_cleared_relation` takes **no `hmin`, no `Cs`, no
+split and no degree bound**.
+
+Two facts the assembly needed and the corpus lacked: `two_le_length_of_gProperRel` (a one-element
+proper relation `[c]` asserts `c x + u x·0 = 0`, i.e. `c` *is* eventually zero), and `hkd` quantified
+`∀ r` rather than at a fixed `m`, since `m` is now derived from the minimal relation's own length.
+
+### Status after this commit
+
+`log(1/x)` satisfies no proper relation whose coefficients clear, over one common non-vanishing
+denominator, to polynomials in `x` and `e^(1/x)` — at **any** degree, with every hypothesis
+discharged. That statement is new. The degree-one reading that (cf) and (ce) attributed to
+`positive_branch_impossible` was never established at all.
+
+Gates: build **731 jobs**, aggregator **728 of 1034** modules reachable, consistency PASS, claims
+**403**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)** + 325
+algebra-spine field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (ch)
 
 ### `GermClearedRatLog` — `hPrd` at the branch's own germs

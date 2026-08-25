@@ -139,7 +139,7 @@ theorem peq_pderiv_ppow_mul {q Q Qt : List Real} (m : Nat)
 pins the order. The `qᵐ` is exact: `q ∤ E`. -/
 theorem ord_deriv_cross {q P Q Qt : List Real} {m : Nat} (hq : PIrred q)
     (hPd : ¬ Pdvd q P) (hQtd : ¬ Pdvd q Qt) (hT : DerivCoprime q (m + 1))
-    (hPn : PNormal P) (hTn : PNormal (pnsum (m + 1) (pderiv q)))
+    (hPn : PNormal P)
     (hQ : PEq Q (pmul (ppow q (m + 1)) Qt)) :
     ∃ E : List Real, ¬ Pdvd q E ∧
       PEq (psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) (pmul (ppow q m) E) := by
@@ -162,7 +162,7 @@ theorem ord_deriv_cross {q P Q Qt : List Real} {m : Nat} (hq : PIrred q)
       exact (peq_padd_psub_right (pmul P (pmul (pnsum (m + 1) (pderiv q)) Qt))
         (pmul P (pmul q (pderiv Qt)))).symm
     -- Euclid twice
-    exact hQtd (euclid_lemma hq hTn hT (euclid_lemma hq hPn hPd hsplit))
+    exact hQtd (euclid_lemma' hq hT (euclid_lemma hq hPn hPd hsplit))
   · -- the factorisation itself
     refine PEq.trans (peq_psub (peq_pmul (PEq.refl (pderiv P)) hQ)
         (peq_pmul (PEq.refl P) (peq_pderiv_ppow_mul m hQ))) ?_

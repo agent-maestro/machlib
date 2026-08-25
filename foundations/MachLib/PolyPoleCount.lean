@@ -181,7 +181,7 @@ theorem pole_order_contradiction {q P Q Qt u ut v vt Nc : List Real} (hq : PIrre
     (hQ : PEq Q (pmul (ppow q (m + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
     (hNd : ¬ Pdvd q Nc)
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
-    (hT : DerivCoprime q (m + 1)) (hTn : PNormal (pnsum (m + 1) (pderiv q)))
+    (hT : DerivCoprime q (m + 1))
     (hident : PEq (pmul (psub (pmul (pderiv u) v) (pmul u (pderiv v))) (pmul Q Q))
                   (pmul (pmul Nc (psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))) (pmul u v))) :
     False := by
@@ -192,7 +192,7 @@ theorem pole_order_contradiction {q P Q Qt u ut v vt Nc : List Real} (hq : PIrre
       (pmul (psub (pmul (pderiv u) v) (pmul u (pderiv v))) (pmul Q Q)) :=
     Pdvd_ppow_pmul (ord_cross_lower hu hv) hQQ
   -- RIGHT: exact order m + (k+1) + (l+1)
-  obtain ⟨E, hEd, hE⟩ := ord_deriv_cross hq hPd hQtd hT hPn hTn hQ
+  obtain ⟨E, hEd, hE⟩ := ord_deriv_cross hq hPd hQtd hT hPn hQ
   have hN0 : PEq Nc (pmul (ppow q 0) Nc) := (peq_pmul_one_left Nc).symm
   obtain ⟨W1, hW1d, hW1n, hW1⟩ := ord_pmul_norm hq hNd hN0 hEd hE
   obtain ⟨W2, hW2d, hW2n, hW2⟩ := ord_pmul_norm hq hW1d hW1 hutd hu
@@ -225,8 +225,7 @@ does not divide `P` — no explicit `q`-adic factorisation. -/
 theorem cleared_relation_impossible {q P Q u ut v vt Nc : List Real} (hq : PIrred q)
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     {k l : Nat}
     (hu : PEq u (pmul (ppow q k) ut)) (hutd : ¬ Pdvd q ut)
     (hv : PEq v (pmul (ppow q l) vt)) (hvtd : ¬ Pdvd q vt)
@@ -242,6 +241,6 @@ theorem cleared_relation_impossible {q P Q u ut v vt Nc : List Real} (hq : PIrre
       exact hQtd (Pdvd_of_peq (PEq.trans hQfac (peq_pmul_one_left Qt)).symm hQd)
   | succ m =>
       exact pole_order_contradiction hq hu hutd hv hvtd hQfac hQtd hNd hPd hPn
-        (hchar (m + 1)) (hcharN (m + 1)) hident
+        (hchar m) hident
 
 end MachLib

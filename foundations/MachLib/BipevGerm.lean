@@ -44,8 +44,7 @@ theorem properRel_congr {S T : Real → Real} {Ls : List (List Real)}
 agreeing with `P/Q` on a tail — the germ, not the formula, is what the statement is about. -/
 theorem germ_relation_impossible {P Q q : List Real}
     (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
     (hQz : ¬ EvZeroF (pev Q))
@@ -53,7 +52,7 @@ theorem germ_relation_impossible {P Q q : List Real}
     (hagree : EvEqF S (fun y => pev P y * (1 / pev Q y)))
     (hrel : ProperRel S Ls) :
     False :=
-  proper_relation_impossible hq hchar hcharN hPd hPn hQn hQne hQd hQz
+  proper_relation_impossible hq hchar hPd hPn hQn hQne hQd hQz
     (properRel_congr hagree hrel)
 
 end MachLib

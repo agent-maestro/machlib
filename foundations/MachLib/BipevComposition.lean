@@ -108,8 +108,7 @@ the nonzero coefficient by the factorisation. -/
 `CRUX.md`, composed. -/
 theorem minimal_relation_impossible {P Q q : List Real}
     (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
     (hQz : ¬ EvZeroF (pev Q))
@@ -143,7 +142,7 @@ theorem minimal_relation_impossible {P Q q : List Real}
   have hu' : PEq u (pmul (ppow q k) ut) := PEq.trans (pnorm_idem u).symm hufac
   have hv' : PEq v (pmul (ppow q l) vt) := PEq.trans (pnorm_idem v).symm hvfac
   -- 6. the count
-  exact cleared_relation_impossible hq hPd hPn hQn hQne hQd hchar hcharN
+  exact cleared_relation_impossible hq hPd hPn hQn hQne hQd hchar
     hu' hutd hv' hvtd (not_Pdvd_pnsum_one' hq (by omega)) hident
 
 end MachLib

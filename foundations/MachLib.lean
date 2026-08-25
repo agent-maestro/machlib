@@ -409,6 +409,9 @@ import MachLib.GermCleared
 import MachLib.GermClearedStep
 import MachLib.GermClearedDrel
 import MachLib.GermClearedRatLog
+import MachLib.GermClearedBranch
+import MachLib.GermClearedDescent
+import MachLib.GermClearedSpecimen
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

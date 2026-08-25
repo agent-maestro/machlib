@@ -31,8 +31,7 @@ open Real
 theorem is exactly that properness is impossible. -/
 theorem all_coeffs_evZero_of_relation {P Q q : List Real}
     (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
     (hQz : ¬ EvZeroF (pev Q))
@@ -42,7 +41,7 @@ theorem all_coeffs_evZero_of_relation {P Q q : List Real}
   refine all_coeffs_evZero_of_shorter'
     (Ms := List.replicate (Ls.length + 1) ([] : List Real))
     (fun Ns h => absurd h (fun hp =>
-      proper_relation_impossible hq hchar hcharN hPd hPn hQn hQne hQd hQz hp)) hrel ?_
+      proper_relation_impossible hq hchar hPd hPn hQn hQne hQd hQz hp)) hrel ?_
   simp
 
 /-- The polynomial form: **zero as a germ is zero as a polynomial**, coefficient by coefficient.
@@ -50,8 +49,7 @@ This is the shape the `S > 0` sweep consumes — it turns a germ identity in `e^
 between the syntactic coefficient polynomials. -/
 theorem all_coeffs_nil_of_relation {P Q q : List Real}
     (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
     (hQz : ¬ EvZeroF (pev Q))
@@ -59,6 +57,6 @@ theorem all_coeffs_nil_of_relation {P Q q : List Real}
     (hrel : EvRel (fun y => pev P y * (1 / pev Q y)) Ls) :
     ∀ A : List Real, A ∈ Ls → pnorm A = [] := fun A hA =>
   pnorm_eq_nil_of_evZero
-    (all_coeffs_evZero_of_relation hq hchar hcharN hPd hPn hQn hQne hQd hQz hrel A hA)
+    (all_coeffs_evZero_of_relation hq hchar hPd hPn hQn hQne hQd hQz hrel A hA)
 
 end MachLib

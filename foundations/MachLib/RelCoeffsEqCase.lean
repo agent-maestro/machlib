@@ -194,8 +194,7 @@ theorem top_eq_impossible {q P Q D α β : List Real} {a m : Nat}
     (hq : PIrred q)
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hDdef : D = psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))
     (hαn : pnorm α ≠ []) (hβn : pnorm β ≠ [])
     (hPne : pnorm P ≠ []) (hQnn : pnorm Q ≠ [])
@@ -218,7 +217,7 @@ theorem top_eq_impossible {q P Q D α β : List Real} {a m : Nat}
   | succ r' =>
       subst hDdef
       refine no_rational_logarithm_scaled (N := pnorm β₁) (D := pscale (0 - 1) α₁) (k := m + 1)
-        hq hchar hcharN hPd hPn (pnorm_normal β₁) hQfac hQtd hkd
+        hq hchar hPd hPn (pnorm_normal β₁) hQfac hQtd hkd
         (pnorm_pscale_ne_nil hneg hα₁)
         (fun hd => fun hn => hlow (Pdvd_of_pscale_neg hd)
           (Pdvd_of_peq (pnorm_idem β₁).symm hn)) ?_

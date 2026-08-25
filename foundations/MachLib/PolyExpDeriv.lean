@@ -58,8 +58,7 @@ namespace MachLib
 /-- **No nonzero rational function satisfies `a' = k·S'·a`.** Stated cleared of denominators:
 `a = N/D`, `S = P/Q` with a pole of order `r+1` at the irreducible `q`. -/
 theorem no_rational_exponential {q P Q Qt N D : List Real} (hq : PIrred q)
-    (hchar : ∀ j : Nat, DerivCoprime q j)
-    (hcharN : ∀ j : Nat, PNormal (pnsum j (pderiv q)))
+    (hchar : ∀ j : Nat, DerivCoprime q (j + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P) (hNn : PNormal N)
     {r k : Nat}
     (hQ : PEq Q (pmul (ppow q (r + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
@@ -71,7 +70,7 @@ theorem no_rational_exponential {q P Q Qt N D : List Real} (hq : PIrred q)
                         (pmul N D))) :
     False := by
   -- `ord_q(P'Q − PQ') = r` exactly, and the `k` factor contributes nothing
-  obtain ⟨Ec, hEcd, hEc⟩ := ord_deriv_cross hq hPd hQtd (hchar (r + 1)) hPn (hcharN (r + 1)) hQ
+  obtain ⟨Ec, hEcd, hEc⟩ := ord_deriv_cross hq hPd hQtd (hchar r) hPn hQ
   have hk0 : PEq (pnsum k [1]) (pmul (ppow q 0) (pnsum k [1])) :=
     (peq_pmul_one_left (pnsum k [1])).symm
   obtain ⟨W₁, hW₁d, _, hW₁⟩ := ord_pmul_norm hq hkd hk0 hEcd hEc
@@ -87,7 +86,7 @@ theorem no_rational_exponential {q P Q Qt N D : List Real} (hq : PIrred q)
     | zero => exact hDtd (Pdvd_of_peq (PEq.trans hD (peq_pmul_one_left Dt)).symm hDd)
     | succ c =>
         obtain ⟨En, hEnd, hEn⟩ :=
-          ord_deriv_cross hq hNd hDtd (hchar (c + 1)) hNn (hcharN (c + 1)) hD
+          ord_deriv_cross hq hNd hDtd (hchar c) hNn hD
         obtain ⟨WL, hWLd, _, hWL⟩ := ord_pmul_norm hq hEnd hEn hWQd hWQ
         have hN0 : PEq N (pmul (ppow q 0) N) := (peq_pmul_one_left N).symm
         obtain ⟨W₂, hW₂d, _, hW₂⟩ := ord_pmul_norm hq hNd hN0 hDtd hD

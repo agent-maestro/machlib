@@ -5954,7 +5954,7 @@
       "hypotheses_count": 1
     },
     {
-      "_comment": "THE POLE-ORDER COUNT -- the theorem the entire Euclid spine was built to reach. hypotheses_count 7, derived with the auditor's own hypotheses_of after moving {m} into the leading binder group. proof_uses pins euclid_lemma (applied twice, the whole content of q not dividing E) and peq_pderiv_ppow_mul (the power-rule factorisation). forbid_axioms includes natCast and HasDerivAt, both genuinely reachable from this module's imports.",
+      "_comment": "THE POLE-ORDER COUNT -- the theorem the entire Euclid spine was built to reach. hypotheses_count 7, derived with the auditor's own hypotheses_of after moving {m} into the leading binder group. proof_uses pins euclid_lemma (applied twice, the whole content of q not dividing E) and peq_pderiv_ppow_mul (the power-rule factorisation). forbid_axioms includes natCast and HasDerivAt, both genuinely reachable from this module's imports. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "poly-pole-order-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -5974,7 +5974,7 @@
         "PEq",
         "ppow"
       ],
-      "hypotheses_count": 7,
+      "hypotheses_count": 6,
       "proof_uses": [
         "euclid_lemma",
         "peq_pderiv_ppow_mul"
@@ -6008,7 +6008,7 @@
       ]
     },
     {
-      "_comment": "CRUX.md section 3's count at arbitrary irreducible q AND arbitrary k, l. claim_text was REPOINTED from entry (ai) to entry (aj) when the theorem was generalised: (ai)'s exponent q^(k+l+1+2(m+1)) is now stale prose, and a claim that keeps passing against a superseded sentence is the drift this auditor exists to prevent. hypotheses_count 13, re-derived after the change.",
+      "_comment": "CRUX.md section 3's count at arbitrary irreducible q AND arbitrary k, l. claim_text was REPOINTED from entry (ai) to entry (aj) when the theorem was generalised: (ai)'s exponent q^(k+l+1+2(m+1)) is now stale prose, and a claim that keeps passing against a superseded sentence is the drift this auditor exists to prevent. hypotheses_count 13, re-derived after the change. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "poly-pole-contradiction-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -6023,7 +6023,7 @@
         "MachLib.Real.HasDerivAt",
         "MachLib.Real.natCast"
       ],
-      "hypotheses_count": 13,
+      "hypotheses_count": 12,
       "proof_uses": [
         "ord_deriv_cross",
         "ord_cross_lower",
@@ -6084,7 +6084,7 @@
       ]
     },
     {
-      "_comment": "The count in the form a caller from the differential route can use. hypotheses_count 14, derived with the auditor's own hypotheses_of. proof_uses pins exists_ord_factor (which supplies the factorisation the caller does not have) and pole_order_contradiction (the count itself). Registered partly to mark the boundary: this is the last theorem in the arc inside algebraFootprint.",
+      "_comment": "The count in the form a caller from the differential route can use. hypotheses_count 14, derived with the auditor's own hypotheses_of. proof_uses pins exists_ord_factor (which supplies the factorisation the caller does not have) and pole_order_contradiction (the count itself). Registered partly to mark the boundary: this is the last theorem in the arc inside algebraFootprint. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "poly-cleared-relation-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -6099,7 +6099,7 @@
         "MachLib.Real.HasDerivAt",
         "MachLib.Real.natCast"
       ],
-      "hypotheses_count": 14,
+      "hypotheses_count": 13,
       "proof_uses": [
         "exists_ord_factor",
         "pole_order_contradiction"
@@ -6823,7 +6823,7 @@
       ]
     },
     {
-      "_comment": "The composition. conclusion_mentions is near-vacuous here (the conclusion is False), so the strength is pinned by hypotheses_count 15 plus proof_uses naming all six links. If a future edit drops a link or adds a hypothesis, one of those two fires.",
+      "_comment": "The composition. conclusion_mentions is near-vacuous here (the conclusion is False), so the strength is pinned by hypotheses_count 15 plus proof_uses naming all six links. If a future edit drops a link or adds a hypothesis, one of those two fires. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "bipev-minimal-relation-impossible-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -6838,7 +6838,7 @@
       "conclusion_mentions": [
         "False"
       ],
-      "hypotheses_count": 15,
+      "hypotheses_count": 14,
       "proof_uses": [
         "evRel_dcoeffs_ratFn",
         "elim_coeff_vanishes",
@@ -6871,7 +6871,7 @@
       "hypotheses_count": 2
     },
     {
-      "_comment": "The arc's top-level theorem. conclusion is False, so as with (bb) the strength is pinned by hypotheses_count 10 plus proof_uses. natCast is forbidden because the characteristic-zero inputs are meant to arrive through DerivCoprime and not_Pdvd_pnsum_one', never through a cast.",
+      "_comment": "The arc's top-level theorem. conclusion is False, so as with (bb) the strength is pinned by hypotheses_count 10 plus proof_uses. natCast is forbidden because the characteristic-zero inputs are meant to arrive through DerivCoprime and not_Pdvd_pnsum_one', never through a cast. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "bipev-proper-relation-impossible-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -6886,7 +6886,7 @@
       "conclusion_mentions": [
         "False"
       ],
-      "hypotheses_count": 10,
+      "hypotheses_count": 9,
       "proof_uses": [
         "exists_minimal_rel",
         "exists_nonzero_lower_coeff",
@@ -6914,7 +6914,7 @@
       "hypotheses_count": 2
     },
     {
-      "_comment": "The arc's final statement, at the germ. hypotheses_count 11 = the ten structural ones of proper_relation_impossible plus EvEqF. proof_uses pins that it really routes through the top-level theorem rather than re-deriving anything.",
+      "_comment": "The arc's final statement, at the germ. hypotheses_count 11 = the ten structural ones of proper_relation_impossible plus EvEqF. proof_uses pins that it really routes through the top-level theorem rather than re-deriving anything. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "bipev-germ-relation-impossible-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -6929,7 +6929,7 @@
       "conclusion_mentions": [
         "False"
       ],
-      "hypotheses_count": 11,
+      "hypotheses_count": 10,
       "proof_uses": [
         "properRel_congr",
         "proper_relation_impossible"
@@ -6964,7 +6964,7 @@
       "hypotheses_count": 2
     },
     {
-      "_comment": "The k=1 instance. proof_uses was repointed in (bk): this theorem's proof became a three-line corollary of no_rational_logarithm_scaled, so the five order lemmas it previously invoked directly are now reached only transitively. The gate would have fired on all five -- proof_uses is a positive obligation. The statement did not move and hypotheses_count is still 11.",
+      "_comment": "The k=1 instance. proof_uses was repointed in (bk): this theorem's proof became a three-line corollary of no_rational_logarithm_scaled, so the five order lemmas it previously invoked directly are now reached only transitively. The gate would have fired on all five -- proof_uses is a positive obligation. The statement did not move and hypotheses_count is still 11. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "poly-no-rational-logarithm-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -6983,7 +6983,7 @@
       "conclusion_mentions": [
         "False"
       ],
-      "hypotheses_count": 11,
+      "hypotheses_count": 10,
       "proof_uses": [
         "no_rational_logarithm_scaled"
       ]
@@ -7042,7 +7042,7 @@
       "hypotheses_count": 4
     },
     {
-      "_comment": "Step 2's workhorse. The whole point of the prose is that this is field-axiom-only, so forbid_axioms names the fully-qualified order and analysis axioms -- fully-qualified because a bare 'exp' would match the theorem's own name, no_rational_exponential.",
+      "_comment": "Step 2's workhorse. The whole point of the prose is that this is field-axiom-only, so forbid_axioms names the fully-qualified order and analysis axioms -- fully-qualified because a bare 'exp' would match the theorem's own name, no_rational_exponential. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "poly-no-rational-exponential-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -7061,7 +7061,7 @@
       "conclusion_mentions": [
         "False"
       ],
-      "hypotheses_count": 13,
+      "hypotheses_count": 12,
       "proof_uses": [
         "ord_deriv_cross",
         "ord_cross_lower",
@@ -7167,7 +7167,7 @@
       "hypotheses_count": 2
     },
     {
-      "_comment": "The general form, carrying the k factor the S>0 sweep needs. The five order lemmas repointed off the k=1 corollary now live here, where they are genuinely direct. hypotheses_count 12 = the original 11 plus the char-0 hypothesis on k.",
+      "_comment": "The general form, carrying the k factor the S>0 sweep needs. The five order lemmas repointed off the k=1 corollary now live here, where they are genuinely direct. hypotheses_count 12 = the original 11 plus the char-0 hypothesis on k. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "poly-no-rational-logarithm-scaled-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -7186,7 +7186,7 @@
       "conclusion_mentions": [
         "False"
       ],
-      "hypotheses_count": 12,
+      "hypotheses_count": 11,
       "proof_uses": [
         "ord_deriv_cross",
         "ord_cross_lower",
@@ -7196,7 +7196,7 @@
       ]
     },
     {
-      "_comment": "The transcendence bridge. proof_uses pins BOTH halves: the descent it reuses and the impossibility theorem that makes the minimality hypothesis vacuous. If either were reached only transitively the six-line proof would be doing something other than advertised.",
+      "_comment": "The transcendence bridge. proof_uses pins BOTH halves: the descent it reuses and the impossibility theorem that makes the minimality hypothesis vacuous. If either were reached only transitively the six-line proof would be doing something other than advertised. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "bipev-all-coeffs-nil-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -7211,7 +7211,7 @@
       "conclusion_mentions": [
         "pnorm"
       ],
-      "hypotheses_count": 11,
+      "hypotheses_count": 10,
       "proof_uses": [
         "all_coeffs_evZero_of_relation",
         "pnorm_eq_nil_of_evZero"
@@ -7428,7 +7428,7 @@
       ]
     },
     {
-      "_comment": "The syntactic landing. conclusion_mentions is pnorm alone, because that IS the conclusion (pnorm A = []); relCoeffs sits in the membership hypothesis, so claiming it here would be the unused-hypothesis attack. 16 hypotheses = the 9 pole conditions + positivity + minimality + the relation + the three shape equations + the membership.",
+      "_comment": "The syntactic landing. conclusion_mentions is pnorm alone, because that IS the conclusion (pnorm A = []); relCoeffs sits in the membership hypothesis, so claiming it here would be the unused-hypothesis attack. 16 hypotheses = the 9 pole conditions + positivity + minimality + the relation + the three shape equations + the membership. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "ratlog-nil-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -7443,7 +7443,7 @@
       "conclusion_mentions": [
         "pnorm"
       ],
-      "hypotheses_count": 16,
+      "hypotheses_count": 15,
       "proof_uses": [
         "all_coeffs_nil_of_relation",
         "evRel_relCoeffs_ratLog"
@@ -7648,7 +7648,7 @@
       ]
     },
     {
-      "_comment": "The a <= b landing. proof_uses is the composition obligation and carries the prose's whole point: the proof really does go through coeff_identity and cleared_relation_impossible, the OTHER branch's machinery, plus exists_ord_factor applied per polynomial. forbid_axioms pins the field-axiom-only claim per-theorem; the whole-module spine check in AxiomLedger is the stronger guard.",
+      "_comment": "The a <= b landing. proof_uses is the composition obligation and carries the prose's whole point: the proof really does go through coeff_identity and cleared_relation_impossible, the OTHER branch's machinery, plus exists_ord_factor applied per polynomial. forbid_axioms pins the field-axiom-only claim per-theorem; the whole-module spine check in AxiomLedger is the stronger guard. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "relcoeffs-le-landing-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -7670,7 +7670,7 @@
         "Pdvd",
         "pnsum"
       ],
-      "hypotheses_count": 15,
+      "hypotheses_count": 14,
       "proof_uses": [
         "coeff_identity",
         "cleared_relation_impossible",
@@ -7812,7 +7812,7 @@
       "hypotheses_count": 1
     },
     {
-      "_comment": "The third landing. proof_uses carries the prose's chain: the two reduction steps, the common split, and the logarithmic count -- if any dropped out the 'lands on no_rational_logarithm_scaled' claim would be false. hypotheses_count 15 matches top_le_impossible's 15, which is itself informative: the a = b case needs no MORE inputs than a <= b despite costing two extra modules.",
+      "_comment": "The third landing. proof_uses carries the prose's chain: the two reduction steps, the common split, and the logarithmic count -- if any dropped out the 'lands on no_rational_logarithm_scaled' claim would be false. hypotheses_count 15 matches top_le_impossible's 15, which is itself informative: the a = b case needs no MORE inputs than a <= b despite costing two extra modules. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "eqcase-landing-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -7834,7 +7834,7 @@
         "relK",
         "Pdvd"
       ],
-      "hypotheses_count": 15,
+      "hypotheses_count": 14,
       "proof_uses": [
         "eq_case_identity",
         "eq_case_reduced",
@@ -7975,7 +7975,7 @@
       ]
     },
     {
-      "_comment": "The dispatcher. proof_uses names ALL SIX pieces -- the three readings and the three landings -- which is the prose's claim that each case is closed by its own landing. If a refactor collapsed two cases into one, a name would drop out and this fires. hypotheses_count 13 pins the interface; it does NOT include a Cd1-nonempty hypothesis because the trimmed-away arm is a separate theorem that does not exist yet, and the changelog says so.",
+      "_comment": "The dispatcher. proof_uses names ALL SIX pieces -- the three readings and the three landings -- which is the prose's claim that each case is closed by its own landing. If a refactor collapsed two cases into one, a name would drop out and this fires. hypotheses_count 13 pins the interface; it does NOT include a Cd1-nonempty hypothesis because the trimmed-away arm is a separate theorem that does not exist yet, and the changelog says so. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "sweep-dispatcher-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -7993,7 +7993,7 @@
         "Pdvd",
         "pnorm"
       ],
-      "hypotheses_count": 13,
+      "hypotheses_count": 12,
       "proof_uses": [
         "relCoeffs_top_gt",
         "relCoeffs_top_eq",
@@ -8058,7 +8058,7 @@
       ]
     },
     {
-      "_comment": "The fourth arm of the dispatcher. proof_uses top_gt_impossible and NOTHING else from the landing layer -- that is the prose's claim that the arm costs a reading and no new landing. hypotheses_count 12 is one fewer than sweep_impossible's 13, the missing one being beta's nonvanishing, which has no beta to be about.",
+      "_comment": "The fourth arm of the dispatcher. proof_uses top_gt_impossible and NOTHING else from the landing layer -- that is the prose's claim that the arm costs a reading and no new landing. hypotheses_count 12 is one fewer than sweep_impossible's 13, the missing one being beta's nonvanishing, which has no beta to be about. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive.",
       "id": "sweep-fourth-arm-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -8075,14 +8075,14 @@
         "Pdvd",
         "pnorm"
       ],
-      "hypotheses_count": 12,
+      "hypotheses_count": 11,
       "proof_uses": [
         "top_gt_impossible",
         "relCoeffs_top_of_nil_second"
       ]
     },
     {
-      "_comment": "The branch, closed. proof_uses names the whole chain: the caller, the trim split, and BOTH sweep arms -- if either arm dropped out the theorem would be covering fewer cases than the prose says. hypotheses_count 17 pins the interface; the seventeenth is hCdne, the properness clause whose absence would make the sweep vacuous, so a drop to 16 is exactly the failure this entry guards.",
+      "_comment": "The branch, closed. proof_uses names the whole chain: the caller, the trim split, and BOTH sweep arms -- if either arm dropped out the theorem would be covering fewer cases than the prose says. hypotheses_count 17 pins the interface; the seventeenth is hCdne, the properness clause whose absence would make the sweep vacuous, so a drop to 16 is exactly the failure this entry guards. RE-PINNED 2026-08-24 (ci): -1 for the removal of the UNSATISFIABLE normality hypothesis (`hcharN`/`hTn` : PNormal (pnsum r (pderiv q)) -- false at every r>=1 since pderiv is length-preserving and always leaves a trailing zero). The drop is that removal ONLY; every other binder was checked to survive. hCdne SURVIVES (PositiveBranch.lean:66, checked): the count now pins 16 with hCdne still the properness clause, so the guard it was written for -- a silent loss of hCdne, now a drop to 15 -- is still live.",
       "id": "positive-branch-closed-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -8101,7 +8101,7 @@
         "EvZeroF",
         "Pdvd"
       ],
-      "hypotheses_count": 17,
+      "hypotheses_count": 16,
       "proof_uses": [
         "relCoeffs_nil_ratLog",
         "bitrim_split",
@@ -8430,6 +8430,50 @@
         "sorryAx",
         "HasDerivAt",
         "Real.log"
+      ]
+    },
+    {
+      "id": "euclid-lemma-no-normality-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "euclid_lemma'",
+        "the statement\nwas already invariant under normalising `a`"
+      ],
+      "module": "MachLib.PolyIrred",
+      "theorem": "MachLib.euclid_lemma'",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log",
+        "Real.exp"
+      ]
+    },
+    {
+      "id": "pirred-x-specimen-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "pIrred_X : PIrred [0,1]",
+        "first `PIrred` construction in the corpus"
+      ],
+      "module": "MachLib.GermClearedSpecimen",
+      "theorem": "MachLib.pIrred_X",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log"
+      ]
+    },
+    {
+      "id": "specimen-fires-inv-x-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no_proper_cleared_relation_inv_x",
+        "No pole hypotheses at all"
+      ],
+      "module": "MachLib.GermClearedSpecimen",
+      "theorem": "MachLib.no_proper_cleared_relation_inv_x",
+      "forbid_axioms": [
+        "sorryAx"
       ]
     }
   ]

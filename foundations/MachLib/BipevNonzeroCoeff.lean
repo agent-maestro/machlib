@@ -100,8 +100,7 @@ there is no eventually-holding polynomial relation `Σ pⱼ·exp(S x)ʲ = 0` wit
 that is not eventually zero. -/
 theorem proper_relation_impossible {P Q q : List Real}
     (hq : PIrred q)
-    (hchar : ∀ r : Nat, DerivCoprime q r)
-    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    (hchar : ∀ r : Nat, DerivCoprime q (r + 1))
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
     (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
     (hQz : ¬ EvZeroF (pev Q))
@@ -110,7 +109,7 @@ theorem proper_relation_impossible {P Q q : List Real}
     False := by
   obtain ⟨Ms, ⟨hMrel, Ls₀, v, hMs, hv⟩, hmin⟩ := exists_minimal_rel hrel
   obtain ⟨j, u, hu, huz⟩ := exists_nonzero_lower_coeff (hMs ▸ hMrel) hv
-  exact minimal_relation_impossible hq hchar hcharN hPd hPn hQn hQne hQd hQz
+  exact minimal_relation_impossible hq hchar hPd hPn hQn hQne hQd hQz
     hmin hMrel hMs hv hu huz
 
 end MachLib
