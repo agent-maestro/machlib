@@ -8686,6 +8686,36 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "reducibility-at-point-of-use-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "singleExp_khovanskii_bound_at_reduct",
+        "**\"exhibit one `x` where one polynomial is nonzero\"**"
+      ],
+      "module": "MachLib.ChainExp2Uniform",
+      "theorem": "MachLib.ChainExp2PathC.singleExp_khovanskii_bound_at_reduct",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "reducibility-weakening-subsumes-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "singleExp_khovanskii_bound_uniform_of_at_reduct",
+        "**subsumes** rather than sits beside"
+      ],
+      "module": "MachLib.ChainExp2Uniform",
+      "theorem": "MachLib.ChainExp2PathC.singleExp_khovanskii_bound_uniform_of_at_reduct",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }

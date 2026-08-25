@@ -5,6 +5,67 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cs)
+
+### Coordinate 3 — the reducibility side condition, at its point of use
+
+The chain-2 bound's antecedent quantifies over **every** 0-chain reduct reachable by
+`IsKhovanskiiReducible` — a four-constructor inductive (`refl`/`reduce`/`drop`/`trim`) of unbounded
+depth. Discharging it for a concrete `p` would mean reasoning about the entire reduction closure.
+
+It is applied **exactly once**. `se_reduces p` produces one specific `(g, k)`, and the proof calls
+`terminal_nonzero g k hg0 hwit` at that pair and nowhere else.
+
+```
+singleExp_khovanskii_bound_at_reduct (p : MultiPoly 1) :
+  ∃ g k, g.n = 0 ∧ IsKhovanskiiReducible ⟨1, SingleExpChain, p⟩ g k ∧
+    ((∃ x, g.eval x ≠ 0) → ∃ N, ∀ a b, a < b → …)
+```
+
+Exposing the reduct turns the obligation from *"reason about the reduction closure"* into
+**"exhibit one `x` where one polynomial is nonzero"**.
+
+`singleExp_khovanskii_bound_uniform_of_at_reduct` recovers the strong form as an instance, so this
+**subsumes** rather than sits beside — the same discipline `(cb)`–`(cd)` used with `Pr := True`, and
+for the same reason: a weakening that leaves its predecessor derivable has nothing to reconcile.
+
+### The third instance of one pattern
+
+This is now the **third** hypothesis in this corpus found to be quantified far beyond its use:
+
+| hypothesis | stated over | used at |
+| --- | --- | --- |
+| `hmin` (`S > 0` arc) | all germ-coefficient lists | the derived relation and its `dropLast`s |
+| `hchar` (pole layer) | all `r : Nat` | successors only — index `0` never consumed |
+| `terminal_nonzero` | the whole reduction closure | one reduct from `se_reduces` |
+
+Two of the three were actively harmful — `hchar`'s extra index made the flagship **vacuous**, and
+`hmin`'s extra scope capped the arc at `m = 0`. The third merely made an obligation look
+intractable. Worth searching for deliberately rather than stumbling on, though that is its own
+exercise.
+
+### No trust cost
+
+Cites no `zero_count_bound_classical` and no `analytic_finite_zeros`.
+
+### Where the three coordinates now stand
+
+| coordinate | before | after |
+| --- | --- | --- |
+| quantifier order | `N` bound after the interval | **closed** (cr) |
+| chain shape | totalised `log`, wrong chain | **open**, structurally |
+| reducibility | ∀ over the reduction closure | **one non-vanishing witness** |
+
+`OneQueryDichotomy` remains **open**. The remaining obstacle is the one that is not bookkeeping: the
+totalised `log` makes the germ **change form at a sign boundary** — Pfaffian where `S > 0`,
+identically `exp(S)` where `S ≤ 0` — while Pfaffian chain machinery assumes a fixed chain on a fixed
+domain. The ray must be split *before* any chain argument, using the regimes `EMLGermSign` already
+establishes.
+
+Gates: build **735 jobs**, aggregator **732 of 1038**, consistency PASS, claims **419**, obligations
+18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted,
+witness audit 36 (pinned set).
+
 ## [Unreleased] — 2026-08-25 (cr)
 
 ### `ChainExp2Uniform` — the quantifier reordering, and one of three coordinates closed

@@ -67,6 +67,55 @@ theorem singleExp_khovanskii_bound_uniform
     (SingleExpChain_isCoherentOn a b)
     (terminal_nonzero g k hg0 hwit) zeros hnodup hzeros
 
+
+/-! ## Coordinate 3: the side condition is far stronger than its use
+
+The bound's antecedent quantifies over **every** 0-chain reduct reachable by
+`IsKhovanskiiReducible` — a four-constructor inductive (`refl`/`reduce`/`drop`/`trim`) with unbounded
+depth. Discharging it for a concrete `p` would mean understanding the whole reduction closure.
+
+It is applied **exactly once**. `se_reduces p` produces one specific `(g, k)`, and the proof calls
+`terminal_nonzero g k hg0 hwit` at that pair and nowhere else. So the hypothesis may be weakened to
+non-vanishing of **that one reduct**, and the proof is unchanged.
+
+This is the same over-quantification as `hmin` in the `S > 0` arc: a hypothesis stated over a whole
+class, consumed at a single point. Exposing the reduct turns "reason about the reduction closure"
+into "exhibit one `x` where one polynomial is nonzero". -/
+
+/-- **The bound with the side condition at its point of use.** The reduct is exposed, so the
+antecedent is a single non-vanishing fact rather than a statement about every reachable reduct. -/
+theorem singleExp_khovanskii_bound_at_reduct (p : MultiPoly 1) :
+    ∃ (g : PfaffianFn) (k : Nat), g.n = 0 ∧
+      PfaffianFn.IsKhovanskiiReducible (⟨1, SingleExpChain, p⟩ : PfaffianFn) g k ∧
+      ((∃ x : Real, g.eval x ≠ 0) →
+        ∃ N : Nat, ∀ (a b : Real), a < b → ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧
+            (⟨1, SingleExpChain, p⟩ : PfaffianFn).eval z = 0) →
+          zeros.length ≤ N) := by
+  obtain ⟨g, k, hg0, hwit⟩ := se_reduces p
+  refine ⟨g, k, hg0, hwit, fun hne => ⟨MultiPoly.degreeX g.poly + k, ?_⟩⟩
+  intro a b hab zeros hnodup hzeros
+  exact PfaffianFn.khovanskii_bound_full
+    (⟨1, SingleExpChain, p⟩ : PfaffianFn) g k hwit
+    SingleExpChain_isTriangular hg0 a b hab
+    (SingleExpChain_isCoherentOn a b)
+    hne zeros hnodup hzeros
+
+/-- **The strong form is an instance.** So this is a weakening, not a sibling — nothing is left to
+reconcile between the two. -/
+theorem singleExp_khovanskii_bound_uniform_of_at_reduct
+    (p : MultiPoly 1)
+    (terminal_nonzero :
+       ∀ g k, g.n = 0 →
+         PfaffianFn.IsKhovanskiiReducible (⟨1, SingleExpChain, p⟩ : PfaffianFn) g k →
+         ∃ x : Real, g.eval x ≠ 0) :
+    ∃ N : Nat, ∀ (a b : Real), a < b → ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (⟨1, SingleExpChain, p⟩ : PfaffianFn).eval z = 0) →
+      zeros.length ≤ N := by
+  obtain ⟨g, k, hg0, hwit, hbound⟩ := singleExp_khovanskii_bound_at_reduct p
+  exact hbound (terminal_nonzero g k hg0 hwit)
+
 end ChainExp2PathC
 
 namespace ChainExp2Capstone
