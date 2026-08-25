@@ -602,6 +602,40 @@ Gates: build **732 jobs**, aggregator **729 of 1035** modules reachable, consist
 
 ## [Unreleased] — 2026-08-24 (ci)
 
+### VOID / scope correction — the disclosure, in short
+
+The previously registered `S > 0` flagship was **vacuous**. Two of its hypotheses were unsatisfiable
+for *every* `q`:
+
+* `hchar : ∀ r : Nat, DerivCoprime q r` — false at `r = 0`, since `pnsum 0 _ = []` and every
+  polynomial divides the zero polynomial.
+* `hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q))` — false at **every `r ≥ 1`**, since `pderiv` is
+  length-preserving and therefore always leaves a trailing zero, so its output is never canonical.
+
+**The Lean proof was valid for its formal statement.** Nothing accepted an invalid derivation. What
+failed is that the statement did not certify the advertised case: with a contradictory hypothesis
+set, the theorem carried no information about any germ, while its registered prose asserted that
+`log(P/Q)` satisfies no minimal relation with coefficients in `R(x)[e^(P/Q)]`.
+
+Both hypotheses are corrected — the first weakened to `r + 1`, the second **deleted** as unnecessary
+— and the replacement proves the intended result directly, with no auxiliary hypothesis:
+
+```
+proper_relation_impossible_inv_x : ProperRel (1/x) Ls → False
+```
+
+i.e. **`exp(1/x)` is transcendental over `ℝ(x)`**, every pole hypothesis discharged at `q = x`,
+`P = 1`, `Q = x`.
+
+**Not to be confused with the `m = 0` finding.** `MinimalityScope` separately established that `hmin`
+caps the arc at `m = 0`. That is a *scope* limitation, disclosed earlier and of a different kind: it
+narrows what the theorem covers, it does not make it vacuous.
+
+**The process lesson.** This defect was not detectable from build status or claim registration.
+`False → P` is provable, cites no forbidden axiom, and discharges any obligation, so the build, the
+claim auditor and the obligation ledger were all structurally blind to it. It was found by asking
+what a universal hypothesis asserts at arguments the proof never supplies.
+
 ### VOID — `positive_branch_impossible` was **vacuous**, and so was everything built on it
 
 **Object of this void:** the registered claim `positive-branch-closed-changelog`, and every
