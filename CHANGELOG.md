@@ -5,6 +5,82 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (da)
+
+### The per-interval bound already existed; only non-vanishing is left
+
+`(cz)` left the route needing *"per-interval bounds on the trees `declamp` actually produces"*. Those
+bounds are already in the corpus, and this is the **fourth** time this session a "what remains" turned
+out to be built.
+
+`EMLExplicitBound.enc_combinedBound` takes an `EMLTree`, a context chain and `LogArgPosOn t (Icc a b)`
+and returns an **explicit** bound
+
+```
+combinedBoundE (len t N) (enc t chain).1 (encTags t chain tags) p
+```
+
+which mentions **no interval** — a function of the tree and barrier alone, so already uniform in the
+sense `eventually_nonzero_of_uniformZeroBoundFrom` needs. Unlike `eml_eval_boundedZeros` it carries no
+`hdescent` hypothesis: the explicit mixed descent is unconditional.
+
+So the remaining input collapses from *"bound the zeros"* to
+
+> **`t.eval` is not identically zero on any interval beyond the ray.**
+
+That is `enc_combinedBound`'s own `hne`, and the route needs it regardless — a function vanishing on
+an interval has infinitely many zeros there and no bound of any kind.
+
+### ⚠ Axiom disclosure — this entry is the first in the arc to pay
+
+Every previous entry in this arc reported *"no footprint cites `analytic_finite_zeros`"*. **That
+changes here.** `encBound_bounds`, `uniformZeroBoundFrom_of_nonvanishing` and
+`eventually_nonzero_of_nonvanishing_of_hard` each cite
+
+* `MachLib.analytic_finite_zeros_compact`
+* `MachLib.Real.rolle_ct`
+
+Both are inherited from `enc_combinedBound`, both are already pinned in the `AxiomLedger` (242,
+unchanged), and neither is the deleted `zero_count_bound_classical` — `analytic_finite_zeros_compact`
+is the **non-uniform, strictly weaker** analyticity axiom, which is why it survived the 2026-07-15
+deletion. Still: results downstream of this module are no longer axiom-clean in the sense the earlier
+sign work was, and anything quoting them must say so. No `sorryAx`, no `Khovanskii`, no `Fbasis`.
+
+### The endpoint shift, a third time
+
+`enc_combinedBound` wants positivity on the **closed** `Icc a b`; `declamp_logArgPos` supplies it on
+the **open** `(a', b')`. So the declamping runs on `(a − 1, b + 1)` and the bound is applied on
+`(a, b)`, strictly inside it — and the ray starts at `X₀ + 1`. Same shape as `ray_shift_nbhd` and the
+`R + 1` seed in `EMLZeroBoundRay`: **third** place in this arc where a closed/open mismatch costs
+exactly one unit. Worth expecting now rather than rediscovering.
+
+Widening keeps the finiteness argument intact — `declamp t (a−1) (b+1)` is still in
+`declampVariants t`, so the maximum is over the same finite list.
+
+### The route, with one input
+
+```
+SignHardCase → EvSign everywhere → LogArgStable on a ray → LogArgPos (declamp t)
+             → LogArgPosOn (Icc a b) → enc_combinedBound → explicit interval-free bound
+             → max over finitely many variants → UniformZeroBoundFrom
+             → eventual non-vanishing
+```
+
+`eventually_nonzero_of_nonvanishing_of_hard` states the whole thing: **on the existing obligation, a
+tree that never vanishes identically on a far-out interval is eventually non-vanishing outright.**
+
+What that does *not* do is close `SignHardCase`, and the reason is worth being exact about. The
+non-vanishing hypothesis is supplied per tree, and for the hard node it is precisely the statement the
+obligation is stuck on. The arc has moved the difficulty, not dissolved it: the residue is now a
+single clean condition on one function rather than a demand for zero-counting machinery, and it sits
+where a Hardy-field or o-minimality argument would apply.
+
+`SignHardCase` stays `open`, 18 rows unchanged, nothing registered.
+
+Gates: build **741 jobs**, aggregator **738 of 1044**, consistency PASS, claims 422, obligations 18
+rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted, witness
+audit 36.
+
 ## [Unreleased] — 2026-08-25 (cz)
 
 ### A variant can be identically zero while its node never vanishes

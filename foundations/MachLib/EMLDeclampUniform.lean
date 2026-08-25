@@ -79,11 +79,13 @@ theorem declamp_mem_variants (t : EMLTree) (a b : Real) :
 
 /-! ## §2 — maximum over a finite list -/
 
-private def listMaxF (F : EMLTree → Nat) : List EMLTree → Nat
+/-- Maximum of `F` over a finite list. -/
+def listMaxF (F : EMLTree → Nat) : List EMLTree → Nat
   | []      => 0
   | v :: vs => Nat.max (F v) (listMaxF F vs)
 
-private theorem le_listMaxF (F : EMLTree → Nat) :
+/-- Each member is bounded by the maximum. -/
+theorem le_listMaxF (F : EMLTree → Nat) :
     ∀ (L : List EMLTree) (v : EMLTree), v ∈ L → F v ≤ listMaxF F L := by
   intro L
   induction L with

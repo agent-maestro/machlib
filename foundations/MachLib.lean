@@ -421,6 +421,7 @@ import MachLib.EMLEventualContinuity
 import MachLib.EMLSignZeroProducer
 import MachLib.EMLDeclampEncoder
 import MachLib.EMLDeclampUniform
+import MachLib.EMLZeroBoundAssembly
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry
