@@ -333,7 +333,12 @@ RELATIONS = {
     ),
 }
 
-EPISTEMIC = {"PROVED", "MEASURED", "ASSUMED", "ATTESTED", "COMPUTED", "CHECKED", "DERIVED"}
+# REDUCED added 2026-08-24. A reduction is not a theorem. `SignHardCase` and `OneQueryDichotomy`
+# each acquired a clean equivalent form in one day, and nothing in this registry distinguished that
+# from closing them -- a dashboard counting green claims would have read a reduction campaign as a
+# closure campaign. REDUCED is the state that keeps the two apart, and check (H) gives it teeth.
+EPISTEMIC = {"PROVED", "MEASURED", "ASSUMED", "ATTESTED", "COMPUTED", "CHECKED", "DERIVED",
+             "REDUCED"}
 
 # ---------------------------------------------------------------------------
 # Relation entailment: DECLARED, never inferred.
@@ -463,6 +468,54 @@ def hypothesis_scope_violations(stmt: str) -> list:
                 bad.append(h)
                 break
     return bad
+
+
+_open_cache: list = []
+
+
+def open_obligations() -> list:
+    """Names of ledger rows currently marked **open**, read from the CHANGELOG mirror.
+
+    Read rather than hardcoded: a pinned list would go stale the moment a row closed, and a check
+    that silently stops applying is worse than no check. This is the same table
+    `obligation_ledger_check.py` gates, so the two cannot disagree without that gate failing.
+    """
+    if _open_cache:
+        return _open_cache
+    path = os.path.join(REPO, "CHANGELOG.md")
+    if not os.path.exists(path):
+        return []
+    for line in open(path, encoding="utf-8"):
+        m = re.match(r"\|\s*`([A-Za-z0-9_\']+)`\s*\|\s*\*\*open\*\*", line)
+        if m and m.group(1) not in _open_cache:
+            _open_cache.append(m.group(1))
+    return _open_cache
+
+
+def reduction_state_problems(concl: str, stmt: str, epistemic, residue, opens: list) -> list:
+    """The REDUCED rule, as a pure function so it can be convicted without a Lean round-trip.
+
+    Two duties:
+      * an equivalence mentioning a live obligation must be declared REDUCED;
+      * a REDUCED claim must name a residue that the theorem actually mentions.
+    """
+    out = []
+    # WORD-BOUNDARY, not substring: `TowerLowerBound` is a prefix of `TowerLowerBoundUpTo`, and the
+    # partial results `tower_lower_bound_upto_{two,three,four}` would otherwise read as touching the
+    # open row they are explicitly NOT closing. Same defect this session found in
+    # `obligation_ledger_check.dischargers_of`, reintroduced here and caught by the registry.
+    #
+    # And the trigger is EQUIVALENCE-shaped: merely mentioning an open obligation is not a
+    # reduction. A theorem may name one in a hypothesis, or prove a bounded instance of it.
+    touched = [o for o in opens if re.search(r"\b" + re.escape(o) + r"\b", concl)]
+    if "↔" in concl and touched and epistemic != "REDUCED":
+        out.append(f"EQUIVALENCE on open obligation(s) {touched} not declared REDUCED")
+    if epistemic == "REDUCED":
+        if not residue:
+            out.append("REDUCED without `reduces_to`")
+        elif residue not in stmt:
+            out.append(f"REDUCED to `{residue}`, absent from the theorem's statement")
+    return out
 
 
 def check_relation(c: dict) -> list:
@@ -602,6 +655,26 @@ def check_claim(c: dict) -> list:
                     f"{c['theorem']} now has {len(got)} top-level hypotheses, not {want_n} — "
                     f"the theorem's STRENGTH changed under prose written for the old one"
                     + (f"; hypotheses: {got}" if len(got) <= 8 else ""))
+
+    # (H) reduction integrity: an equivalence is not a closure.
+    #
+    # A theorem whose conclusion is `P ↔ Q` moves an obligation into another form; it does not
+    # discharge it. Left unmarked, such a claim is indistinguishable in the registry from one that
+    # closed `P`. So: an `↔` conclusion MUST declare `epistemic_type: "REDUCED"`, and a REDUCED
+    # claim must name the residue it reduces to -- and that residue must actually occur in the
+    # theorem's statement, so "reduced to X" cannot name something the theorem never mentions.
+    et = c.get("epistemic_type")
+    if et is not None and et not in EPISTEMIC:
+        problems.append(f"unknown epistemic_type `{et}` (one of {sorted(EPISTEMIC)})")
+    stmt_h = statement_of(c["module"], c["theorem"])
+    if statement_resolved(stmt_h):
+        concl = stmt_h.rsplit(":", 1)[-1]
+        for msg in reduction_state_problems(concl, stmt_h, et, c.get("reduces_to"),
+                                            open_obligations()):
+            problems.append(f"{c['theorem']}: {msg} — a reduction that reads as a closure is "
+                            f"exactly what the REDUCED state exists to prevent")
+    elif et == "REDUCED" and not c.get("reduces_to"):
+        problems.append("claim is REDUCED but names no `reduces_to`")
 
     return problems
 
@@ -924,6 +997,42 @@ def self_test() -> int:
           f"because that file went clean → M; a\n           second edit to an already-M file was "
           f"invisible. Found by reading the gate after it fired,\n           not by it failing "
           f"— a check that fails open reads identical to one that passes.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 15: a reduction must not read as a closure …{RST}")
+    # Unit test on the PURE rule, so the convict costs no Lean round-trip. Three specimens:
+    # an unmarked equivalence on a live obligation must FIRE; a residue the theorem never mentions
+    # must FIRE; the honest form must stay SILENT.
+    opens_c = ["SignHardCase"]
+    bad1 = reduction_state_problems("SignHardCase ↔ Foo", "… : SignHardCase ↔ Foo", None, None, opens_c)
+    bad2 = reduction_state_problems("SignHardCase ↔ Foo", "… : SignHardCase ↔ Foo", "REDUCED",
+                                    "NotInThisStatement", opens_c)
+    good = reduction_state_problems("SignHardCase ↔ Foo", "… : SignHardCase ↔ Foo", "REDUCED",
+                                    "Foo", opens_c)
+    # and a plain characterisation, which mentions NO live obligation, must stay silent
+    plain = reduction_state_problems("OIOTangentLine d ρ ↔ x", "… : OIOTangentLine d ρ ↔ x",
+                                     None, None, opens_c)
+    # a PREFIX of an open obligation is not that obligation (TowerLowerBoundUpTo vs TowerLowerBound)
+    prefix = reduction_state_problems("SignHardCaseUpTo 2 ↔ Foo", "… : SignHardCaseUpTo 2 ↔ Foo",
+                                      None, None, opens_c)
+    # and a non-equivalence that merely MENTIONS an open obligation is not a reduction
+    mention = reduction_state_problems("SignHardCase", "(h : Foo) : SignHardCase", None, None, opens_c)
+    if not (bad1 and bad2 and not good and not plain and not prefix and not mention):
+        print(f"{RED}[self-test] FAILED: the REDUCED rule does not discriminate "
+              f"(unmarked={bad1}, bad-residue={bad2}, honest={good}, characterisation={plain}, "
+              f"prefix={prefix}, mention={mention}).{RST}")
+        return 1
+    if not open_obligations():
+        print(f"{RED}[self-test] FAILED: no open obligations parsed from the CHANGELOG mirror — "
+              f"the REDUCED trigger would silently never apply. A check that stops applying is "
+              f"worse than no check.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 15 fires: an unmarked equivalence on an open obligation and a "
+          f"residue absent from the statement are both REJECTED; the honest form and a plain "
+          f"characterisation stay silent; {len(open_obligations())} open rows parsed. ✓{RST}")
+    print(f"{DIM}           Added 2026-08-24. Two reductions landed in one day "
+          f"(SignHardCase, OneQueryDichotomy) and nothing in the registry distinguished "
+          f"them from closures — a dashboard counting green claims would have read a "
+          f"reduction campaign as a closure campaign.{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"

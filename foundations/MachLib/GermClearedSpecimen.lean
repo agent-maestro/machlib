@@ -1,4 +1,5 @@
 import MachLib.GermClearedDescent
+import MachLib.PolyExpDeriv
 
 /-!
 # A firing specimen: `q = x`, `S = 1/x`, `u = log(1/x)`
@@ -165,5 +166,27 @@ theorem germ_relation_impossible_inv_x {S : Real → Real} {Ls : List (List Real
   germ_relation_impossible pIrred_X derivCoprime_X
     (not_Pdvd_const pIrred_X pnorm_one_ne_nil (by simp))
     pNormal_one pNormal_X (by simp) Pdvd_refl not_evZeroF_pev_X hagree hrel
+
+/-- **The pole data of `no_rational_exponential` is dischargeable too.** Twelve hypotheses; the eight
+that are *about the pole* are discharged here at `q = x`, `P = 1`, `Qt = 1`, `r = 0`, `k = 1`. What
+is left as antecedent is exactly the content: the shape of `N`, `D` and the cross-multiplied
+identity.
+
+This is the largest hypothesis set in the pole layer, and it is the one that most resembled
+`positive_branch_impossible` before the repair — same `hchar`, same `PIrred`, same
+`¬ Pdvd q (pnsum k [1])`. It is now witnessed rather than assumed. -/
+theorem no_rational_exponential_inv_x {Q N D : List Real}
+    (hQ : PEq Q (pmul (ppow ([0, 1] : List Real) 1) [1]))
+    (hNn : PNormal N) (hNne : pnorm N ≠ []) (hDne : pnorm D ≠ [])
+    (hlow : Pdvd ([0, 1] : List Real) D → ¬ Pdvd ([0, 1] : List Real) N)
+    (hident : PEq (pmul (psub (pmul (pderiv N) D) (pmul N (pderiv D))) (pmul Q Q))
+                  (pmul (pmul (pnsum 1 [1])
+                          (psub (pmul (pderiv [1]) Q) (pmul [1] (pderiv Q)))) (pmul N D))) :
+    False :=
+  no_rational_exponential (q := [0, 1]) (P := [1]) (Qt := [1]) (r := 0) (k := 1)
+    pIrred_X derivCoprime_X
+    (not_Pdvd_const pIrred_X pnorm_one_ne_nil (by simp)) pNormal_one hNn
+    hQ (not_Pdvd_const pIrred_X pnorm_one_ne_nil (by simp))
+    (not_Pdvd_pnsum_one' pIrred_X (by omega)) hNne hDne hlow hident
 
 end MachLib

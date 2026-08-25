@@ -5,6 +5,75 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (co)
+
+### `REDUCED` — a reduction may no longer read as a closure
+
+Two obligations acquired clean equivalent forms in one day (`SignHardCase` → a growth comparison,
+`OneQueryDichotomy` → bivariate vanishing) and **nothing in the claim registry distinguished that
+from closing them**. A dashboard counting green claims would have read a reduction campaign as a
+closure campaign. `REDUCED` is the state that keeps them apart, and check (H) gives it teeth:
+
+* an **equivalence** whose conclusion mentions a **live** obligation must declare
+  `epistemic_type: "REDUCED"`;
+* a `REDUCED` claim must carry `reduces_to`, and that residue must actually occur in the cited
+  theorem's statement — so "reduced to X" cannot name something the theorem never mentions.
+
+`signHardCase_iff_compareExpExpPos`, `oneQueryDichotomy_divFree_of_bipoly` and
+`oneQueryDichotomy_of_bipoly` are marked accordingly.
+
+### The trigger is read from the ledger, and fails closed
+
+Open rows come from the CHANGELOG mirror — the same table `obligation_ledger_check.py` gates, so the
+two cannot disagree silently. A pinned list would go stale the moment a row closed, and the self-test
+**fails if it parses empty**: a check that quietly stops applying is worse than no check.
+
+### The rule shipped with two bugs of its own, and the registry caught both
+
+Worth recording rather than quietly fixing, because one of them is a repeat.
+
+**Substring matching.** `TowerLowerBound` is a prefix of `TowerLowerBoundUpTo`, so the honest partial
+results `tower_lower_bound_upto_{two,three,four}` were flagged as claiming the open theorem they
+explicitly do **not**. That is exactly the defect found earlier the same day in
+`obligation_ledger_check.dischargers_of`, reintroduced by the person who had just fixed it. Now
+word-boundary matched.
+
+**A dropped condition.** Refactoring the rule into a pure function lost the `↔` requirement, so it
+fired on any *mention* of an open obligation. A theorem may name one in a hypothesis
+(`evSign_of_hard`) or prove a bounded instance (`TowerLowerBoundUpTo 4`); neither is a reduction.
+
+The three claims that failed were the *honest partial results for an open obligation* — precisely
+what this state exists to protect. A rule that punished them was backwards.
+
+**Canary 15** unit-tests the rule on six specimens with no Lean round-trip: unmarked equivalence
+FIRES, absent residue FIRES, honest form SILENT, plain characterisation SILENT, prefix-of-an-open-row
+SILENT, non-equivalence mention SILENT.
+
+### The witness ratchet turned
+
+`no_rational_exponential` — twelve hypotheses, the largest in the pole layer and the one that most
+resembled `positive_branch_impossible` before its repair — is now witnessed at `q = x`, `P = 1`,
+`Qt = 1`, `r = 0`, `k = 1`. Baseline **37 → 36**.
+
+### The 37 were triaged, and the number overstated the risk
+
+`hypotheses_count` counts **all** top-level binders, so a computation lemma `foo (x : Real) : …`
+lands in the list with arity 1 and zero vacuity exposure. Annotated per entry:
+
+| category | n | can it be vacuous? |
+| --- | --- | --- |
+| computation (value binders only) | 12 | no |
+| generalisation receipt (`Pr := True`) | 5 | no — terminal by design |
+| internal case-absurdity | 7 | no |
+| review queue | 12 | **yes** |
+
+So the genuine review queue is **12, not 37**. Driving the count to zero would have meant writing
+ceremonial witnesses for computation lemmas, which is worse than an honest list.
+
+Gates: build **733 jobs**, aggregator **730 of 1036**, consistency PASS, claims **411** (self-test:
+fifteen canaries), obligations 18 rows (nine convict specimens), discovered 290/294, AxiomLedger
+**242 pinned (unchanged)**, sorry-audit 1 allowlisted, witness audit **36** (pinned set).
+
 ## [Unreleased] — 2026-08-24 (cn)
 
 ### `div` finished — a rational normal form, and the reduction for arbitrary contexts

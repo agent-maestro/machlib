@@ -8487,7 +8487,9 @@
       "theorem": "MachLib.signHardCase_iff_compareExpExpPos",
       "forbid_axioms": [
         "sorryAx"
-      ]
+      ],
+      "epistemic_type": "REDUCED",
+      "reduces_to": "SignCompareExpExpPos"
     },
     {
       "id": "exp-is-an-eml-tree-changelog",
@@ -8556,7 +8558,9 @@
       "theorem": "MachLib.oneQueryDichotomy_divFree_of_bipoly",
       "forbid_axioms": [
         "sorryAx"
-      ]
+      ],
+      "epistemic_type": "REDUCED",
+      "reduces_to": "BipolyDichotomyAlong"
     },
     {
       "id": "ctxfrac-rational-normalform-changelog",
@@ -8585,7 +8589,9 @@
       "theorem": "MachLib.oneQueryDichotomy_of_bipoly",
       "forbid_axioms": [
         "sorryAx"
-      ]
+      ],
+      "epistemic_type": "REDUCED",
+      "reduces_to": "BipolyDichotomyAlong"
     }
   ]
 }
