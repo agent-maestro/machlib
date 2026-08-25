@@ -5,6 +5,84 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cx)
+
+### `EMLDeclampEncoder` — rewrite the tree, not the encoder
+
+`(cw)` located the live mismatch: `enc_isCoherentOn` needs `LogArgPos` — the log argument **positive**
+at every node — while the depth induction produces *positive or clamped*. This closes it, and the
+closure is smaller than the gap looked.
+
+**The clamped branch has no logarithm in it.** `log y = 0` for `y ≤ 0`, so a clamped `eml t1 t2`
+evaluates to `exp (t1 x)` — and `exp ∘ t1` is itself an EML node with a *positive* argument,
+`eml t1 (const 1)`, because `log 1 = 0` (`expTree_eval`, in the corpus since `(cs)`). So the node the
+encoder cannot accept computes a function the encoder accepts in a different spelling.
+
+`declamp t a b` performs that spelling change: replace every clamped node's right child by `const 1`.
+
+```
+declamp_eval        : LogArgStable t a b → ∀ x ∈ (a,b), (declamp t a b).eval x = t.eval x
+declamp_logArgPos   : LogArgStable t a b → LogArgPos (declamp t a b) a b
+```
+
+The first is where the work is — on the clamped branch both sides reduce to `exp (t1.eval x)`, one via
+`log_nonpos`, the other via `log_one`. The second is then immediate: kept nodes keep a positive
+argument (their values are unchanged), rewritten nodes have argument `1`.
+
+`enc_isCoherentOn` applies unchanged. **No change to the encoder, and no new axioms** —
+`declamp_eval` cites 18, `logArgStable_of_evSign` 14.
+
+### The hypothesis is exactly what the induction produces
+
+```
+LogArgStable (.eml t1 t2) a b := LogArgStable t1 a b ∧ LogArgStable t2 a b ∧
+                                 ((∀ x ∈ (a,b), 0 < t2.eval x) ∨ (∀ x ∈ (a,b), t2.eval x ≤ 0))
+```
+
+`LogArgPos` with each node's positivity replaced by the **disjunction** — the same move `(cu)` made
+for continuity, now made for coherence. `logArgStable_of_logArgPos` records that it is genuinely
+weaker, and `logArgStable_of_evSign` supplies it on a ray from `EvSign` at every node, by structural
+induction with the three rays joined at each step.
+
+Note what it is **not**: not `EMLNoCrossingAt`. A node whose argument sits at exactly `0` throughout
+is stable — it takes the non-positive branch and `declamp` sends it to `const 1`. The condition rules
+out *crossings inside the interval*, not zeros. That is the third time in this arc the totalisation
+has turned a rejected case into a free one.
+
+### The chain, end to end
+
+```
+SignHardCase → ∀ t, EvSign t.eval        (evSign_of_hard)
+             → LogArgStable t on a ray    (logArgStable_of_evSign)
+             → LogArgPos (declamp t) ∧ same values on (a,b)
+             → enc (declamp t) coherent on (a,b)     (enc_declamp_isCoherentOn)
+```
+
+`eventually_coherent_encoding_of_hard` states it in one theorem: **on the existing obligation, every
+EML tree is eventually computed by a tree whose Pfaffian encoding is coherent — hence analytic — on
+every interval far enough out.** That is what the log-Khovanskii arc consumes.
+`eventually_coherent_encoding_of_uniformBounds` is the same on the zero-control obligation.
+
+### What it does not close, stated precisely
+
+`declamp` depends on `(a,b)`: it is a **different tree per interval**, chosen by a `Classical` test at
+each node. Harmless for coherence on a fixed interval, which is all `enc_isCoherentOn` asks — but it
+means no single tree serves every interval, so a zero count obtained this way is *per interval* and
+still has to be made uniform before `eventually_nonzero_of_uniformZeroBoundFrom` can consume it.
+
+That is now the whole remaining gap on this route, and it is a uniformity question rather than a
+representability one: the tree varies, but only across finitely many shapes (`declamp` only ever
+replaces right children by `const 1`, so every variant is a sub-selection of the same node set).
+Whether that finiteness gives a uniform bound is not proved here and is not assumed.
+
+`SignHardCase` stays `open`, 18 rows unchanged, nothing registered, and no `UniformZeroBound` of
+either strength is supplied for any EML node value.
+
+Gates: build **739 jobs**, aggregator **736 of 1042**, consistency PASS, claims 422, obligations 18
+rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted, witness
+audit 36. No footprint cites `sorryAx`, `zero_count_bound_classical`, `analytic_finite_zeros`,
+`Khovanskii`, `Fbasis` or `rolle`.
+
 ## [Unreleased] — 2026-08-25 (cw)
 
 ### The bridge's hypothesis, at its point of use — and two corrections
