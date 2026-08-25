@@ -5,7 +5,80 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cz)
+
+### A variant can be identically zero while its node never vanishes
+
+`(cy)` shipped the finiteness reduction and flagged one thing as undecided: whether some variant of a
+node can be eventually zero while the node itself is not. It can, and here it is.
+
+```
+witInner = eml (const 0) (const 1)              value  exp 0 − log 1       = 1
+witB     = eml witInner (const (exp 1))         value  exp 1 − log (exp 1) = exp 1 − 1
+witT     = eml (const 0) witB                   value  1 − log (exp 1 − 1)   ≠ 0
+witV     = eml (const 0) (eml witInner (const 1))
+                                                value  1 − log (exp 1)     = 0
+```
+
+`witV` is `witT` with `witB`'s right child clamped to `const 1`, so `witV_mem_variants` puts it in the
+list. `witV_eval_zero` — identically `0`. `witT_eval_ne_zero` — never `0`, because
+`log (exp 1 − 1) = 1` would force `exp 1 − 1 = exp 1`, i.e. `0 = 1`.
+
+> **`variant_can_be_evZero`** — `∃ t v, v ∈ declampVariants t ∧ EvZeroF v.eval ∧ ¬ EvZeroF t.eval`
+
+So a node's non-vanishing does **not** transfer to its variants. That closes the door `(cy)` left ajar:
+a per-variant demand cannot be conditioned on the node alone.
+
+### The consequence lands on `(cy)`'s own corollary
+
+`variantBounds_hypothesis_unsatisfiable` — there is **no** `F` giving
+`UniformZeroBoundFrom v.eval 1 (F v)` for every `v ∈ declampVariants witT`, because it would have to
+bound `witV`, and an identically-zero function is not eventually non-vanishing. The all-variants form
+shipped in `(cy)` is a true theorem with a hypothesis nothing can supply for such trees.
+
+**Reachability is exactly what separates the two.** `witV` arises only by clamping at a node whose log
+argument is the constant `exp 1 > 0` — a node `declamp` never clamps. So the identically-zero variant
+is *in the list* but is *never produced*.
+
+`uniformZeroBoundFrom_of_reachableBounds` is therefore now the primary statement: it demands bounds
+only on trees `declamp` really produces,
+
+```
+hF : ∀ a b, X₀ ≤ a → a < b → UniformZeroBoundFrom (declamp t a b).eval X₀ (F (declamp t a b))
+```
+
+and still concludes one `N` for the whole ray, because `declamp t a b` is always *in* the finite list
+even though not everything in the list is reachable. The `(cy)` corollary is kept and derived from it,
+with its docstring now saying when it is useless.
+
+### What this run of the pattern cost, and what it should cost next time
+
+Fourth time this arc a demand had to be conditioned, and the first time the *conditioning I had
+already applied* turned out to be insufficient rather than absent. `(cv)`'s lesson was "condition on
+`¬ EvZeroF`"; the refinement is that **the condition has to sit on the object the hypothesis
+quantifies over**, not on a related one. Conditioning the node says nothing about its variants,
+because a variant is a different function.
+
+The general form: when a hypothesis ranges over derived objects, check satisfiability *for the derived
+objects*, not for the thing they were derived from.
+
+### Scope
+
+`SignHardCase` stays `open`, 18 rows unchanged, nothing registered. The remaining input is unchanged
+in substance — per-interval bounds on the trees `declamp` actually produces — but is now stated
+against the right set.
+
+Gates: build **740 jobs**, aggregator 737 of 1043, consistency PASS, claims 422, obligations 18 rows,
+discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted, witness audit
+36. `variant_can_be_evZero` cites 29 axioms; no footprint cites `sorryAx`,
+`zero_count_bound_classical`, `analytic_finite_zeros`, `Khovanskii`, `Fbasis` or `rolle`.
+
 ## [Unreleased] — 2026-08-25 (cy)
+
+> **ANSWERED IN `(cz)` BELOW.** The question this entry leaves open — whether a variant can be
+> eventually zero while its node is not — is settled **yes**, by an explicit tree. The
+> consequence is that `uniformZeroBoundFrom_of_variantBounds`'s hypothesis is *unsatisfiable*
+> for some trees; use `uniformZeroBoundFrom_of_reachableBounds` instead.
 
 ### `EMLDeclampUniform` — the tree varies, the maximum does not
 

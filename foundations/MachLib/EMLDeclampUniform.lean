@@ -105,13 +105,17 @@ theorem uniformZeroBoundFrom_mono {f : Real → Real} {N : Nat} {R R' : Real} (h
 
 The tree changes with the interval; the maximum does not. -/
 
-/-- **A bound per variant gives a bound for the tree.** On each interval the zeros of `t` are the
-zeros of `declamp t a b` — they agree there — and that tree is one of finitely many, so the maximum
-of the per-variant bounds serves every interval at or beyond `X₀`. -/
-theorem uniformZeroBoundFrom_of_variantBounds (t : EMLTree) (X₀ : Real)
+/-- **A bound for each variant that actually occurs gives a bound for the tree.** On each interval
+the zeros of `t` are the zeros of `declamp t a b` — they agree there — and that tree is one of
+finitely many, so the maximum over the variant list serves every interval at or beyond `X₀`.
+
+The hypothesis asks for bounds only on trees `declamp` really produces. §6 shows that matters: some
+variants in the list are unreachable, and one of those can be identically zero. -/
+theorem uniformZeroBoundFrom_of_reachableBounds (t : EMLTree) (X₀ : Real)
     (hst : ∀ a b : Real, X₀ ≤ a → a < b → LogArgStable t a b)
     (F : EMLTree → Nat)
-    (hF : ∀ v ∈ declampVariants t, UniformZeroBoundFrom v.eval X₀ (F v)) :
+    (hF : ∀ a b : Real, X₀ ≤ a → a < b →
+            UniformZeroBoundFrom (declamp t a b).eval X₀ (F (declamp t a b))) :
     ∃ N : Nat, UniformZeroBoundFrom t.eval X₀ N := by
   refine ⟨listMaxF F (declampVariants t), fun a b hRa hab zeros hnd hz => ?_⟩
   have hmem := declamp_mem_variants t a b
@@ -120,7 +124,18 @@ theorem uniformZeroBoundFrom_of_variantBounds (t : EMLTree) (X₀ : Real)
     intro z hzm
     obtain ⟨ha, hb, h0⟩ := hz z hzm
     exact ⟨ha, hb, by rw [heval z ha hb]; exact h0⟩
-  exact Nat.le_trans (hF _ hmem a b hRa hab zeros hnd hzv) (le_listMaxF F _ _ hmem)
+  exact Nat.le_trans (hF a b hRa hab a b hRa hab zeros hnd hzv) (le_listMaxF F _ _ hmem)
+
+/-- Bounds for *every* variant are more than enough — a corollary, since every reachable variant is
+in the list. Kept because it is the shape a producer that ignores reachability would supply, but §6
+shows its hypothesis can be unsatisfiable, so prefer the reachable form. -/
+theorem uniformZeroBoundFrom_of_variantBounds (t : EMLTree) (X₀ : Real)
+    (hst : ∀ a b : Real, X₀ ≤ a → a < b → LogArgStable t a b)
+    (F : EMLTree → Nat)
+    (hF : ∀ v ∈ declampVariants t, UniformZeroBoundFrom v.eval X₀ (F v)) :
+    ∃ N : Nat, UniformZeroBoundFrom t.eval X₀ N :=
+  uniformZeroBoundFrom_of_reachableBounds t X₀ hst F
+    (fun a b _ _ => hF _ (declamp_mem_variants t a b))
 
 /-- The same with the stability hypothesis discharged from sign-definiteness at every node — the
 form the depth induction already supplies. The ray is the one `logArgStable_of_evSign` produces, and
@@ -141,6 +156,120 @@ theorem uniformZeroBoundFrom_of_evSign_variantBounds (t : EMLTree)
       (fun a b ha hab => hst a b (le_trans hX0X1 ha) hab)
       F (fun v hv => uniformZeroBoundFrom_mono hX0R (hF v hv))
   exact ⟨X₀, N, hX01, hN⟩
+
+
+/-! ## §6 — a variant *can* be eventually zero while the node is not
+
+§5 left this open. It is settled, **negatively**, by an explicit tree — and the consequence lands on
+§4's convenience corollary.
+
+```
+witInner = eml (const 0) (const 1)          value  exp 0 − log 1     = 1
+witB     = eml witInner (const (exp 1))     value  exp 1 − log(e)    = exp 1 − 1
+witT     = eml (const 0) witB               value  1 − log (exp 1 − 1)   ≠ 0
+witV     = eml (const 0) (eml witInner (const 1))
+                                            value  1 − log (exp 1)   = 0
+```
+
+`witV` is `witT` with `witB`'s right child clamped to `const 1`, so it is a variant. Its value is
+identically `0`; `witT`'s never is, because `log (exp 1 − 1) = 1` would force `exp 1 − 1 = exp 1`.
+
+**Reachability is what separates them.** `witV` arises only by clamping at a node whose log argument
+is the constant `exp 1 > 0` — a node `declamp` never clamps. So the identically-zero variant is in
+the list but is never produced, which is exactly why
+`uniformZeroBoundFrom_of_reachableBounds` is the right form and the all-variants corollary is not. -/
+
+/-- `exp 0 − log 1 = 1`. -/
+noncomputable def witInner : EMLTree := EMLTree.eml (EMLTree.const 0) (EMLTree.const 1)
+
+/-- `exp 1 − log (exp 1) = exp 1 − 1`. -/
+noncomputable def witB : EMLTree := EMLTree.eml witInner (EMLTree.const (exp 1))
+
+/-- The node: value `1 − log (exp 1 − 1)`, never zero. -/
+noncomputable def witT : EMLTree := EMLTree.eml (EMLTree.const 0) witB
+
+/-- The variant: value identically `0`. -/
+noncomputable def witV : EMLTree :=
+  EMLTree.eml (EMLTree.const 0) (EMLTree.eml witInner (EMLTree.const 1))
+
+private theorem witInner_eval (x : Real) : witInner.eval x = 1 := by
+  show exp (0 : Real) - log (1 : Real) = 1
+  rw [log_one, exp_zero]; mach_ring
+
+private theorem exp_one_sub_one_pos : (0 : Real) < exp 1 - 1 := by
+  have h := one_lt_exp_one_wit
+  have v := add_lt_add_left h (-(1 : Real))
+  have l : -(1 : Real) + 1 = 0 := by mach_ring
+  have r : -(1 : Real) + exp 1 = exp 1 - 1 := by mach_ring
+  rw [l, r] at v; exact v
+
+private theorem witB_eval (x : Real) : witB.eval x = exp 1 - 1 := by
+  show exp (witInner.eval x) - log (exp 1) = exp 1 - 1
+  rw [witInner_eval x, log_exp]
+
+/-- **The variant is identically zero.** -/
+theorem witV_eval_zero (x : Real) : witV.eval x = 0 := by
+  show exp (0 : Real) - log (exp (witInner.eval x) - log (1 : Real)) = 0
+  rw [witInner_eval x, log_one, exp_zero,
+    show exp (1 : Real) - (0 : Real) = exp 1 from by mach_ring, log_exp]
+  mach_ring
+
+/-- **The node never is.** `log (exp 1 − 1) = 1` would force `exp 1 − 1 = exp 1`. -/
+theorem witT_eval_ne_zero (x : Real) : witT.eval x ≠ 0 := by
+  intro h
+  have h' : exp (0 : Real) - log (witB.eval x) = 0 := h
+  rw [witB_eval x, exp_zero] at h'
+  have hlog : log (exp 1 - 1) = 1 := by
+    have e : (1 : Real) - log (exp 1 - 1) + log (exp 1 - 1) = 1 := by mach_ring
+    rw [h'] at e
+    have e2 : (0 : Real) + log (exp 1 - 1) = log (exp 1 - 1) := by mach_ring
+    rw [e2] at e
+    exact e
+  have hel := exp_log exp_one_sub_one_pos
+  rw [hlog] at hel
+  -- hel : exp 1 = exp 1 - 1
+  have e3 : exp (1 : Real) - (exp 1 - 1) = 1 := by mach_ring
+  rw [← hel] at e3
+  have e4 : exp (1 : Real) - exp 1 = 0 := by mach_ring
+  rw [e4] at e3
+  exact zero_ne_one_ax e3
+
+/-- `witV` really is a variant of `witT`: clamp `witB`'s right child, keep everything else. -/
+theorem witV_mem_variants : witV ∈ declampVariants witT := by
+  have hinner : witInner ∈ declampVariants witInner := by
+    simp [declampVariants, witInner]
+  have hB : EMLTree.eml witInner (EMLTree.const 1) ∈ declampVariants witB := by
+    rw [show declampVariants witB
+          = (declampVariants witInner).flatMap (fun v1 =>
+              (declampVariants (EMLTree.const (exp 1))).map (fun v2 => EMLTree.eml v1 v2)
+                ++ [EMLTree.eml v1 (EMLTree.const 1)]) from rfl]
+    exact List.mem_flatMap.mpr ⟨witInner, hinner, List.mem_append.mpr (Or.inr (by simp))⟩
+  rw [show declampVariants witT
+        = (declampVariants (EMLTree.const 0)).flatMap (fun v1 =>
+            (declampVariants witB).map (fun v2 => EMLTree.eml v1 v2)
+              ++ [EMLTree.eml v1 (EMLTree.const 1)]) from rfl]
+  refine List.mem_flatMap.mpr ⟨EMLTree.const 0, by simp [declampVariants], ?_⟩
+  exact List.mem_append.mpr
+    (Or.inl (List.mem_map.mpr ⟨EMLTree.eml witInner (EMLTree.const 1), hB, rfl⟩))
+
+/-- **The question §5 left open, settled negatively.** A variant can be eventually zero — indeed
+identically zero — while the node it came from never vanishes. So a node's non-vanishing does **not**
+transfer to its variants, and per-variant demands cannot be conditioned on the node alone. -/
+theorem variant_can_be_evZero :
+    ∃ t v : EMLTree, v ∈ declampVariants t ∧ EvZeroF v.eval ∧ ¬ EvZeroF t.eval := by
+  refine ⟨witT, witV, witV_mem_variants, ⟨1, le_refl 1, fun x _ => witV_eval_zero x⟩, ?_⟩
+  rintro ⟨Y, _, hz⟩
+  exact witT_eval_ne_zero Y (hz Y (le_refl Y))
+
+/-- **And therefore the all-variants hypothesis is unsatisfiable for `witT`.** It demands a bound for
+`witV`, which is identically zero and so is not eventually non-vanishing. The reachable form
+(`uniformZeroBoundFrom_of_reachableBounds`) never asks for it: `witV` arises only by clamping at a
+node whose log argument is the constant `exp 1 > 0`, which `declamp` never clamps. -/
+theorem variantBounds_hypothesis_unsatisfiable :
+    ¬ ∃ F : EMLTree → Nat, ∀ v ∈ declampVariants witT, UniformZeroBoundFrom v.eval 1 (F v) := by
+  rintro ⟨F, hF⟩
+  obtain ⟨Y, hY1, hne⟩ := eventually_nonzero_of_uniformZeroBoundFrom (hF witV witV_mem_variants)
+  exact hne Y (le_refl Y) (witV_eval_zero Y)
 
 /-! ## §5 — discrimination
 
