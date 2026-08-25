@@ -8528,6 +8528,35 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "id": "onequery-divfree-normalform-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`divFree_eval` proves it evaluates correctly",
+        "**unconditionally,\nwith no side conditions at all**"
+      ],
+      "module": "MachLib.EMLOneQueryNormalForm",
+      "theorem": "MachLib.divFree_eval",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log",
+        "Real.exp"
+      ]
+    },
+    {
+      "id": "onequery-divfree-reduction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "oneQueryDichotomy_divFree_of_bipoly",
+        "no context syntax and no `FCtx`"
+      ],
+      "module": "MachLib.EMLOneQueryNormalForm",
+      "theorem": "MachLib.oneQueryDichotomy_divFree_of_bipoly",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

@@ -5,6 +5,58 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cm)
+
+### `EMLOneQueryNormalForm` — the div-free fragment of `OneQueryDichotomy` is bivariate algebra
+
+`OneQueryDichotomy` asks whether a one-query *context* `C(x, F(S x))` is eventually zero or
+eventually nonzero, for `S = P/Q` rational. `EMLGermSign` already recorded the reason to expect it to
+turn on **representation** rather than transcendence: sign-definiteness for `C₀` was easy precisely
+*because `C₀` has a normal form*, and the level-1 question is hard exactly where none is available to
+read the answer off.
+
+This supplies the normal form for the fragment where one exists outright.
+
+`FCtx` is `hole | const | var | add | sub | mul | div` — a **rational** function of `x` and the hole.
+Drop `div` and it is a **polynomial** in the hole with polynomial-in-`x` coefficients: a `Bipoly`.
+`ctxPoly` is that translation, and `divFree_eval` proves it evaluates correctly — **unconditionally,
+with no side conditions at all**.
+
+```
+oneQueryDichotomy_divFree_of_bipoly : BipolyDichotomyAlong → (the dichotomy, for every div-free C)
+```
+
+On this fragment the obligation contains **no context syntax and no `FCtx`**. What is left is whether
+a bivariate polynomial can vanish identically along the curve `y = F(P(x)/Q(x))` — an
+algebraic-relation question about `F ∘ (P/Q)` and nothing else. Same move as `EMLSignReduction`:
+strip the representation until the residue is growth or algebraic dependence, then name it.
+
+### Why `div` is excluded deliberately
+
+Division needs its denominator nonzero to mean anything — `div_def` carries `hb : b ≠ 0` — so a
+*rational* normal form must carry a nonvanishing condition for **every intermediate denominator**,
+and that bookkeeping is a separate piece of work. The div-free fragment needs none of it, which is
+exactly what makes it worth isolating rather than bundling.
+
+### Discrimination
+
+`divFree_specimens` exhibits two div-free contexts with real structure (`x·y` and `y² − 1`) and shows
+`div` is genuinely excluded, so the normal form is not a theorem about an empty or trivial class.
+`ctxPoly_mul_var_hole` checks the translation computes: the `Bipoly` denoted by `mul var hole` really
+is `x · y`.
+
+### What is **not** claimed
+
+`OneQueryDichotomy` stays **open** and the `div` case is untouched. Nothing here shows a bivariate
+polynomial cannot vanish along that curve — that is the residue, and for `F = exp + log` composed
+with a *rational function* it is transcendence input the corpus does not yet have in this form.
+`Fbasis_not_algebraic` is the corresponding statement for the **identity** argument (`F x`), not for
+`F (P/Q)`.
+
+Gates: build **733 jobs**, aggregator **730 of 1036** modules reachable, consistency PASS, claims
+**409**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit
+1 allowlisted, witness audit 37 (pinned set).
+
 ## [Unreleased] — 2026-08-24 (cl)
 
 ### `witness_audit.py` — the signal that was there and unread, made into an artifact

@@ -413,6 +413,7 @@ import MachLib.GermClearedBranch
 import MachLib.GermClearedDescent
 import MachLib.GermClearedSpecimen
 import MachLib.EMLSignReduction
+import MachLib.EMLOneQueryNormalForm
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry
