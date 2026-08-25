@@ -5,6 +5,103 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cw)
+
+### The bridge's hypothesis, at its point of use — and two corrections
+
+Two things happened while trying to take the next step named at the end of `(cv)`. One is a small
+theorem. The other is that **the step named there was already done**, and so was the one named after
+it. Both were asserted from memory of the corpus rather than checked against it.
+
+### Correction 1 — the quantifier reordering is not outstanding
+
+`(cv)` closed with: *"the Khovanskii statements would first have to quantify `N` before the
+interval"*. That reordering was performed in the `(cs)` arc.
+`MachLib.ChainExp2Capstone.chain2_khovanskii_bound_uniform` already reads
+
+```
+∃ N : Nat, ∀ (a b : Real), a < b → ∀ zeros, … → zeros.length ≤ N
+```
+
+— `N` in front of `a b`, exactly the shape `eventually_nonzero_of_uniformZeroBound` consumes. The
+note quoted in `EMLZeroBoundRay`'s docstring predates that module and is stale where it is quoted.
+
+### Correction 2 — the `EMLTree → chain` encoder exists
+
+`(cv)`'s successor claim, that no encoder from `EMLTree` to a Pfaffian chain existed, is also wrong.
+`MachLib.EMLEncoder` ships `enc` (state-threaded via `chainExtend`), `enc_eval` (the barrier
+evaluates to `t.eval`) and `enc_isCoherentOn` (the produced chain is coherent on `(a,b)`), with no
+new axioms.
+
+Both corrections came from grepping the corpus before building on the claim. Neither would have been
+caught by any gate: a stale "what remains" sentence in a changelog is not a proposition anything
+checks. The pattern is the same one that produced the vacuous obligation in `(cv)` — reasoning from a
+remembered state of the corpus instead of the corpus.
+
+### What actually remains, checked
+
+`enc_isCoherentOn` is gated on `LogArgPos`:
+
+```
+LogArgPos (.eml t1 t2) a b := LogArgPos t1 a b ∧ LogArgPos t2 a b ∧ (∀ x ∈ (a,b), 0 < t2.eval x)
+```
+
+Positivity of the log argument at **every** node, throughout the interval. That is the same demand
+`EMLNoCrossingAt` made and that `(cu)` replaced for the continuity route — and the sign induction
+does **not** supply it. `evSignCont_of_cts` gives each node's argument *positive or clamped*; on the
+clamped branch the argument is `≤ 0`, `LogArgPos` fails, and the node's value is `exp (A x)` with no
+real logarithm in it at all.
+
+So the live mismatch is neither the reordering nor the encoder. It is that **the encoder wants
+positivity where the induction produces a disjunction** — the same tension `(cu)` resolved for
+continuity, unresolved for coherence. A clamped-aware encoder (encode a clamped node as its `exp`
+factor, since that is what it evaluates to) is the shape that would close it. Not attempted here.
+
+### The small theorem: `UniformZeroBoundFrom`
+
+`UniformZeroBound f N` demands the bound on **every** interval.
+`eventually_nonzero_of_uniformZeroBound` inspects exactly one, `(pickZero 0 − 1, pickZero N + 1)`,
+and the milking argument may place it as far out as it likes, because the zeros it draws on are
+cofinal by construction. Intervals near or below any chosen base are never consulted.
+
+```
+UniformZeroBoundFrom f R N := ∀ a b, R ≤ a → a < b → ∀ zeros, … → zeros.length ≤ N
+```
+
+`eventually_nonzero_of_uniformZeroBoundFrom` proves the bridge from it, seeding the milking at
+`R + 1` — **not `R`**, because the interval starts one unit *beneath* its first zero, the same
+closed-ray/two-sided off-by-one `ray_shift_nbhd` handles in the sign arc. Seeding required threading
+an explicit seed through the private `pickZero`/`zlist` machinery; the change is mechanical and the
+seed defaults to the old behaviour at `R = 1`.
+
+`uniformZeroBoundFrom_of_uniformZeroBound` recovers the weaker form from the original and
+`eventually_nonzero_of_uniformZeroBound` is now a **corollary** rather than a second proof — the
+weakening subsumes its predecessor, as `singleExp_khovanskii_bound_at_reduct` did. Footprint
+unchanged at 22 axioms, and the registered claim on it still resolves.
+
+### The fourth instance of one pattern
+
+| hypothesis | stated over | used at |
+| --- | --- | --- |
+| `IsKhovanskiiReducible` side condition | the whole reduction closure | one reduct, `(cs)` |
+| chain-2 bound's `N` | after the interval | one `N` for all, `(cs)` |
+| `SignHardCase`'s obligation | every tree pair | one node, `(cu)` |
+| `UniformZeroBound` | every interval | one far-out interval, here |
+
+`SignHardUniformZeroBound` now demands only `UniformZeroBoundFrom … X₀ …`, on the ray its own
+positivity hypothesis controls. Asking for zero control below `X₀` was asking the producer for
+information the statement never gives it.
+
+### Scope
+
+`SignHardCase` stays `open`, 18 rows unchanged, nothing registered. No `UniformZeroBound` — of either
+strength — is supplied for any EML node value.
+
+Gates: build **738 jobs**, aggregator 735 of 1041, consistency PASS, claims 422, obligations 18 rows,
+discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted, witness audit
+36. No new footprint cites `sorryAx`, `zero_count_bound_classical`, `analytic_finite_zeros`,
+`Khovanskii`, `Fbasis` or `rolle`.
+
 ## [Unreleased] — 2026-08-25 (cv)
 
 ### `EMLSignZeroProducer` — the producer wired, and the obligation it kills on the way

@@ -69,94 +69,137 @@ private theorem sub_one_lt' (a : Real) : a - 1 < a := by
 
 /-- A strictly increasing sequence of zeros, from the assumption that zeros are cofinal. -/
 private noncomputable def pickZero (f : Real → Real)
-    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) : Nat → Real
-  | 0     => Classical.choose (hz 1)
-  | n + 1 => Classical.choose (hz (pickZero f hz n + 1))
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) : Nat → Real
+  | 0     => Classical.choose (hz S)
+  | n + 1 => Classical.choose (hz (pickZero f hz S n + 1))
 
 private theorem pickZero_spec (f : Real → Real)
-    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) :
-    ∀ n : Nat, 1 ≤ pickZero f hz n ∧ f (pickZero f hz n) = 0 := by
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) :
+    ∀ n : Nat, 1 ≤ pickZero f hz S n ∧ f (pickZero f hz S n) = 0 := by
   intro n
   cases n with
-  | zero => exact ⟨(Classical.choose_spec (hz 1)).2.1, (Classical.choose_spec (hz 1)).2.2⟩
+  | zero => exact ⟨(Classical.choose_spec (hz S)).2.1, (Classical.choose_spec (hz S)).2.2⟩
   | succ k =>
-      exact ⟨(Classical.choose_spec (hz (pickZero f hz k + 1))).2.1,
-             (Classical.choose_spec (hz (pickZero f hz k + 1))).2.2⟩
+      exact ⟨(Classical.choose_spec (hz (pickZero f hz S k + 1))).2.1,
+             (Classical.choose_spec (hz (pickZero f hz S k + 1))).2.2⟩
 
 private theorem pickZero_succ_gt (f : Real → Real)
-    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) :
-    ∀ n : Nat, pickZero f hz n < pickZero f hz (n + 1) := by
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) :
+    ∀ n : Nat, pickZero f hz S n < pickZero f hz S (n + 1) := by
   intro n
-  have hge : pickZero f hz n + 1 ≤ pickZero f hz (n + 1) :=
-    (Classical.choose_spec (hz (pickZero f hz n + 1))).1
+  have hge : pickZero f hz S n + 1 ≤ pickZero f hz S (n + 1) :=
+    (Classical.choose_spec (hz (pickZero f hz S n + 1))).1
   exact lt_of_lt_of_le (lt_add_one' _) hge
 
 private theorem pickZero_mono (f : Real → Real)
-    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) :
-    ∀ i j : Nat, i < j → pickZero f hz i < pickZero f hz j := by
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) :
+    ∀ i j : Nat, i < j → pickZero f hz S i < pickZero f hz S j := by
   intro i j
   induction j with
   | zero => intro h; exact absurd h (Nat.not_lt_zero i)
   | succ k ih =>
       intro h
       rcases Nat.lt_or_ge i k with hlt | hge
-      · exact lt_of_lt_of_le (ih hlt) (le_of_lt (pickZero_succ_gt f hz k))
+      · exact lt_of_lt_of_le (ih hlt) (le_of_lt (pickZero_succ_gt f hz S k))
       · have hik : i = k := Nat.le_antisymm (by omega) hge
-        rw [hik]; exact pickZero_succ_gt f hz k
+        rw [hik]; exact pickZero_succ_gt f hz S k
 
 /-! ## The witness list -/
 
 private noncomputable def zlist (f : Real → Real)
-    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) : Nat → List Real
-  | 0     => [pickZero f hz 0]
-  | k + 1 => pickZero f hz (k + 1) :: zlist f hz k
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) : Nat → List Real
+  | 0     => [pickZero f hz S 0]
+  | k + 1 => pickZero f hz S (k + 1) :: zlist f hz S k
 
 private theorem zlist_length (f : Real → Real)
-    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) :
-    ∀ k : Nat, (zlist f hz k).length = k + 1 := by
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) :
+    ∀ k : Nat, (zlist f hz S k).length = k + 1 := by
   intro k
   induction k with
   | zero => rfl
-  | succ m ih => show (zlist f hz m).length + 1 = m + 1 + 1; rw [ih]
+  | succ m ih => show (zlist f hz S m).length + 1 = m + 1 + 1; rw [ih]
 
 private theorem zlist_bounds (f : Real → Real)
-    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) :
-    ∀ (k : Nat) (z : Real), z ∈ zlist f hz k →
-      pickZero f hz 0 ≤ z ∧ z ≤ pickZero f hz k ∧ f z = 0 := by
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) :
+    ∀ (k : Nat) (z : Real), z ∈ zlist f hz S k →
+      pickZero f hz S 0 ≤ z ∧ z ≤ pickZero f hz S k ∧ f z = 0 := by
   intro k
   induction k with
   | zero =>
       intro z hzm
-      have : z = pickZero f hz 0 := by simpa [zlist] using hzm
+      have : z = pickZero f hz S 0 := by simpa [zlist] using hzm
       rw [this]
-      exact ⟨le_refl _, le_refl _, (pickZero_spec f hz 0).2⟩
+      exact ⟨le_refl _, le_refl _, (pickZero_spec f hz S 0).2⟩
   | succ m ih =>
       intro z hzm
       rcases List.mem_cons.mp hzm with hhead | htail
       · rw [hhead]
-        refine ⟨le_of_lt (pickZero_mono f hz 0 (m + 1) (by omega)), le_refl _, ?_⟩
-        exact (pickZero_spec f hz (m + 1)).2
+        refine ⟨le_of_lt (pickZero_mono f hz S 0 (m + 1) (by omega)), le_refl _, ?_⟩
+        exact (pickZero_spec f hz S (m + 1)).2
       · obtain ⟨h0, hm, hf⟩ := ih z htail
-        exact ⟨h0, le_trans hm (le_of_lt (pickZero_succ_gt f hz m)), hf⟩
+        exact ⟨h0, le_trans hm (le_of_lt (pickZero_succ_gt f hz S m)), hf⟩
 
 private theorem zlist_nodup (f : Real → Real)
-    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) :
-    ∀ k : Nat, (zlist f hz k).Nodup := by
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) :
+    ∀ k : Nat, (zlist f hz S k).Nodup := by
   intro k
   induction k with
   | zero => exact List.nodup_cons.mpr ⟨by simp, List.nodup_nil⟩
   | succ m ih =>
       refine List.nodup_cons.mpr ⟨?_, ih⟩
       intro hmem
-      obtain ⟨_, hle, _⟩ := zlist_bounds f hz m _ hmem
-      exact (ne_of_lt (lt_of_lt_of_le (pickZero_succ_gt f hz m) hle)) rfl
+      obtain ⟨_, hle, _⟩ := zlist_bounds f hz S m _ hmem
+      exact (ne_of_lt (lt_of_lt_of_le (pickZero_succ_gt f hz S m) hle)) rfl
 
-/-! ## The bridge -/
+/-- Every picked zero lies at or beyond the seed. -/
+private theorem pickZero_ge_seed (f : Real → Real)
+    (hz : ∀ Y : Real, ∃ x : Real, Y ≤ x ∧ 1 ≤ x ∧ f x = 0) (S : Real) :
+    ∀ n : Nat, S ≤ pickZero f hz S n := by
+  intro n
+  induction n with
+  | zero => exact (Classical.choose_spec (hz S)).1
+  | succ k ih => exact le_trans ih (le_of_lt (pickZero_succ_gt f hz S k))
 
-/-- **A uniform interval bound gives eventual non-vanishing.** Pure order and combinatorics: no
+/-! ## The bridge
+
+### The hypothesis was quantified past its use
+
+`UniformZeroBound` asks for the bound on **every** interval. The proof below inspects exactly one —
+`(pickZero 0 − 1, pickZero N + 1)` — and the milking argument is free to place that interval as far
+out as it likes, because the zeros it draws on are cofinal by construction. Intervals near or below
+any chosen base are never consulted, so demanding them quantifies past the use.
+
+`UniformZeroBoundFrom f R N` says so: the bound is demanded only on intervals lying at or beyond `R`.
+`uniformZeroBoundFrom_of_uniformZeroBound` recovers it from the original and
+`eventually_nonzero_of_uniformZeroBound` is now a corollary rather than a second proof, so this
+**subsumes** rather than sits beside — the discipline `singleExp_khovanskii_bound_at_reduct` applied
+to the reducibility side condition, and for the same reason: a hypothesis quantified far past its use
+makes the remaining work look larger than it is.
+
+It matters concretely downstream. `SignHardUniformZeroBound` (`EMLSignZeroProducer`) carries
+positivity of the right child only on `[X₀, ∞)`, so demanding a zero bound on intervals below `X₀`
+asks the producer for control in a region its own hypothesis says nothing about.
+
+The seed is `R + 1`, not `R`: the interval built below starts one unit *beneath* its first zero, so
+seeding at `R + 1` is what puts the whole interval at or beyond `R`. Seeding at `R` leaves the left
+endpoint one unit short — the same off-by-one between a closed ray and a two-sided neighbourhood that
+`ray_shift_nbhd` handles in the sign arc. -/
+
+/-- One bound `N` on the number of distinct zeros in every interval **at or beyond `R`**. Weaker than
+`UniformZeroBound`, and all the bridge needs. -/
+def UniformZeroBoundFrom (f : Real → Real) (R : Real) (N : Nat) : Prop :=
+  ∀ a b : Real, R ≤ a → a < b → ∀ zeros : List Real, zeros.Nodup →
+    (∀ z ∈ zeros, a < z ∧ z < b ∧ f z = 0) → zeros.length ≤ N
+
+/-- The original hypothesis gives the ray-relative one, so the weakening loses nothing. -/
+theorem uniformZeroBoundFrom_of_uniformZeroBound {f : Real → Real} {N : Nat} (R : Real)
+    (h : UniformZeroBound f N) : UniformZeroBoundFrom f R N :=
+  fun a b _ hab zeros hnd hz => h a b hab zeros hnd hz
+
+/-- **A ray-relative uniform bound gives eventual non-vanishing.** Pure order and combinatorics: no
 analyticity, no Pfaffian chain, nothing about `f` beyond the bound. -/
-theorem eventually_nonzero_of_uniformZeroBound {f : Real → Real} {N : Nat}
-    (h : UniformZeroBound f N) : ∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x → f x ≠ 0 := by
+theorem eventually_nonzero_of_uniformZeroBoundFrom {f : Real → Real} {N : Nat} {R : Real}
+    (h : UniformZeroBoundFrom f R N) : ∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x → f x ≠ 0 := by
   rcases Classical.em (∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x → f x ≠ 0) with hy | hy
   · exact hy
   · exfalso
@@ -174,19 +217,30 @@ theorem eventually_nonzero_of_uniformZeroBound {f : Real → Real} {N : Nat}
         exact ⟨x, heq ▸ hx1, hx1, hfx⟩
       · obtain ⟨x, hxY, hfx⟩ := base Y (le_of_lt hgt)
         exact ⟨x, hxY, le_trans (le_of_lt hgt) hxY, hfx⟩
-    have hlen := zlist_length f hz N
-    have h0N : pickZero f hz 0 ≤ pickZero f hz N := by
+    have hlen := zlist_length f hz (R + 1) N
+    have h0N : pickZero f hz (R + 1) 0 ≤ pickZero f hz (R + 1) N := by
       cases N with
       | zero => exact le_refl _
-      | succ m => exact le_of_lt (pickZero_mono f hz 0 (m + 1) (by omega))
-    have hab : pickZero f hz 0 - 1 < pickZero f hz N + 1 :=
+      | succ m => exact le_of_lt (pickZero_mono f hz (R + 1) 0 (m + 1) (by omega))
+    have hab : pickZero f hz (R + 1) 0 - 1 < pickZero f hz (R + 1) N + 1 :=
       lt_of_lt_of_le (sub_one_lt' _) (le_trans h0N (le_of_lt (lt_add_one' _)))
-    have hbound := h (pickZero f hz 0 - 1) (pickZero f hz N + 1) hab
-      (zlist f hz N) (zlist_nodup f hz N) (fun z hzm => by
-        obtain ⟨h0, hn, hf⟩ := zlist_bounds f hz N z hzm
+    have hRa : R ≤ pickZero f hz (R + 1) 0 - 1 := by
+      have v := add_le_add_wit (pickZero_ge_seed f hz (R + 1) 0) (le_refl (-(1 : Real)))
+      have e1 : R + 1 + -(1 : Real) = R := by mach_ring
+      have e2 : pickZero f hz (R + 1) 0 + -(1 : Real) = pickZero f hz (R + 1) 0 - 1 := by mach_ring
+      rw [e1, e2] at v; exact v
+    have hbound := h (pickZero f hz (R + 1) 0 - 1) (pickZero f hz (R + 1) N + 1) hRa hab
+      (zlist f hz (R + 1) N) (zlist_nodup f hz (R + 1) N) (fun z hzm => by
+        obtain ⟨h0, hn, hf⟩ := zlist_bounds f hz (R + 1) N z hzm
         exact ⟨lt_of_lt_of_le (sub_one_lt' _) h0, lt_of_le_of_lt hn (lt_add_one' _), hf⟩)
     rw [hlen] at hbound
     omega
+
+/-- **A uniform interval bound gives eventual non-vanishing.** Now a corollary of the ray-relative
+form, so the two do not carry separate proofs. -/
+theorem eventually_nonzero_of_uniformZeroBound {f : Real → Real} {N : Nat}
+    (h : UniformZeroBound f N) : ∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x → f x ≠ 0 :=
+  eventually_nonzero_of_uniformZeroBoundFrom (uniformZeroBoundFrom_of_uniformZeroBound 1 h)
 
 /-! ## Discrimination
 

@@ -47,10 +47,11 @@ counterexample shows the disjunct is load-bearing rather than decorative.
 
 ## The producer
 
-`eventually_nonzero_of_uniformZeroBound` (`EMLZeroBoundRay`) turns a zero bound uniform **in the
+`eventually_nonzero_of_uniformZeroBoundFrom` (`EMLZeroBoundRay`) turns a zero bound uniform **in the
 interval** into eventual non-vanishing, with no analyticity and nothing about `f` beyond the bound.
 `SignHardUniformZeroBound` is that demand for the node value, conditioned on `¬ EvZeroF` exactly as
-`bipolyNoOscillation_of_uniformBounds` conditions its own. The chain closes:
+`bipolyNoOscillation_of_uniformBounds` conditions its own, and restricted to the ray `[X₀, ∞)` the
+obligation actually controls. The chain closes:
 
 ```
 SignHardUniformZeroBound → SignHardNonzeroOrClamped → SignHardCts → ∀ t, EvSign t.eval ∧ EvCont t.eval
@@ -116,11 +117,15 @@ The conditioning on `¬ EvZeroF` is not cosmetic: §1 is exactly the member it m
 zeros that is uniform **in the interval** (`K` quantified before `a b`), for node values that are not
 eventually zero.
 
-Same shape, and same conditioning, as `bipolyNoOscillation_of_uniformBounds`'s hypothesis. -/
+Same conditioning as `bipolyNoOscillation_of_uniformBounds`'s hypothesis, and demanded only on the
+ray the obligation actually controls: `UniformZeroBoundFrom … X₀ …`, not `UniformZeroBound`. The
+positivity hypothesis says nothing about `B` below `X₀`, so asking for zero control there would be
+asking the producer for information this statement never gives it. The stronger form still suffices
+(`uniformZeroBoundFrom_of_uniformZeroBound`), so nothing is lost by asking for less. -/
 def SignHardUniformZeroBound : Prop :=
   ∀ (A B : EMLTree) (X₀ : Real), 1 ≤ X₀ → (∀ x : Real, X₀ ≤ x → 0 < B.eval x) →
     ¬ EvZeroF (fun x => exp (A.eval x) - log (B.eval x)) →
-    ∃ K : Nat, UniformZeroBound (fun x => exp (A.eval x) - log (B.eval x)) K
+    ∃ K : Nat, UniformZeroBoundFrom (fun x => exp (A.eval x) - log (B.eval x)) X₀ K
 
 /-- **The producer, wired.** Eventually-zero node values take the clamped disjunct; the rest go
 through `eventually_nonzero_of_uniformZeroBound` — the same bridge
@@ -132,7 +137,7 @@ theorem signHardNonzeroOrClamped_of_uniformBounds (h : SignHardUniformZeroBound)
   · obtain ⟨Y, hY1, hzero⟩ := hz
     exact ⟨Y, hY1, Or.inr (fun x hx => le_of_eq (hzero x hx))⟩
   · obtain ⟨K, hK⟩ := h A B X₀ hX₀ hpos hz
-    obtain ⟨Y, hY1, hne⟩ := eventually_nonzero_of_uniformZeroBound hK
+    obtain ⟨Y, hY1, hne⟩ := eventually_nonzero_of_uniformZeroBoundFrom hK
     exact ⟨Y, hY1, Or.inl hne⟩
 
 /-- **The full chain.** Uniform zero bounds at the hard node give sign-definiteness *and* eventual
@@ -170,8 +175,8 @@ and satisfiable. Without this the conditioning could have emptied the statement 
 it. -/
 theorem signHardUniformZeroBound_specimen :
     ¬ EvZeroF (fun x => exp ((EMLTree.const 0).eval x) - log ((EMLTree.const 1).eval x))
-      ∧ UniformZeroBound
-          (fun x => exp ((EMLTree.const 0).eval x) - log ((EMLTree.const 1).eval x)) 0 := by
+      ∧ UniformZeroBoundFrom
+          (fun x => exp ((EMLTree.const 0).eval x) - log ((EMLTree.const 1).eval x)) 1 0 := by
   constructor
   · intro hz
     obtain ⟨Y, hY1, hzero⟩ := hz
@@ -179,7 +184,7 @@ theorem signHardUniformZeroBound_specimen :
       hzero Y (le_refl Y)
     rw [const_node_eval Y] at h1
     exact zero_ne_one_ax h1.symm
-  · intro a b _ zeros _ hmem
+  · intro a b _ _ zeros _ hmem
     cases zeros with
     | nil => exact Nat.le_refl 0
     | cons z _ =>
