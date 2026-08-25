@@ -8716,6 +8716,21 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "generic-sign-bridge-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "evSign_of_continuous_nonzero_on_ray",
+        "no `Khovanskii`, no `zero_count_bound_classical`, no\n`analytic_finite_zeros`, and no `Fbasis`"
+      ],
+      "module": "MachLib.EMLSignFromNonzero",
+      "theorem": "MachLib.evSign_of_continuous_nonzero_on_ray",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }

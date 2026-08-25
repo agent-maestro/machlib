@@ -5,6 +5,79 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (ct)
+
+### `EMLSignFromNonzero` — a general topology bridge, and the second ingredient the pipeline needs
+
+`EMLZeroBoundRay` turns a uniform zero bound into **eventual non-vanishing**. This turns eventual
+non-vanishing into **eventual constant sign** — what `SignHardCase` asks for.
+
+```
+evSign_of_continuous_nonzero_on_ray {f : Real → Real} {R : Real}
+  (hR : 1 ≤ R) (hne : ∀ x, R ≤ x → f x ≠ 0) (hcont : ∀ x, R ≤ x → ContinuousAt f x) : EvSign f
+```
+
+The mathematics is one line: a continuous function that took both signs would have to cross zero.
+
+**Deliberately generic.** The statement mentions no EML tree, no Pfaffian chain, no `Fbasis`, and no
+zero-counting theorem; the footprint cites no `Khovanskii`, no `zero_count_bound_classical`, no
+`analytic_finite_zeros`, and no `Fbasis`. It decouples *how* non-vanishing was obtained from *what*
+it buys, so any future zero-counting engine can feed it while none appears in its statement. Worth
+having as a general topology bridge in this corpus regardless of what consumes it.
+
+Two mechanical details: `EvSign`'s second disjunct is `f x ≤ 0` rather than `< 0`, so the strictly
+negative case lands in it with no packaging work; and `intermediate_value` has a single orientation
+(`f a < 0` then `0 < f b`), so rather than assume a mirrored version exists, the positive case
+applies the same theorem to `fun x => -(f x)` through `continuousAt_neg`.
+
+### The specialization does NOT close, and that is the informative half
+
+Continuity of `EMLTree.eval` comes from `eml_continuousAt_of_no_crossing`, gated on
+
+```
+EMLNoCrossingAt (.eml t1 t2) x := EMLNoCrossingAt t1 x ∧ EMLNoCrossingAt t2 x ∧ t2.eval x ≠ 0
+```
+
+which is **recursive over the whole tree** — every log argument at every node, nested arbitrarily
+deep in both `A` and `B`. `SignHardCase` supplies `0 < B.eval x`: the **top-level** log argument and
+nothing else.
+
+**Stated carefully:** this does *not* show `SignHardCase` is under-hypothesised. It shows it is
+under-hypothesised **for the `EMLNoCrossingAt` → continuity → IVT route**. `EMLNoCrossingAt` is
+plausibly stronger than continuity actually requires — a log argument that is eventually *clamped*
+sits stably on the totalised branch, and demanding literal non-vanishing there would reject cases
+that are perfectly well behaved on the ray. So it should not be promoted into the public statement
+of the obligation, and no obligation was modified here.
+
+### The second ingredient, and why it is not optional
+
+The generic bridge makes a failure mode explicit that was easy to overlook: **a jump can change sign
+without ever taking the value zero.** So eventual non-vanishing alone cannot deliver `EvSign` for an
+arbitrary function — zero-counting is genuinely insufficient, and some form of eventual continuity or
+branch stability is *mathematically necessary* rather than merely convenient.
+
+The unified pipeline is therefore two ingredients, not one:
+
+```
+uniform zero control  +  eventual continuity / branch stability  ⟹  EvSign
+```
+
+That is sharper than the position one step earlier, where continuity looked like plumbing.
+
+### The next question, scoped
+
+Read `evSign_of_hard`'s use site and ask what eventual sign/zero/branch information the depth
+induction *already* has for every nested log argument at the point `SignHardCase` is invoked. Three
+outcomes: the induction already knows enough (build the ray at the call site, change nothing); it
+knows enough for a **weaker continuity lemma** than `EMLNoCrossingAt` (eventual branch stability ⟹
+eventual continuity — closer to the totalised log's actual semantics); or it knows nothing about
+nested crossings, in which case a new induction invariant is the honest answer. **Do not strengthen
+`SignHardCase` before that inspection.**
+
+Gates: build **736 jobs**, aggregator **733 of 1039**, consistency PASS, claims **420**, obligations
+18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted,
+witness audit 36 (pinned set).
+
 ## [Unreleased] — 2026-08-25 (cs)
 
 ### Coordinate 3 — the reducibility side condition, at its point of use
