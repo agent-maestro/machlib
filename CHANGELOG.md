@@ -5,6 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cl)
+
+### `witness_audit.py` — the signal that was there and unread, made into an artifact
+
+`positive_branch_impossible` was vacuous for weeks under seven green gates. The one thing that would
+have caught it — **nobody had ever supplied its hypotheses** — was visible the whole time as "this
+theorem has no caller and no specimen anywhere in the corpus". Nothing measured it.
+
+Now something does. `tools/witness_audit.py` reports every registered claim-theorem that takes at
+least one hypothesis and is referenced nowhere else in `MachLib/`.
+
+### A set, not a count
+
+The baseline (`tools/witness_baseline.json`, **37 entries**) pins the explicit names. A count would
+be a lossy proxy — it can sit flat while one entry gets witnessed and another regresses. Pinning the
+set makes the ratchet turn one way: a **new** uninstantiated capstone fails the audit, and a
+**witnessed** one must be removed from the list.
+
+### Its scope, stated rather than assumed
+
+* **No-caller is not a defect.** A capstone is legitimately terminal, which is why this is a ratchet
+  against a pinned set and not a pass/fail on zero.
+* **It cannot see vacuity, only drift.** A theorem concluding `False` is *meant* to have an
+  unsatisfiable hypothesis set; the real question there is whether everything *except* the existence
+  hypothesis discharges, and only a specimen can answer that.
+* `∀ r, P r → Q r` is not vacuous because `P 0` is false — it stays usable at every `r ≥ 1`.
+
+Two convict specimens, both verified to discriminate: a synthetic uninstantiated capstone is
+reported, and a witnessed one (`pIrred_X`) stays silent. The ratchet was tested by unpinning an entry
+— the audit goes RED and names it.
+
+**Not wired into CI.** The gate set is deliberately exactly seven and adding an eighth is an owner
+decision, so this sits with `closerate.sh` and `sorry_audit.lean` as a harness to run, not a gate.
+
+Gates unchanged by this commit: build **732 jobs**, aggregator **729 of 1035**, consistency PASS,
+claims **407**, obligations 18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**,
+sorry-audit 1 allowlisted. Witness audit: **37, exactly the pinned set**.
+
 ## [Unreleased] — 2026-08-24 (ck)
 
 ### The vacuity sweep, and two more capstones witnessed

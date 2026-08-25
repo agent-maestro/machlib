@@ -65,6 +65,15 @@ python3 tools/claim_audit/claim_audit.py       # "all 385 claims resolve against
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
+`python3 tools/witness_audit.py` is the newest **measurement harness** and is likewise **not** a CI
+gate. It reports every registered claim-theorem that takes hypotheses and is referenced nowhere else
+in `MachLib/` — i.e. nobody has ever supplied its hypotheses. That is the one signal that was present
+and unread when `positive_branch_impossible` was vacuous: it had no caller and no specimen. The
+baseline is pinned as a **set** (`tools/witness_baseline.json`, 37 entries), not a count, so the
+ratchet turns one way — a new entry fails, a witnessed one must be removed. It carries two convict
+specimens of its own. Read its scope note before trusting it: no-caller is not a defect on its own,
+and it cannot see vacuity, only drift.
+
 `lake env lean tools/sorry_audit.lean` is useful (`1 sorryAx`, allowlisted) but is **not** a CI gate,
 and note its scope: it walks the **environment** after `import MachLib`, so it cannot see
 `Discovered/`. Neither is `scripts/closerate.sh`, which is a *measurement* harness (close-rate,
