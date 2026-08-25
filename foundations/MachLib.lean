@@ -420,6 +420,7 @@ import MachLib.EMLSignFromNonzero
 import MachLib.EMLEventualContinuity
 import MachLib.EMLSignZeroProducer
 import MachLib.EMLDeclampEncoder
+import MachLib.EMLDeclampUniform
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

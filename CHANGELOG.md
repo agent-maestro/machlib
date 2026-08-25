@@ -5,6 +5,79 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cy)
+
+### `EMLDeclampUniform` — the tree varies, the maximum does not
+
+`(cx)` closed the coherence gap and left one objection: `declamp t a b` is a **different tree per
+interval**, so a zero count taken through it is per-interval and cannot feed
+`eventually_nonzero_of_uniformZeroBoundFrom`, which needs one `N` for every interval beyond a ray.
+
+The variation is bounded. `declamp` only ever replaces a right child by `const 1`, so every tree it
+can produce lies in a list computed from `t` alone:
+
+```
+declampVariants (.eml t1 t2) =
+  (declampVariants t1).flatMap fun v1 =>
+    (declampVariants t2).map (fun v2 => .eml v1 v2) ++ [.eml v1 (.const 1)]
+```
+
+`declamp_mem_variants` proves membership for every `(a,b)` — 10 axioms. So a bound **per variant**
+gives a bound for `t`: on each interval the zeros of `t` are the zeros of `declamp t a b` (they agree
+there, by `declamp_eval`), that tree is one of finitely many, and the maximum over the list serves
+every interval at or beyond the ray. `uniformZeroBoundFrom_of_variantBounds`, 18 axioms.
+
+`uniformZeroBoundFrom_of_evSign_variantBounds` discharges the stability hypothesis from
+sign-definiteness at every node — the form the depth induction already supplies — joining the ray
+`logArgStable_of_evSign` produces with the one the bounds come on, via the new
+`uniformZeroBoundFrom_mono`.
+
+So the interval-dependence is real and harmless: **the tree changes, the maximum does not.**
+
+### Deliberately a reduction, not an obligation
+
+No `Prop` is registered here and the per-variant demand is **not** promoted, because the naive form
+is false and the module proves it so.
+
+> **`not_all_variants_bounded`** — it is not the case that every variant of every tree admits a
+> uniform bound on some ray.
+
+Same witness as `(cv)`: for `B := expExpTree A` the node `eml A B` has value identically `0`; nothing
+in it is clamped, so it is its own variant (`declamp_eq_self_of_logArgPos`); and an identically-zero
+function is not eventually non-vanishing, so by `eventually_nonzero_of_uniformZeroBoundFrom` it admits
+no bound on any ray. Node-level `¬ EvZeroF` conditioning — which `SignHardUniformZeroBound` already
+carries — excludes exactly that witness.
+
+**What is not settled**, and is the reason this stops at a reduction: whether some *other* variant can
+be eventually zero while the node itself is not. A variant is a genuinely different function from `t`
+— they agree only on the interval whose clamping pattern selected it — so the node's non-vanishing
+does not transfer to its variants for free. Promoting the per-variant demand to an obligation before
+deciding that would be stating something possibly vacuous, which is the step `(cv)` had to retract.
+
+Discrimination the other way: `variantBounds_specimen` fires the reduction on `var`, whose single
+variant is itself and which has no zeros at or beyond `1`. A reduction that only ever applied to
+degenerate trees would prove nothing.
+
+### Where the route stands
+
+```
+SignHardCase → EvSign everywhere → LogArgStable on a ray → LogArgPos (declamp t)
+             → coherent, analytic Pfaffian encoding                      (cx)
+             → per-variant zero bounds → one uniform bound for t         (cy)
+             → eventual non-vanishing → SignHardNonzeroOrClamped → SignHardCase
+```
+
+Every arrow is a theorem except the per-variant bounds, which nothing supplies. That is the whole
+remaining input, and it is now a statement about **finitely many fixed trees per node** rather than
+about a tree that changes with the interval.
+
+`SignHardCase` stays `open`, 18 rows unchanged, nothing registered.
+
+Gates: build **740 jobs**, aggregator **737 of 1043**, consistency PASS, claims 422, obligations 18
+rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted, witness
+audit 36. No footprint cites `sorryAx`, `zero_count_bound_classical`, `analytic_finite_zeros`,
+`Khovanskii`, `Fbasis` or `rolle`.
+
 ## [Unreleased] — 2026-08-25 (cx)
 
 ### `EMLDeclampEncoder` — rewrite the tree, not the encoder
