@@ -94,6 +94,11 @@ def dischargers_of(prop, decls):
         stripped = re.sub(r"\([^()]*:\s*" + re.escape(prop) + r"\b[^()]*\)", "", sig)
         # conclusion is the tail after the last top-level `:`
         tail = stripped.rsplit(":", 1)[-1].strip()
+        # An EQUIVALENCE is not a discharge. `foo : P ↔ Q` prefix-matches `P` and would otherwise be
+        # counted as concluding it -- which is how a reduction reads as a solution. Found 2026-08-24
+        # when `signHardCase_iff_compareExpExpPos` silently made canary 5 stop firing.
+        if "↔" in tail:
+            continue
         if re.match(r"^" + re.escape(prop) + r"\b", tail):
             out.append(name)
     return out
@@ -228,7 +233,11 @@ def self_test(decls) -> int:
     ok &= fired
 
     # 4b. A refuted row with no refutation theorem behind it.
-    bad, out = check_rows([("SignHardCase", "refuted", "")], decls)
+    # SYNTHETIC specimen on purpose: this canary needs a prop NO theorem concludes, so it must
+    # not name a live obligation. It named `SignHardCase`, and went silent the day a reduction
+    # theorem concluded it. "refuted"/"discharged" specimens are only stable if the named prop
+    # stays unconcluded -- which is a property of the CORPUS, not of the status label.
+    bad, out = check_rows([("CanaryNeverConcludedProp", "refuted", "")], decls)
     fired = bad == 1 and "UNBACKED" in out[0]
     print(f"  canary 5 (refuted row with no ¬-theorem)      {'FIRES' if fired else 'SILENT'}")
     ok &= fired
@@ -260,6 +269,18 @@ def self_test(decls) -> int:
     print(f"  canary 8 (reduced to an unregistered residue)  {'FIRES' if fired else 'SILENT'}")
     ok &= fired
 
+    # 7b. An EQUIVALENCE is not a discharge. `dischargers_of` matches the conclusion by PREFIX, so
+    # `foo : P ↔ Q` would read as concluding `P` -- and a REDUCTION would read as a SOLUTION. This
+    # is a direct unit test on synthetic declarations rather than a ledger row, because the defect
+    # is in the matcher, not in any row. Found 2026-08-24: `signHardCase_iff_compareExpExpPos`
+    # silently made canary 5 stop firing, which is how the rule got noticed at all.
+    iff_decl  = [("theorem", "fake_iff",   "theorem fake_iff : CanaryProp ↔ SomethingElse")]
+    bare_decl = [("theorem", "fake_bare",  "theorem fake_bare : CanaryProp")]
+    fired = (dischargers_of("CanaryProp", iff_decl) == []
+             and dischargers_of("CanaryProp", bare_decl) == ["fake_bare"])
+    print(f"  canary 9 (an ↔ is not a discharge)             {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
     # 8. And the true ledger must still pass, so the canaries are not just "everything fails".
     # A CORRECT reduced row is included: a new status that only ever fires is as useless as one
     # that never does, and this is the row the two specimens above are perturbations of.
@@ -271,9 +292,13 @@ def self_test(decls) -> int:
     # discharged hours later by the dispatch. Each time this canary fired and took the whole gate
     # down with it -- a self-test that fails because the corpus got BETTER is a bad self-test.
     #
-    # The other three statuses are structurally stable: discharged and refuted rows do not revert,
-    # and a reduced row stays well-formed as long as its residue is in the list (it is). Only
-    # "open" is unstable, because closing open rows is the entire point of the ledger. So the open
+    # CORRECTED 2026-08-24: the note here used to say the other three statuses are structurally
+    # stable because "discharged and refuted rows do not revert". That is wrong, and canary 5 proved
+    # it -- its specimen marked the LIVE obligation `SignHardCase` as "refuted", which fires only
+    # while NO theorem concludes it. The day a reduction theorem concluded it, the canary went
+    # silent and took the gate down. The stable property is not the status label: it is that the
+    # named proposition stays unconcluded, which is a fact about the CORPUS. So no canary specimen
+    # may name a live obligation, whatever status it is labelled with. So the open
     # specimen must not name one. A synthetic name exercises exactly the branch under control --
     # dischargers_of returns [] and the row must stay silent -- while canary 1 covers the other
     # branch with a real discharged proposition mislabelled open. Together they discriminate.
@@ -287,14 +312,14 @@ def self_test(decls) -> int:
                          ("SpecimenNeverConcluded", "open", "—")], decls)
     b2, _ = check_mirror(a, a)
     quiet = bad == 0 and b2 == 0
-    print(f"  canary 9 (correct rows stay silent)            {'SILENT' if quiet else 'FIRES'}")
+    print(f"  canary 10 (correct rows stay silent)          {'SILENT' if quiet else 'FIRES'}")
     ok &= quiet
 
     print()
     if not ok:
         print("LEDGER SELF-TEST FAIL — a canary did not fire; the gate is unvalidated")
         return 1
-    print("LEDGER SELF-TEST PASS — all eight convict specimens fire")
+    print("LEDGER SELF-TEST PASS — all nine convict specimens fire")
     return 0
 
 

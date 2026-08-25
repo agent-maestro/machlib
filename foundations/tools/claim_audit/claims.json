@@ -8475,6 +8475,33 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "id": "signhard-iff-growth-comparison-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "signHardCase_iff_compareExpExpPos : SignHardCase ↔ SignCompareExpExpPos",
+        "**An equivalence, not a one-way reduction**"
+      ],
+      "module": "MachLib.EMLSignReduction",
+      "theorem": "MachLib.signHardCase_iff_compareExpExpPos",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "id": "exp-is-an-eml-tree-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`log 1 = 0`, so `eml t (const 1)` evaluates to `exp (t.eval x)`"
+      ],
+      "module": "MachLib.EMLSignReduction",
+      "theorem": "MachLib.expTree_eval",
+      "forbid_axioms": [
+        "sorryAx",
+        "Real.log_lt_log",
+        "HasDerivAt"
+      ]
     }
   ]
 }

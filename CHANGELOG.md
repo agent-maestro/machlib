@@ -5,6 +5,76 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cj)
+
+### `EMLSignReduction` — `SignHardCase` is a growth comparison, with no logarithm in it
+
+`SignHardCase` is the last cancellation obligation and, via `evSign_of_hard`, the whole remaining gap
+in the depth programme: is `exp (A x) − log (B x)` eventually of constant sign when `B > 0`?
+
+**`log 1 = 0`, so `eml t (const 1)` evaluates to `exp (t.eval x)`** — `exp ∘ t` is itself an EML tree
+(`expTree_eval`), and hence so is `exp ∘ exp ∘ t`. On a ray where `B > 0` the logarithm is strictly
+monotone, so
+
+```
+exp (A x) − log (B x) > 0   ⟺   exp (exp (A x)) > B x
+exp (A x) − log (B x) ≤ 0   ⟺   exp (exp (A x)) ≤ B x
+```
+
+and both sides of the right-hand comparison are EML tree values. So
+
+```
+signHardCase_iff_compareExpExpPos : SignHardCase ↔ SignCompareExpExpPos
+```
+
+where `SignCompareExpExpPos A B` is eventual sign-definiteness of `exp (exp (A.eval x)) − B.eval x`.
+**An equivalence, not a one-way reduction** — the positivity hypothesis is consumed by the direction
+that needs it and reappears in the other, so the obligation is *the same*, not merely implied.
+
+### Why the equivalence and not the stronger form
+
+Dropping `B`'s positivity gives `SignCompareExpExp`, which is strictly *stronger* — reformulating the
+difficulty without lowering it. Both are recorded and the difference is stated, because a reduction
+to a stronger statement is easy to mistake for progress. `treeComparable_imp` notes that full
+pairwise comparability of EML germs (the Hardy-field property) gives the stronger form.
+
+What the equivalence buys is that the **totalised `log` is removable, not merely avoidable**. The
+convention `log y = 0` for `y ≤ 0` is why `SignHardCase` carries a positivity hypothesis at all and
+why its two branches behave so differently; after the reduction none of that is present and the
+content is a pure growth comparison. `signHard_of_le_one` marks where the difficulty is *not*: if
+`B ≤ 1` eventually the node is positive for free, so the whole problem lives on the ray `B > 1`.
+
+**`SignHardCase` remains `open`.** Nothing here discharges it.
+
+### The ledger: an equivalence is not a reduction
+
+The first attempt marked `SignHardCase` **reduced** to `SignCompareExpExpPos` and registered the
+residue as a new row. The gate accepted it — and it was wrong. `reduced` means the debt got
+*smaller*; here it moved to an **equivalent** unproved statement, so the row would have claimed
+progress that did not happen. Reverted to `open`, 18 rows, and both directions are now folded into
+the `Iff` so that **no named theorem's conclusion is `SignHardCase`**.
+
+### Two defects in the obligations gate, found by this
+
+**An `↔` was read as a discharge.** `dischargers_of` matches the conclusion by *prefix*, so
+`foo : P ↔ Q` counted as concluding `P` — a reduction reading as a solution. Guarded, with a new
+**canary 9** that unit-tests the matcher on synthetic declarations. Verified by perturbation: with
+the guard removed the canary goes SILENT and the self-test FAILS.
+
+**A canary specimen named a live obligation.** Canary 5 marked `SignHardCase` as `refuted`, which
+fires only while *no* theorem concludes it — so it went silent the moment a reduction theorem did,
+taking the whole gate down. Its specimen is now synthetic.
+
+The reasoning recorded beside canary 9 said the other statuses were stable because "discharged and
+refuted rows do not revert". That is **wrong**, and this is the counterexample: the stable property
+is not the status label but that the named proposition stays *unconcluded* — a fact about the corpus.
+No canary specimen may name a live obligation, whatever status it carries. Comment corrected in
+place.
+
+Gates: build **732 jobs**, aggregator **729 of 1035** modules reachable, consistency PASS, claims
+**405**, obligations 18 rows (self-test: nine convict specimens), discovered 290/294, AxiomLedger
+**242 pinned (unchanged)**, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (ci)
 
 ### VOID — `positive_branch_impossible` was **vacuous**, and so was everything built on it
@@ -6258,7 +6328,7 @@ in commit archaeology:
 | obligation | status | discharged by |
 | --- | --- | --- |
 | `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`) |
-| `SignHardCase` | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
+| `SignHardCase` | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2; equivalent to the log-free `SignCompareExpExpPos`, `EMLSignReduction`) |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |
