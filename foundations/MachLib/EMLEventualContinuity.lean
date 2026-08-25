@@ -55,12 +55,14 @@ failure mode this corpus has already paid for.
 `SignHardCase` stays **open** and no ledger row moves. Two obligations are stated here and neither is
 registered:
 
-* `SignHardNonzero` — pure eventual non-vanishing, the shape a zero-counting engine produces. It
-  **implies** `SignHardCts` (`signHardCts_of_nonzero`) and hence sign-definiteness at every depth
-  (`evSign_of_nonzero`). The implication runs one way only: `SignHardCase` does **not** give it back,
-  because `EvSign`'s second disjunct is `≤ 0`, which permits infinitely many zeros. So the
-  zero-control route *over-delivers* — it is a sufficient condition, not a reduction, and adopting it
-  as the obligation would enlarge the debt rather than shrink it.
+* `SignHardNonzero` — pure eventual non-vanishing. **REFUTED** by `not_signHardNonzero`
+  (`EMLSignZeroProducer`): `exp ∘ exp ∘ A` is a tree, is positive everywhere, and makes the node value
+  identically `0`, so no ray is free of zeros. Everything below taking it as a hypothesis
+  (`signHardCts_of_nonzero`, `evSign_of_nonzero`, `evCont_of_nonzero`, `nonzeroOrClamped_of_nonzero`)
+  is therefore **vacuous** — true, and useless. Kept as the record of the step. The reading that it is
+  "a sufficient condition, stronger than `SignHardCase`" was right about the direction and wrong about
+  the value: a false sufficient condition is no obligation at all. The usable form conditions on not
+  being eventually zero — `SignHardUniformZeroBound` in `EMLSignZeroProducer`.
 * `SignHardNonzeroOrClamped` — the same statement with the clamped case restored as a disjunct. This
   one **is** implied by `SignHardCase` (`nonzeroOrClamped_of_hard`) as well as implying it through
   the skeleton, so it is debt-neutral: the honest form of "all that is missing is zero control".
@@ -273,10 +275,13 @@ theorem evCont_of_hard (h : SignHardCase) : ∀ t : EMLTree, EvCont t.eval :=
 /-- **Pure eventual non-vanishing** — the shape a zero-counting engine produces, and the same shape
 `OneQueryDichotomy` needs.
 
-Strictly a *sufficient* condition: `SignHardCase` does not give it back, because `EvSign`'s second
-disjunct is `≤ 0` and tolerates a function with infinitely many zeros. Adopting this as the
-obligation would therefore enlarge the debt, not reduce it — see `SignHardNonzeroOrClamped` for the
-debt-neutral form. -/
+**REFUTED — see `not_signHardNonzero` (`EMLSignZeroProducer`).** `expExpTree A` is positive
+everywhere and drives the node value to `0` everywhere, so no ray is free of zeros. Every theorem
+below that assumes this is vacuous; use `SignHardNonzeroOrClamped`, whose second disjunct absorbs
+exactly that counterexample, or the conditioned `SignHardUniformZeroBound`.
+
+Retained because the step is worth recording: the obligation was not merely stronger than
+`SignHardCase` (which it is), it was unsatisfiable. -/
 def SignHardNonzero : Prop :=
   ∀ (A B : EMLTree) (X₀ : Real), 1 ≤ X₀ → (∀ x : Real, X₀ ≤ x → 0 < B.eval x) →
     ∃ R : Real, 1 ≤ R ∧ ∀ x : Real, R ≤ x → exp (A.eval x) - log (B.eval x) ≠ 0
@@ -291,16 +296,19 @@ theorem signHardCts_of_nonzero (h : SignHardNonzero) : SignHardCts := by
     (fun x hx => hne x (le_trans hSR hx))
     (fun x hx => hcc x (le_trans hSc hx))
 
-/-- **Zero control alone gives sign-definiteness at every depth.** The drop-in analogue of
-`evSign_of_hard`, with the sign obligation replaced by a non-vanishing one. -/
+/-- The drop-in analogue of `evSign_of_hard` with the sign obligation replaced by a non-vanishing one
+— **vacuous**, since `SignHardNonzero` is refuted (`not_signHardNonzero`). The live version is
+`evSign_of_uniformBounds` in `EMLSignZeroProducer`. -/
 theorem evSign_of_nonzero (h : SignHardNonzero) : ∀ t : EMLTree, EvSign t.eval :=
   fun t => (evSignCont_of_cts (signHardCts_of_nonzero h) t).1
 
-/-- The continuity half of the same instance. -/
+/-- The continuity half of the same instance — likewise vacuous. -/
 theorem evCont_of_nonzero (h : SignHardNonzero) : ∀ t : EMLTree, EvCont t.eval :=
   fun t => (evSignCont_of_cts (signHardCts_of_nonzero h) t).2
 
-/-- **The debt-neutral form.** Eventual non-vanishing *or* the clamped case, restored as a disjunct.
+/-- **The form that survives.** Eventual non-vanishing *or* the clamped case, restored as a disjunct.
+The identically-zero counterexample that refutes `SignHardNonzero` satisfies the **second** disjunct
+rather than falsifying this, so the disjunct is load-bearing, not decorative.
 Unlike `SignHardNonzero` this is implied by `SignHardCase` (`nonzeroOrClamped_of_hard`) as well as
 implying it via the skeleton, so it neither strengthens nor weakens the obligation — it says exactly
 "all that is missing is zero control, on the branch where zero control is what is missing". -/
@@ -335,7 +343,8 @@ theorem nonzeroOrClamped_of_hard (h : SignHardCase) : SignHardNonzeroOrClamped :
     exact lt_irrefl_ax 0 hlt
   · exact ⟨R, hR1, Or.inr hn⟩
 
-/-- `SignHardNonzero` is the stronger of the two zero-control forms. -/
+/-- `SignHardNonzero` is the stronger of the two zero-control forms — vacuously, now that it is
+refuted. The content of the pair is entirely in `nonzeroOrClamped_of_hard`. -/
 theorem nonzeroOrClamped_of_nonzero (h : SignHardNonzero) : SignHardNonzeroOrClamped := by
   intro A B X₀ hX₀ hpos
   obtain ⟨R, hR1, hne⟩ := h A B X₀ hX₀ hpos

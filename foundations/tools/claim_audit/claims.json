@@ -8731,6 +8731,36 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "signhard-nonzero-refuted-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "not_signHardNonzero",
+        "**refutes `SignHardNonzero`**"
+      ],
+      "module": "MachLib.EMLSignZeroProducer",
+      "theorem": "MachLib.not_signHardNonzero",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "clamped-continuity-no-derivative-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "continuousAt_log_comp_of_nonpos_nbhd",
+        "no differentiability of `g` anywhere"
+      ],
+      "module": "MachLib.EMLEventualContinuity",
+      "theorem": "MachLib.continuousAt_log_comp_of_nonpos_nbhd",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }

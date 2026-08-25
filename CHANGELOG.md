@@ -5,7 +5,101 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cv)
+
+### `EMLSignZeroProducer` — the producer wired, and the obligation it kills on the way
+
+Step six: connect the corpus's zero-counting bridge to the hard node. It connects — and in the
+process **refutes `SignHardNonzero`**, the pure-non-vanishing obligation `(cu)` shipped one commit
+earlier under all nine green gates.
+
+### The counterexample
+
+`exp ∘ exp ∘ t` is again an EML tree — `expExpTree_eval`, already in `EMLSignReduction` since the
+`(cs)` arc. So for **any** left child `A`, taking `B := expExpTree A` gives
+
+```
+B.eval x = exp (exp (A.eval x)) > 0                    for every x
+exp (A.eval x) − log (B.eval x) = 0                    for every x
+```
+
+The positivity hypothesis holds on the whole line and the node value is *identically zero*. A
+function that is everywhere zero is never eventually non-vanishing. `not_signHardNonzero` closes it
+in 23 axioms.
+
+So `signHardCts_of_nonzero`, `evSign_of_nonzero`, `evCont_of_nonzero` and
+`nonzeroOrClamped_of_nonzero` are **vacuous** — true, and useless. They are kept as the record of the
+step with their docstrings corrected in place, and `(cu)` now carries a correction banner.
+
+**This is the failure mode `EMLZeroBoundRay` had already documented**, in its own words: the
+unconditioned form of `bipolyNoOscillation`'s hypothesis is false because `N = []` has an
+identically-zero germ and therefore no bound. The same sentence, transposed to EML trees, was sitting
+in the file the producer had to import. The lesson generalises past both: **an obligation demanding
+non-vanishing must be conditioned on not being eventually zero**, or its identically-zero member
+refutes it.
+
+Worth being exact about what `(cu)` got wrong. It reasoned about the *direction* of the implication
+and stopped there. Direction is not satisfiability: a false sufficient condition is not a stronger
+obligation, it is no obligation. Checking that `SignHardCase ↛ SignHardNonzero` is not a substitute
+for instantiating `SignHardNonzero`.
+
+### What the disjunct was for
+
+`SignHardNonzeroOrClamped` is untouched. The identically-zero germ satisfies its **second** disjunct
+(`≤ 0` on a ray) instead of falsifying it — `expExpTree_witness_is_clamped` records that. The disjunct
+that made the form debt-neutral is the same disjunct that absorbs the counterexample; it was
+load-bearing, not decorative.
+
+### The chain, closed
+
+```
+SignHardUniformZeroBound → SignHardNonzeroOrClamped → SignHardCts → ∀ t, EvSign t.eval ∧ EvCont t.eval
+```
+
+`SignHardUniformZeroBound` demands a zero bound uniform **in the interval** (`K` before `a b`) at the
+hard node, conditioned on `¬ EvZeroF` — the same shape *and the same conditioning* as
+`bipolyNoOscillation_of_uniformBounds`. `signHardNonzeroOrClamped_of_uniformBounds` sends eventually
+zero germs to the clamped disjunct and everything else through
+`eventually_nonzero_of_uniformZeroBound`.
+
+**The shared frontier is now a shared lemma.** `oneQueryDichotomy_of_uniformBounds` and
+`evSign_of_uniformBounds` call the same bridge, `eventually_nonzero_of_uniformZeroBound` — pure order
+and combinatorics, no analyticity, no Pfaffian chain. Not an analogy between two prose descriptions.
+
+### Two specimens, because the repair could have emptied the statement
+
+* `counterexample_is_conditioned_out` — the refuting witness *is* `EvZeroF`, so
+  `SignHardUniformZeroBound` demands nothing there. That is why §1 does not refute it too.
+* `signHardUniformZeroBound_specimen` — `A = const 0`, `B = const 1` has `B > 0`, is **not**
+  eventually zero, and carries the uniform bound `0`. So there is a pair where the demand is real and
+  satisfiable, and the conditioning repaired the statement rather than vacating it.
+
+### Scope
+
+No `UniformZeroBound` for any EML node value is supplied here; that is the open work, and
+`EMLZeroBoundRay`'s note applies verbatim — the Khovanskii statements would first have to quantify
+`N` **before** the interval. `SignHardCase` stays `open`, 18 rows unchanged, nothing registered.
+
+Two claims registered (**422**, was 420), binding this entry's prose to the artefacts:
+`not_signHardNonzero` and `continuousAt_log_comp_of_nonpos_nbhd` — the two results here that carry no
+hypothesis or are already instantiated. The conditional capstones (`evSign_of_uniformBounds`,
+`evCont_of_hard`, `signHardNonzeroOrClamped_of_uniformBounds`) are deliberately **not** registered:
+each takes a hypothesis nothing in the corpus supplies, which is exactly what the witness audit
+exists to report, and padding a pinned set with known-uninstantiated capstones would weaken it.
+
+Gates: build **738 jobs**, aggregator **735 of 1041**, consistency PASS, claims **422**, obligations
+18 rows (`SignHardCase` open), discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit
+1 allowlisted, witness audit 36 (pinned set unchanged). New footprints cite no `sorryAx`, `zero_count_bound_classical`,
+`analytic_finite_zeros`, `Khovanskii`, `Fbasis` or `rolle`; `not_signHardNonzero` needs 23 axioms.
+
 ## [Unreleased] — 2026-08-25 (cu)
+
+> **CORRECTED BY `(cv)` BELOW.** This entry reads `SignHardNonzero` as a *sufficient*
+> condition, stronger than `SignHardCase`. The direction was right; the value was not.
+> `SignHardNonzero` is **false** — `not_signHardNonzero` refutes it — so every theorem here
+> that assumes it is vacuous. `SignHardNonzeroOrClamped`, `evCont_of_hard` and the skeleton
+> are unaffected. Read `(cv)` before using anything in the paragraph beginning *"It is
+> strictly a sufficient condition"*.
 
 ### `EMLEventualContinuity` — the induction manufactures its own continuity
 
