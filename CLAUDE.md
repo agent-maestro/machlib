@@ -7,9 +7,9 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 022 `.lean` files** (706 top-level + 316 in subdirectories) /
-**~227 k lines** / **7 887 theorems**, re-exported through the aggregator
-**`foundations/MachLib.lean`** (624 imports) — a module not reachable from there is **invisible to
+material). `foundations/MachLib/` holds **1 034 `.lean` files** (718 top-level + 316 in subdirectories) /
+**~228 k lines** / **7 962 theorems**, re-exported through the aggregator
+**`foundations/MachLib.lean`** (636 imports) — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 (Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
 commands, do not trust the figure. An earlier revision said 5 851 theorems by an unrecorded method —
@@ -85,7 +85,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**629 of 935 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**728 of 1034 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
@@ -131,6 +131,23 @@ behind it is missing — registration is still a human act.
   that does not exist, and if `A` is *open* it reports the row as stale. Write `foo (h : A) : B`,
   which strips correctly. (`depth3DecayExp_of_hard` is the worked case; both forms were run against
   the parser before choosing.)
+- **A CONDITIONAL THEOREM IS NOT EVIDENCE UNTIL ITS HYPOTHESES ARE INSTANTIATED.** Two hypotheses in
+  the `S > 0` pole layer were *unsatisfiable for every `q`*, so the flagship
+  `positive_branch_impossible` was vacuously true and proved nothing — and **every gate passed**, for
+  weeks. `False → P` is provable, cites no bad axioms, and discharges any obligation. Build a
+  **specimen** (`GermClearedSpecimen`) discharging every hypothesis, and ship it with the capstone;
+  it then fails to compile if a hypothesis ever becomes unsatisfiable again. Tell-tale before it was
+  found: the capstone had **no caller and no specimen anywhere**.
+- **Suspect `∀ n` hypotheses at indices nobody consumes.** `∀ r, DerivCoprime q r` was false at
+  `r = 0` (`pnsum 0 _ = []`, and everything divides the zero polynomial) while every proof site used
+  `r + 1`. If no site applies a hypothesis at index `k`, ask whether it *holds* at `k`.
+- **`pderiv` is LENGTH-PRESERVING, so its output always carries a trailing zero** (`pderiv [a,b] =
+  [b, 0]`) and is **never `PNormal`**. Any hypothesis asserting canonicity of a `pderiv`/`pnsum`
+  image is unsatisfiable. Use `pnorm` first, or a normalisation-invariant lemma — `euclid_lemma'`
+  drops `euclid_lemma`'s `PNormal` side condition entirely, since `Pdvd` already sees only `pnorm`.
+- **`obtain` on a `GEvEq` entry against `expCoeffs` yields an UNREDUCED application** —
+  `a x = (fun C x => bipev C x (exp (S x))) C x` — so `rw [← e]` will not match the beta-reduced
+  goal. Bind it through a typed `have e' : a x = bipev C x (exp (S x)) := e x hx`.
 - **A gate's own self-test can go stale when the corpus improves.** `obligation_ledger_check.py`'s
   canary 9 is a literal specimen, and its `open` row must name something no theorem can conclude —
   it named live obligations twice and both were discharged the same day, failing the gate because
@@ -138,20 +155,37 @@ behind it is missing — registration is still a human act.
 
 ## Status
 
-Lean `v4.32.2`, `master`. All seven gates green (626 build jobs). `sorryAx`: 1, allowlisted.
-**242 axioms pinned — unchanged across the whole 2026-08 EML arc.**
+Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (731 build jobs) at **true exit
+codes** — note `gate | tail` reads `tail`'s status, not the gate's. `sorryAx`: 1, allowlisted.
+**242 axioms pinned — unchanged across the whole 2026-08 EML arc, including the repair below.**
 
-The depth-3 decay arc **closed 2026-08-18**. `BoundedEmlCellApproachLarge` (the router),
-`BoundedEmlCellApproach`, `BoundedCellApproach` and `Depth3DecayExp` are all theorems, so the
-obligations ledger at the end of `EMLDepthTameness` has no **reduced** rows and no open row in this
-file. `Depth3DecayExp`'s refuted sibling `Depth3DecayHard` is the stronger statement and
-`depth3DecayExp_of_hard` proves Hard ⟹ Exp, so the rung correction is sharp.
+**The `S > 0` branch was VACUOUS and is now repaired** (`a10b3b5b`, 2026-08-24). Two pole hypotheses
+were unsatisfiable for every `q`: `∀ r, DerivCoprime q r` (false at `r = 0`) and
+`∀ r, PNormal (pnsum r (pderiv q))` (false at every `r ≥ 1`). The first was weakened to `r + 1`
+(proof-neutral); the second was **deleted** — it fed one `euclid_lemma` call and was not merely
+unsatisfiable but decorative. `GermClearedSpecimen` now discharges every hypothesis at `q = x`,
+`P = 1`, `Q = x`, giving
 
-**Still open, all elsewhere:** `SignHardCase` (here — the sign of `exp a − log b`, the last
-cancellation statement), `TowerLowerBound` and `TowerReducesToSign` (both `EMLCertifiedSynthesis`).
+```
+no_proper_cleared_relation_inv_x : ClearsToExp (1/x) fs → GProperRel (log(1/x)) fs → False
+```
+
+with **no pole hypotheses assumed**. `pIrred_X` is the corpus's first `PIrred` construction. Read the
+changelog's `(ci)` VOID before citing anything about this branch.
+
+**Degree-`d` is closed.** `ClearsToExp` (a class whose members clear, over one common
+eventually-non-vanishing denominator, to `expCoeffs` images) discharges all three obligations of
+`minimal_expRel_identity_in`; `no_proper_cleared_relation` takes no `hmin`, no `Cs`, no split and no
+degree bound. Two findings worth carrying: `gscaleSub` denominators do **not** multiply (the step is
+asymmetric — only one factor per product is ever dirty), so no denominator *bound* is needed; and
+`EvNonvanish` (non-zero on a tail) is required over "not eventually zero", because germs have zero
+divisors and the weak form silently breaks properness.
+
+**Still open, all elsewhere:** `SignHardCase` (the sign of `exp a − log b`), `TowerLowerBound` and
+`TowerReducesToSign` (both `EMLCertifiedSynthesis`).
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then
-**`s(1/x) ∈ {7,9,11}` proved** (two `eml` gates can never compute a reciprocal), `d(1/x)` frozen at
-`{3,4}`, and a depth- and size-indexed **growth envelope** built. Start here:
+`s(1/x) ∈ {7,9,11}` proved, `d(1/x)` frozen at `{3,4}`, and a depth- and size-indexed **growth
+envelope** built. Start here:
 `monogate-research/exploration/inv_x_termination_route_2026_08_06/EML_STATUS.md`, and
 `FRONTIER_BRIEF_3.md` for the open questions.
