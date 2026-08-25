@@ -5,6 +5,66 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (db)
+
+### `EMLSignInductionV2` — the induction rewritten so the hard node is self-contained
+
+The arc built three things the depth induction can manufacture — eventual continuity, eventual
+log-argument stability, and through them a coherent Pfaffian encoding — but assembled them in **two
+passes**: the induction ran first, conditional on `SignHardCase`, and stability was derived afterwards
+from its output (`logArgStable_of_evSign (evSign_of_hard h)`).
+
+That layering is what blocks any attempt to *discharge* the hard node. Anything proved from it already
+assumes `SignHardCase`, so feeding it back proves `SignHardCase → SignHardCase`.
+
+`EvLogArgStable` is now a **third conjunct of the induction's own motive**:
+
+```
+evSignContStable_of_ctsStable : SignHardCtsStable → ∀ t, EvSign t.eval ∧ EvCont t.eval ∧ EvLogArgStable t
+```
+
+**Why the children suffice.** `LogArgStable (eml A B) a b` needs stability inside `A`, stability
+inside `B`, and the sign disjunction for `B` itself — `ihA.2.2`, `ihB.2.2`, `ihB.1`. Every node of
+`eml A B` is either the node itself or a node of a structurally smaller tree, so nothing about the
+node's own value is used. That is precisely why there is no circularity, and `evLogArgStable_eml`
+isolates the step (14 axioms, no analyticity).
+
+`SignHardCtsStable` is `SignHardCase` with **two** extra hypotheses, so it is implied by it
+(`signHardCtsStable_of_hard`) and nothing is strengthened. What changes is the call site: an argument
+at the hard node may now use eventual continuity *and* eventual log-argument stability of the whole
+node without re-entering the induction.
+
+Footprints are **clean again** — 41 axioms, citing no `analytic_finite_zeros_compact` and no
+`rolle_ct`, unlike `(da)`'s assembly. The restructuring costs nothing in trust.
+
+### ⚠ The next step is blocked on an axiom, not on a proof
+
+The intended use of the rewrite was to discharge the hard node from analyticity: an EML value that is
+identically zero on a sub-interval and analytic there is identically zero on the whole interval, so
+`¬ EvZeroF` would give `(da)`'s non-vanishing input. The identity theorem is available —
+`analytic_finite_zeros_compact` contraposed says analytic on `Icc a b` with an infinite zero set forces
+`f ≡ 0` on `Ioo a b`.
+
+**What is missing is the analyticity of `t.eval` itself**, and both routes to it fail:
+
+* `enc_coherent_and_hAnalytic` gives `IsAnalyticOnReals (pfaffianChainFn … r).eval (Icc a b)`, which is
+  *pointwise equal* to `t.eval` there by `enc_eval` — but `IsAnalyticOnReals` is an opaque `axiom`
+  with closure rules (`analytic_add/sub/mul/comp/exp/log_pos/…`) and **no congruence along pointwise
+  equality**. The same shape of obstruction as `HasDerivAt` in `(cu)`.
+* `eml_tree_analytic_on_pos` gives analyticity of `t.eval` directly, but requires
+  `EMLLogArgPosOnIoi t` — log-argument positivity on **all of `(0, ∞)`**, where declamping supplies it
+  only per interval.
+
+So closing this needs a **new axiom** (an `IsAnalyticOnReals` congruence, or an interval-localised
+tree-analyticity port). That is a decision about the `AxiomLedger`, not a proof step, and it is not
+taken here. Recording it as the precise blocker rather than working around it.
+
+`SignHardCase` stays `open`, 18 rows unchanged, nothing registered.
+
+Gates: build **742 jobs**, aggregator **739 of 1045**, consistency PASS, claims 422, obligations 18
+rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted, witness
+audit 36.
+
 ## [Unreleased] — 2026-08-25 (da)
 
 ### The per-interval bound already existed; only non-vanishing is left
