@@ -417,6 +417,7 @@ import MachLib.EMLOneQueryNormalForm
 import MachLib.EMLZeroBoundRay
 import MachLib.ChainExp2Uniform
 import MachLib.EMLSignFromNonzero
+import MachLib.EMLEventualContinuity
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

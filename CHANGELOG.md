@@ -5,6 +5,126 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cu)
+
+### `EMLEventualContinuity` — the induction manufactures its own continuity
+
+The previous entry left one question: read `evSign_of_hard`'s use site and ask what eventual
+sign/zero/branch information the depth induction *already* has for every nested log argument. The
+answer is the middle of the three outcomes — enough for a **weaker continuity lemma** than
+`EMLNoCrossingAt`, not enough to build the ray at the call site unchanged.
+
+**What is actually in scope at the invocation.** At `EMLDepthTameness.lean:2643` the context holds
+exactly one verdict, `ihB : EvSign B.eval` — the top-level log argument — and `ihA` is bound to `_`.
+Nothing nested, in either child. That is forced by the motive: `EvSign t.eval` is a statement about
+the root value, so a structural IH cannot carry anything about a child's interior.
+
+**But the nested verdicts are not missing — they are produced at their own nodes.** Every nested log
+argument is the right child of some `eml a b` the same induction visits, and there its own `ihB` *is*
+the branch verdict for it. Nothing has to be transported to the root. So continuity can ride along as
+a second conjunct of the induction's own conclusion, proved from immediate-children hypotheses alone.
+
+### The two branches are continuous for different reasons
+
+| branch | why `log ∘ B` is continuous | `EMLNoCrossingAt` |
+| --- | --- | --- |
+| `0 < B.eval` on the ray | `log` is continuous at positive points; the verdict is used at the single point `x` | implied (`> 0` gives `≠ 0`) |
+| `B.eval ≤ 0` on the ray | `log ∘ B ≡ 0` there, hence *locally constant*; the verdict is used on a whole ball | **fails** at any `B.eval x = 0` |
+
+The clamped row is the one that matters. Totalisation makes `log ∘ B` constant, so exact zeros of `B`
+are harmless, and a condition phrased as non-vanishing rejects a case that is perfectly well behaved.
+`continuousAt_log_comp_of_nonpos_nbhd` is the whole of the new analysis and its footprint is 17 base
+`Real` axioms — **no differentiability of `g` anywhere**.
+
+There is no derivative twin, and the reason is structural: `MachLib.Real.HasDerivAt` is an opaque
+`axiom` with no local-congruence rule, so `HasDerivAt (fun _ => 0) 0 x` cannot be transferred across
+an agreement neighbourhood. The existing derivative-based node lemma
+`eml_hasDerivAt_away_from_crossing` therefore *cannot* serve the clamped branch at all. `EvCont`
+carries `ContinuousAt` because that is the only thing available, not merely the cheaper option.
+
+### The endpoint shift, kept explicit
+
+`EvSign` and `EvCont` rays are closed (`X₀ ≤ x`); `ContinuousAt` is two-sided. At `x = X₀` the clamped
+branch's local-constancy argument has no left neighbourhood and is false as stated. `ray_shift_nbhd`
+states the fix once — the radius-`1` ball about any `x ≥ X₀ + 1` stays inside `[X₀, ∞)` — and the node
+lemma's conclusion is a ray at `X + 1`. Named rather than inlined; a silently dropped endpoint is a
+failure mode this corpus has already paid for.
+
+### What the skeleton buys, and what it costs
+
+`evSignCont_of_cts` advances `EvSign` and `EvCont` together. Its hypothesis `SignHardCts` is
+`SignHardCase` **plus** a continuity hypothesis at the node — more hypotheses, same conclusion, so it
+is *implied by* `SignHardCase` (`signHardCts_of_hard`) and nothing is strengthened to route through
+it. `ihA`, discarded in `evSign_of_hard` because the left child's sign is genuinely irrelevant, is
+used here for the left child's **continuity**.
+
+Immediate consequence, on the *existing* obligation with nothing added:
+
+> **`evCont_of_hard : SignHardCase → ∀ t : EMLTree, EvCont t.eval`**
+
+Continuity was never a second mathematical frontier. It is internal bookkeeping, and the corpus can
+now say so with a theorem.
+
+### The zero-control instance, and an asymmetry worth stating plainly
+
+`SignHardNonzero` — pure eventual non-vanishing, the shape a zero-counting engine produces and the
+same shape `OneQueryDichotomy` needs — feeds the skeleton through
+`evSign_of_continuous_nonzero_on_ray`, giving
+
+> **`evSign_of_nonzero : SignHardNonzero → ∀ t : EMLTree, EvSign t.eval`**
+
+the drop-in analogue of `evSign_of_hard` with the sign obligation replaced by a zero-control one.
+
+**It is strictly a sufficient condition, not a reduction.** `SignHardCase` does **not** give
+`SignHardNonzero` back: `EvSign`'s second disjunct is `≤ 0`, which tolerates a function with
+infinitely many zeros. So any zero-control route to `SignHardCase` *over-delivers*, and adopting
+`SignHardNonzero` as the obligation would **enlarge** the debt rather than shrink it. That is the
+opposite of the `signHardCase_iff_compareExpExpPos` case, where the residue was equivalent; here it is
+stronger, which is worse in debt terms, and the row must not move on the strength of it.
+
+`SignHardNonzeroOrClamped` is the debt-neutral form — the same statement with the clamped case
+restored as a disjunct. It feeds the skeleton (`signHardCts_of_nonzeroOrClamped`) *and* is implied by
+`SignHardCase` (`nonzeroOrClamped_of_hard`), so it neither strengthens nor weakens the obligation. It
+is the honest spelling of "all that is missing is zero control, on the branch where zero control is
+what is missing".
+
+### Ledger
+
+**No row moves. `SignHardCase` stays `open`, 18 rows unchanged**, and the gate confirms it: *"ok
+SignHardCase: open, no theorem concludes it"*. Neither `SignHardCts`, `SignHardNonzero` nor
+`SignHardNonzeroOrClamped` is registered — the producer is not connected, and a sufficient condition
+with no producer is not progress in debt terms.
+
+Deliberately, **no theorem in this module concludes `SignHardCase`** — and both halves of that
+sentence were checked rather than assumed. The theorem *is* writable: `SignHardNonzero → SignHardCase`
+follows from `evCont_of_nonzero` applied to `A` and `B`, then `evCont_eml_of_evSign_right`, then
+`signHardCts_of_nonzero`; it elaborates clean (kept out of the corpus, not out of reach). And it
+*would* have fired: feeding that signature to `dischargers_of` returns
+`['probe_signHardCase_of_nonzero']` and `check_rows` reports **`STALE SignHardCase: marked open but
+discharged by …`**, because binder-stripping removes only binders of the obligation's *own* type — a
+consumer of `SignHardNonzero` concluding `SignHardCase` passes straight through. The three shipped
+shapes (`… : SignHardCts`, `… : ∀ t, EvSign t.eval`, `… : SignHardNonzeroOrClamped`) return `bad = 0`
+against the same row. The capstones are stated at their real use site (`∀ t, EvSign t.eval`), which is
+where `evSign_of_hard` states its own.
+
+### What changed in the dependency graph
+
+Before: two open mathematical frontiers, sign-definiteness and zero-counting, with continuity an
+unresolved third thing. After: one zero-counting frontier plus continuity as internal plumbing —
+
+```
+eventual non-vanishing ──┬── OneQueryDichotomy
+                         └── + IVT + (manufactured) eventual continuity ── SignHardCase
+```
+
+with the caveat above that the left edge into `SignHardCase` is a sufficient condition, not an
+equivalence, unless it is taken in the `…OrClamped` form.
+
+Gates: build **737 jobs**, aggregator **734 of 1040**, consistency PASS, claims 420, obligations 18
+rows (`SignHardCase` open), discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1
+allowlisted, witness audit 36 (pinned set). New-module footprints cite no `sorryAx`, no
+`zero_count_bound_classical`, no `analytic_finite_zeros`, no `Khovanskii`, no `Fbasis`, no `rolle`.
+
 ## [Unreleased] — 2026-08-25 (ct)
 
 ### `EMLSignFromNonzero` — a general topology bridge, and the second ingredient the pipeline needs
