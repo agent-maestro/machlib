@@ -28,9 +28,24 @@ div-free fragment needs none of it, which is what makes it worth isolating.
 
 With the normal form, the dichotomy for a div-free context is **literally** the dichotomy for its
 `Bipoly` (`oneQueryDichotomy_divFree_of_bipoly`). So on this fragment the obligation contains no
-context syntax and no `FCtx` at all — what is left is the question of whether a bivariate polynomial
-can vanish identically along the curve `y = F(P(x)/Q(x))`, which is an algebraic-relation question
-about `F ∘ (P/Q)` and nothing else.
+context syntax and no `FCtx` at all — what is left is a question about a bivariate polynomial
+evaluated along the curve `y = F(P(x)/Q(x))`.
+
+**And that residue is two things, not one.** An earlier revision of this paragraph called it "an
+algebraic-relation question about `F ∘ (P/Q)` and nothing else", which is wrong and worth correcting
+in place. `BipolyDichotomyAlong`'s second disjunct is *eventual non-vanishing*, so it demands:
+
+1. that a nonzero `N` does not vanish **identically** along the curve — the transcendence half; and
+2. that it does not vanish **infinitely often** either — a **finite-zeros** statement.
+
+The level-0 analogue shows why both are needed: `pev_dichotomy`'s second disjunct is `EvDom`, and a
+polynomial earns it from having finitely many roots. Nothing about transcendence alone rules out a
+germ that keeps returning to zero on a sparse set.
+
+The second half is not new territory for this corpus — `AnalyticFiniteZeros`,
+`ExpRationalKhovanskii`, `InnerKhovanskiiExp` and `FiniteZeroPacket` are the zero-counting arc — but
+it does mean `OneQueryDichotomy` is **not** reducible to transcendence, and a decomposition of the
+residue by growth regime alone would silently lose the zero-counting half.
 
 That is the same move as `EMLSignReduction`: strip the representation until the residue is a
 statement about growth or algebraic dependence, and name it.
@@ -328,5 +343,45 @@ theorem oneQueryDichotomy_of_bipoly (h : BipolyDichotomyAlong) :
     intro hzero
     rw [hzero, zero_mul] at hid
     exact hNn hid.symm
+
+/-! ## What the dichotomy actually is: zero-counting, not transcendence
+
+Sharper than the correction above, and it redirects the work.
+
+`EvZeroF f ∨ (eventually f ≠ 0)` is a disjunction whose **first** branch is decidable by excluded
+middle. So the entire content sits in the second: *if `f` is not eventually zero, then `f` is
+eventually nonzero* — no infinite oscillation through zero. Transcendence, non-algebraicity, and
+`Fbasis_not_algebraic` play **no role** in it.
+
+That is easy to miss because the level-0 analogue looks like an algebra theorem: `pev_dichotomy`
+concludes `EvZeroF ∨ EvDom`, and one reads `EvDom` as "the leading coefficient wins". But what
+`EvDom` *buys* is eventual non-vanishing, and a polynomial earns that from having finitely many
+roots. The level-1 statement needs the same thing for `N(x, F(P/Q))`, which is a **zero-counting**
+question — the `AnalyticFiniteZeros` / `ExpRationalKhovanskii` / `InnerKhovanskiiExp` arc — and not
+the transcendence arc at all.
+
+`bipolyDichotomy_iff_noOscillation` states that as an equivalence rather than as commentary, so the
+redirection is checkable and not a matter of my say-so. -/
+
+/-- No infinite oscillation through zero along the curve. -/
+def BipolyNoOscillation : Prop :=
+  ∀ (N : List (List Real)) (P Q : List Real) (X : Real), 1 ≤ X →
+    (∀ x : Real, X ≤ x → pev Q x ≠ 0) →
+      ¬ EvZeroF (fun x => bipev N x (Fbasis (pev P x / pev Q x))) →
+        ∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x →
+          bipev N x (Fbasis (pev P x / pev Q x)) ≠ 0
+
+/-- **The dichotomy IS the no-oscillation statement.** So `OneQueryDichotomy` reduces, on the whole
+of `FCtx`, to a finite-zeros question and to nothing about algebraic independence. -/
+theorem bipolyDichotomy_iff_noOscillation : BipolyDichotomyAlong ↔ BipolyNoOscillation := by
+  constructor
+  · intro h N P Q X hX hQ hne
+    rcases h N P Q X hX hQ with hz | hgood
+    · exact absurd hz hne
+    · exact hgood
+  · intro h N P Q X hX hQ
+    rcases Classical.em (EvZeroF (fun x => bipev N x (Fbasis (pev P x / pev Q x)))) with hz | hne
+    · exact Or.inl hz
+    · exact Or.inr (h N P Q X hX hQ hne)
 
 end MachLib

@@ -5,6 +5,61 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cp)
+
+### CORRECTION — `OneQueryDichotomy` is zero-counting, not transcendence
+
+(cm) and (cn) said the residue of `OneQueryDichotomy`, after the normal form, was "an
+algebraic-relation question about `F ∘ (P/Q)` and nothing else". **That is wrong**, and the error was
+mine in prose I had just published. Corrected in place in both the module docstring and the (cm)
+entry, and recorded here rather than quietly edited away.
+
+### The first correction was itself too weak
+
+The obvious repair is "it is transcendence **plus** a finite-zeros statement", because the second
+disjunct of `BipolyDichotomyAlong` is *eventual non-vanishing*. That is closer, and still wrong.
+
+`EvZeroF f ∨ (eventually f ≠ 0)` has a **decidable first branch**. By excluded middle the entire
+content sits in the second: *if `f` is not eventually zero then `f` is eventually nonzero* — no
+infinite oscillation through zero. Transcendence, non-algebraicity and `Fbasis_not_algebraic` play
+**no role in it whatsoever**.
+
+```
+bipolyDichotomy_iff_noOscillation : BipolyDichotomyAlong ↔ BipolyNoOscillation
+```
+
+Stated as an equivalence so the redirection is checkable rather than a matter of assertion.
+
+### Why it was easy to get wrong
+
+The level-0 analogue reads like an algebra theorem. `pev_dichotomy` concludes `EvZeroF ∨ EvDom`, and
+`EvDom` sounds like "the leading coefficient wins". But what `EvDom` *buys* is eventual
+non-vanishing, and a polynomial earns that from having **finitely many roots**. The level-1 statement
+needs exactly that for `N(x, F(P/Q))`.
+
+### What this changes about where the work goes
+
+A three-regime split of the bivariate question by growth — `deg P > deg Q` routing to
+`not_algebraic_of_dominates_exp`, `deg P < deg Q` to `no_rational_logarithm`, `deg P = deg Q` left
+over — was drafted and **abandoned before being built**. Every engine in it is a transcendence
+engine, and the obligation is not a transcendence statement.
+
+`OneQueryDichotomy` belongs to the **zero-counting** arc: `AnalyticFiniteZeros`,
+`AnalyticFiniteZerosReal`, `ExpRationalKhovanskii`, `InnerKhovanskiiExp`, `FiniteZeroPacket`. That is
+a link between two arcs this project has been running separately, and it is worth more than the split
+would have been.
+
+### The habit that caught it
+
+Checking that the four engines *existed* was not what saved this — they all do. What saved it was
+checking the **model**: reading what `BipolyDichotomyAlong`'s second disjunct actually demands
+instead of what its level-0 analogue's name suggests. A decomposition that is plausible, cites real
+lemmas, and targets the wrong arc is not distinguishable from a correct one by any gate here.
+
+Gates: build **733 jobs**, aggregator **730 of 1036**, consistency PASS, claims **412**, obligations
+18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted,
+witness audit 36 (pinned set).
+
 ## [Unreleased] — 2026-08-25 (co)
 
 ### `REDUCED` — a reduction may no longer read as a closure
@@ -150,7 +205,8 @@ oneQueryDichotomy_divFree_of_bipoly : BipolyDichotomyAlong → (the dichotomy, f
 
 On this fragment the obligation contains **no context syntax and no `FCtx`**. What is left is whether
 a bivariate polynomial can vanish identically along the curve `y = F(P(x)/Q(x))` — an
-algebraic-relation question about `F ∘ (P/Q)` and nothing else. Same move as `EMLSignReduction`:
+algebraic-relation question about `F ∘ (P/Q)` and nothing else. **[CORRECTED in (cp): the residue
+is that question *plus* a finite-zeros statement — see below.]** Same move as `EMLSignReduction`:
 strip the representation until the residue is growth or algebraic dependence, then name it.
 
 ### Why `div` is excluded deliberately

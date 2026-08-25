@@ -8592,6 +8592,22 @@
       ],
       "epistemic_type": "REDUCED",
       "reduces_to": "BipolyDichotomyAlong"
+    },
+    {
+      "id": "onequery-is-zero-counting-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "bipolyDichotomy_iff_noOscillation : BipolyDichotomyAlong ↔ BipolyNoOscillation",
+        "**no role in it whatsoever**"
+      ],
+      "module": "MachLib.EMLOneQueryNormalForm",
+      "theorem": "MachLib.bipolyDichotomy_iff_noOscillation",
+      "epistemic_type": "REDUCED",
+      "reduces_to": "BipolyNoOscillation",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt"
+      ]
     }
   ]
 }
