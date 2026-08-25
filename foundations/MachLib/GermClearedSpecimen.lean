@@ -137,4 +137,33 @@ theorem no_proper_cleared_relation_inv_x
     (fun r => not_Pdvd_pnsum_one' pIrred_X (by omega))
     hcl hprop
 
+/-! ## The same pole data witnesses the neighbouring capstones
+
+A theorem concluding `False` is *meant* to have an unsatisfiable hypothesis set — that is what an
+impossibility statement is. So "is it vacuous?" is the wrong question for these; the right one is
+whether everything **except** the relation-existence hypothesis can be discharged. If it cannot, the
+theorem says "these side conditions never hold" rather than "no relation exists for this germ", and
+that is the failure `positive_branch_impossible` had.
+
+`proper_relation_impossible` and `germ_relation_impossible` take exactly the pole data discharged
+above, so the same `q = x`, `P = 1`, `Q = x` witnesses both. `ProperRel S Ls` is a polynomial
+relation in `exp (S x)` with a non-vanishing top coefficient, so what these say, concretely, is that
+**`exp (1/x)` is transcendental over `ℝ(x)`** — now with nothing assumed about the pole. -/
+
+/-- **`exp (1/x)` satisfies no proper polynomial relation over `ℝ(x)`.** Every pole hypothesis
+discharged; only the relation itself is assumed. -/
+theorem proper_relation_impossible_inv_x {Ls : List (List Real)}
+    (hrel : ProperRel (fun y => pev [1] y * (1 / pev [0, 1] y)) Ls) : False :=
+  proper_relation_impossible pIrred_X derivCoprime_X
+    (not_Pdvd_const pIrred_X pnorm_one_ne_nil (by simp))
+    pNormal_one pNormal_X (by simp) Pdvd_refl not_evZeroF_pev_X hrel
+
+/-- The same, for any germ eventually equal to `1/x`. -/
+theorem germ_relation_impossible_inv_x {S : Real → Real} {Ls : List (List Real)}
+    (hagree : EvEqF S (fun y => pev [1] y * (1 / pev [0, 1] y)))
+    (hrel : ProperRel S Ls) : False :=
+  germ_relation_impossible pIrred_X derivCoprime_X
+    (not_Pdvd_const pIrred_X pnorm_one_ne_nil (by simp))
+    pNormal_one pNormal_X (by simp) Pdvd_refl not_evZeroF_pev_X hagree hrel
+
 end MachLib

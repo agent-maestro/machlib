@@ -5,6 +5,69 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (ck)
+
+### The vacuity sweep, and two more capstones witnessed
+
+A sweep over the corpus for the two defect shapes that made the `S > 0` branch vacuous, plus a pass
+over every registered capstone that has never been instantiated.
+
+### Both defect shapes are gone
+
+* `∀ r : Nat, P r` where `P` mentions `pnsum` — the `r = 0` trap, since `pnsum 0 _ = []` and every
+  polynomial divides the zero polynomial: **1 site**, `hkd` in `GermClearedDescent`, already stated at
+  `r + 1` and discharged by the specimen.
+* `PNormal` applied to a **constructed** object — the canonicity trap, since `pderiv` is
+  length-preserving and always leaves a trailing zero: **0 sites**.
+
+Other `∀ n : Nat` hypotheses were checked at their edge index and are false positives:
+`npow n r` is `rⁿ`, so the Weierstrass bound at `n = 0` reads `|mult 0| ≤ C`;
+`WitnessResidualConvexZeroBoundClosure`'s hypothesis is guarded by `1 ≤ k`; and the recurring-target
+meta-lemma is instantiated (4 and 2 references).
+
+### The criterion was wrong for impossibility theorems, and this corrects it
+
+**A theorem concluding `False` is *supposed* to have an unsatisfiable hypothesis set** — that is what
+an impossibility statement *is*. So "are the hypotheses satisfiable?" is the wrong question for
+`proper_relation_impossible` and its neighbours, and applying it would have condemned every one of
+them.
+
+The right question is whether everything **except** the relation-existence hypothesis can be
+discharged. If it cannot, the theorem says *"these side conditions never hold"* rather than *"no
+relation exists for this germ"* — and that distinction is exactly what
+`positive_branch_impossible` got wrong, since its `hchar` alone yielded `False`.
+
+Likewise, `∀ r, P r → Q r` is **not** vacuous merely because `P 0` is false: it stays usable at
+every `r ≥ 1`. Vacuity needs the hypothesis set contradictory under *every* instantiation, which is
+why a `∀` *inside* a hypothesis was the dangerous shape and a `∀` *over* an implication is not.
+
+### Two more capstones witnessed, by the same pole data
+
+`proper_relation_impossible` and `germ_relation_impossible` take exactly the pole data the `q = x`,
+`P = 1`, `Q = x` specimen already discharges, so both are now witnessed with **nothing assumed about
+the pole**:
+
+```
+proper_relation_impossible_inv_x : ProperRel (1/x) Ls → False
+germ_relation_impossible_inv_x   : EvEqF S (1/x) → ProperRel S Ls → False
+```
+
+`ProperRel S Ls` is a polynomial relation in `exp (S x)` with a non-vanishing top coefficient, so
+what these say concretely is that **`exp (1/x)` is transcendental over `ℝ(x)`** — and now with no
+pole hypotheses left standing between the statement and a reader.
+
+### What the sweep leaves open
+
+Of 405 registered claim-theorems, **38 carry hypotheses and are still referenced nowhere else** — no
+caller, no instantiation, no specimen. None matches a known-bad pattern, and the two shapes above are
+eradicated, so this is a standing item rather than a live defect. The list is dominated by
+`EMLSizeNineShape`, `EMLGrowthEnvelope`, `EMLCertifiedSynthesis` and `EMLUnaryBasis`; the pole and
+relation layer is now largely witnessed.
+
+Gates: build **732 jobs**, aggregator **729 of 1035** modules reachable, consistency PASS, claims
+**407**, obligations 18 rows (self-test: nine convict specimens), discovered 290/294, AxiomLedger
+**242 pinned (unchanged)**, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-24 (cj)
 
 ### `EMLSignReduction` — `SignHardCase` is a growth comparison, with no logarithm in it

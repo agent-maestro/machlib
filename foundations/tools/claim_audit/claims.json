@@ -8502,6 +8502,32 @@
         "Real.log_lt_log",
         "HasDerivAt"
       ]
+    },
+    {
+      "id": "exp-inv-x-transcendental-witnessed-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "proper_relation_impossible_inv_x",
+        "**`exp (1/x)` is transcendental over `ℝ(x)`**"
+      ],
+      "module": "MachLib.GermClearedSpecimen",
+      "theorem": "MachLib.proper_relation_impossible_inv_x",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "id": "germ-relation-inv-x-witnessed-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "germ_relation_impossible_inv_x",
+        "with **nothing assumed about\nthe pole**"
+      ],
+      "module": "MachLib.GermClearedSpecimen",
+      "theorem": "MachLib.germ_relation_impossible_inv_x",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
