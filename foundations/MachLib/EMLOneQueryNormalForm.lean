@@ -151,4 +151,182 @@ theorem ctxPoly_mul_var_hole (x y : Real) :
   rw [← divFree_eval _ divFree_specimens.1 x y]
   rfl
 
+/-! ## The `div` case — a rational normal form
+
+The div-free fragment above needed no side conditions. Division does: `div_def` carries `hb : b ≠ 0`,
+so an identity `C.eval = N/D` can only hold where the denominators are actually denominators. The
+statement below therefore multiplies out — `C.eval · D = N` — and carries exactly the nonvanishing it
+needs, which turns out to be **one condition per `div` node** and nothing more.
+
+Why so little: for `add`/`sub`/`mul` the denominator is `da·db`, so the top denominator being nonzero
+already forces both children's. Only `div` breaks that, because its denominator is `da·nb` and `db`
+appears in the *numerator* — so `db ≠ 0` has to be asked for. Everything else is derived, including
+`b.eval ≠ 0`, which follows from `b.eval · db = nb` and `nb ≠ 0`. -/
+
+/-- Numerator and denominator bipolys for an **arbitrary** context. -/
+noncomputable def ctxFrac : FCtx → List (List Real) × List (List Real)
+  | .hole    => ([[], [1]], [[1]])
+  | .const c => ([[c]], [[1]])
+  | .var     => ([[0, 1]], [[1]])
+  | .add a b => (biadd (bimul (ctxFrac a).1 (ctxFrac b).2) (bimul (ctxFrac b).1 (ctxFrac a).2),
+                 bimul (ctxFrac a).2 (ctxFrac b).2)
+  | .sub a b => (bisub (bimul (ctxFrac a).1 (ctxFrac b).2) (bimul (ctxFrac b).1 (ctxFrac a).2),
+                 bimul (ctxFrac a).2 (ctxFrac b).2)
+  | .mul a b => (bimul (ctxFrac a).1 (ctxFrac b).1, bimul (ctxFrac a).2 (ctxFrac b).2)
+  | .div a b => (bimul (ctxFrac a).1 (ctxFrac b).2, bimul (ctxFrac a).2 (ctxFrac b).1)
+
+/-- The side condition, and it is minimal: at each `div` node the divisor's **denominator** bipoly
+must not vanish. Nothing is asked at the other nodes. -/
+def DivDenomsOK : FCtx → Real → Real → Prop
+  | .hole,    _, _ => True
+  | .const _, _, _ => True
+  | .var,     _, _ => True
+  | .add a b, x, y => DivDenomsOK a x y ∧ DivDenomsOK b x y
+  | .sub a b, x, y => DivDenomsOK a x y ∧ DivDenomsOK b x y
+  | .mul a b, x, y => DivDenomsOK a x y ∧ DivDenomsOK b x y
+  | .div a b, x, y => DivDenomsOK a x y ∧ DivDenomsOK b x y ∧ bipev (ctxFrac b).2 x y ≠ 0
+
+private theorem ne_zero_left {a b : Real} (h : a * b ≠ 0) : a ≠ 0 := by
+  intro hz; exact h (by rw [hz]; exact zero_mul b)
+
+private theorem ne_zero_right {a b : Real} (h : a * b ≠ 0) : b ≠ 0 := by
+  intro hz; exact h (by rw [hz]; exact mul_zero a)
+
+/-- **The rational normal form.** `C.eval x y · D(x,y) = N(x,y)` wherever the denominators are
+genuine. -/
+theorem ctxFrac_eval : ∀ (C : FCtx) (x y : Real), DivDenomsOK C x y →
+    bipev (ctxFrac C).2 x y ≠ 0 →
+      C.eval x y * bipev (ctxFrac C).2 x y = bipev (ctxFrac C).1 x y := by
+  intro C
+  induction C with
+  | hole =>
+      intro x y _ _
+      show y * (pev [1] x + y * 0) = pev [] x + y * (pev [1] x + y * 0)
+      show y * ((1 + x * 0) + y * 0) = 0 + y * ((1 + x * 0) + y * 0)
+      mach_ring
+  | const c =>
+      intro x y _ _
+      show c * (pev [1] x + y * 0) = pev [c] x + y * 0
+      show c * ((1 + x * 0) + y * 0) = (c + x * 0) + y * 0
+      mach_ring
+  | var =>
+      intro x y _ _
+      show x * (pev [1] x + y * 0) = pev [0, 1] x + y * 0
+      show x * ((1 + x * 0) + y * 0) = (0 + x * (1 + x * 0)) + y * 0
+      mach_ring
+  | add a b iha ihb =>
+      intro x y hok hD
+      have hD' : bipev (ctxFrac a).2 x y * bipev (ctxFrac b).2 x y ≠ 0 := by
+        rw [← bipev_bimul]; exact hD
+      show (a.eval x y + b.eval x y) * bipev (bimul (ctxFrac a).2 (ctxFrac b).2) x y
+          = bipev (biadd (bimul (ctxFrac a).1 (ctxFrac b).2)
+                         (bimul (ctxFrac b).1 (ctxFrac a).2)) x y
+      rw [bipev_bimul, bipev_biadd, bipev_bimul, bipev_bimul,
+          ← iha x y hok.1 (ne_zero_left hD'), ← ihb x y hok.2 (ne_zero_right hD')]
+      mach_mpoly [a.eval x y, b.eval x y, bipev (ctxFrac a).2 x y, bipev (ctxFrac b).2 x y]
+  | sub a b iha ihb =>
+      intro x y hok hD
+      have hD' : bipev (ctxFrac a).2 x y * bipev (ctxFrac b).2 x y ≠ 0 := by
+        rw [← bipev_bimul]; exact hD
+      show (a.eval x y - b.eval x y) * bipev (bimul (ctxFrac a).2 (ctxFrac b).2) x y
+          = bipev (bisub (bimul (ctxFrac a).1 (ctxFrac b).2)
+                         (bimul (ctxFrac b).1 (ctxFrac a).2)) x y
+      rw [bipev_bimul, bipev_bisub, bipev_bimul, bipev_bimul,
+          ← iha x y hok.1 (ne_zero_left hD'), ← ihb x y hok.2 (ne_zero_right hD')]
+      mach_mpoly [a.eval x y, b.eval x y, bipev (ctxFrac a).2 x y, bipev (ctxFrac b).2 x y]
+  | mul a b iha ihb =>
+      intro x y hok hD
+      have hD' : bipev (ctxFrac a).2 x y * bipev (ctxFrac b).2 x y ≠ 0 := by
+        rw [← bipev_bimul]; exact hD
+      show (a.eval x y * b.eval x y) * bipev (bimul (ctxFrac a).2 (ctxFrac b).2) x y
+          = bipev (bimul (ctxFrac a).1 (ctxFrac b).1) x y
+      rw [bipev_bimul, bipev_bimul,
+          ← iha x y hok.1 (ne_zero_left hD'), ← ihb x y hok.2 (ne_zero_right hD')]
+      mach_mpoly [a.eval x y, b.eval x y, bipev (ctxFrac a).2 x y, bipev (ctxFrac b).2 x y]
+  | div a b iha ihb =>
+      intro x y hok hD
+      have hD' : bipev (ctxFrac a).2 x y * bipev (ctxFrac b).1 x y ≠ 0 := by
+        rw [← bipev_bimul]; exact hD
+      show (a.eval x y / b.eval x y) * bipev (bimul (ctxFrac a).2 (ctxFrac b).1) x y
+          = bipev (bimul (ctxFrac a).1 (ctxFrac b).2) x y
+      rw [bipev_bimul, bipev_bimul]
+      have hb := ihb x y hok.2.1 hok.2.2
+      have hbne : b.eval x y ≠ 0 := by
+        intro hz
+        rw [hz, zero_mul] at hb
+        exact (ne_zero_right hD') hb.symm
+      have ha := iha x y hok.1 (ne_zero_left hD')
+      rw [div_def _ _ hbne, ← hb, ← ha]
+      have e : a.eval x y * (1 / b.eval x y)
+            * (bipev (ctxFrac a).2 x y * (b.eval x y * bipev (ctxFrac b).2 x y))
+          = (a.eval x y * bipev (ctxFrac a).2 x y * bipev (ctxFrac b).2 x y)
+            * (b.eval x y * (1 / b.eval x y)) := by
+        mach_mpoly [a.eval x y, 1 / b.eval x y, bipev (ctxFrac a).2 x y, b.eval x y,
+                    bipev (ctxFrac b).2 x y]
+      rw [e, mul_inv _ hbne]
+      mach_ring
+
+private theorem bipev_const_one (x y : Real) : bipev [[(1 : Real)]] x y = 1 := by
+  show (1 + x * 0) + y * 0 = 1
+  mach_ring
+
+private theorem one_ne_zero' : (1 : Real) ≠ 0 := fun h => zero_ne_one_ax h.symm
+
+/-- **Discrimination for `div`.** The side condition is satisfiable and the normal form fires on a
+context that actually contains a division — so `ctxFrac_eval` is not a theorem about div-free
+contexts in disguise. -/
+theorem ctxFrac_div_specimen (x y : Real) :
+    (FCtx.div FCtx.var (FCtx.const 1)).eval x y
+      * bipev (ctxFrac (FCtx.div FCtx.var (FCtx.const 1))).2 x y
+    = bipev (ctxFrac (FCtx.div FCtx.var (FCtx.const 1))).1 x y := by
+  refine ctxFrac_eval _ x y ⟨trivial, trivial, ?_⟩ ?_
+  · show bipev [[(1 : Real)]] x y ≠ 0
+    rw [bipev_const_one]; exact one_ne_zero'
+  · show bipev (bimul [[(1 : Real)]] [[(1 : Real)]]) x y ≠ 0
+    rw [bipev_bimul, bipev_const_one]
+    have e : (1 : Real) * 1 = 1 := by mach_ring
+    rw [e]; exact one_ne_zero'
+
+private theorem eq_zero_of_mul_eq_zero {a b : Real} (h : a * b = 0) (hb : b ≠ 0) : a = 0 := by
+  rcases Classical.em (a = 0) with ha | ha
+  · exact ha
+  · exact absurd h (mul_ne_zero ha hb)
+
+/-! ## The reduction, for arbitrary contexts
+
+With the rational normal form the dichotomy transfers to **every** context, not just the div-free
+ones — at the price of the side conditions holding along the ray, which is exactly the price
+division charges and no more. -/
+
+/-- **`OneQueryDichotomy` for arbitrary contexts, given the bivariate dichotomy.** The two extra
+hypotheses are the `div` side conditions evaluated along the curve; for a div-free `C` they are
+vacuous and this collapses to `oneQueryDichotomy_divFree_of_bipoly`. -/
+theorem oneQueryDichotomy_of_bipoly (h : BipolyDichotomyAlong) :
+    ∀ (C : FCtx) (P Q : List Real) (X : Real), 1 ≤ X →
+      (∀ x : Real, X ≤ x → pev Q x ≠ 0) →
+      (∀ x : Real, X ≤ x → DivDenomsOK C x (Fbasis (pev P x / pev Q x))) →
+      (∀ x : Real, X ≤ x → bipev (ctxFrac C).2 x (Fbasis (pev P x / pev Q x)) ≠ 0) →
+        EvZeroF (fun x => FCtx.eval C x (Fbasis (pev P x / pev Q x)))
+        ∨ ∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x →
+            FCtx.eval C x (Fbasis (pev P x / pev Q x)) ≠ 0 := by
+  intro C P Q X hX hQ hok hD
+  rcases h (ctxFrac C).1 P Q X hX hQ with ⟨Z, hZ, hz⟩ | ⟨Y, hY, hn⟩
+  · obtain ⟨W, hW, h0, h1⟩ := two_bounds' hX hZ
+    refine Or.inl ⟨W, hW, fun x hx => ?_⟩
+    have hid := ctxFrac_eval C x (Fbasis (pev P x / pev Q x))
+      (hok x (le_trans h0 hx)) (hD x (le_trans h0 hx))
+    have hNz : bipev (ctxFrac C).1 x (Fbasis (pev P x / pev Q x)) = 0 := hz x (le_trans h1 hx)
+    rw [hNz] at hid
+    show FCtx.eval C x (Fbasis (pev P x / pev Q x)) = 0
+    exact eq_zero_of_mul_eq_zero hid (hD x (le_trans h0 hx))
+  · obtain ⟨W, hW, h0, h1⟩ := two_bounds' hX hY
+    refine Or.inr ⟨W, hW, fun x hx => ?_⟩
+    have hid := ctxFrac_eval C x (Fbasis (pev P x / pev Q x))
+      (hok x (le_trans h0 hx)) (hD x (le_trans h0 hx))
+    have hNn : bipev (ctxFrac C).1 x (Fbasis (pev P x / pev Q x)) ≠ 0 := hn x (le_trans h1 hx)
+    show FCtx.eval C x (Fbasis (pev P x / pev Q x)) ≠ 0
+    intro hzero
+    rw [hzero, zero_mul] at hid
+    exact hNn hid.symm
+
 end MachLib

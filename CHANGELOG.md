@@ -5,6 +5,59 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-24 (cn)
+
+### `div` finished — a rational normal form, and the reduction for arbitrary contexts
+
+(cm) handled the div-free fragment, where a context *is* a `Bipoly` and no side conditions arise.
+Division needs them: `div_def` carries `hb : b ≠ 0`, so an identity `C.eval = N/D` can only hold
+where the denominators are denominators. `ctxFrac_eval` states it multiplied out —
+
+```
+C.eval x y · bipev D x y = bipev N x y
+```
+
+— and carries **one nonvanishing condition per `div` node**, which turns out to be all that is
+needed.
+
+### Why the side condition is that small
+
+For `add`/`sub`/`mul` the denominator is `da·db`, so the *top* denominator being nonzero already
+forces both children's, and nothing extra is asked. Only `div` breaks the pattern: its denominator is
+`da·nb` while `db` moves into the **numerator**, so `db ≠ 0` has to be requested. Everything else is
+derived — including `b.eval ≠ 0`, which falls out of `b.eval · db = nb` together with `nb ≠ 0`
+rather than being assumed.
+
+`DivDenomsOK` is that predicate, and it asks for nothing at the non-`div` nodes.
+
+### The reduction now covers every context
+
+```
+oneQueryDichotomy_of_bipoly : BipolyDichotomyAlong → (the dichotomy, for EVERY C)
+```
+
+with the two `div` side conditions evaluated along the curve. For a div-free `C` they are vacuous and
+this collapses to (cm)'s statement. So `OneQueryDichotomy` is now reduced, on the whole of `FCtx`, to
+one question with no context syntax in it: **can a nonzero bivariate polynomial vanish identically
+along `y = F(P(x)/Q(x))`?**
+
+### Discrimination
+
+`ctxFrac_div_specimen` fires the normal form on a context that actually contains a division, with
+both side conditions discharged — so `ctxFrac_eval` is not a theorem about div-free contexts in
+disguise, and `DivDenomsOK` is not an unsatisfiable predicate. That check is the direct lesson of the
+`hcharN` defect: a side condition nobody has ever satisfied is indistinguishable from a false one.
+
+### Still open, and still only reduced
+
+`OneQueryDichotomy` remains **open**. What (cm) and (cn) together establish is that its difficulty is
+entirely the bivariate vanishing question — not the context grammar, not the totalised `log`, and not
+the division. That is a reduction, not a theorem, and the ledger row is unchanged.
+
+Gates: build **733 jobs**, aggregator **730 of 1036**, consistency PASS, claims **411**, obligations
+18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted,
+witness audit 37 (pinned set).
+
 ## [Unreleased] — 2026-08-24 (cm)
 
 ### `EMLOneQueryNormalForm` — the div-free fragment of `OneQueryDichotomy` is bivariate algebra

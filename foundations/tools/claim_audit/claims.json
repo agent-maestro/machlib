@@ -8557,6 +8557,35 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "id": "ctxfrac-rational-normalform-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "ctxFrac_eval",
+        "**one nonvanishing condition per `div` node**"
+      ],
+      "module": "MachLib.EMLOneQueryNormalForm",
+      "theorem": "MachLib.ctxFrac_eval",
+      "forbid_axioms": [
+        "sorryAx",
+        "HasDerivAt",
+        "Real.log",
+        "Real.exp"
+      ]
+    },
+    {
+      "id": "onequery-reduction-all-contexts-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "oneQueryDichotomy_of_bipoly",
+        "the dichotomy, for EVERY C"
+      ],
+      "module": "MachLib.EMLOneQueryNormalForm",
+      "theorem": "MachLib.oneQueryDichotomy_of_bipoly",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
