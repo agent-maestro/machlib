@@ -5,6 +5,67 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (cr)
+
+### `ChainExp2Uniform` — the quantifier reordering, and one of three coordinates closed
+
+(cq) measured `OneQueryDichotomy`'s distance to closure in three coordinates: **quantifier order**,
+**chain shape**, **reducibility transport**. This closes the first.
+
+```
+chain2_khovanskii_bound_uniform (p : MultiPoly 2) :
+  ∃ g k, degreeY g = 0 ∧
+    (terminal-nonvanishing → ∃ N, ∀ (a b : Real), a < b → ∀ zeros, … → zeros.length ≤ N)
+```
+
+`N` now precedes the interval — the shape `eventually_nonzero_of_uniformZeroBound` consumes.
+
+### It is a restatement, and establishing that was the work
+
+The existing statements bind `N` *inside* `a b`, so they license only the weaker, interval-dependent
+reading. Reading the construction shows the bound never depended on the interval. At the bottom of
+the stack:
+
+```
+obtain ⟨g, k, hg0, hwit⟩ := se_reduces p
+refine ⟨MultiPoly.degreeX g.poly + k, ?_⟩
+```
+
+`N = degreeX g.poly + k`, with `g`, `k` from `se_reduces p` — **a function of the polynomial alone**.
+The interval enters only afterwards, to apply `khovanskii_bound_full`. One level up,
+`chain2_reduces_to_y1free` already quantifies `a b` *inside* its conclusion. So each proof here is
+the original with `intro a b hab` moved after the witness is supplied.
+
+The bounds were uniform all along; the statements did not say so, and every downstream use inherited
+the weaker reading.
+
+### Why it was checked rather than asserted
+
+"Khovanskii bounds are uniform in nature" is true, and is not a proof. Writing that sentence at the
+start would have been correct and would have licensed nothing. The distance turned out to be one
+`intro` — which is only learnable by reading the construction, not the intuition. Same discipline
+that killed the growth-regime detour in (cp).
+
+### No trust cost
+
+`chain2_khovanskii_bound_uniform` cites **no `zero_count_bound_classical` and no
+`analytic_finite_zeros`**, inheriting the unconditional route's footprint. Closing this coordinate
+did not spend any of the axiom budget — which matters, because `analytic_finite_zeros_compact` sits
+in the ledger's *disclosed-but-not-trusted* list, so a headline routed through it would fail the
+`AxiomLedger` gate outright rather than merely being frowned upon.
+
+### Scope, stated plainly
+
+Chain-2 only. The terminal non-vanishing side condition is carried unchanged, not discharged. This
+does **not** close `OneQueryDichotomy`: the remaining coordinates are **chain shape** — the germ
+`N(x, F(P/Q))` involves `x`, `exp(S)` *and* a totalised `log(S)`, whose `log y = 0` for `y ≤ 0`
+convention forces a sign split, so the germ is only Pfaffian on the ray where `S > 0` — and
+**transporting reducibility** to the relevant `FCtx` expression. Both untouched.
+
+Gates: build **735 jobs**, aggregator **732 of 1038**, consistency PASS, claims **417**, obligations
+18 rows, discovered 290/294, AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted,
+witness audit 36 (pinned set).
+
 ## [Unreleased] — 2026-08-25 (cq)
 
 ### `EMLZeroBoundRay` — the missing bridge, and `OneQueryDichotomy`'s debt in one statement

@@ -8657,6 +8657,35 @@
         "analytic_finite_zeros",
         "zero_count_bound_classical"
       ]
+    },
+    {
+      "id": "chain2-uniform-interval-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "chain2_khovanskii_bound_uniform",
+        "`N` now precedes the interval"
+      ],
+      "module": "MachLib.ChainExp2Uniform",
+      "theorem": "MachLib.ChainExp2Capstone.chain2_khovanskii_bound_uniform",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "singleexp-uniform-interval-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`N = degreeX g.poly + k`, with `g`, `k` from `se_reduces p`"
+      ],
+      "module": "MachLib.ChainExp2Uniform",
+      "theorem": "MachLib.ChainExp2PathC.singleExp_khovanskii_bound_uniform",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }
