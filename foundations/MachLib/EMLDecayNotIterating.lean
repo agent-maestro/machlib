@@ -134,4 +134,105 @@ theorem not_decay_on_ray_depth_three :
   exact lt_irrefl_ax _ (lt_of_le_of_lt hb' hgt)
 
 
+/-! ## §2 — the rate grows with depth, so no fixed bound can work
+
+`V₃` fails against a **linear** `-log`. The obvious repair is to allow a bigger right-hand side. This
+section shows the repair cannot be a *fixed* one: one rung further, the linear form fails too.
+
+```
+expXplus1  = eml var (const (exp (-1)))   exp x − log(exp(−1)) = exp x + 1        depth 1
+expExpX1   = eml expXplus1 (const 1)      exp(exp x + 1) − log 1                  depth 2
+negExpX    = eml (const 0) expExpX1       1 − (exp x + 1) = −exp x                depth 3
+decayFaster= eml negExpX (const 0)        exp(−exp x) − log 0                     depth 4
+```
+
+`-log (decayFaster.eval x) = exp x`, so `not_linear_decay_bound_depth_four` rules out every
+`C + x`. And `decayFast_linear_bound` shows the depth-3 witness **does** satisfy that bound, with
+`C = 0`. So this is a genuine **separation between depth 3 and depth 4**, not just another failure.
+
+The pattern is visible in the construction: each extra `eml` node buys one more `exp` in the decay
+exponent, because `log 0 = 0` turns `eml A (const 0)` into `exp ∘ A` and `eml (const 0) (expTree s)`
+into `−s`. So the decay rate at depth `j` is a tower of height growing with `j`.
+
+**Consequence for the repair.** Any correct `V_j` must be **depth-indexed** — `-log (t x) ≤ E_{f(j)}(x)`
+with the height growing in `j`, not a single envelope serving all depths. That is a sharper
+requirement than `(de)` recorded, and it is what the two witnesses jointly establish. Whether such a
+depth-indexed form actually iterates is still not proved here.
+-/
+
+-- exp x + 1, depth 1:  exp x - log (exp (-1)) = exp x + 1
+noncomputable def expXplus1 : EMLTree := EMLTree.eml EMLTree.var (EMLTree.const (exp (-1)))
+-- exp (exp x + 1), depth 2
+noncomputable def expExpX1 : EMLTree := EMLTree.eml expXplus1 (EMLTree.const 1)
+-- -exp x, depth 3:  exp 0 - log (exp (exp x + 1)) = 1 - (exp x + 1)
+noncomputable def negExpX : EMLTree := EMLTree.eml (EMLTree.const 0) expExpX1
+-- exp (-exp x), depth 4
+noncomputable def decayFaster : EMLTree := EMLTree.eml negExpX (EMLTree.const 0)
+
+theorem decayFaster_depth : decayFaster.depth = 4 := by decide
+
+theorem expXplus1_eval (x : Real) : expXplus1.eval x = exp x + 1 := by
+  show exp x - log (exp (-1 : Real)) = exp x + 1
+  rw [log_exp]; mach_ring
+
+theorem expExpX1_eval (x : Real) : expExpX1.eval x = exp (exp x + 1) := by
+  show exp (expXplus1.eval x) - log (1 : Real) = exp (exp x + 1)
+  rw [expXplus1_eval x, log_one]; mach_ring
+
+theorem negExpX_eval (x : Real) : negExpX.eval x = -exp x := by
+  show exp (0 : Real) - log (expExpX1.eval x) = -exp x
+  rw [expExpX1_eval x, log_exp, exp_zero]; mach_ring
+
+theorem decayFaster_eval (x : Real) : decayFaster.eval x = exp (-exp x) := by
+  show exp (negExpX.eval x) - log (0 : Real) = exp (-exp x)
+  rw [negExpX_eval x, log_nonpos (le_refl (0 : Real))]; mach_ring
+
+theorem decayFaster_pos (x : Real) : 0 < decayFaster.eval x := by
+  rw [decayFaster_eval x]; exact exp_pos _
+
+/-- **Not even a linear bound survives at depth 4.** -/
+theorem not_linear_decay_bound_depth_four :
+    ¬ ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < decayFaster.eval x →
+        -log (decayFaster.eval x) ≤ C + x := by
+  rintro ⟨C, X₀, hX₀, h⟩
+  obtain ⟨x, hxX, hxC⟩ : ∃ x : Real, X₀ ≤ x ∧ C < x :=
+    ⟨MachLib.Real.max X₀ (C + 1), le_max_left _ _,
+      lt_of_lt_of_le (by
+        have v := add_lt_add_left zero_lt_one_ax C
+        have e : C + 0 = C := by mach_ring
+        rw [e] at v; exact v) (le_max_right X₀ (C + 1))⟩
+  have hb := h x hxX (decayFaster_pos x)
+  rw [decayFaster_eval x, log_exp] at hb
+  -- hb : -(-exp x) ≤ C + x
+  have hb' : exp x ≤ C + x := by
+    have e : -(-exp x) = exp x := by mach_ring
+    rw [e] at hb; exact hb
+  have h2 : (1 + 1) * x < exp x := exp_gt_two_x x
+  have hlt : C + x < exp x := by
+    have e : (1 + 1) * x = x + x := by mach_ring
+    rw [e] at h2
+    have hCx : C + x < x + x := by
+      have v := add_lt_add_left hxC x
+      have e1 : x + C = C + x := by mach_ring
+      have e2 : x + x = x + x := by mach_ring
+      rw [e1] at v; exact v
+    exact lt_trans_ax hCx h2
+  exact lt_irrefl_ax _ (lt_of_le_of_lt hb' hlt)
+
+/-- Depth 3's witness DOES satisfy the linear bound — so this is a genuine separation. -/
+theorem decayFast_linear_bound :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < decayFast.eval x →
+      -log (decayFast.eval x) ≤ C + x := by
+  refine ⟨0, 1, le_refl 1, fun x _ _ => ?_⟩
+  rw [decayFast_eval x, log_exp]
+  have e : -(1 - x) = x - 1 := by mach_ring
+  rw [e]
+  have v := add_lt_add_left zero_lt_one_ax (x - 1)
+  have e1 : x - 1 + 0 = x - 1 := by mach_ring
+  have e2 : x - 1 + 1 = x := by mach_ring
+  rw [e1, e2] at v
+  have e3 : (0 : Real) + x = x := by mach_ring
+  rw [e3]; exact le_of_lt v
+
+
 end MachLib

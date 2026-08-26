@@ -5,6 +5,53 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (df)
+
+### The decay rate grows with depth — a depth-3/depth-4 separation
+
+`(de)` refuted `V₃` and suggested the repair was a bigger right-hand side. This shows the repair
+cannot be a **fixed** one.
+
+```
+expXplus1   = eml var (const (exp (-1)))   exp x − log(exp(−1)) = exp x + 1   depth 1
+expExpX1    = eml expXplus1 (const 1)      exp(exp x + 1) − log 1             depth 2
+negExpX     = eml (const 0) expExpX1       1 − (exp x + 1) = −exp x           depth 3
+decayFaster = eml negExpX (const 0)        exp(−exp x) − log 0                depth 4
+```
+
+`-log (decayFaster.eval x) = exp x`, so **`not_linear_decay_bound_depth_four`** rules out every bound
+`C + x`. And **`decayFast_linear_bound`** shows `(de)`'s depth-3 witness *does* satisfy that bound,
+with `C = 0`.
+
+> Depth 3 satisfies the linear decay bound. Depth 4 does not.
+
+That is a genuine **separation**, not another failure. Both depths are `by decide`.
+
+### The mechanism, and what it forces
+
+Each extra `eml` node buys one more `exp` in the decay exponent, and for the same two reasons as
+before: `log 0 = 0` turns `eml A (const 0)` into `exp ∘ A`, and `eml (const 0) (expTree s)` into
+`−s`. Note `const` takes an **arbitrary real**, so `const (exp (-1))` is legal and `exp x + 1` is a
+*depth-1* tree — that is what keeps the whole ladder one rung shorter than it looks.
+
+So the decay rate at depth `j` is a tower whose height grows with `j`, and:
+
+> **Any correct `V_j` must be depth-indexed** — `-log (t x) ≤ E_{f(j)}(x)` with the height growing in
+> `j`, not one envelope serving all depths.
+
+That is sharper than `(de)`'s note, which only said "let the bound grow with depth". The two
+witnesses jointly establish *that it must*, and rule out the cheapest reading of the repair.
+
+**Still not proved:** that a depth-indexed form iterates. This constrains the shape of a solution; it
+does not supply one, and should not be quoted as if it did.
+
+`TowerLowerBound` stays **open**, no ledger row moves, and both new results are **footprint-clean** —
+no `sorryAx`, no `analytic_finite_zeros_compact`, no `eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates: build **745 jobs**, aggregator 742 of 1048, consistency PASS, claims 422, obligations 18 rows
+unchanged, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit
+36.
+
 ## [Unreleased] — 2026-08-25 (de)
 
 ### The decay bound does not iterate: `V₃` is false
