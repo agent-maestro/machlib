@@ -11335,7 +11335,7 @@ this sentence.) Their status, as of the last edit:
 | obligation | where | status | discharged by |
 | --- | --- | --- | --- |
 | `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`) |
-| `SignHardCase` | here | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2; equivalent to the log-free `SignCompareExpExpPos`, `EMLSignReduction`) |
+| `SignHardCase` | here | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |

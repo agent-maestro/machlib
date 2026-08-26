@@ -5,6 +5,79 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (dc)
+
+### `SignHardCase` is discharged
+
+> **`signHardCase_holds : SignHardCase`** — `EMLAnalyticDischarge`
+
+The obligation the whole depth programme has been reduced to is proved, and the ledger row moves from
+**open** to **discharged** for the first time. `evSign_all : ∀ t : EMLTree, EvSign t.eval` follows
+unconditionally: **every EML tree is eventually of constant sign, at every depth.**
+
+Read the trust cost before the result.
+
+### ⚠ It rests on a new axiom, added deliberately
+
+`AxiomLedger` goes **242 → 243**. The addition is
+
+```
+axiom eml_tree_analytic_on_interval (t : EMLTree) (a b : Real) :
+    LogArgPos t a b → ∀ a' b', a < a' → b' < b → IsAnalyticOnReals t.eval (Icc a' b')
+```
+
+the **interval-localised twin** of the existing `eml_tree_analytic_on_pos`, which states the same fact
+with the domain fixed to `(0, ∞)`. Declamping supplies log-argument positivity per *interval*, never
+on all of `(0, ∞)`, which is why the existing form could not be used. It is registered in
+`knownAxioms` and `disclosedUnwitnessed` (8 disclosed inert, was 7), and deliberately **not** added to
+`trustedFootprint` — no headline cites it, and widening what headlines may cite was not the point.
+
+**The alternative was rejected as unsound.** The other route — transport analyticity from the
+encoder's barrier to `t.eval` along pointwise equality — needs an `IsAnalyticOnReals` congruence. But
+`IsAnalyticOnReals f (Icc a b)` depends on `f` *near* each point, not only on `[a,b]`, so a plain
+set-congruence is false in any faithful model. Choosing the port over the congruence was a deliberate
+call, not a convenience.
+
+Full footprint of `signHardCase_holds`: 69 axioms, of which the three that matter are
+`eml_tree_analytic_on_interval`, `analytic_finite_zeros_compact` and `Real.rolle_ct`. **No `sorryAx`,
+no `zero_count_bound_classical`, no `Khovanskii`, no `Fbasis`.**
+
+### The argument
+
+Four steps, each a separate theorem.
+
+1. **An open interval is infinite** — `not_realSetFinite_of_contains_interval`. A bisection sequence
+   strictly inside `(p,q)`, strictly decreasing, yields arbitrarily long nodup lists. Pure arithmetic,
+   26 axioms, no analyticity.
+2. **The identity theorem** — `eq_zero_on_Ioo_of_zero_on_subinterval`, the contrapositive of
+   `analytic_finite_zeros_compact`: analytic on `Icc a b` with a zero set containing an interval
+   forces `f ≡ 0` on `Ioo a b`.
+3. **Vanishing propagates to a ray** — `evZeroF_of_zero_on_interval`. Widen the interval past any
+   target point, re-run (2) on the **declamped** tree there, transfer the value back. Note that no
+   analyticity is ever transported: the identity theorem runs entirely on `declamp t a' b'`, and only
+   *values* cross to `t`, by `declamp_eval`. That is what makes the missing congruence irrelevant.
+4. **The node** — `signHardCtsStable_holds`. Either the node value is eventually zero, and then it is
+   eventually `≤ 0` so `EvSign` holds outright; or it is not, and (3) gives `(da)`'s non-vanishing
+   input, `(da)`'s assembly turns that into a uniform zero bound, the ray bridge into eventual
+   non-vanishing, and continuity plus the IVT finish it.
+
+Both ingredients the obligation receives — eventual continuity and eventual log-argument stability —
+are used, and neither is assumed of the caller: `(db)`'s induction manufactures both. That is what
+`(db)` was for, and it is why this is not circular: `signHardCtsStable_holds` cites nothing from the
+induction it feeds.
+
+### The ledger
+
+**6 open, 1 refuted, 11 discharged** (was 7/1/10). `SignHardCase`'s row now cites `signHardCase_holds`
+with its three analytic axioms named in the row itself, so the trust cost travels with the claim.
+
+`TowerLowerBound` and `TowerReducesToSign` were recorded as reducing to `SignHardCase`; whether they
+now fall out is not checked here and no row was touched but `SignHardCase`'s.
+
+Gates: build **743 jobs**, aggregator **740 of 1046**, consistency PASS, claims 422, obligations 18
+rows (`ok SignHardCase: discharged by signHardCase_holds`), discovered 290/294, AxiomLedger **243
+pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-25 (db)
 
 ### `EMLSignInductionV2` — the induction rewritten so the hard node is self-contained
@@ -7631,7 +7704,7 @@ in commit archaeology:
 | obligation | status | discharged by |
 | --- | --- | --- |
 | `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`) |
-| `SignHardCase` | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2; equivalent to the log-free `SignCompareExpExpPos`, `EMLSignReduction`) |
+| `SignHardCase` | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |
