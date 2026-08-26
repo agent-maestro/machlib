@@ -5,6 +5,68 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (de)
+
+### The decay bound does not iterate: `V₃` is false
+
+`(dd)` discharged the *crossing* half of `V_j` at every depth and reported the **rate** half as
+untouched. It is worse than untouched.
+
+> **`not_decay_on_ray_depth_three`** — the rate statement, generalised one rung from where it is
+> proved, is **FALSE**.
+
+So the programme `EMLCertifiedSynthesis` names for `TowerReducesToSign` — *"proving the growth/decay
+pair iterates at every depth — `U_j` and `V_j` for all `j`"* — cannot succeed in that form.
+
+### The witness is three nodes
+
+`depth_le_two_decay_on_ray` is `V₂`; `V₃` is the same with `≤ 3`.
+
+```
+expVar    = eml var (const 1)         exp x − log 1      = exp x        depth 1
+oneSubX   = eml (const 0) expVar      exp 0 − log(exp x) = 1 − x        depth 2
+decayFast = eml oneSubX (const 0)     exp(1−x) − log 0   = exp(1−x)     depth 3
+```
+
+`decayFast_depth` is `by decide`: depth **exactly** 3, one rung above where `V₂` holds — so `V₂` is
+untouched. `decayFast` is positive everywhere, so the guard `0 < t.eval x` never protects it, and
+`-log (decayFast.eval x) = x − 1`, which outruns `C + log x` for every `C`. The proof takes
+`x := exp y` with `y ≥ max (C+1) X₀` and closes on the unconditional `exp_gt_two_x`.
+
+**Footprint: clean.** No `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`. The refutation stands entirely independently of
+`(dc)`'s discharge and its new axiom — it would have been true before this session started.
+
+### Where the statement went wrong
+
+Nothing exotic is involved, and that is the point. `log 0 = 0` makes `eml A (const 0)` compute
+`exp ∘ A`; `eml (const 0) (expTree var)` computes `1 − x`; composing them gives a positive tree
+decaying like `e·exp(−x)`. **Three nodes and the totalisation convention** — not the asymptotic
+cancellation the watch-list expected to be the depth-3 obstruction.
+
+`V_j`'s right-hand side `C + log x` is a **log-scale** bound: it says `t x ≥ e^{−C}/x`, i.e. *no
+positive tree decays faster than a constant over `x`*. True through depth 2, false at depth 3 —
+because depth 3 is exactly where a tree can put a **linear** function inside an `exp`.
+
+That is the fourth time in this arc the totalisation convention has been the active ingredient, and
+the first time it has worked *against* the programme rather than for it.
+
+### What survives, and the shape a repair would take
+
+`decayFast` has `-log t x = x − 1`, comfortably inside a **tower-form** envelope. So the natural
+repair is to let the decay bound grow with depth — `-log (t x) ≤ envelope k M x` rather than
+`C + log x` — mirroring what `EMLGrowthEnvelope` already does on the growth side. **Nothing here
+proves such a form iterates.** It is recorded as the shape the evidence points at, not as a result,
+and the next session should not read it as one.
+
+`TowerLowerBound` stays **open** and no ledger row moves — `V_j` was never a row, it is the route the
+ledger's note describes. What changed is that the route is now known to be closed off, which is worth
+more than another session spent making it work.
+
+Gates: build **745 jobs**, aggregator **742 of 1048**, consistency PASS, claims 422, obligations 18
+rows unchanged, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness
+audit 36.
+
 ## [Unreleased] — 2026-08-25 (dd)
 
 ### What the discharge did to the tower — and what it did not
