@@ -5,6 +5,54 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-26 (di)
+
+### `DecayFloor`'s open branch is not a corner case — it contains the whole problem
+
+`(dh)` proved the clamped half and left the positive-`B` branch open. The natural next move is to
+treat that branch as a special case and attack it separately. **That reading is wrong.**
+
+**Every tree re-embeds into a positive-`B` node at `+4` depth.** With `eTree t = eml t (const 1)`
+computing `exp ∘ t` (the `log 1 = 0` identity `expTree_eval` already uses):
+
+```
+posEmbed t = eml (const 0) (eTree (eml (const 0) (eTree t)))
+```
+
+unwinds to `1 − (1 − t x) = t x`, and its right child is `exp (1 − t x)` — **positive everywhere**,
+not merely eventually, so it is a genuine instance of the open branch rather than a boundary case.
+`posEmbed_depth` is `t.depth + 4` on the nose.
+
+`floor_transfer_via_posEmbed` draws the consequence: a floor for the embedded node **is** a floor for
+the original tree, verbatim.
+
+> Solving the positive-`B` branch at depth `j + 4` solves `DecayFloor` at depth `j`.
+
+So the branch is *at least as hard* as the general obligation, up to a depth shift of 4. There is no
+route that disposes of it as a special case, and an attempt that reasons only about
+"nearly-cancelling" nodes is reasoning about **every** node in disguise.
+
+### Why this is worth a commit
+
+It closes off a plausible line of attack before anyone spends a session on it — the same service
+`(de)` performed for "make the pair iterate". Three of this arc's results are of that kind, and they
+have been cheaper than the positive ones every time.
+
+It also sharpens what `(dh)` said. The clamped/positive split is **not** a decomposition into an easy
+half and a hard half; it is a decomposition into a half that reduces to the envelopes and a half that
+is the original problem re-stated. The first is genuinely disposed of; the second was never a piece
+of the problem, it *is* the problem.
+
+**What this does not do:** it bounds nothing. It is a statement about where the difficulty lives, not
+a step toward removing it, and should not be quoted as progress on `DecayFloor`.
+
+`DecayFloor` stays **open** — the gate confirms *"open, no theorem concludes it"* — 19 rows unchanged.
+**Footprint clean**: no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates: build **746 jobs**, aggregator 743 of 1049, consistency PASS, claims 422, obligations 19 rows,
+discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-26 (dh)
 
 ### The third quantity, named — `DecayFloor`, ledger row 19

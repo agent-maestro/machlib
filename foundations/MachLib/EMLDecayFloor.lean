@@ -100,4 +100,76 @@ theorem decayFaster_floor : ∀ x : Real, 1 ≤ x →
   show exp (-(exp x)) ≤ exp (-exp x)
   exact le_refl _
 
+/-! ## §2 — the open branch is not a corner case
+
+It is tempting to read `DecayFloor` as "the clamped branch is done, now handle the positive-`B` case
+separately". That reading is wrong, and this section says why.
+
+**Every tree re-embeds into a positive-`B` node at `+4` depth.** With `eTree t = eml t (const 1)`
+computing `exp ∘ t` (because `log 1 = 0` — the same identity `expTree_eval` uses in
+`EMLSignReduction`):
+
+```
+posEmbed t = eml (const 0) (eTree (eml (const 0) (eTree t)))
+```
+
+unwinds to `1 − (1 − t x) = t x`, and its right child is `exp (1 − t x)` — **positive everywhere**,
+not merely eventually. `posEmbed_depth` is `t.depth + 4` on the nose.
+
+So the positive-`B` branch **contains the whole problem**. `floor_transfer_via_posEmbed` makes the
+consequence explicit: a floor for the embedded node is a floor for the original tree, verbatim.
+
+> Solving the positive-`B` branch at depth `j + 4` solves `DecayFloor` at depth `j`.
+
+Which also says the branch is *at least as hard* as the general obligation, up to a depth shift of 4.
+There is no route that disposes of it as a special case, and an attempt that only ever reasons about
+"nearly-cancelling" nodes is reasoning about every node in disguise.
+
+**What this does not do:** it does not bound anything. It is a statement about where the difficulty
+lives, not a step toward removing it.
+-/
+
+/-- `exp ∘ t` as a tree. -/
+noncomputable def eTree (t : EMLTree) : EMLTree := EMLTree.eml t (EMLTree.const 1)
+
+theorem eTree_eval (t : EMLTree) (x : Real) : (eTree t).eval x = exp (t.eval x) := by
+  show exp (t.eval x) - log (1 : Real) = exp (t.eval x)
+  rw [log_one]; mach_ring
+
+theorem eTree_depth (t : EMLTree) : (eTree t).depth = 1 + t.depth := by
+  show 1 + max t.depth 0 = 1 + t.depth
+  omega
+
+/-- **Every tree re-embeds into a node whose right child is positive everywhere**, at `+4` depth. -/
+noncomputable def posEmbed (t : EMLTree) : EMLTree :=
+  EMLTree.eml (EMLTree.const 0) (eTree (EMLTree.eml (EMLTree.const 0) (eTree t)))
+
+theorem posEmbed_right_pos (t : EMLTree) (x : Real) :
+    0 < (eTree (EMLTree.eml (EMLTree.const 0) (eTree t))).eval x := by
+  rw [eTree_eval]; exact exp_pos _
+
+theorem posEmbed_eval (t : EMLTree) (x : Real) : (posEmbed t).eval x = t.eval x := by
+  show exp ((EMLTree.const 0).eval x)
+      - log ((eTree (EMLTree.eml (EMLTree.const 0) (eTree t))).eval x) = t.eval x
+  rw [eTree_eval, log_exp]
+  show exp (0 : Real) - (exp ((EMLTree.const 0).eval x) - log ((eTree t).eval x)) = t.eval x
+  rw [eTree_eval, log_exp]
+  show exp (0 : Real) - (exp (0 : Real) - t.eval x) = t.eval x
+  rw [exp_zero]; mach_ring
+
+theorem posEmbed_depth (t : EMLTree) : (posEmbed t).depth = t.depth + 4 := by
+  simp only [posEmbed, eTree, EMLTree.depth]
+  omega
+
+/-- **The floor transfers.** A floor for the embedded node is a floor for the original tree — they
+are the same function. So solving the positive-`B` branch at depth `j + 4` solves `DecayFloor` at
+depth `j`. -/
+theorem floor_transfer_via_posEmbed (t : EMLTree) (k : Nat) (X₁ : Real)
+    (h : ∀ x : Real, X₁ ≤ x → exp (-(EMLTree.towerFn k x)) ≤ (posEmbed t).eval x) :
+    ∀ x : Real, X₁ ≤ x → exp (-(EMLTree.towerFn k x)) ≤ t.eval x := by
+  intro x hx
+  rw [← posEmbed_eval t x]
+  exact h x hx
+
+
 end MachLib
