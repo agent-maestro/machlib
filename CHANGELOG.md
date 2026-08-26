@@ -5,6 +5,62 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (dd)
+
+### What the discharge did to the tower — and what it did not
+
+Two consequences of `(dc)`, both small, both worth stating so the ledger reads correctly.
+`EMLTowerAfterSign`.
+
+### The two tower rows are one row
+
+`TowerReducesToSign` is literally `SignHardCase → TowerLowerBound`. Its antecedent is now a theorem,
+so
+
+> **`towerReducesToSign_iff_towerLowerBound : TowerReducesToSign ↔ TowerLowerBound`**
+
+Two ledger rows that looked like separate debts are one debt stated twice. Stated as an `Iff` on
+purpose: a theorem whose bare conclusion is `TowerLowerBound` would read to
+`obligation_ledger_check.dischargers_of` as an unconditional discharge of an open row — the shape
+canary 5 exists to catch. The gate skips `↔`, and confirms both rows still read *"open, no theorem
+concludes it"*.
+
+### The crossing obstruction is discharged
+
+`depth_le_two_decay_on_ray` reads `∃ C X₀, ∀ x ≥ X₀, 0 < t.eval x → -log (t.eval x) ≤ C + log x`, and
+the guard is not decoration: near a zero crossing from above `t → 0⁺`, so `-log t → +∞` and no fixed
+`C` survives. The statement is rescued only by pushing `X₀` past the last crossing — *finiteness of
+sign changes*, which this corpus recorded as the **binding** obstruction to an all-depth theory.
+
+`evSign_all` supplies it at every depth, and `decay_on_ray_of_positive_ray` cashes it:
+
+> the guarded decay statement follows from the unguarded one **on a positivity ray**, for every tree
+> at every depth
+
+Both branches of `evSign_all` are used — on the positive branch the hypothesis applies with no
+crossings to avoid; on the non-positive branch the guard is unsatisfiable and the conclusion is
+vacuous. No classification, no hand analysis. `decay_on_ray_specimen` fires it on `var` so the
+reduction is not vacuous.
+
+### What it does not buy, stated plainly
+
+**The rate.** `V_j` is quantitative and sign-definiteness supplies the ray, not the bound. At depth
+≤ 2 the rate comes from the depth-≤1 classification, by hand; for general `j` there is still no
+classification and nothing here supplies one.
+
+So `TowerLowerBound` stays **open**. One of the two ingredients `V_j` needs is now free; the other is
+untouched. `EMLCertifiedSynthesis`'s own note that the reduction "is not a formality" remains
+correct — this narrows the gap, it does not close it, and it should not be quoted as if it did.
+
+### Trust
+
+All three results inherit `(dc)`'s footprint: 69 axioms including `eml_tree_analytic_on_interval`,
+`analytic_finite_zeros_compact` and `rolle_ct`. Anything downstream carries the same disclosure.
+
+Gates: build **744 jobs**, aggregator **741 of 1047**, consistency PASS, claims 422, obligations 18
+rows (`TowerLowerBound` and `TowerReducesToSign` both still open), discovered 290/294, AxiomLedger
+**243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-25 (dc)
 
 ### `SignHardCase` is discharged
