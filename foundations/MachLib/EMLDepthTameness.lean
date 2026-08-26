@@ -11327,7 +11327,7 @@ theorem depth3DecayExp_of_hard (h : Depth3DecayHard) : Depth3DecayExp := by
 
 /-! ### Obligations ledger
 
-Eighteen propositions in this corpus have been introduced as *named obligations* — stated so that a
+Nineteen propositions in this corpus have been introduced as *named obligations* — stated so that a
 partial result can be committed without overstating it. (It was four when the section was written;
 the count is `grep -c` over the table below, and the gate compares the table to the corpus, not to
 this sentence.) Their status, as of the last edit:
@@ -11336,6 +11336,7 @@ this sentence.) Their status, as of the last edit:
 | --- | --- | --- | --- |
 | `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`) |
 | `SignHardCase` | here | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
+| `DecayFloor` | `EMLDecayFloor` | **open** | — (clamped half only: `decayFloor_clamped`; the positive-`B` cancellation branch is the gap) |
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |

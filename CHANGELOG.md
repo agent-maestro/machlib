@@ -5,6 +5,62 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-26 (dh)
+
+### The third quantity, named — `DecayFloor`, ledger row 19
+
+`(dg)` showed the pair was split along the wrong seam and that **decay** — distance from zero *from
+above* — is a third quantity neither envelope controls. `(de)`/`(df)` showed it grows with depth.
+This states it as a **named obligation**, the corpus's device for committing a partial result without
+overstating it, and proves the half that needs no cancellation.
+
+```
+DecayFloor : ∀ j, ∃ k, ∀ t, t.depth ≤ j → (eventually positive) →
+                             eventually  exp (-(towerFn k x)) ≤ t.eval x
+```
+
+**`k` depends on the depth only, not on the tree.** That is the whole content: quantified per tree
+the existential could be chosen after seeing the germ and the statement would evaporate. Stated
+against the corpus's own `towerFn` — the same object `towerTree` realises — so the obligation lives in
+the depth programme's existing vocabulary rather than beside it.
+
+### What is proved
+
+`decayFloor_clamped` — the **clamped** branch. A non-positive right child totalises its `log` to `0`,
+so the node *is* `exp ∘ A` and the floor is exactly a **lower bound on `A`**. Composed with
+`(dg)`'s `node_lower_of_right_upper`, this is the branch that inherits from the envelopes, with no
+cancellation anywhere.
+
+Both witnesses are checked against the obligation: `decayFast_floor` (depth 3) sits above the
+height-**0** floor, `decayFaster_floor` (depth 4) needs height **1**. So it is satisfiable where it
+has been tested, and the height demonstrably grows — the two facts a named obligation should come
+with, rather than being asserted into the ledger unexercised.
+
+### What is open, precisely
+
+The **positive-`B`** branch: `exp (A x) − log (B x) > 0` with `B` eventually positive, where the node
+can be tiny because `exp (A x)` nearly cancels `log (B x)`. That is an *approximation* question — how
+closely one EML germ can approach another without meeting it — and nothing built this session speaks
+to it. In particular `evSign_all` gives eventual **non-vanishing**; this asks to be **bounded away**
+from zero, which is strictly more.
+
+### Ledger
+
+**19 rows** (was 18): 7 open, 1 refuted, 11 discharged. `DecayFloor` enters as **open** and the gate
+confirms *"open, no theorem concludes it"* — `decayFloor_clamped` concludes a statement about the
+clamped branch, not the obligation.
+
+Note the arithmetic: `SignHardCase` left the open column and `DecayFloor` entered it, so the count is
+unchanged at 7. That is the honest bookkeeping — this session discharged one obligation and isolated
+a new one, and the ledger should show both.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates: build **746 jobs**, aggregator **743 of 1049**, consistency PASS, claims 422, obligations
+**19 rows**, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit
+36.
+
 ## [Unreleased] — 2026-08-25 (dg)
 
 ### What *does* iterate — the pair was split along the wrong seam
@@ -7916,6 +7972,7 @@ in commit archaeology:
 | --- | --- | --- |
 | `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`) |
 | `SignHardCase` | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
+| `DecayFloor` | **open** | — (clamped half only: `decayFloor_clamped`; the positive-`B` cancellation branch is the gap) |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |
