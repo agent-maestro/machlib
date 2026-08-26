@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-25 (dg)
+
+### What *does* iterate — the pair was split along the wrong seam
+
+`(de)` and `(df)` are negative. This is the positive counterpart, and it explains both.
+
+> **`node_lower_of_right_upper`** — a node's **lower** bound follows from an **upper** bound on its
+> **right child alone**.
+
+```
+(eml A B).eval x = exp (A x) − log (B x)  ≥  −log (B x)  ≥  −E x     when B x ≤ E x
+```
+
+`exp (A x) > 0` does all the work; `log y ≤ y` finishes it (`log_le_self_ge_one`, proved here from
+`exp_gt_two_x` and `exp_log`). **The left child is never inspected** — the exact mirror of
+`evSign_of_hard`'s observation about signs, and for the same reason: one side of an `eml` node is
+structurally inert for one kind of question.
+
+So `upper_j ⟹ lower_{j+1}` needs **no** cancellation analysis, **no** sign stability, and **no**
+depth classification.
+
+### Which retro-explains `V₂`
+
+`V₂`'s clamped case is `depth_le_one_lower_on_ray` — a *lower* bound one level down, wearing decay's
+clothes. It worked because it was never a decay statement. That is why it did not generalise, and why
+`(de)`'s three-node witness broke the generalisation so easily.
+
+### The seam
+
+The pair was posed as **growth vs decay**. The evidence says the real split is **growth vs
+lower-bound**, and those two iterate into each other cleanly. What does not iterate is *decay* —
+distance from zero **from above** — a **third** quantity that neither envelope controls and which
+`(de)`/`(df)` show grows with depth.
+
+> Conflating the lower envelope with decay is what made `V_j` look inductive.
+
+Three quantities, not two. Two of them compose; the third is the open problem. That reframing is the
+result — it does not bound decay, and nothing here should be read as progress on that.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`. `TowerLowerBound` stays open, no ledger row moves.
+
+Gates: build **745 jobs**, aggregator 742 of 1048, consistency PASS, claims 422, obligations 18 rows
+unchanged, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit
+36.
+
 ## [Unreleased] — 2026-08-25 (df)
 
 ### The decay rate grows with depth — a depth-3/depth-4 separation

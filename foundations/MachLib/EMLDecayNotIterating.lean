@@ -235,4 +235,86 @@ theorem decayFast_linear_bound :
   rw [e3]; exact le_of_lt v
 
 
+/-! ## §3 — what *does* iterate: the lower envelope
+
+§1 and §2 are negative. This is the positive counterpart, and it says the pair was split along the
+wrong seam.
+
+`node_lower_of_right_upper`: a node's **lower** bound follows from an **upper** bound on its
+**right child alone**.
+
+```
+(eml A B).eval x = exp (A x) − log (B x)  ≥  −log (B x)  ≥  −E x     when B x ≤ E x
+```
+
+`exp (A x) > 0` does all the work, and `log y ≤ y` finishes it. **The left child is never
+inspected** — the exact mirror of `evSign_of_hard`'s observation about signs, and for the same
+reason: one side of an `eml` node is structurally inert for one kind of question.
+
+So `upper_j ⟹ lower_{j+1}` needs no cancellation analysis, no sign stability, and no depth
+classification. That is why `V₂`'s clamped case worked: it is `depth_le_one_lower_on_ray`, a *lower*
+bound one level down, wearing decay's clothes.
+
+**The seam.** The pair `U_j / V_j` was posed as growth-vs-decay. The evidence says the real split is
+growth-vs-**lower-bound**, and those two do iterate into each other cleanly. What does not iterate is
+*decay* — distance from zero **from above** — which is a third quantity that neither envelope
+controls, and which §1 and §2 show grows with depth. Conflating it with the lower envelope is what
+made `V_j` look inductive.
+
+Nothing here bounds decay. It isolates which two of the three quantities compose.
+-/
+
+/-- `log y ≤ y` for `y ≥ 1`, from `exp_gt_two_x` and `exp_log`. -/
+theorem log_le_self_ge_one {y : Real} (hy : 1 ≤ y) : log y ≤ y := by
+  have hy0 : (0 : Real) < y := lt_of_lt_of_le zero_lt_one_ax hy
+  have hlog0 : (0 : Real) ≤ log y := by
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    have hm := log_le_log zero_lt_one_ax hy
+    rw [hl1] at hm; exact hm
+  have h2 : (1 + 1) * log y < exp (log y) := exp_gt_two_x (log y)
+  rw [exp_log hy0] at h2
+  have e : (1 + 1) * log y = log y + log y := by mach_ring
+  rw [e] at h2
+  have hle : log y + 0 ≤ log y + log y := add_le_add_wit (le_refl (log y)) hlog0
+  have e2 : log y + 0 = log y := by mach_ring
+  rw [e2] at hle
+  exact le_of_lt (lt_of_le_of_lt hle h2)
+
+/-- **The lower envelope at a node comes from an upper envelope on its RIGHT CHILD alone.**
+
+`exp (A x) > 0` does all the work: the node is bounded below by `-log (B x)`, and `log` is bounded
+above by its own argument. No cancellation, no sign analysis, and the LEFT child is never inspected —
+the mirror of `evSign_of_hard`'s observation about signs. -/
+theorem node_lower_of_right_upper (A B : EMLTree) (E : Real → Real) (X₀ : Real)
+    (hE : ∀ x : Real, X₀ ≤ x → 0 ≤ E x)
+    (hupper : ∀ x : Real, X₀ ≤ x → B.eval x ≤ E x) :
+    ∀ x : Real, X₀ ≤ x → -(E x) ≤ (EMLTree.eml A B).eval x := by
+  intro x hx
+  have hkey : log (B.eval x) ≤ E x := by
+    rcases lt_total (B.eval x) 1 with hb | hb | hb
+    · rcases lt_total 0 (B.eval x) with hp | hp | hp
+      · have hl : log (B.eval x) < 0 := by
+          have hl1 : log (1 : Real) = 0 := by
+            have hz : exp (0 : Real) = 1 := exp_zero
+            rw [← hz, log_exp]
+          have hm := log_lt_log hp hb
+          rw [hl1] at hm; exact hm
+        exact le_trans (le_of_lt hl) (hE x hx)
+      · rw [log_nonpos (le_of_eq hp.symm)]; exact hE x hx
+      · rw [log_nonpos (le_of_lt hp)]; exact hE x hx
+    · exact le_trans (log_le_self_ge_one (le_of_eq hb.symm)) (hupper x hx)
+    · exact le_trans (log_le_self_ge_one (le_of_lt hb)) (hupper x hx)
+  show -(E x) ≤ exp (A.eval x) - log (B.eval x)
+  have hexp : (0 : Real) < exp (A.eval x) := exp_pos _
+  have v : -(E x) ≤ -log (B.eval x) := neg_le_neg_wit hkey
+  have w : -log (B.eval x) ≤ exp (A.eval x) - log (B.eval x) := by
+    have u := add_le_add_wit (le_of_lt hexp) (le_refl (-log (B.eval x)))
+    have e1 : (0 : Real) + -log (B.eval x) = -log (B.eval x) := by mach_ring
+    have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+    rw [e1, e2] at u; exact u
+  exact le_trans v w
+
+
 end MachLib
