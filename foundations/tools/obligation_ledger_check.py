@@ -121,6 +121,46 @@ def assumes(name, residue, decls):
     return False
 
 
+def reduction_cycles(rows):
+    """Cycles in the reduction graph.
+
+    A `reduced` row is honest bookkeeping: the obligation now rests on a residue that is itself
+    tracked. But if the residue chain comes back round, **nothing has been reduced** — the rows are
+    one obligation written several ways, and every one of them is still open.
+
+    No per-row check can see this. Each row in a cycle passes all three reduction conditions: the
+    cited theorem concludes the prop, it does assume the residue, and the residue is a real ledger
+    row. The defect is in the graph, not in any row — which is exactly the shape of the failure the
+    `reduced` status was introduced to make visible, one level up.
+
+    Added 2026-08-26, when `DecayFloor` and `GrowthEnvelope` were proved equivalent and each became
+    a legitimate reduction of the other. Without this the open column would have lost a row for a
+    result that closed nothing.
+    """
+    known = {p for p, _, _ in rows}
+    edge = {}
+    for prop, status, cell in rows:
+        if status != "reduced":
+            continue
+        named = re.findall(r"`([A-Za-z0-9_\']+)`", cell)
+        residue = next((n for n in named if n in known and n != prop), None)
+        if residue:
+            edge[prop] = residue
+    cycles = []
+    for start in edge:
+        node, path = start, []
+        for _ in range(len(edge) + 1):
+            if node not in edge:
+                break
+            path.append(node)
+            node = edge[node]
+            if node == start:
+                if frozenset(path) not in [frozenset(c) for c in cycles]:
+                    cycles.append(path)
+                break
+    return cycles
+
+
 def check_rows(rows, decls):
     """Returns (bad_count, report_lines). Shared by the gate and its self-test."""
     bad, out = 0, []
@@ -315,11 +355,23 @@ def self_test(decls) -> int:
     print(f"  canary 10 (correct rows stay silent)          {'SILENT' if quiet else 'FIRES'}")
     ok &= quiet
 
+    # 7c. A REDUCTION CYCLE. Two rows that reduce to each other pass every per-row check, and
+    # would quietly leave the open column together. The specimen must also stay SILENT on a
+    # legitimate linear chain, or it would just be "any reduction is suspicious".
+    cyc = reduction_cycles([("CanaryA", "reduced", "`t1` → `CanaryB`"),
+                            ("CanaryB", "reduced", "`t2` → `CanaryA`")])
+    lin = reduction_cycles([("CanaryA", "reduced", "`t1` → `CanaryB`"),
+                            ("CanaryB", "reduced", "`t2` → `CanaryC`"),
+                            ("CanaryC", "discharged", "`t3`")])
+    fired = len(cyc) == 1 and set(cyc[0]) == {"CanaryA", "CanaryB"} and lin == []
+    print(f"  canary 11 (a reduction cycle reduces nothing)  {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
     print()
     if not ok:
         print("LEDGER SELF-TEST FAIL — a canary did not fire; the gate is unvalidated")
         return 1
-    print("LEDGER SELF-TEST PASS — all nine convict specimens fire")
+    print("LEDGER SELF-TEST PASS — all ten convict specimens fire")
     return 0
 
 
@@ -358,11 +410,27 @@ def main() -> int:
     for line in dout:
         print(line)
 
+    cycles = reduction_cycles(rows)
+    for cyc in cycles:
+        print(f"  CYCLE  {' ⇄ '.join(cyc)}: these reduce to each other, so none of them is reduced "
+              f"away — all {len(cyc)} are OPEN")
+
     print()
     if bad:
         print(f"OBLIGATION-LEDGER FAIL — {bad}/{len(rows)} row(s) do not match the corpus")
         return 1
+    marked_open = sum(1 for _, st, _ in rows if st == "open")
+    in_cycles = sum(len(c) for c in cycles)
     print(f"OBLIGATION-LEDGER OK — {len(rows)} rows match the corpus and the CHANGELOG mirror")
+    if cycles:
+        # A cycle is ONE obligation written several ways, so it contributes 1 to the count of
+        # distinct open obligations and len(cyc) to the count of open ROWS. Reporting only the
+        # row count would inflate the debt; reporting only the obligation count would hide that
+        # the ledger carries several rows for it. Both, or the number is misreadable.
+        print(f"  open rows: {marked_open} marked open + {in_cycles} in {len(cycles)} reduction "
+              f"cycle(s) = {marked_open + in_cycles}")
+        print(f"  distinct open obligations: {marked_open} + {len(cycles)} (each cycle is ONE "
+              f"obligation written several ways) = {marked_open + len(cycles)}")
     return 0
 
 

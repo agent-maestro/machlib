@@ -5,6 +5,112 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-26 (dj)
+
+### `DecayFloor` **is** the growth envelope — and the ledger grew a cycle
+
+`(di)` showed the positive-`B` branch of `DecayFloor` contains the whole problem. This says what the
+whole problem *is*: the **at-infinity growth envelope**, which is the tool the depth ladder uses to
+attack it.
+
+#### The ladder step, and the repair that does not repair it
+
+`depth_le_three_growth_envelope` is built exactly as the programme intends — it opens with
+`depth_le_two_growth_envelope` for the left child and `depth_le_two_decay_on_ray` for the right, i.e.
+`U (j+1) ⟸ U j ∧ V j`, literally. `(de)` proved **`V₃` is false**. `DecayFloor` is the repair:
+`V`'s log-scale floor replaced by a tower-scale one.
+
+The hope is that the repaired `D` restores the ladder. **It does not.**
+
+#### The reciprocal is an EML tree, at `+2` depth
+
+```
+recipTree t = eml (eml (const 0) t) (const 1)          (recipTree t).eval x = exp (1 − log (t x))
+                                                       (recipTree t).depth = t.depth + 2
+```
+
+which is `e / t x` wherever `t x > 0`. Nothing clever: **the grammar already contains `log`**, so a
+reciprocal costs two nodes. (Not the `4` that `d(1/x)` costs — that four pays for pinning the
+constant to exactly `1`, which an envelope never needs.)
+
+Two transfers follow, both division-free and neither inspecting the shape of `t`:
+
+* `floor_of_recip_upper` — a ceiling on `recipTree t` is a floor on `t`, at the **same** tower height.
+* `upper_of_recip_floor` — a floor on `recipTree t` is a ceiling on `t`, one `+1` up.
+
+Hence `decayFloor_iff_growthEnvelope : DecayFloor ↔ GrowthEnvelope`, with `GrowthEnvelope` the
+at-infinity tower-form ceiling stated in `DecayFloor`'s own vocabulary. `GrowthEnvelope → DecayFloor`
+costs `+2` depth and height `k`; `DecayFloor → GrowthEnvelope` costs `+3` and height `k+1`.
+
+> ```
+> U (j+1)  ⟸  U j ∧ D j     the step the corpus actually performs
+> D j      ⟸  U (j+2)        this entry
+> U j      ⟸  D (j+3)        this entry
+> ```
+> **The repaired step consumes the envelope two levels ABOVE the one it produces.**
+
+`D` and `U` are not two obligations of which one might discharge the other. They are **one
+obligation written two ways**, and the map rewriting either into the other moves *up* the depth
+ladder both times. Any proof must find an induction parameter that is not depth.
+
+#### The converse costs no axioms, because of where it is routed
+
+The first draft proved `DecayFloor → GrowthEnvelope` by splitting on `evSign_all`, and paid the whole
+analytic block for it — `rolle_ct`, `analytic_finite_zeros_compact`, `eml_tree_analytic_on_interval`.
+Routing instead through `eTree` removes the split entirely: `recipTree (eTree t)` is `exp (1 − t x)`,
+positive **everywhere** for every `t` of any sign, so it is a legal input to `DecayFloor` with no sign
+analysis at all. One extra rung of depth, zero axioms. `#print axioms` on the `↔` shows only the
+field/order/`exp` base.
+
+#### Both transfers are exercised
+
+Each transfer takes hypotheses, and a transfer no tree satisfies proves nothing. Both are fired on
+`decayFast` (`(de)`'s depth-3 witness): its reciprocal is `exp` **on the nose**, since
+`1 − log (exp (1 − x)) = x`, so the ceiling is met with equality. `decayFast_floor` already gives that
+tree a *better* floor than the transfer returns — the specimen shows the machinery fires, not that it
+improves a bound.
+
+#### Ledger: a **reduction cycle**, and a gate that can see one
+
+Both rows are now legitimately **reduced**, each to the other, and every per-row check passes on
+both — the cited theorem concludes the proposition, it does assume the residue, and the residue is a
+tracked row. **And nothing has been reduced.**
+
+That is a defect in the *graph*, not in any row, so no per-row check could see it. The gate now walks
+the residue graph (`reduction_cycles`) and reports cycles, with **canary 11** as the specimen —
+required to fire on a 2-cycle and to stay silent on a legitimate linear chain, or it would be saying
+only that reductions are suspicious. The count is now printed twice on purpose:
+
+```
+open rows: 6 marked open + 2 in 1 reduction cycle(s) = 8
+distinct open obligations: 6 + 1 (each cycle is ONE obligation written several ways) = 7
+```
+
+**Seven is the number that did not move.** It was seven before this entry and it is seven after.
+Without the cycle check the ledger would have shown the open column losing a row for a result that
+closed nothing.
+
+#### Scope
+
+Bounds nothing, discharges nothing. `DecayFloor` stays open; so does `GrowthEnvelope`; they are the
+same open question. It does not make `DecayFloor` harder either — the two were always the same
+thing, and only now is that on the record.
+
+`decayFloor_upTo_two` proves the half that was previously only asserted in prose: `V₂` is a
+*log-scale* floor, strictly stronger than tower-scale, and converting it gives **every**
+eventually-positive tree of depth ≤ 2 the floor `exp (−x)` — tower height `0`, whole depth class, not
+two hand-picked witnesses. So `D 0`–`D 2` were in hand before this entry. The reciprocal route, fed
+the corpus's `U 3`, would reach only `D 1`, and `U 3` is stated in explicit-constant form
+(`exp (exp (exp x + K) + M) + N`) rather than `towerFn` form, so even that needs a conversion nobody
+has written. **The route buys no new rung either way.**
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates: build **747 jobs**, aggregator 744 of 1050, consistency PASS, claims 425, obligations **20
+rows / 7 distinct open**, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted,
+witness audit 36.
+
 ## [Unreleased] — 2026-08-26 (di)
 
 ### `DecayFloor`'s open branch is not a corner case — it contains the whole problem
@@ -8020,7 +8126,8 @@ in commit archaeology:
 | --- | --- | --- |
 | `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`) |
 | `SignHardCase` | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
-| `DecayFloor` | **open** | — (clamped half only: `decayFloor_clamped`; the positive-`B` cancellation branch is the gap) |
+| `DecayFloor` | **reduced** | `decayFloor_of_growthEnvelope` → `GrowthEnvelope` — an *equivalence*, not a shrink; the two form a reduction cycle and are one open obligation (clamped half: `decayFloor_clamped`) |
+| `GrowthEnvelope` | **reduced** | `growthEnvelope_of_decayFloor` → `DecayFloor` — the other half of the same cycle |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |

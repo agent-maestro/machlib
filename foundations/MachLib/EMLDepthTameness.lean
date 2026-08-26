@@ -11327,7 +11327,7 @@ theorem depth3DecayExp_of_hard (h : Depth3DecayHard) : Depth3DecayExp := by
 
 /-! ### Obligations ledger
 
-Nineteen propositions in this corpus have been introduced as *named obligations* — stated so that a
+Twenty propositions in this corpus have been introduced as *named obligations* — stated so that a
 partial result can be committed without overstating it. (It was four when the section was written;
 the count is `grep -c` over the table below, and the gate compares the table to the corpus, not to
 this sentence.) Their status, as of the last edit:
@@ -11336,7 +11336,8 @@ this sentence.) Their status, as of the last edit:
 | --- | --- | --- | --- |
 | `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`) |
 | `SignHardCase` | here | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
-| `DecayFloor` | `EMLDecayFloor` | **open** | — (clamped half only: `decayFloor_clamped`; the positive-`B` cancellation branch is the gap) |
+| `DecayFloor` | `EMLDecayFloor` | **reduced** | `decayFloor_of_growthEnvelope` → `GrowthEnvelope` — an *equivalence*, not a shrink; the two form a reduction cycle and are one open obligation (clamped half: `decayFloor_clamped`) |
+| `GrowthEnvelope` | `EMLDecayFloorIsGrowth` | **reduced** | `growthEnvelope_of_decayFloor` → `DecayFloor` — the other half of the same cycle |
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |
@@ -11364,6 +11365,20 @@ own, so the router proving `BoundedEmlCellApproachLarge` discharged all three in
 noting what that says about the **reduced** status — it is honest bookkeeping, not progress. Two rows
 sat green for weeks while the thing they reduced to was open, and the gate was right to keep them
 distinct from **discharged**.
+
+**A reduction CYCLE — 2026-08-26.** `DecayFloor` and `GrowthEnvelope` each reduce to the other:
+`recipTree` carries a ceiling into a floor at `+2` depth and a floor into a ceiling at `+3`
+(`EMLDecayFloorIsGrowth`), and `decayFloor_iff_growthEnvelope` states the equivalence outright. Both
+rows are therefore legitimately **reduced**, and every per-row check passes on both — the cited
+theorem concludes the proposition, it does assume the residue, and the residue is a tracked row.
+**And nothing has been reduced.** The two are one obligation written twice.
+
+So the gate now walks the residue graph and reports cycles (`reduction_cycles`), because two rows
+leaving the open column together, for a result that closed neither, is exactly the bookkeeping the
+**reduced** status was introduced to prevent — one level up, where no per-row check can see it. The
+count is reported twice on purpose: **8 open rows, 7 distinct open obligations**, the second being
+the number that did not move this session. Canary 11 is the specimen, and it is required to stay
+silent on a legitimate linear chain, or it would be saying only that reductions are suspicious.
 
 **`Depth3DecayExp` closed the same day**, once the dispatch onto its four cells was written
 (`depth3DecayExp_holds`). That the cells covered an arbitrary depth-≤2 `A` was an expectation until

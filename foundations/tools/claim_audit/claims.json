@@ -8761,6 +8761,57 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "decayfloor-iff-growthenvelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`decayFloor_iff_growthEnvelope : DecayFloor ↔ GrowthEnvelope`",
+        "shows only the\nfield/order/`exp` base"
+      ],
+      "module": "MachLib.EMLDecayFloorIsGrowth",
+      "theorem": "MachLib.decayFloor_iff_growthEnvelope",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "growthenvelope-of-decayfloor-sign-free-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Routing instead through `eTree` removes the split entirely",
+        "One extra rung of depth, zero axioms."
+      ],
+      "module": "MachLib.EMLDecayFloorIsGrowth",
+      "theorem": "MachLib.growthEnvelope_of_decayFloor",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "decayfloor-upto-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`decayFloor_upTo_two` proves the half that was previously only asserted in prose",
+        "tower height `0`, whole depth class, not\ntwo hand-picked witnesses"
+      ],
+      "module": "MachLib.EMLDecayFloorIsGrowth",
+      "theorem": "MachLib.decayFloor_upTo_two",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }
