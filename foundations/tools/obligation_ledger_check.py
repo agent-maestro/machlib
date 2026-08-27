@@ -161,6 +161,101 @@ def reduction_cycles(rows):
     return cycles
 
 
+def proved_equivalences(rows, decls):
+    """Pairs of ledger rows the corpus proves EQUIVALENT, as `(a, b, theorem)`.
+
+    A proved `a ↔ b` between two rows means they are **one obligation written twice** — the same
+    thing a reduction cycle means, arrived at by a different route. `reduction_cycles` cannot see
+    it: it walks the residue edges of `reduced` rows, and an equivalence between two rows both
+    marked `open` contributes no edge at all.
+
+    Nor can `dischargers_of`, and that is deliberate — it skips any conclusion containing `↔`, so
+    that `foo : P ↔ Q` does not read as a proof of `P` (canary 9). Correct, and it left an
+    equivalence contributing *nothing* to any check rather than merely not contributing a
+    discharge. Two mechanisms each declining to look at the same theorem is how the count went
+    wrong.
+
+    Found 2026-08-26: `towerReducesToSign_iff_towerLowerBound` has been in the corpus since
+    `b5c9fd53`, and `EMLTowerAfterSign`'s own docstring says "two ledger rows that looked like
+    separate debts are one debt stated twice" — while the ledger went on reporting two.
+
+    CONDITIONAL equivalences do not count and are returned separately: `(h : X) : a ↔ b` says the
+    rows agree *given `X`*, which collapses nothing until `X` is discharged. They are reported
+    rather than dropped, because a silent skip is the defect this function exists to remove.
+    """
+    known = {p for p, _, _ in rows}
+    uncond, cond = [], []
+    for kind, name, sig in decls:
+        if not kind.endswith("theorem"):
+            continue
+        head, _, tail = sig.rpartition(":")
+        m = re.fullmatch(r"([A-Za-z0-9_'.]+)\s*↔\s*([A-Za-z0-9_'.]+)", tail.strip())
+        if not m:
+            continue
+        # strip the namespace prefix: rows are registered by bare name (`TowerLowerBound`), the
+        # theorem may write `EMLTree.TowerLowerBound`.
+        a, b = (g.rsplit(".", 1)[-1] for g in m.groups())
+        if a == b or a not in known or b not in known:
+            continue
+        # any binder in the head makes the equivalence conditional
+        binder = re.search(r"[\(\{\[][^\(\)\{\}\[\]]*:", head)
+        (cond if binder else uncond).append((a, b, name))
+    return uncond, cond
+
+
+def open_units(rows, cycles, equivs):
+    """The open obligations, grouped so each unit is ONE obligation however many rows carry it.
+
+    A unit starts as either a whole reduction cycle (whose rows are `reduced`, each to the next,
+    so nothing was reduced away) or a single `open` row. Units are then merged across proved
+    equivalences. Rows that are `discharged`, `refuted`, or legitimately `reduced` along a linear
+    chain to a tracked residue are not open and form no unit.
+
+    The number of units is the honest debt; the total membership is the number of rows carrying
+    it. Both are reported, because either alone is misreadable — see the note at the print site.
+    """
+    units = [set(c) for c in cycles]
+    units += [{p} for p, st, _ in rows if st == "open"]
+    merged = True
+    while merged:
+        merged = False
+        for a, b, _ in equivs:
+            ia = next((i for i, u in enumerate(units) if a in u), None)
+            ib = next((i for i, u in enumerate(units) if b in u), None)
+            if ia is not None and ib is not None and ia != ib:
+                # pop the HIGHER index: popping the lower one first would shift the other, and the
+                # merge would write into the wrong unit and leave a duplicate behind.
+                lo, hi = min(ia, ib), max(ia, ib)
+                units[lo] |= units.pop(hi)
+                merged = True
+                break
+    return units
+
+
+def check_equivalences(rows, uncond):
+    """An equivalence to a SETTLED row settles the other side.
+
+    `dischargers_of` skips `↔` conclusions, so a row proved equivalent to a discharged one is
+    never marked stale by the per-row check — it reads as a perfectly good open row. That is the
+    same blind spot as the miscount, in its dangerous direction: the miscount overstates the debt,
+    this understates the corpus.
+    """
+    status = {p: st for p, st, _ in rows}
+    bad, out = 0, []
+    for a, b, thm in uncond:
+        sa, sb = status.get(a), status.get(b)
+        for x, sx, y, sy in ((a, sa, b, sb), (b, sb, a, sa)):
+            if sx == "open" and sy in ("discharged", "refuted"):
+                out.append(f"  STALE  {x}: marked open, but {thm} proves it equivalent to {y}, "
+                           f"which is {sy}")
+                bad += 1
+        if {sa, sb} == {"discharged", "refuted"}:
+            out.append(f"  CONTRA {a} ⟷ {b}: {thm} proves them equivalent, but one is discharged "
+                       f"and the other refuted")
+            bad += 1
+    return bad, out
+
+
 def check_rows(rows, decls):
     """Returns (bad_count, report_lines). Shared by the gate and its self-test."""
     bad, out = 0, []
@@ -367,11 +462,56 @@ def self_test(decls) -> int:
     print(f"  canary 11 (a reduction cycle reduces nothing)  {'FIRES' if fired else 'SILENT'}")
     ok &= fired
 
+    # 7d. A PROVED EQUIVALENCE between two open rows. Same content as canary 11 — one obligation
+    # written twice — reached by the other route, and the route no check was watching: an `↔` is
+    # skipped by `dischargers_of` (canary 9, correctly) and contributes no residue edge for
+    # `reduction_cycles` to walk, so before this it was seen by nothing at all.
+    #
+    # SYNTHETIC declarations on purpose. The live instance is
+    # `towerReducesToSign_iff_towerLowerBound`, and naming it here would tie the canary to
+    # `TowerLowerBound` staying open — the exact way canaries 5 and 10 broke, twice, on the corpus
+    # getting better. What is under test is the mechanism, so the specimen owns its own decls.
+    eq_decl = [("theorem", "fake_eq", "theorem fake_eq : CanaryA ↔ CanaryB")]
+    rows_oo = [("CanaryA", "open", "—"), ("CanaryB", "open", "—")]
+    uncond, _ = proved_equivalences(rows_oo, eq_decl)
+    # and the discrimination: the SAME rows with no equivalence must stay two obligations, or the
+    # check would only be saying that open rows are suspicious.
+    fired = (len(uncond) == 1
+             and len(open_units(rows_oo, [], uncond)) == 1
+             and len(open_units(rows_oo, [], [])) == 2)
+    print(f"  canary 12 (an ↔ between open rows is ONE debt) {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    # 7e. An equivalence to a SETTLED row settles the other side. This is the same blind spot in
+    # its dangerous direction: `dischargers_of` skips the `↔`, so a row proved equivalent to a
+    # discharged one reads as a perfectly good open row and the corpus is understated.
+    rows_od = [("CanaryA", "open", "—"), ("CanaryB", "discharged", "`fake_thm`")]
+    ud, _ = proved_equivalences(rows_od, eq_decl)
+    bad, out = check_equivalences(rows_od, ud)
+    quiet, _ = check_equivalences(rows_oo, uncond)
+    fired = (bad == 1 and any("STALE" in l and "CanaryA" in l for l in out) and quiet == 0)
+    print(f"  canary 13 (↔ to a discharged row is STALE)    {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    # 7f. A CONDITIONAL equivalence collapses NOTHING. `(h : X) : a ↔ b` says the rows agree given
+    # `X`; until `X` is discharged they are still two debts. Without this the gate would merge rows
+    # on the strength of a hypothesis nobody has supplied — which is precisely the failure
+    # `assumes` exists to prevent one level down, and precisely the vacuity lesson of
+    # `positive_branch_impossible`. It must still be REPORTED, not dropped: a silent skip is the
+    # defect this whole family of checks exists to remove.
+    cond_decl = [("theorem", "fake_cond", "theorem fake_cond (h : CanaryH) : CanaryA ↔ CanaryB")]
+    uc, cc = proved_equivalences(rows_oo, cond_decl)
+    fired = (uc == [] and len(cc) == 1 and len(open_units(rows_oo, [], uc)) == 2)
+    print(f"  canary 14 (a conditional ↔ collapses nothing)  {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
     print()
     if not ok:
         print("LEDGER SELF-TEST FAIL — a canary did not fire; the gate is unvalidated")
         return 1
-    print("LEDGER SELF-TEST PASS — all ten convict specimens fire")
+    # No count here. It said "all ten" while eleven ran, because a literal in a message is a
+    # snapshot that trains you to edit it rather than to re-derive it.
+    print("LEDGER SELF-TEST PASS — every convict specimen fires")
     return 0
 
 
@@ -410,27 +550,37 @@ def main() -> int:
     for line in dout:
         print(line)
 
+    uncond, cond = proved_equivalences(rows, decls)
+    ebad, eout = check_equivalences(rows, uncond)
+    bad += ebad
+    for line in eout:
+        print(line)
+
     cycles = reduction_cycles(rows)
     for cyc in cycles:
         print(f"  CYCLE  {' ⇄ '.join(cyc)}: these reduce to each other, so none of them is reduced "
               f"away — all {len(cyc)} are OPEN")
+    for a, b, thm in cond:
+        print(f"  COND   {a} ⟷ {b}: {thm} is a CONDITIONAL equivalence — it collapses nothing "
+              f"until its hypothesis is discharged")
 
     print()
     if bad:
         print(f"OBLIGATION-LEDGER FAIL — {bad}/{len(rows)} row(s) do not match the corpus")
         return 1
-    marked_open = sum(1 for _, st, _ in rows if st == "open")
-    in_cycles = sum(len(c) for c in cycles)
     print(f"OBLIGATION-LEDGER OK — {len(rows)} rows match the corpus and the CHANGELOG mirror")
-    if cycles:
-        # A cycle is ONE obligation written several ways, so it contributes 1 to the count of
-        # distinct open obligations and len(cyc) to the count of open ROWS. Reporting only the
-        # row count would inflate the debt; reporting only the obligation count would hide that
-        # the ledger carries several rows for it. Both, or the number is misreadable.
-        print(f"  open rows: {marked_open} marked open + {in_cycles} in {len(cycles)} reduction "
-              f"cycle(s) = {marked_open + in_cycles}")
-        print(f"  distinct open obligations: {marked_open} + {len(cycles)} (each cycle is ONE "
-              f"obligation written several ways) = {marked_open + len(cycles)}")
+
+    # A row is not an obligation. A reduction cycle and a proved equivalence each mean "one
+    # obligation written several ways", so both counts are printed: the row count would inflate
+    # the debt, the obligation count alone would hide that the ledger carries several rows for it.
+    # Neither number is readable without the other.
+    units = open_units(rows, cycles, uncond)
+    open_rows = sum(len(u) for u in units)
+    for u in sorted(units, key=lambda u: sorted(u)):
+        if len(u) > 1:
+            print(f"  ONE    {' ⟷ '.join(sorted(u))}: {len(u)} rows, ONE open obligation")
+    print(f"  open rows: {open_rows}")
+    print(f"  distinct open obligations: {len(units)}")
     return 0
 
 

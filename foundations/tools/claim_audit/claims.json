@@ -8812,6 +8812,103 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "ladder-recip-ge-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the reciprocal spends two",
+        "Both specimens meet `recip_ge` with equality"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.LadderMeasure.recip_ge",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-step-children-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "one step buys one node"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.LadderMeasure.step_children",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-obstruction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "one full step above the level it delivers"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.LadderMeasure.recip_not_at_one_step",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-size-fails-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "¬ ((recipTree t).size ≤ t.size + 2)"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.size_ladder_fails",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-size-sharp-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "so the class is inhabited and the bound is sharp"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.sizeMeasure_recip_sharp",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-converse-size-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the converse route included at `+3` and `+6` (`recipTree_eTree_size`)"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.recipTree_eTree_size",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }

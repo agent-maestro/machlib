@@ -11334,7 +11334,7 @@ this sentence.) Their status, as of the last edit:
 
 | obligation | where | status | discharged by |
 | --- | --- | --- | --- |
-| `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`) |
+| `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`); `towerReducesToSign_iff_towerLowerBound` makes this row and `TowerReducesToSign` ONE obligation |
 | `SignHardCase` | here | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
 | `DecayFloor` | `EMLDecayFloor` | **reduced** | `decayFloor_of_growthEnvelope` → `GrowthEnvelope` — an *equivalence*, not a shrink; the two form a reduction cycle and are one open obligation (clamped half: `decayFloor_clamped`) |
 | `GrowthEnvelope` | `EMLDecayFloorIsGrowth` | **reduced** | `growthEnvelope_of_decayFloor` → `DecayFloor` — the other half of the same cycle |
@@ -11345,7 +11345,7 @@ this sentence.) Their status, as of the last edit:
 | `BoundedCellApproach` | here | **discharged** | `boundedCellApproach_holds` |
 | `BoundedEmlCellApproach` | here | **discharged** | `boundedEmlCellApproach_holds` |
 | `BoundedEmlCellApproachLarge` | here | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
-| `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
+| `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — equivalent to `TowerLowerBound` ever since `signHardCase_holds` discharged its antecedent (`towerReducesToSign_iff_towerLowerBound`, `EMLTowerAfterSign`) |
 | `NegativeTranslationGrowingLeft` | `EMLDepthTameness` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
 | `FQueryLowerBound` | `EMLBasisOverhead` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | `EMLOneQueryForm` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
@@ -11376,9 +11376,35 @@ theorem concludes the proposition, it does assume the residue, and the residue i
 So the gate now walks the residue graph and reports cycles (`reduction_cycles`), because two rows
 leaving the open column together, for a result that closed neither, is exactly the bookkeeping the
 **reduced** status was introduced to prevent — one level up, where no per-row check can see it. The
-count is reported twice on purpose: **8 open rows, 7 distinct open obligations**, the second being
-the number that did not move this session. Canary 11 is the specimen, and it is required to stay
-silent on a legitimate linear chain, or it would be saying only that reductions are suspicious.
+count is reported twice on purpose — the row count inflates the debt, the obligation count alone
+hides that several rows carry it, and neither number is readable without the other. Canary 11 is the
+specimen, and it is required to stay silent on a legitimate linear chain, or it would be saying only
+that reductions are suspicious.
+
+**A second route to the same thing, and it had been open for three commits — 2026-08-26.** A
+reduction cycle is not the only way two rows can be one obligation. `TowerReducesToSign` is literally
+`SignHardCase → TowerLowerBound`; `signHardCase_holds` discharged the antecedent, so
+`towerReducesToSign_iff_towerLowerBound` (`EMLTowerAfterSign`) makes the two rows **equivalent**. That
+module's own docstring says exactly this — *"two ledger rows that looked like separate debts are one
+debt stated twice"* — and the ledger went on reporting two, through and including the entry that
+built `reduction_cycles` to catch precisely this shape.
+
+It was invisible because **two checks each declined to look at it, and both were right to**.
+`dischargers_of` skips any conclusion containing `↔`, so that `foo : P ↔ Q` cannot read as a proof of
+`P` (canary 9) — and `EMLTowerAfterSign` states the equivalence as an `Iff` *on purpose*, citing that
+rule. `reduction_cycles` walks the residue edges of **reduced** rows, and two rows marked **open**
+contribute no edge. So the theorem fed into nothing at all. The lesson generalises past this gate: a
+rule that says what a theorem does **not** establish must also say what it **does**, or the theorem
+leaves the checker's field of view entirely rather than merely leaving one column of it.
+
+`proved_equivalences` now reads them and `open_units` groups the open rows into obligations across
+both routes. The corrected count is **8 open rows, 6 distinct open obligations** — the debt was
+overstated by one, not understated, which is why nothing failed. Canaries 12–14 are the specimens:
+an equivalence between two open rows collapses them (and the same rows *without* the equivalence must
+stay two, or the check is only saying that open rows are suspicious); an equivalence to a
+**discharged** row marks the other side stale, which is the same blind spot in the direction that
+*understates* the corpus; and a **conditional** `(h : X) : a ↔ b` collapses nothing until `X` is
+discharged, but is reported rather than dropped, since a silent skip is the defect being removed.
 
 **`Depth3DecayExp` closed the same day**, once the dispatch onto its four cells was written
 (`depth3DecayExp_holds`). That the cells covered an arbitrary depth-≤2 `A` was an expectation until

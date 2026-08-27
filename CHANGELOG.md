@@ -5,6 +5,121 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-26 (dk)
+
+### The ladder fails for **every** grammar-respecting measure — and the open count was 7, not 6
+
+Two things, and the second is the one that will matter in a month.
+
+#### 1. Reaching for size does not help
+
+`(dj)` proved `DecayFloor ↔ GrowthEnvelope` and closed with a sentence rather than a theorem:
+*"any proof must find an induction parameter that is not depth."* The obvious next reach is
+**size** — `EMLSizeCost` already prices trees that way, `two_mul_depth_succ_le_size` bridges the
+two, and `T38-NNP` prices silicon that way. New module `MachLib/EMLLadderMeasure`: that reach fails,
+and it fails for every measure of the kind at once rather than one at a time.
+
+A measure **respects the grammar** if an `eml` node costs at least `step > 0` more than *either*
+child. That one hypothesis generates both halves of the picture:
+
+```
+step_children  μ (eml A B) ≤ j + step  →  μ A ≤ j ∧ μ B ≤ j      one step buys one node
+recip_ge       μ t + 2 * step  ≤  μ (recipTree t)                the reciprocal spends two
+```
+
+and hence
+
+```
+recip_not_at_one_step : ¬ (μ (recipTree t) ≤ μ t + step)
+```
+
+> **The route consumes the envelope one full step above the level it delivers, for every measure in
+> the class.** Not a fact about depth — a fact about the step spending one `eml` node while
+> `recipTree` spends two.
+
+**Both specimens meet `recip_ge` with equality**, so the class is inhabited and the bound is sharp
+rather than merely true — an abstract bound no real measure meets proves nothing, and this corpus
+has paid for that lesson once already:
+
+```
+depthMeasure   step = 1    (recipTree t).depth = t.depth + 2      = 2 * step
+sizeMeasure    step = 2    (recipTree t).size  = t.size  + 4      = 2 * step
+```
+
+The size column is the answer to the question that prompted the file, and `size_ladder_fails` states
+it in the form a session reaching for size would want: `¬ ((recipTree t).size ≤ t.size + 2)`. It is
+not a coincidence that the numbers double — one `eml` node costs `1` depth and `2` size (the node
+and the leaf it needs), so **every** construction in `EMLDecayFloorIsGrowth` costs exactly twice as
+much in size as in depth, the converse route included at `+3` and `+6` (`recipTree_eTree_size`).
+
+**Where the escape hatch is, and why it is not one.** The hypothesis doing the work is `step_pos`.
+A measure pricing an `eml` node at `0` evades `recip_ge` — and then `step_children` returns `μ A ≤ j`
+from `μ (eml A B) ≤ j` with no decrease, so there is no induction left to carry. The hypothesis that
+makes the obstruction bite is the same one that makes the ladder a ladder; the two facts have one
+source, which is exactly why changing the measure does not help. That last sentence is prose, not a
+theorem: *"no induction terminates"* is not a proposition this corpus can state and is not claimed
+as one.
+
+**Scope.** Bounds nothing, discharges nothing. `GrowthEnvelope` stays open, unchanged, still one
+obligation with `DecayFloor`. It does not say no proof exists — only that no induction whose
+parameter is a grammar-respecting measure can run the reciprocal transfer as its step. A parameter
+that can *decrease* under `recipTree`, or that is not a function of the tree at all, is untouched.
+This is the fourth route-closure in the arc and, like the other three, it cost a fraction of what
+the positive results cost.
+
+**Footprint clean** — `[propext, Real, Quot.sound, Real.oneR, Real.zeroR]` and nothing else. No
+`sorryAx`, no `analytic_finite_zeros_compact`, no `eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+#### 2. The open count was overstated by one, and no gate could see it
+
+`(dj)` built `reduction_cycles` so that two rows reducing to each other would not leave the open
+column together. A second instance of the same thing was **already in the tree** and went on being
+counted twice.
+
+`TowerReducesToSign` is literally `SignHardCase → TowerLowerBound`. `signHardCase_holds` discharged
+the antecedent, so `towerReducesToSign_iff_towerLowerBound` (`EMLTowerAfterSign`, since `b5c9fd53`)
+makes the two rows **equivalent** — and that module's own docstring says so, *"two ledger rows that
+looked like separate debts are one debt stated twice"*, while the ledger reported two through three
+commits, including the one that built the cycle checker.
+
+**It was invisible because two checks each declined to look at it, and both were right to.**
+`dischargers_of` skips any conclusion containing `↔`, so that `foo : P ↔ Q` cannot read as a proof of
+`P` (canary 9) — and `EMLTowerAfterSign` states the equivalence as an `Iff` *on purpose*, citing that
+rule. `reduction_cycles` walks the residue edges of **reduced** rows, and two rows marked **open**
+contribute no edge. So the theorem fed into nothing at all.
+
+> **A rule that says what a theorem does *not* establish must also say what it *does*, or the
+> theorem leaves the checker's field of view entirely rather than merely leaving one column of it.**
+
+`obligation_ledger_check.py` now has `proved_equivalences` (unconditional `↔` between two rows),
+`check_equivalences`, and `open_units`, which groups the open rows into obligations across *both*
+routes — cycles and equivalences. Corrected:
+
+```
+open rows: 8
+distinct open obligations: 6        (was reported as 7)
+```
+
+The debt was **overstated**, not understated, which is why nothing failed and why it survived. Three
+canaries, all on synthetic declarations so they cannot go stale the day the corpus improves — the
+way canaries 5 and 10 each broke once:
+
+* **12** — an `↔` between two open rows collapses them, *and* the same rows without the equivalence
+  must stay two, or the check would only be saying that open rows are suspicious.
+* **13** — an `↔` to a **discharged** row marks the other side `STALE`. Same blind spot, in the
+  direction that *understates* the corpus: before this, a row proved equivalent to a discharged one
+  read as a perfectly good open row.
+* **14** — a **conditional** `(h : X) : a ↔ b` collapses nothing until `X` is discharged, but is
+  reported rather than dropped, since a silent skip is the defect being removed.
+
+The self-test's closing line no longer counts itself. It said *"all ten convict specimens"* while
+eleven ran, because a literal in a message is a snapshot that trains you to edit it rather than to
+re-derive it.
+
+Gates: build **748 jobs**, aggregator 745 of 1051, consistency PASS, claims 431, obligations **20
+rows / 8 open rows / 6 distinct open**, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1
+allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-26 (dj)
 
 ### `DecayFloor` **is** the growth envelope — and the ledger grew a cycle
@@ -8124,7 +8239,7 @@ in commit archaeology:
 
 | obligation | status | discharged by |
 | --- | --- | --- |
-| `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`) |
+| `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`); `towerReducesToSign_iff_towerLowerBound` makes this row and `TowerReducesToSign` ONE obligation |
 | `SignHardCase` | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
 | `DecayFloor` | **reduced** | `decayFloor_of_growthEnvelope` → `GrowthEnvelope` — an *equivalence*, not a shrink; the two form a reduction cycle and are one open obligation (clamped half: `decayFloor_clamped`) |
 | `GrowthEnvelope` | **reduced** | `growthEnvelope_of_decayFloor` → `DecayFloor` — the other half of the same cycle |
@@ -8135,7 +8250,7 @@ in commit archaeology:
 | `BoundedCellApproach` | **discharged** | `boundedCellApproach_holds` |
 | `BoundedEmlCellApproach` | **discharged** | `boundedEmlCellApproach_holds` |
 | `BoundedEmlCellApproachLarge` | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
-| `TowerReducesToSign` | **open** | — |
+| `TowerReducesToSign` | **open** | — equivalent to `TowerLowerBound` ever since `signHardCase_holds` discharged its antecedent (`towerReducesToSign_iff_towerLowerBound`, `EMLTowerAfterSign`) |
 | `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
