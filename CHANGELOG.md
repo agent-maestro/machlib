@@ -5,6 +5,68 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (du)
+
+### The rung, as a step — and a correction: `(di)` does not block depth 4
+
+New module `MachLib/EMLDecayLadderStep`. `(dt)` proved `DecayFloorUpTo 3` from two ingredients that
+happened to be lying around. This turns that proof into a **general step**, so the next rung costs
+one new theorem instead of a fresh argument.
+
+```
+decayFloorUpTo_succ :  DecayFloorUpTo j → NodeDecayBound j m → LowerEnvBound j m
+                         → DecayFloorUpTo (j + 1)          -- at height m + 1
+```
+
+#### It reproduces `(dt)`, height and all
+
+`nodeDecayBound_two` **is** `Depth3DecayExp` (`towerFn 1 x` is `exp x` definitionally);
+`lowerEnvBound_two` follows from `depth_le_two_lower_on_ray` since `x ≤ exp x`; and
+
+```
+decayFloorUpTo_three_via_step :=
+  decayFloorUpTo_succ (j := 2) (m := 1) decayFloorUpTo_two nodeDecayBound_two lowerEnvBound_two
+```
+
+comes out at height `2`, matching the hand proof exactly. **An abstraction that does not reproduce
+the concrete case it was extracted from is a repackaging** — this one does, so it is not.
+
+#### The correction: `(di)` does not block depth 4, and will not until depth 8
+
+`(dt)`'s summary read `(di)` as blocking depth 4. **That is wrong, and the error is worth naming
+because the pessimistic reading costs nothing to believe.**
+
+`posEmbed t` has depth `t.depth + 4`, so the precise statement is that the positive branch at depth
+`k` is at least as hard as `DecayFloor` at depth `k − 4`. With depth ≤ 3 now discharged, the branch at
+depths **4, 5, 6 and 7** re-embeds only problems that are already solved. **The re-embedding first
+bites at depth 8** — and that boundary *moves up by one with every rung proved*. Read carelessly,
+`(di)` retires four rungs without an argument.
+
+#### What depth 4 now costs
+
+Two inputs at `j = 3`, and they are not the same kind of thing:
+
+* **`NodeDecayBound 3 m` — the residue.** The depth-4 analogue of `Depth3DecayExp`: how small can
+  `exp (A x) − log (B x)` be, positive, with `A` and `B` at depth ≤ 3. Same proposition
+  `Depth3DecayExp` was, one rung down.
+* **`LowerEnvBound 3 m`** — ingredients exist (`node_lower_of_right_upper` turns the depth-2 *upper*
+  envelope into a depth-3 *lower* one, giving `m = 3`), with one friction flagged rather than waved
+  at: `LowerEnvBound` quantifies over all `x ≥ 1` with no per-tree ray, while
+  `depth_le_two_growth_envelope` holds only past a tree-dependent `X₀`. Either the constant absorbs
+  the ray or the definition grows one, and which is cheaper has not been checked.
+
+The `NodeDecayBound` hypotheses are **pointwise** by design, copied from `Depth3DecayExp` — that is
+what keeps the step free of `evSign_all` and the analytic block, and it is a constraint on whoever
+proves the depth-4 instance, not an accident of how it is written.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`. `DecayFloor` untouched; ledger unchanged at 21 rows /
+9 open rows / 6 distinct open.
+
+Gates, every figure read off the gate that produced it: build **752 jobs**, aggregator 749 of 1055,
+consistency PASS, claims 464, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (dt)
 
 ### `DecayFloorUpTo 3` — the ladder's top moves for the first time in the arc

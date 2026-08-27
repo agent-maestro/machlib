@@ -9390,6 +9390,54 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "ladder-step-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "so the next rung costs\none new theorem instead of a fresh argument"
+      ],
+      "module": "MachLib.EMLDecayLadderStep",
+      "theorem": "MachLib.decayFloorUpTo_succ",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-step-reproduces-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "comes out at height `2`, matching the hand proof exactly"
+      ],
+      "module": "MachLib.EMLDecayLadderStep",
+      "theorem": "MachLib.decayFloorUpTo_three_via_step",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-tower-absorb-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "-- at height m + 1"
+      ],
+      "module": "MachLib.EMLDecayLadderStep",
+      "theorem": "MachLib.const_add_tower_le_succ",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }
