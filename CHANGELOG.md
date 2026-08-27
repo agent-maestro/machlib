@@ -5,6 +5,80 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dp)
+
+### The literature places the obligation: everything but one quantifier is a theorem of 1912
+
+A literature check against `EmlGermApproach`, recorded in
+`monogate-research/exploration/germ_approach_literature_2026_08_27/NOTE.md`. New `§4` of
+`MachLib/EMLGermApproach`. **No axiom spent; no row changed status; 243 pinned.**
+
+> **The per-pair version of the obligation is a corollary of Hardy (1912). The entire mathematical
+> content of what MachLib needs is the position of a single `∃ k`.**
+
+#### Why the per-pair version is classical
+
+Three classical facts compose. EML germs at infinity are germs of Hardy's **logarithmico-exponential
+functions** — totalised `log` is first-order definable in `ℝ_exp`, so totalisation does not leave the
+class. The LE-functions form a **field**, so where the gap `exp ∘ A − C` is eventually non-zero its
+**reciprocal is again an LE-function**. And every Hardy-field germ is `o(exp^∘k)` for **some** `k`.
+Compose: `1/gap ≤ exp^∘k` gives `gap ≥ exp(−towerFn (k+1) x)`.
+
+**That is the reciprocal route `(dj)` found from the inside.** `recipTree` *is* the reciprocal of the
+field-closure fact, and `(dj)`'s "the grammar already contains `log`, so a reciprocal is two nodes,
+`+2` depth" is the syntactic shadow of "the LE-functions are closed under division". The corpus
+rediscovered a 1912 argument by walking into it backwards.
+
+#### What is not classical, and two near misses that show why
+
+`EmlGermApproach` puts `∃ k` **before** `∀ A C`, with `k` from the depth bound alone. Nothing found
+supplies that.
+
+* **Berarducci–Servi (2004)** prove `ℝ_exp` **effectively o-minimal**: the number of connected
+  components of a definable set is bounded *computably in the complexity of a defining formula* —
+  exactly the kind of syntactic uniformity wanted. **But it counts components and this needs a
+  rate.** The corpus already has the lesson, in `FRONTIER_BRIEF_3`'s correction banner: `exp(−x)` is
+  positive on the ray, has **no zeros at all**, and still has infimum `0`. Right kind of theorem,
+  wrong quantity.
+* The classical **Łojasiewicz inequality** — the standard separation tool, with effective versions
+  for polynomials and for Pfaffian functions — is **polynomially shaped**, and that shape provably
+  does not extend to o-minimal expansions in which `exp` is definable.
+
+  That last point retro-justifies a choice made before the check existed: this obligation's floor is
+  `exp(−towerFn k x)`, a **tower-scale** envelope. **The shape was forced by the structure, not
+  chosen** — and it is a third reason "bounded away from zero" was the wrong description.
+
+#### What it changes: where an assumption would be spent
+
+Nothing in the corpus. One thing about the trust boundary: **if an assumption is ever spent it should
+be spent on the uniformity alone.** The per-pair half is a theorem of 1912, and importing it would
+widen the disclosed surface for nothing. So `§4` states `EmlGermApproachPerPair` — `k` chosen after
+seeing the germs, no depth hypothesis, because none is used — and proves
+`emlGermApproachPerPair_of_emlGermApproach`. The converse is not proved and nothing here suggests it.
+**The gap between those two Props is the entire open problem, and the corpus's whole depth programme
+lives inside it.**
+
+Neither version is provable *inside* MachLib either way: `MachLib.Real` is an axiomatised abstract
+ordered field with `exp`/`log`, not standard ℝ, so a theorem about the standard reals is not a
+theorem about every model of these axioms. Unchanged since the 2026-08-19 note; worth restating
+because "it is classical" invites exactly that slip.
+
+#### Honest limits of the search
+
+Web search and abstracts; **no paper read in full**, and the Hardy-field survey failed to decode as
+text. **Absence of a citation is not absence of a theorem** — "nothing found supplies the uniformity"
+is a claim about a two-hour search. The precise question for a specialist is recorded in the note:
+*is the exponential height of an LE germ bounded by the exp-depth of a defining term, uniformly?* The
+transseries literature, where exponential and logarithmic depth are standard load-bearing notions, is
+the next place to look.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates, every figure read off the gate that produced it: build **749 jobs**, aggregator 746 of 1052,
+consistency PASS, claims 446, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-26 (do)
 
 ### The obligation was under-restricted — by its own criterion

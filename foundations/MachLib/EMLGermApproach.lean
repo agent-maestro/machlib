@@ -265,4 +265,61 @@ theorem decaying_gap_meets_floor {x : Real} (hx : 1 ≤ x) :
   rw [e]
   exact decayFast_floor x hx
 
+/-! ## §4 — the whole content is the position of one quantifier
+
+A literature check (2026-08-27, `monogate-research/exploration/germ_approach_literature_2026_08_27/`)
+places this obligation exactly. **The per-pair version is classical.** Over standard ℝ:
+
+* EML germs at infinity are germs of Hardy's **logarithmico-exponential functions** — totalised `log`
+  is first-order definable in `ℝ_exp`, so the totalisation does not leave the class.
+* The LE-functions form a **field**, so where `exp ∘ A − C` is eventually non-zero its **reciprocal
+  is again an LE-function**.
+* Every Hardy-field germ is `o(exp^∘k)` for **some** `k` (Hardy 1912). Applied to the reciprocal,
+  that is a tower floor for the gap.
+
+So `EmlGermApproachPerPair` below — `k` chosen *after* seeing the pair — is a corollary of classical
+Hardy theory, and it is **exactly the reciprocal route `(dj)` arrived at independently**:
+`recipTree` is that reciprocal, and `(dj)`'s finding that it costs `+2` depth is the syntactic
+shadow of "the LE-functions are closed under division".
+
+**What is not classical is the uniformity.** `EmlGermApproach` puts `∃ k` *before* `∀ A C`, with `k`
+from the depth bound alone. Nothing found in the literature supplies that, and the nearest effective
+results do not:
+
+* **Berarducci–Servi (2004)** prove `ℝ_exp` **effectively o-minimal** — the number of connected
+  components of a definable set is bounded computably in the complexity of a defining formula. That
+  is a **count**, not a **rate**, and this corpus already recorded why a count cannot produce a floor:
+  `exp (−x)` is positive on the ray, has **no zeros at all**, and still has infimum `0`.
+* The classical **Łojasiewicz inequality** is the standard separation tool and has the wrong shape
+  here — it is polynomial (`|f| ≥ C·dist^α`) and provably does not extend to o-minimal expansions in
+  which `exp` is definable. That is *why* this obligation is stated with a tower-scale envelope
+  rather than a polynomial one; the shape was forced, not chosen.
+
+> **The mathematical content of `EmlGermApproach` is entirely the position of `∃ k`.** Everything
+> else in it is a theorem of 1912.
+
+That matters for the trust boundary, and it is the reason to record it here rather than in a note
+nobody imports: **if an assumption is ever spent, it should be spent on the uniformity alone**, not
+on the whole statement. Neither version is provable *inside* MachLib — `MachLib.Real` is an
+axiomatised abstract structure, not standard ℝ, so a theorem about the standard reals is not a
+theorem about every model of these axioms — but the two are very different sizes of import. -/
+
+/-- **The per-pair version: `k` chosen after seeing the germs.** Weaker than `EmlGermApproach` by
+exactly one quantifier exchange, and — over standard ℝ — a corollary of Hardy's growth theorem
+applied to the reciprocal of the gap. Carries no depth hypothesis at all, because none is used. -/
+def EmlGermApproachPerPair : Prop :=
+  ∀ (A C : EMLTree) (X₀ : Real), 1 ≤ X₀ →
+    (∀ x : Real, X₀ ≤ x → C.eval x < exp (A.eval x)) →
+    ∃ (k : Nat) (X₁ : Real), X₀ ≤ X₁ ∧ ∀ x : Real, X₁ ≤ x →
+      exp (-(EMLTree.towerFn k x)) ≤ exp (A.eval x) - C.eval x
+
+/-- **Uniform implies per-pair**, and nothing in this corpus proves the converse. The gap between
+these two Props is the entire open problem; the corpus's whole depth programme lives in it. -/
+theorem emlGermApproachPerPair_of_emlGermApproach (h : EmlGermApproach) :
+    EmlGermApproachPerPair := by
+  intro A C X₀ hX₀ hlt
+  obtain ⟨k, hk⟩ := h (A.depth + C.depth)
+  obtain ⟨X₁, hX₁, hf⟩ := hk A C X₀ (by omega) (by omega) hX₀ hlt
+  exact ⟨k, X₁, hX₁, hf⟩
+
 end MachLib

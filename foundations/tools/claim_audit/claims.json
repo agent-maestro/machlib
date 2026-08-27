@@ -9134,6 +9134,22 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "approach-perpair-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The gap between those two Props is the entire open problem"
+      ],
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.emlGermApproachPerPair_of_emlGermApproach",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }
