@@ -5,6 +5,128 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-26 (dn)
+
+### The missing input, named — and it is a separation, not a bound away from zero
+
+New module `MachLib/EMLNodeSeparation`. **No axiom was added and the count of open obligations did
+not move.** That is the point of the entry.
+
+#### It is not "bounded away from zero"
+
+The tempting description of the missing input is *"a non-vanishing EML germ is bounded away from
+zero"*. **Taken literally that is false, on ordinary members of the class**: `exp (1 − x)` and `e / x`
+are positive everywhere on the ray and have infimum `0`. `decayFast_floor` has been in the corpus for
+days, flooring one of them.
+
+What `DecayFloor` consumes is not a positive constant but an **effective lower envelope** of one
+specific shape — `exp (-(towerFn k x))`, `k` from the depth bound and never from the tree. The
+obligation states that and nothing else.
+
+#### Exactly what the downstream proof consumes, and no wider
+
+`DecayFloor` splits on the sign of the right child; the clamped branch is already a theorem
+(`decayFloor_clamped`). What is left is the branch where `B` is eventually **positive**, so that
+restriction goes *into* the obligation rather than being quantified away:
+
+```
+EmlNodeSeparation :
+  ∀ j, ∃ k, ∀ A B X₀,  A.depth ≤ j → B.depth ≤ j → 1 ≤ X₀ →
+    (∀ x ≥ X₀, 0 < B.eval x) →
+    (∀ x ≥ X₀, 0 < exp (A.eval x) - log (B.eval x)) →
+    ∃ X₁ ≥ X₀, ∀ x ≥ X₁, exp (-(towerFn k x)) ≤ exp (A.eval x) - log (B.eval x)
+```
+
+Same quantifier order as `DecayFloor`, same floor shape. Two germs that **do not meet** on a ray are
+separated there by an effective envelope.
+
+#### It is an EQUIVALENCE, and the ledger says so
+
+Both directions are proved, so this is a **third name for one obligation, not a shrink**:
+
+```
+Sep j        ⟸ DecayFloor (j+1)     one node
+DecayFloor j ⟸ Sep (j+3)            via posEmbed — NO induction
+```
+
+The forward direction needs no induction at all: `(di)`'s `posEmbed` already re-embeds every tree
+into a node whose right child is positive *everywhere*, so the restricted obligation reaches every
+tree. The ledger now carries a **three-row cycle** — `DecayFloor ⇄ EmlNodeSeparation ⇄
+GrowthEnvelope` — and the gate reports `3 rows, ONE open obligation`. **The distinct-open count did
+not move.** Recording the equivalence, rather than only the useful direction, is what stops a later
+session reading this as progress on difficulty. It is not.
+
+What it *is*: the obligation restated in the idiom in which an external theorem could be cited. A
+Hardy-field, o-minimal or Pfaffian separation result is a statement about two germs failing to meet;
+it is not a statement about tower floors for shallow syntax trees. Nothing in the corpus was shaped
+like the thing that would buy it until now. **`GrowthEnvelope` is no longer independently
+mysterious** — it, `DecayFloor` and the separation are one object, and the object has a name in
+somebody else's literature.
+
+#### Stress cases, shipped with the statement
+
+An obligation nobody has attacked is an obligation nobody has understood.
+
+* **Exact cancellation** — `B = eTree (eTree A)` makes `log (B x)` equal `exp (A x)` on the nose, so
+  the node is identically `0`, at every `A` and every `x`. The right child is an `exp`, hence
+  positive everywhere, so the pair *satisfies* the `B`-positivity hypothesis and fails only the
+  node-positivity one. Two EML germs **can** meet, and where they meet no envelope exists: the
+  hypothesis is load-bearing and cannot be dropped.
+* **Near-cancellation of two arbitrarily fast-growing germs** — `gapNode_eval`: with
+  `A = towerTree n` and `B = eTree (eml (towerTree n) (const (exp c)))`, both `exp (A x)` and
+  `log (B x)` grow like an `(n+1)`-fold tower and their difference is **exactly the constant `c`**,
+  at every `x`, for every `n` and every `c`.
+
+  > The germs live at tower height `n + 1`; the floor their difference needs is height **0**.
+  > **Separation is not controlled by growth rate.**
+
+  That is the case a growth-based argument would be expected to handle and cannot even see — and it
+  is why `(dm)`'s germ-height parameter was never going to be the right instrument.
+* **A node that tends to zero and still meets the floor** — `posEmbed decayFast` is a positive-`B`
+  pair whose node is `exp (1 − x)`, infimum `0`, and it meets the height-`0` floor. Read as *bounded
+  away from zero* the statement would be **false here**, on a member of its own class.
+* **The totalised-log branch** — excluded by hypothesis, covered by `decayFloor_clamped`, and
+  exhaustive with the positive branch by `evSign_all`.
+
+#### Why the row is `open` and not `assumed`
+
+**An external mathematical input is not automatically an axiom.** Right now this is a theorem we need
+from outside the machinery we possess; until it is *deliberately* accepted without proof it is simply
+an obligation nobody has discharged. `(dm)` repaired the ledger so it can finally represent that
+distinction — `open` versus `assumed` — and the first thing to do with the repair is to use the
+honest half of it. **243 axioms stay pinned.**
+
+The ordering is worth noting: the moment this corpus first contemplated importing an assumption was
+also the moment it discovered the obligation ledger could not tell an assumption from a proof.
+Fixing that *before* adding the axiom was the correct sequence, and it was luck rather than design
+that the two came up together.
+
+#### Two corrections
+
+**`(dm)` claimed more than was proved.** It ended *"a proof would need something that is not a
+well-founded descent on the tree at all."* What `(dk)`–`(dm)` kill is **local scalar growth descent
+through the syntax tree** — a `Nat`-valued measure on trees, syntactic or germ-based, descending to
+both children. No theorem here excludes every conceivable well-founded relation: a lexicographic
+order, an ordinal rank, a well-founded *relation* on germs rather than a function of them, and any
+non-structural argument are untouched. `(dm)` carries a correction banner and `EMLLadderMeasure`'s §3
+now states the width correctly.
+
+**Counts are now policy, in `CLAUDE.md`.** No count in prose may be written from memory: run the
+gate, read its number, paste it. Three remembered counts went into this arc's changelog wrong
+(`claims 429` for 431, `claims 439` for 438, and an earlier `5 851 theorems` by an unrecorded
+method). The gates were right every time and cost about a second each. A wrong count is worse than a
+missing one, because it reads as measured.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates, every figure read off the gate that produced it: build **749 jobs**, aggregator 746 of 1052,
+consistency PASS, claims 445, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
+**The distinct-open count is 6, before and after.** A row was added and nothing was discharged; that
+is what an honest ledger looks like when work isolates rather than closes.
+
 ## [Unreleased] — 2026-08-26 (dm)
 
 ### The germ route closes too — and the obligation ledger finally looks at axioms
@@ -42,6 +164,13 @@ So the two routes fail for **opposite** reasons: syntactic measures grow too fas
 germ measures do not descend to the right child. That is the pincer, and with it the induction
 question is closed on both sides. What survives is narrower still and no longer a matter of choosing
 a parameter: a proof would need something that is not a well-founded descent on the tree at all.
+
+> **⚠ CORRECTED in `(dn)` — that last sentence claims more than was proved.** What `(dk)`–`(dm)`
+> kill is **local scalar growth descent through the syntax tree**: a `Nat`-valued measure on trees,
+> syntactic or germ-based. No theorem here excludes *every conceivable well-founded relation* — a
+> lexicographic order, an ordinal rank, a relation on germs rather than a function of them, or a
+> non-structural argument are all untouched. The sentence is left unaltered as the record of what
+> was written; the correct width is stated in `(dn)` and in `EMLLadderMeasure`'s §3.
 
 `open Real` is scoped to `§4` on purpose — it shadows `max`, which `§2`'s `depthMeasure` needs.
 
@@ -8391,7 +8520,8 @@ in commit archaeology:
 | --- | --- | --- |
 | `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`); `towerReducesToSign_iff_towerLowerBound` makes this row and `TowerReducesToSign` ONE obligation |
 | `SignHardCase` | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
-| `DecayFloor` | **reduced** | `decayFloor_of_growthEnvelope` → `GrowthEnvelope` — an *equivalence*, not a shrink; the two form a reduction cycle and are one open obligation (clamped half: `decayFloor_clamped`) |
+| `DecayFloor` | **reduced** | `decayFloor_of_emlNodeSeparation` → `EmlNodeSeparation` — an *equivalence*, not a shrink; a three-row cycle, one open obligation (clamped half: `decayFloor_clamped`) |
+| `EmlNodeSeparation` | **reduced** | `emlNodeSeparation_of_growthEnvelope` → `GrowthEnvelope` — closes the cycle; the missing input stated as a *separation* of two germs, the idiom an external theorem would be cited in |
 | `GrowthEnvelope` | **reduced** | `growthEnvelope_of_decayFloor` → `DecayFloor` — the other half of the same cycle |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |

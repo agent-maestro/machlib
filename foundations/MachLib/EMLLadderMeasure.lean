@@ -54,9 +54,14 @@ measures that can carry a structural induction at all. The escape route *"then u
 does not grow under `recipTree`"* closes with it (`no_structural_induction_of_cheap_recip`): such
 measures exist, and none of them descends.
 
-**The honest residual.** What is left untouched is a parameter that is not a `Nat`-valued measure on
-the tree — a lexicographic pair with an unbounded second component, an ordinal, or an induction on
-the *germ* rather than on the syntax. That is where a proof would now have to come from.
+**The honest residual, at the right width.** `§4` closes the germ arm as well, so what these
+sections kill is **local scalar growth descent through the syntax tree** — a `Nat`-valued measure on
+trees, syntactic or germ-based, descending to both children.
+
+That is *not* the claim that no well-founded induction can work, and the difference matters. A
+lexicographic order with an unbounded second component, an ordinal rank, a well-founded **relation**
+on germs rather than a function of them, and any non-structural argument are all untouched. State
+the result at that width and no wider.
 
 **Where the escape hatch is, and why it is not one.** The hypothesis doing the work is `step_pos`.
 A measure that prices an `eml` node at `0` evades `recip_ge` — but then `step_children` hands back

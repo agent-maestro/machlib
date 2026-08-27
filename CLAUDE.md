@@ -162,6 +162,21 @@ behind it is missing — registration is still a human act.
   it named live obligations twice and both were discharged the same day, failing the gate because
   work succeeded. `discharged`, `refuted` and `reduced` specimens are stable; `open` is not.
 
+## Counts: the gate is the source, prose is a copy
+
+**No count in prose — a claim total, an axiom total, an open-obligation total, a job count — may be
+written from memory or arithmetic-in-the-head. Run the gate, read its number, paste it.** Prose is a
+copy of gate output and never authoritative.
+
+This is policy, not advice, and it is empirical: in the 2026-08 arc three separate remembered counts
+went into a changelog wrong (`claims 429` for 431, `claims 439` for 438, and an earlier `5 851
+theorems` by an unrecorded method that nobody can reproduce). The gates were right every time and
+cost about a second each. A wrong count is worse than a missing one, because it reads as measured.
+
+Corollary for the gates themselves: **a check that is silent on success is indistinguishable from a
+check that did not run.** Print the figure even when nothing is wrong — `check_obligations.sh` prints
+its footprint tally for exactly this reason.
+
 ## Status
 
 Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (731 build jobs) at **true exit

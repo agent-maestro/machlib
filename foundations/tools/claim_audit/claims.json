@@ -9022,6 +9022,119 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "sep-decayfloor-from-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The forward direction needs no induction at all"
+      ],
+      "module": "MachLib.EMLNodeSeparation",
+      "theorem": "MachLib.decayFloor_of_emlNodeSeparation",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "sep-converse-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a **third name for one obligation, not a shrink**"
+      ],
+      "module": "MachLib.EMLNodeSeparation",
+      "theorem": "MachLib.emlNodeSeparation_of_decayFloor",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "sep-iff-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "it, `DecayFloor` and the separation are one object"
+      ],
+      "module": "MachLib.EMLNodeSeparation",
+      "theorem": "MachLib.emlNodeSeparation_iff_decayFloor",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "sep-exact-cancellation-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the node is identically `0`, at every `A` and every `x`"
+      ],
+      "module": "MachLib.EMLNodeSeparation",
+      "theorem": "MachLib.exact_cancellation_node_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "sep-gap-node-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "their difference is **exactly the constant `c`**",
+        "Separation is not controlled by growth rate."
+      ],
+      "module": "MachLib.EMLNodeSeparation",
+      "theorem": "MachLib.gapNode_eval",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "sep-decaying-node-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "whose node is `exp (1 − x)`, infimum `0`, and it meets the height-`0` floor"
+      ],
+      "module": "MachLib.EMLNodeSeparation",
+      "theorem": "MachLib.decaying_node_meets_floor",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "sep-clamped-branch-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "excluded by hypothesis, covered by `decayFloor_clamped`"
+      ],
+      "module": "MachLib.EMLNodeSeparation",
+      "theorem": "MachLib.clamped_node_is_exp",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }
