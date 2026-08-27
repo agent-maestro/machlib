@@ -17,8 +17,11 @@ required to agree, obligation for obligation.
 
 Exit 0 pass, 1 stale/missing/divergent, 2 a ledger could not be read (UNAVAILABLE, not a pass).
 """
+import os
 import re
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,7 +49,8 @@ def parse_rows(text):
         if not m:
             continue
         stat = [c for c in cells
-                if c in ("**open**", "**discharged**", "**refuted**", "**reduced**")]
+                if c in ("**open**", "**discharged**", "**refuted**", "**reduced**",
+                         "**assumed**")]
         if len(stat) != 1:
             continue
         i = cells.index(stat[0])
@@ -256,6 +260,123 @@ def check_equivalences(rows, uncond):
     return bad, out
 
 
+# ── The axiom half of "discharged" ──────────────────────────────────────────────────────────────
+#
+# Until 2026-08-26 this gate contained no reference to axioms, footprints or `sorryAx` at all, and
+# the 2026-08-19 trust-boundary note (`exploration/signhardcase_trust_boundary_2026_08_19/NOTE.md`)
+# recorded that as a live defect and an explicit PRECONDITION on ever importing an external
+# assumption:
+#
+#   > if someone adds `axiom signHardCase_ax : SignHardCase` plus a one-line theorem concluding it,
+#   > the obligations ledger will report the row as **discharged** — indistinguishable from a proof.
+#   > The axiom ledger would separately surface the new axiom as footprint drift. But NO GATE JOINS
+#   > THOSE TWO FACTS, and the misleading one is the one a reader reaches for.
+#
+# This joins them. Both halves of "discharged" are now checked: that a theorem concludes the
+# proposition (above), and that the theorem is a PROOF rather than a restatement of an assumption.
+
+
+def _lean(src: str) -> str:
+    """Run a snippet against the built corpus. Returns combined output, or '' if it could not run."""
+    fd, path = tempfile.mkstemp(suffix=".lean", dir=str(ROOT))
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(src)
+        proc = subprocess.run(["lake", "env", "lean", os.path.relpath(path, str(ROOT))],
+                              cwd=str(ROOT), capture_output=True, text=True, timeout=900)
+        return proc.stdout + proc.stderr
+    except Exception:
+        return ""
+    finally:
+        os.unlink(path)
+
+
+def cited_witness(prop, status, cell, decls):
+    """The theorem a non-open row rests on, or None."""
+    if status == "open":
+        return None
+    named = re.findall(r"`([A-Za-z0-9_\']+)`", cell)
+    pool = refuters_of(prop, decls) if status == "refuted" else dischargers_of(prop, decls)
+    return next((n for n in named if n in pool), None)
+
+
+def footprints(names):
+    """`#print axioms` for every witness, in ONE `lake env lean` run (~1 s for all of them).
+
+    Returns `{name: set(axioms)}`; a name absent from the result did not resolve, and the caller
+    must treat that as UNAVAILABLE rather than as a clean footprint. A gate that reads a failed
+    Lean run as an empty axiom set would report every row as pristine exactly when it knows least.
+    """
+    if not names:
+        return {}
+    src = "import MachLib\n" + "".join(f"#print axioms MachLib.{n}\n" for n in names)
+    out = _lean(src)
+    got = {}
+    for m in re.finditer(r"'([A-Za-z0-9_.\']+)' depends on axioms:\s*\[(.*?)\]", out, re.S):
+        got[m.group(1).split(".")[-1]] = {a.strip() for a in m.group(2).split(",") if a.strip()}
+    for m in re.finditer(r"'([A-Za-z0-9_.\']+)' does not depend on any axioms", out):
+        got[m.group(1).split(".")[-1]] = set()
+    return got
+
+
+def axiom_types(axioms):
+    """`#check` each axiom, in one run. Returns `{axiom: printed type}`."""
+    if not axioms:
+        return {}
+    names = sorted(axioms)
+    out = _lean("import MachLib\n" + "".join(f"#check @{a}\n" for a in names))
+    got = {}
+    for m in re.finditer(r"^([A-Za-z0-9_.\']+)\s*:\s*(.+)$", out, re.M):
+        got[m.group(1)] = m.group(2).strip()
+    return got
+
+
+def check_footprints(rows, decls, fps, types):
+    """A `discharged` row must be discharged by a PROOF.
+
+    Three failures, and the second is the one the trust-boundary note is about:
+
+      1. the witness could not be resolved at all — UNAVAILABLE, never a pass
+      2. `sorryAx` anywhere in the footprint — the row says proved and nothing is
+      3. an axiom in the footprint whose TYPE IS THE OBLIGATION — that is an assumption wearing a
+         theorem's clothes. `axiom foo_ax : Foo` + `theorem foo_holds : Foo := foo_ax` passes every
+         other check in this file. Such a row must be marked `assumed`, which is checked in
+         `check_rows` and reports the axiom by name.
+    """
+    bad, out, unavailable = 0, [], False
+    for prop, status, cell in rows:
+        w = cited_witness(prop, status, cell, decls)
+        if w is None:
+            continue
+        if w not in fps:
+            out.append(f"  UNAVAIL {prop}: could not read the footprint of {w} — is the corpus built?")
+            unavailable = True
+            continue
+        fp = fps[w]
+        if "sorryAx" in fp:
+            out.append(f"  SORRY  {prop}: {w} depends on sorryAx; the row claims {status}")
+            bad += 1
+        assumed = [a for a in sorted(fp)
+                   if types.get(a, "").split(".")[-1] == prop]
+        if assumed and status != "assumed":
+            out.append(f"  ASSUMED {prop}: {w} rests on axiom {assumed[0]}, whose type IS {prop} — "
+                       f"that is a disclosed assumption, not a proof; mark the row `assumed`")
+            bad += 1
+        elif status == "assumed":
+            # Dots on purpose: axioms are cited fully qualified (`MachLib.foo_ax`), and the
+            # identifier regex used everywhere else in this file stops at the dot. Accept either
+            # the qualified name or its last component, so the row may write whichever reads better.
+            named = re.findall(r"`([A-Za-z0-9_.\']+)`", cell)
+            short = {n.split(".")[-1] for n in named}
+            if not any(a in named or a.split(".")[-1] in short for a in assumed):
+                out.append(f"  UNNAMED {prop}: marked assumed, but the row does not name the axiom "
+                           f"it assumes (footprint offers {assumed or '(none)'})")
+                bad += 1
+            else:
+                out.append(f"  ok     {prop}: ASSUMED — external, via axiom {assumed[0]}")
+    return bad, out, unavailable
+
+
 def check_rows(rows, decls):
     """Returns (bad_count, report_lines). Shared by the gate and its self-test."""
     bad, out = 0, []
@@ -309,12 +430,15 @@ def check_rows(rows, decls):
             else:
                 out.append(f"  ok     {prop}: reduced by {thm} to {residue}")
         else:
+            # `discharged` and `assumed` share this half — a theorem must conclude the prop. What
+            # separates them is the AXIOM half, in `check_footprints`: whether that theorem is a
+            # proof or a restatement of an assumption.
             named = re.findall(r"`([A-Za-z0-9_\']+)`", discharger)
             hit = [n for n in named if n in found]
             if hit:
-                out.append(f"  ok     {prop}: discharged by {hit[0]}")
+                out.append(f"  ok     {prop}: {status} by {hit[0]}")
             else:
-                out.append(f"  BROKEN {prop}: marked discharged; "
+                out.append(f"  BROKEN {prop}: marked {status}; "
                            f"cited {named or '(none)'}, actual dischargers {found or '(none)'}")
                 bad += 1
     return bad, out
@@ -505,6 +629,51 @@ def self_test(decls) -> int:
     print(f"  canary 14 (a conditional ↔ collapses nothing)  {'FIRES' if fired else 'SILENT'}")
     ok &= fired
 
+    # 7g. AN ASSUMPTION WEARING A THEOREM'S CLOTHES. `axiom p_ax : P` plus
+    # `theorem p_holds : P := p_ax` concludes `P`, cites no bad name, and passes every other check
+    # in this file — the 2026-08-19 trust-boundary note flagged exactly this as the precondition on
+    # ever importing an external assumption, and until today no gate joined "row says discharged" to
+    # "witness rests on an axiom that IS the row".
+    #
+    # Synthetic footprints and types, passed in as arguments, so the specimen owns its whole world.
+    a_decls = [("theorem", "canary_holds", "theorem canary_holds : CanaryProp")]
+    a_rows  = [("CanaryProp", "discharged", "`canary_holds`")]
+    a_fps   = {"canary_holds": {"MachLib.canary_ax"}}
+    a_types = {"MachLib.canary_ax": "MachLib.CanaryProp"}
+    bad, out, _ = check_footprints(a_rows, a_decls, a_fps, a_types)
+    fired = bad == 1 and any("ASSUMED" in l for l in out)
+    print(f"  canary 15 (an axiom typed as the row is not a proof) {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    # 7h. A discharged row whose witness carries `sorryAx`.
+    bad, out, _ = check_footprints(a_rows, a_decls, {"canary_holds": {"sorryAx"}}, {})
+    fired = bad == 1 and any("SORRY" in l for l in out)
+    print(f"  canary 16 (a discharged row resting on sorryAx)      {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    # 7i. DISCRIMINATION, both ways. An ordinary axiom in the footprint must stay silent — nearly
+    # every discharged row in this corpus depends on `MachLib.Real` and would otherwise fail — and a
+    # correctly-marked `assumed` row that NAMES its axiom must stay silent too, or the new status
+    # would be unusable the moment it was introduced.
+    b1, _, _ = check_footprints(a_rows, a_decls, a_fps, {"MachLib.canary_ax": "MachLib.Something"})
+    b2, o2, _ = check_footprints([("CanaryProp", "assumed", "`canary_holds` via `MachLib.canary_ax`")],
+                                 a_decls, a_fps, a_types)
+    b3, o3, _ = check_footprints([("CanaryProp", "assumed", "`canary_holds`")],
+                                 a_decls, a_fps, a_types)
+    fired = (b1 == 0 and b2 == 0 and any("ASSUMED — external" in l for l in o2)
+             and b3 == 1 and any("UNNAMED" in l for l in o3))
+    print(f"  canary 17 (discrimination: ordinary axiom vs named assumption) "
+          f"{'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    # 7j. AN UNREADABLE FOOTPRINT IS NOT A CLEAN ONE. If the corpus is not built, `#print axioms`
+    # resolves nothing — and a gate that read the empty result as "no axioms" would report every row
+    # as pristine exactly when it knows least. It must exit 2. See the UNAVAILABLE rule.
+    _, out, unavail = check_footprints(a_rows, a_decls, {}, {})
+    fired = unavail and any("UNAVAIL" in l for l in out)
+    print(f"  canary 18 (an unread footprint is UNAVAILABLE, not clean) {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
     print()
     if not ok:
         print("LEDGER SELF-TEST FAIL — a canary did not fire; the gate is unvalidated")
@@ -549,6 +718,24 @@ def main() -> int:
     bad += dbad
     for line in dout:
         print(line)
+
+    # The axiom half of "discharged". Two `lake env lean` runs, ~1 s each; this gate runs after
+    # `lake build` in CI, and an unbuilt corpus must exit 2, not 0 — see check_footprints.
+    wits = [w for w in (cited_witness(p_, st, cell, decls) for p_, st, cell in rows) if w]
+    fps = footprints(wits)
+    types = axiom_types({a for f in fps.values() for a in f})
+    fbad, fout, funavail = check_footprints(rows, decls, fps, types)
+    bad += fbad
+    for line in fout:
+        print(line)
+    if funavail:
+        print("UNAVAILABLE: witness footprints could not be read — run `lake build` first",
+              file=sys.stderr)
+        return 2
+    # Printed even when nothing is wrong. A check that is silent on success is indistinguishable
+    # from a check that did not run, and this one was absent entirely until today.
+    print(f"  ok     witness footprints: {len(fps)} of {len(wits)} read, "
+          f"{len({a for f in fps.values() for a in f})} distinct axioms, no sorryAx")
 
     uncond, cond = proved_equivalences(rows, decls)
     ebad, eout = check_equivalences(rows, uncond)

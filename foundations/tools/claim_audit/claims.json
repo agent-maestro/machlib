@@ -8957,6 +8957,71 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "germ-recip-bounded-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "costs a growth measure **less than nothing**"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.recipTree_germ_bounded",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "germ-capnode-nonpos-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The node is **non-positive on the ray**, so it needs no tower height at all"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.capNode_nonpos",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "germ-no-right-descent-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "it is unbounded in `n`",
+        "germ measures do not descend to the right child"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.tower_height_does_not_descend_right",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "germ-capnode-eval-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Growth descends on the left and inverts on the right."
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.capNode_eval",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }

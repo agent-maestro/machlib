@@ -5,6 +5,104 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-26 (dm)
+
+### The germ route closes too — and the obligation ledger finally looks at axioms
+
+Two things, from the two directions `(dl)` left open.
+
+#### 1. The germ route escapes §1 and dies of something else
+
+`(dl)` ended by naming the honest residual: *an induction on the **germ** rather than on the
+syntax.* New `§4` of `MachLib/EMLLadderMeasure`. It really does escape — and not for long.
+
+**It escapes.** Every syntactic measure pays `2 * step` for `recipTree` (`recip_ge`). A germ measure
+pays **nothing** — it goes *down*. Where `t ≥ 1` on a ray, `recipTree t` is `e / t x`, hence at most
+`e`: a constant, tower height `0`, however fast `t` grew (`recipTree_germ_bounded`). The construction
+that costs every syntactic measure two steps costs a growth measure **less than nothing**, so a
+germ-based parameter is genuinely outside everything `(dk)` and `(dl)` cover.
+
+**And it dies anyway.** Such a parameter must still descend to **both** children — `(dl)` identified
+that as the real requirement — and it does not descend to the *right* one. Totalised `log` sees to
+it:
+
+```
+capNode n = eml (const 0) (towerTree (n+1))        capNode_eval : = 1 − towerFn n x
+                                                   capNode_nonpos : ≤ 0 on [1, ∞)
+```
+
+The node is **non-positive on the ray**, so it needs no tower height at all, while its right child
+*is* the `(n+1)`-tower (`tower_height_does_not_descend_right`). The gap is not a constant to be
+absorbed — **it is unbounded in `n`.**
+
+> A node can be arbitrarily **flatter** than the child it is built from, because the right child
+> enters under a `log`. Growth descends on the left and inverts on the right.
+
+So the two routes fail for **opposite** reasons: syntactic measures grow too fast under `recipTree`;
+germ measures do not descend to the right child. That is the pincer, and with it the induction
+question is closed on both sides. What survives is narrower still and no longer a matter of choosing
+a parameter: a proof would need something that is not a well-founded descent on the tree at all.
+
+`open Real` is scoped to `§4` on purpose — it shadows `max`, which `§2`'s `depthMeasure` needs.
+
+**Footprint clean** — the ordinary field/order/`exp` base only. No `sorryAx`, no
+`analytic_finite_zeros_compact`, no `eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+#### 2. The obligation ledger now looks at axioms — a documented precondition, discharged
+
+`exploration/signhardcase_trust_boundary_2026_08_19/NOTE.md` decided how an external assumption may
+ever enter this corpus, and recorded a **precondition that had to be fixed first**:
+
+> if someone adds `axiom signHardCase_ax : SignHardCase` plus a one-line theorem concluding it, the
+> obligations ledger will report the row as **discharged** — indistinguishable from a proof. The
+> axiom ledger would separately surface the new axiom as footprint drift. But **no gate joins those
+> two facts**, and the misleading one is the one a reader reaches for.
+
+That was accurate: until now `obligation_ledger_check.py` contained no reference to axioms,
+footprints or `sorryAx` at all. Both halves of *discharged* are now checked — that a theorem
+concludes the proposition, **and that the theorem is a proof rather than a restatement of an
+assumption**:
+
+* `footprints` reads `#print axioms` for **every cited witness in one `lake env lean` run** (~1 s for
+  all fourteen), and `axiom_types` reads the type of every axiom that turns up.
+* `sorryAx` anywhere in a witness's footprint fails the row.
+* An axiom **whose type IS the obligation** fails the row: that is a disclosed assumption, not a
+  proof, and it must be marked with the new `assumed` status — which in turn must *name* the axiom,
+  the way a `reduced` row must name its residue.
+* A footprint that could not be read is **UNAVAILABLE, exit 2**. A gate that read a failed Lean run
+  as an empty axiom set would report every row as pristine exactly when it knows least.
+
+The gate now prints `witness footprints: 14 of 14 read, 75 distinct axioms, no sorryAx` **even when
+nothing is wrong** — a check that is silent on success is indistinguishable from a check that did
+not run, and this one was absent entirely until today.
+
+Four canaries, all on synthetic footprints and types passed in as arguments, so each specimen owns
+its whole world and none can go stale as the corpus improves:
+
+* **15** — an axiom typed as the row is not a proof.
+* **16** — a `discharged` row resting on `sorryAx`.
+* **17** — discrimination, both ways: an *ordinary* axiom in the footprint must stay silent (nearly
+  every discharged row here depends on `MachLib.Real` and would otherwise fail), and a correctly
+  marked `assumed` row that names its axiom must stay silent too, or the new status would be
+  unusable the moment it was introduced.
+* **18** — an unread footprint is UNAVAILABLE, not clean.
+
+**Canary 17 earned its keep immediately**: it failed on the first run, because the backticked-name
+regex used everywhere else in the file stops at a dot, so a row citing `` `MachLib.canary_ax` ``
+matched nothing. The check would have accepted no correctly-marked `assumed` row at all. A
+discrimination specimen catching a bug in the check it discriminates is the whole argument for
+writing the silent half.
+
+**No axiom was added.** The interface itself stays parked — that note's own doctrine is to prefer the
+narrowest surface and to weigh the trust boundary deliberately, and *"adding the axiom first and the
+status later would be the exact shape of error the ledger exists to prevent."* This removes the
+blocker; it does not spend it. `SignHardCase` was in any case later discharged outright
+(`d7b8d28c`), so the parked interface was never needed.
+
+Gates: build 748 jobs, aggregator 745 of 1051, consistency PASS, claims 438, obligations 20 rows /
+8 open rows / 6 distinct open with 18 canaries, discovered 290/294, AxiomLedger 243 pinned,
+sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-26 (dl)
 
 ### "Grammar-respecting" was not a restriction — it is the condition for a structural induction

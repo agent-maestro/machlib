@@ -294,4 +294,92 @@ theorem const_measure_not_descending :
           < (fun _ : EMLTree => (0 : Nat)) (EMLTree.eml A B))) :=
   no_structural_induction_of_cheap_recip (fun _ => 0) EMLTree.var (by show (0 : Nat) ≤ 0 + 1; omega)
 
+/-! ## §4 — the germ route escapes §1, and dies of something else
+
+`§3` left one opening: *an induction on the **germ** rather than on the syntax.* It is the natural
+next reach, and it really does escape `§1` — but not for long. Two facts, both cheap, closing from
+opposite sides.
+
+**It escapes.** Every syntactic measure pays `2 * step` for `recipTree` (`recip_ge`). A germ measure
+pays **nothing** — it goes *down*. Where `t ≥ 1`, `recipTree t` is `e / t x`, hence at most `e`: a
+constant, tower height `0`, however fast `t` grew. So a parameter tracking the growth of the germ is
+genuinely outside the class `§1` and `§3` cover, and no argument there touches it.
+
+**And it dies anyway.** Such a parameter must still descend to **both** children — `§3` identified
+that as the real requirement — and it does not descend to the *right* one. Totalised `log` sees to
+it: `eml (const 0) (towerTree (n+1))` is `1 − towerFn n x`, **non-positive on the ray**, so it needs
+no height at all, while its right child *is* the `(n+1)`-tower. The gap is not a constant to be
+absorbed; it is unbounded in `n`.
+
+> A node can be arbitrarily **flatter** than the child it is built from, because the right child
+> enters under a `log`. Growth descends on the left and inverts on the right.
+
+So the two routes fail for opposite reasons — **syntactic measures grow too fast under `recipTree`;
+germ measures do not descend to the right child.** Nothing here bounds anything either.
+
+`open Real` is scoped to this section on purpose: it shadows `max`, which `§2`'s `depthMeasure`
+needs. -/
+
+section GermRoute
+
+open Real
+
+/-- **The reciprocal collapses the germ.** Where `t ≥ 1` on a ray, `recipTree t` is bounded by `e`
+there — tower height `0`, no matter how fast `t` grew. This is why a germ-based parameter escapes
+`recip_ge`: the construction that costs every syntactic measure two steps costs a growth measure
+less than nothing. -/
+theorem recipTree_germ_bounded (t : EMLTree) (X : Real)
+    (h : ∀ x : Real, X ≤ x → 1 ≤ t.eval x) :
+    ∀ x : Real, X ≤ x → (recipTree t).eval x ≤ exp 1 := by
+  intro x hx
+  rw [recipTree_eval]
+  have hpos : (0 : Real) < t.eval x := lt_of_lt_of_le zero_lt_one_ax (h x hx)
+  have hlog : (0 : Real) ≤ log (t.eval x) := by
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    have hm := log_le_log zero_lt_one_ax (h x hx)
+    rw [hl1] at hm; exact hm
+  have hle : (1 : Real) - log (t.eval x) ≤ 1 := by
+    have u := add_le_add_wit (le_refl (1 : Real)) (neg_le_neg_wit hlog)
+    have e1 : (1 : Real) + -log (t.eval x) = 1 - log (t.eval x) := by mach_ring
+    have e2 : (1 : Real) + -(0 : Real) = 1 := by mach_ring
+    rw [e1, e2] at u; exact u
+  exact exp_monotone hle
+
+/-- The node that flattens its own right child: `1 − towerFn n x`. -/
+noncomputable def capNode (n : Nat) : EMLTree :=
+  EMLTree.eml (EMLTree.const 0) (EMLTree.towerTree (n + 1))
+
+theorem capNode_eval (n : Nat) (x : Real) :
+    (capNode n).eval x = 1 - EMLTree.towerFn n x := by
+  show exp ((0 : Real)) - log ((EMLTree.towerTree (n + 1)).eval x) = _
+  rw [exp_zero, EMLTree.towerTree_eval]
+  show (1 : Real) - log (exp (EMLTree.towerFn n x)) = _
+  rw [log_exp]
+
+/-- **Non-positive on the ray**, at every `n`: the node needs no ceiling at all. -/
+theorem capNode_nonpos (n : Nat) {x : Real} (hx : 1 ≤ x) : (capNode n).eval x ≤ 0 := by
+  rw [capNode_eval]
+  have h1 := towerFn_ge_one n hx
+  have u := add_le_add_wit (le_refl (1 : Real)) (neg_le_neg_wit h1)
+  have e1 : (1 : Real) + -EMLTree.towerFn n x = 1 - EMLTree.towerFn n x := by mach_ring
+  have e2 : (1 : Real) + -(1 : Real) = 0 := by mach_ring
+  rw [e1, e2] at u; exact u
+
+/-- **No growth measure descends to the right child, and the gap is unbounded.** For every `n` there
+is a node non-positive on `[1, ∞)` — needing no tower height — whose right child *is* the
+`(n+1)`-tower. A parameter tracking how fast the germ grows therefore cannot decrease from a node to
+its right child, so it cannot carry a structural induction, and `§3`'s residual closes on the germ
+side too. -/
+theorem tower_height_does_not_descend_right (n : Nat) :
+    ∃ A B : EMLTree,
+      (∀ x : Real, 1 ≤ x → (EMLTree.eml A B).eval x ≤ 0) ∧
+      (∀ x : Real, B.eval x = EMLTree.towerFn (n + 1) x) :=
+  ⟨EMLTree.const 0, EMLTree.towerTree (n + 1),
+   fun _ hx => capNode_nonpos n hx,
+   EMLTree.towerTree_eval (n + 1)⟩
+
+end GermRoute
+
 end MachLib
