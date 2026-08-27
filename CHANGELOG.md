@@ -5,6 +5,77 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dw)
+
+### The convexity transfer, once, at every depth — depth 4 down to one value-level residue
+
+New module `MachLib/EMLValueGap`. `(dv)` left depth 4 resting on `NodeDecayBound 3 3`. This factors
+*that*, the way `(du)` factored the rung.
+
+```
+nodeDecayBound_of_valueGap        : ValueGapBound j m → ExpUpperBound j m → NodeDecayBound j (m+1)
+expUpperBound_three               : ExpUpperBound 3 7                              ← PROVED
+decayFloorUpTo_four_of_valueGap   : ValueGapBound 3 7 → DecayFloorUpTo 4           ← PROVED
+```
+
+#### Value level is the vocabulary the corpus already proves things in
+
+`exp (A x) − log (B x) > 0` is exactly `B x < exp (exp (A x))`, so the node's positivity is a
+*value-level* statement about `B` staying under `exp ∘ exp ∘ A`. Every discharged piece of
+`Depth3DecayExp` — `ExpExpGapBelow`, `BoundedCellApproach`, `BoundedEmlCellApproach`,
+`BoundedEmlCellApproachLarge` — is written at that level. `(dv)` searched the discharged column and
+found them at the wrong depth; this puts depth 4's residue in the same *shape*, which is the half of
+that search that was reusable.
+
+#### The transfer, and the substitution that makes it division-free
+
+The relation wanted is `E − q ≤ node · E` with `E = exp (exp (A x))`, `q = B x` — the corpus calls it
+"reverse convexity" inside `depth_three_decayExp_var_left_of_gap`, stated there only for `A = var`.
+
+The clean derivation is not the one that stares at `E`. Put `d = node = u − log q` with
+`u = exp (A x)`; then `q · exp d = exp u = E` and the whole claim collapses to
+
+```
+exp_sub_one_le_mul :  exp d − 1 ≤ d · exp d
+```
+
+which follows from `log_le_sub_one` at `exp (−d)`: `−d ≤ exp (−d) − 1`, hence
+`(1 − d) · exp d ≤ exp (−d) · exp d = 1`. **No division anywhere** — which matters in a base that has
+`/` but almost no lemmas about it, and which the `E`-first derivation cannot avoid.
+
+#### The growth input is assembly too
+
+`depth_le_three_growth_envelope` gives `A x ≤ exp (exp (exp x + K) + M) + N`, and four applications of
+`const_add_tower_le_succ` — one per additive constant, one per `exp` — climb it to `towerFn 6 x`, with
+one more `exp` bounding `exp (A x)` by `towerFn 7 x`.
+
+The height `7` is **not sharp and does not need to be**: `ValueGapBound j m` gets *weaker* as `m`
+grows, so asking for it at `7` asks for less than at `3`. That asymmetry is worth noticing — the loose
+arithmetic makes the residue easier, not harder, so there is no reason to tighten it.
+
+#### The state of the ladder
+
+```
+depth ≤ 2   decayFloor_upTo_two               height 0   proved
+depth ≤ 3   decayFloorUpTo_three              height 2   proved
+depth ≤ 4   decayFloorUpTo_four_of_valueGap   height 8   ONE input: ValueGapBound 3 7
+```
+
+Proved and no longer part of the debt: the ladder step, the lower envelope, the growth bound, the
+convexity transfer. **What is left is one value-level approach statement at depth ≤ 3** — the same
+question `ExpExpGapBelow` and the `…CellApproach` family answered at depth ≤ 2.
+
+Its hypotheses stay **pointwise** throughout, which is what keeps the whole ladder free of
+`evSign_all` and the analytic block.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`. `DecayFloor` untouched; ledger unchanged at 21 rows /
+9 open rows / 6 distinct open.
+
+Gates, every figure read off the gate that produced it: build **753 jobs**, aggregator 750 of 1056,
+consistency PASS, claims 471, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (dv)
 
 ### Depth 4 now rests on exactly one proposition

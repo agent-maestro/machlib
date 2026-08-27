@@ -9470,6 +9470,86 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "valuegap-transfer-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**No division anywhere**"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.value_gap_le_node_mul",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "valuegap-expsub-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the whole claim collapses to"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.exp_sub_one_le_mul",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "valuegap-factoring-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "puts depth 4's residue in the same *shape*"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.nodeDecayBound_of_valueGap",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "valuegap-expupper-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "climb it to `towerFn 6 x`"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.expUpperBound_three",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "valuegap-depth4-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "ONE input: ValueGapBound 3 7"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.decayFloorUpTo_four_of_valueGap",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }
