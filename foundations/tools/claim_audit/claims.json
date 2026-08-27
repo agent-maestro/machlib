@@ -9598,6 +9598,54 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "ladder-capstone-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the whole obligation reduces to the per-depth\ninputs, and nothing else is missing"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.decayFloor_of_ladderInputs",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-all-rungs-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "composes by induction on the depth bound"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.decayFloorUpTo_all",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-inputs-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "checks the shape is satisfiable"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.ladderInputs_at_two",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }

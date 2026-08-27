@@ -5,6 +5,66 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dy)
+
+### The capstone: the ladder machinery reaches `DecayFloor` itself — and why depth 4 is different in kind
+
+```
+LadderInputs                :  ∀ j, ∃ m, NodeDecayBound j m ∧ LowerEnvBound j m
+decayFloor_of_ladderInputs  :  LadderInputs → DecayFloor          ← PROVED
+```
+
+Six entries of rungs and steps add up to this: **the whole obligation reduces to the per-depth
+inputs, and nothing else is missing.** The step, the base case, the tower arithmetic, the transfer,
+the leaf cases — all of it composes by induction on the depth bound into `DecayFloor` itself. No
+`evSign_all` anywhere, so the obligation would arrive **footprint-clean** if the inputs did.
+
+It discharges nothing, and it is still worth having explicitly: it converts *"we proved some rungs"*
+into *"here is exactly what all the rungs need, uniformly"*, which is the difference between a ladder
+and a pile of steps. `ladderInputs_at_two` checks the shape is satisfiable — `Depth3DecayExp` plus
+`depth_le_two_lower_on_ray`, which is why depth 3 landed.
+
+#### Deliberately NOT registered as a ledger reduction
+
+`LadderInputs → DecayFloor` is proved; the converse is not, and it hits the same wall as `(dx)`:
+`NodeDecayBound`'s positivity hypotheses are **pointwise**, `DecayFloor`'s are **eventual**. So
+`LadderInputs` may be *strictly stronger*, and reducing `DecayFloor` to a strictly stronger residue
+would read in the open column as progress while being the opposite. **The ledger stays at 21 rows / 9
+open rows / 6 distinct open.**
+
+#### Why depth 4 is different in kind — and it is not `(di)`
+
+`(du)` corrected the `(di)` reading: the re-embedding does not bite until depth 8. The real obstacle
+is elsewhere, and reading `boundedEmlCellApproachLarge_holds` — the last depth-≤2 cell to fall —
+shows it.
+
+`Depth3DecayExp` was proved by a cell enumeration that bottoms out in `depth_le_one_classification`:
+the depth-≤1 germs are a short list of closed forms, and the router dispatches over them, splitting
+`Q` on structure, then a left dichotomy on whether `exp (P x)` is bounded, then a right dichotomy
+leaving `P` and `R` each `const` or `c − log x`.
+
+The depth-4 analogue needs that same enumeration bottoming out at **depth ≤ 2**, where the normal form
+is `exp a − log b` with `a`, `b` themselves depth-1 forms — roughly `27 × 27` shape pairings *before*
+parameter regimes.
+
+> That is precisely the scale `FRONTIER_BRIEF_3` §4 Q2 measured and called a trap, and its objection —
+> **the cost is in the parameter regimes, not the shape count** — applies here with more force, not
+> less. **Depth 3 was reachable because someone had already paid that cost one level down.** Nobody
+> has paid it at depth 2, and the ladder does not make it cheaper; it makes it the *only* thing left.
+
+So the recommendation, stated plainly rather than left implicit: **do not start the depth-2 cell
+enumeration.** It is the one route the arc has already measured and rejected, and the machinery built
+over `(du)`–`(dy)` does not change that measurement — it just means a single grind now buys the whole
+next rung instead of part of it. Whether that is worth it is a judgement about the value of one more
+bounded rung, and bounded rungs do not move the ledger.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates, every figure read off the gate that produced it: build **753 jobs**, aggregator 750 of 1056,
+consistency PASS, claims 477, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (dx)
 
 ### The transfer runs both ways — `(dw)` factored nothing, it renamed something usefully

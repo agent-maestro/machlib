@@ -359,4 +359,68 @@ theorem value_gap_brackets (u q : Real) (hq : 0 < q) :
     q * (u - log q) ≤ exp u - q ∧ exp u - q ≤ (u - log q) * exp u :=
   ⟨node_mul_le_value_gap u q hq, value_gap_le_node_mul u q hq⟩
 
+/-! ## §6 — the capstone: the machinery reaches `DecayFloor` itself
+
+Everything so far is rungs and steps. This says what the ladder adds up to, which is the question a
+reader of the last six entries should be asking.
+
+```
+LadderInputs :  ∀ j, ∃ m, NodeDecayBound j m ∧ LowerEnvBound j m
+decayFloor_of_ladderInputs :  LadderInputs → DecayFloor
+```
+
+**So the whole obligation reduces to the per-depth inputs, and nothing else is missing.** The step,
+the base, the tower arithmetic, the transfer, the leaf cases — all of it composes, by induction on the
+depth bound, into the obligation itself. No `evSign_all` anywhere, so `DecayFloor` would arrive
+footprint-clean if the inputs did.
+
+That is worth having explicitly even though it discharges nothing: it converts *"we proved some
+rungs"* into *"here is exactly what all the rungs need, uniformly"*, and it is the difference between
+a ladder and a pile of steps.
+
+## And the honest limit, so nobody reads this as nearly done
+
+`LadderInputs` at `j = 2` is `Depth3DecayExp` plus `depth_le_two_lower_on_ray` — both proved, which
+is why depth 3 landed. At `j = 3` the lower envelope is proved (`lowerEnvBound_three`) and the node
+bound is not.
+
+**The reason depth 4 is different in kind, and it is not `(di)`:** `Depth3DecayExp` was proved by a
+cell enumeration that bottoms out in `depth_le_one_classification` — the depth-≤1 germs are a short
+list of closed forms, and `boundedEmlCellApproachLarge_holds`'s router dispatches over them. The
+depth-4 analogue needs the same enumeration bottoming out at **depth ≤ 2**, where the normal form is
+`exp a − log b` with `a`, `b` themselves depth-1 forms — so roughly `27 × 27` shape pairings before
+parameter regimes.
+
+That is precisely the scale `FRONTIER_BRIEF_3` §4 Q2 measured and called a trap, and its objection —
+that the cost is in the *parameter regimes*, not the shape count — applies here with more force, not
+less. **Depth 3 was reachable because someone had already paid that cost one level down.** Nobody has
+paid it at depth 2, and the ladder does not make it cheaper; it only makes it the *only* thing left.
+-/
+
+/-- The per-depth inputs the ladder needs, all of them. -/
+def LadderInputs : Prop :=
+  ∀ j : Nat, ∃ m : Nat, NodeDecayBound j m ∧ LowerEnvBound j m
+
+/-- Every bounded rung, by induction on the depth bound. -/
+theorem decayFloorUpTo_all (h : LadderInputs) : ∀ N : Nat, DecayFloorUpTo N := by
+  intro N
+  induction N with
+  | zero =>
+      intro i hi
+      exact ⟨0, fun t X₀ hd hX₀ hpos => decayFloor_upTo_two t X₀ (by omega) hX₀ hpos⟩
+  | succ n ih =>
+      obtain ⟨m, hnode, hlow⟩ := h n
+      exact decayFloorUpTo_succ ih hnode hlow
+
+/-- **The capstone.** `DecayFloor` itself, from the per-depth inputs and nothing else. -/
+theorem decayFloor_of_ladderInputs (h : LadderInputs) : DecayFloor := by
+  intro j
+  obtain ⟨k, hk⟩ := decayFloorUpTo_all h j j (Nat.le_refl j)
+  exact ⟨k, hk⟩
+
+/-- The inputs are in hand at `j = 2` — which is why depth 3 landed, and a check that
+`LadderInputs` is asking for the right things rather than something no instance meets. -/
+theorem ladderInputs_at_two : ∃ m : Nat, NodeDecayBound 2 m ∧ LowerEnvBound 2 m :=
+  ⟨1, nodeDecayBound_two, lowerEnvBound_two⟩
+
 end MachLib
