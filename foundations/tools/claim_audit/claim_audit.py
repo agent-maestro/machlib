@@ -489,6 +489,27 @@ def open_obligations() -> list:
         m = re.match(r"\|\s*`([A-Za-z0-9_\']+)`\s*\|\s*\*\*open\*\*", line)
         if m and m.group(1) not in _open_cache:
             _open_cache.append(m.group(1))
+    # A row in a REDUCTION CYCLE is open too -- it is marked `reduced`, but each member reduces to
+    # another member, so nothing was reduced away. Matching only `**open**` made this check
+    # SILENTLY STOP APPLYING to exactly those rows: after `(dj)` put `DecayFloor` and
+    # `GrowthEnvelope` in a cycle, an equivalence on either no longer required `REDUCED`, and two
+    # such claims were registered without it. Found 2026-08-27.
+    #
+    # The cycle walk is imported rather than reimplemented, so this file and the ledger gate cannot
+    # disagree about which rows are open -- the duplicated-state failure one level up.
+    try:
+        sys.path.insert(0, os.path.join(REPO, "foundations", "tools"))
+        from obligation_ledger_check import parse_rows, reduction_cycles  # noqa: E402
+        rows = parse_rows(open(path, encoding="utf-8").read())
+        for cyc in reduction_cycles(rows):
+            for name in cyc:
+                if name not in _open_cache:
+                    _open_cache.append(name)
+    except Exception:
+        # Fail LOUD-ish: if the cycle walk is unavailable the check is weaker than advertised, and
+        # silently returning the narrow list is how this defect happened in the first place.
+        print("WARNING: reduction-cycle rows could not be read; open-obligation list is the "
+              "narrow `**open**` set only", file=sys.stderr)
     return _open_cache
 
 

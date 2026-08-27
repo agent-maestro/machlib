@@ -5,6 +5,69 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (eb)
+
+### The claim auditor's REDUCED rule silently stopped applying — to the rows a cycle keeps open
+
+Sweeping the other tools for `(ea)`'s parser pattern (*"audit every gate's scope, not just the one
+you suspect"*) turned up a second `rsplit(":", 1)` in `claim_audit.py`. Chasing it found something
+worse than a parse bug.
+
+#### The rule, and why it was not firing
+
+`reduction_state_problems` requires that **an `↔` conclusion mentioning a live obligation must
+declare `epistemic_type: "REDUCED"`** — otherwise a reduction is indistinguishable in the registry
+from a closure. It asks `open_obligations()` which rows are live, and that read the CHANGELOG mirror
+for rows marked `**open**`.
+
+**`DecayFloor`, `GrowthEnvelope` and `EmlGermApproach` are marked `**reduced**`.** They are in a
+reduction **cycle** — each reduces to another member, so nothing is reduced away and all three are
+open. A `status == "open"` test does not see them.
+
+So from `(dj)` onward, an equivalence on any of those three no longer required `REDUCED` — and **two
+such claims were registered without it**, both mine: `decayFloor_iff_growthEnvelope` and
+`emlGermApproach_iff_decayFloor`. Registering an equivalence between two open obligations as an
+ordinary claim is precisely what the `REDUCED` state exists to prevent.
+
+The docstring of the function that broke says *"a check that silently stops applying is worse than no
+check"*, and names staleness as the risk it was guarding against. It stopped applying for a different
+reason: **a status change that does not mean closed.**
+
+#### The fix, and where it comes from
+
+`open_obligations()` now imports `parse_rows` and `reduction_cycles` from `obligation_ledger_check`
+and takes open rows **∪** cycle members. Imported rather than reimplemented, so the two tools cannot
+disagree about which obligations are open — which is the duplicated-state failure one level up, and
+the reason this happened at all: **two tools answered "which rows are open" from the same table, and
+only one of them was taught about cycles.** If the walk is unavailable it warns on stderr rather than
+quietly returning the narrow set.
+
+Both claims are now `REDUCED` with a `reduces_to` the theorem's statement actually contains.
+
+#### On the `rsplit` that led here
+
+`claim_audit.py:671` uses `stmt_h.rsplit(":", 1)[-1]` for the `↔` test — the same non-top-level split
+`(ea)` fixed in the ledger gate, and a second, sloppier extraction sitting a few hundred lines from
+that file's own carefully depth-tracked `conclusion_of`. **It is left alone deliberately**: with the
+`open_obligations` fix the check now fires on the cases that matter, and changing a second extractor
+in the same commit would make the verdict diff unreadable. Recorded here so it is not lost —
+a bracketed colon *after* an `↔` would still hide it.
+
+**Ledger unchanged: 21 rows / 9 open rows / 6 distinct open.** No Lean changed. Two registry entries
+corrected and one check restored to the scope it always claimed.
+
+Gates, every figure read off the gate that produced it: build **753 jobs**, aggregator 750 of 1056,
+consistency PASS, claims 478, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36,
+hypothesis audit 34.
+
+The first claim-audit run for this entry came back **STALE, exit 1** — its tree-binding noticed the
+worktree changed mid-run, because this entry was being written while it went. The gate was right and
+the verdict was discarded; the figure above is from a re-run on a quiescent tree. `(dj)` recorded the
+same thing happening for the same reason. **Do not read a PASS line without its exit code**, and do
+not edit the tree while the auditor is running — the second half of that lesson evidently needed
+saying twice.
+
 ## [Unreleased] — 2026-08-27 (ea)
 
 ### The mirror harness — and it immediately found a parser bug in a shipped gate

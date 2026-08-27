@@ -8777,7 +8777,9 @@
         "analytic_finite_zeros",
         "eml_tree_analytic_on_interval",
         "rolle_ct"
-      ]
+      ],
+      "epistemic_type": "REDUCED",
+      "reduces_to": "GrowthEnvelope"
     },
     {
       "id": "growthenvelope-of-decayfloor-sign-free-changelog",
@@ -9069,7 +9071,9 @@
         "analytic_finite_zeros",
         "eml_tree_analytic_on_interval",
         "rolle_ct"
-      ]
+      ],
+      "epistemic_type": "REDUCED",
+      "reduces_to": "DecayFloor"
     },
     {
       "id": "approach-nonpos-no-cancel-changelog",
