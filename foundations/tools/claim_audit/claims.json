@@ -9438,6 +9438,38 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "lower-env-three-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**The envelope's `M` may be negative**"
+      ],
+      "module": "MachLib.EMLDecayLadderStep",
+      "theorem": "MachLib.lowerEnvBound_three",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "depth4-one-input-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Depth 4 now rests on exactly one proposition"
+      ],
+      "module": "MachLib.EMLDecayLadderStep",
+      "theorem": "MachLib.decayFloorUpTo_four_of_nodeDecay",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }

@@ -69,7 +69,7 @@ def NodeDecayBound (j m : Nat) : Prop :=
 /-- **The lower envelope**, for the clamped and negative-log branches, where the node is at least
 `exp ∘ A` and the floor is a lower bound on `A`. -/
 def LowerEnvBound (j m : Nat) : Prop :=
-  ∀ A : EMLTree, A.depth ≤ j → ∃ C : Real, ∀ x : Real, 1 ≤ x →
+  ∀ A : EMLTree, A.depth ≤ j → ∃ C XL : Real, 1 ≤ XL ∧ ∀ x : Real, XL ≤ x →
     -(C + EMLTree.towerFn m x) ≤ A.eval x
 
 /-! ## §2 — two facts about the tower -/
@@ -143,38 +143,48 @@ theorem decayFloorUpTo_succ {j m : Nat} (hprev : DecayFloorUpTo j)
       have hB : B.depth ≤ j := by
         simp only [EMLTree.depth] at hd
         have := Nat.le_max_right A.depth B.depth; omega
-      obtain ⟨C₂, hL⟩ := hlow A hA
+      obtain ⟨C₂, XL, hXL, hL⟩ := hlow A hA
       obtain ⟨C₁, XD, hXD, hD⟩ := hnode A B hA hB
       have hXDp : (0 : Real) ≤ XD := le_trans (le_of_lt zero_lt_one_ax) hXD
       have he1 : (0 : Real) ≤ exp C₁ := le_of_lt (exp_pos C₁)
       have he2 : (0 : Real) ≤ exp C₂ := le_of_lt (exp_pos C₂)
       have hX0p : (0 : Real) ≤ X₀ := le_trans (le_of_lt zero_lt_one_ax) hX₀
-      refine ⟨X₀ + XD + exp C₁ + exp C₂, ?_, ?_⟩
-      · exact le_trans (le_trans (le_add_nonneg' hXDp) (le_add_nonneg' he1)) (le_add_nonneg' he2)
+      have hXLp : (0 : Real) ≤ XL := le_trans (le_of_lt zero_lt_one_ax) hXL
+      -- one ray dominating all five thresholds; `exp C > C` stands in for the `max` this base lacks
+      have hpos4 : (0 : Real) ≤ XD + exp C₁ + exp C₂ + XL := by
+        have u := add_le_add_wit (add_le_add_wit (add_le_add_wit hXDp he1) he2) hXLp
+        have e : (0 : Real) + 0 + 0 + 0 = 0 := by mach_ring
+        rw [e] at u; exact u
+      refine ⟨X₀ + (XD + exp C₁ + exp C₂ + XL), le_add_nonneg' hpos4, ?_⟩
       intro x hx
-      have hxX₀ : X₀ ≤ x :=
-        le_trans (le_trans (le_trans (le_add_nonneg' hXDp) (le_add_nonneg' he1))
-          (le_add_nonneg' he2)) hx
+      have hxX₀ : X₀ ≤ x := le_trans (le_add_nonneg' hpos4) hx
       have hxXD : XD ≤ x := by
-        have e : X₀ + XD + exp C₁ + exp C₂ = XD + (X₀ + exp C₁ + exp C₂) := by mach_ring
+        have e : X₀ + (XD + exp C₁ + exp C₂ + XL) = XD + (X₀ + exp C₁ + exp C₂ + XL) := by mach_ring
         rw [e] at hx
         refine le_trans (le_add_nonneg' ?_) hx
-        have u := add_le_add_wit (add_le_add_wit hX0p he1) he2
-        have e2 : (0 : Real) + 0 + 0 = 0 := by mach_ring
+        have u := add_le_add_wit (add_le_add_wit (add_le_add_wit hX0p he1) he2) hXLp
+        have e2 : (0 : Real) + 0 + 0 + 0 = 0 := by mach_ring
+        rw [e2] at u; exact u
+      have hxXL : XL ≤ x := by
+        have e : X₀ + (XD + exp C₁ + exp C₂ + XL) = XL + (X₀ + XD + exp C₁ + exp C₂) := by mach_ring
+        rw [e] at hx
+        refine le_trans (le_add_nonneg' ?_) hx
+        have u := add_le_add_wit (add_le_add_wit (add_le_add_wit hX0p hXDp) he1) he2
+        have e2 : (0 : Real) + 0 + 0 + 0 = 0 := by mach_ring
         rw [e2] at u; exact u
       have hxC₁ : C₁ < x := by
-        have e : X₀ + XD + exp C₁ + exp C₂ = exp C₁ + (X₀ + XD + exp C₂) := by mach_ring
+        have e : X₀ + (XD + exp C₁ + exp C₂ + XL) = exp C₁ + (X₀ + XD + exp C₂ + XL) := by mach_ring
         rw [e] at hx
         refine lt_of_lt_of_le (exp_grows_strictly_thm C₁) (le_trans (le_add_nonneg' ?_) hx)
-        have u := add_le_add_wit (add_le_add_wit hX0p hXDp) he2
-        have e2 : (0 : Real) + 0 + 0 = 0 := by mach_ring
+        have u := add_le_add_wit (add_le_add_wit (add_le_add_wit hX0p hXDp) he2) hXLp
+        have e2 : (0 : Real) + 0 + 0 + 0 = 0 := by mach_ring
         rw [e2] at u; exact u
       have hxC₂ : C₂ < x := by
-        have e : X₀ + XD + exp C₁ + exp C₂ = exp C₂ + (X₀ + XD + exp C₁) := by mach_ring
+        have e : X₀ + (XD + exp C₁ + exp C₂ + XL) = exp C₂ + (X₀ + XD + exp C₁ + XL) := by mach_ring
         rw [e] at hx
         refine lt_of_lt_of_le (exp_grows_strictly_thm C₂) (le_trans (le_add_nonneg' ?_) hx)
-        have u := add_le_add_wit (add_le_add_wit hX0p hXDp) he1
-        have e2 : (0 : Real) + 0 + 0 = 0 := by mach_ring
+        have u := add_le_add_wit (add_le_add_wit (add_le_add_wit hX0p hXDp) he1) hXLp
+        have e2 : (0 : Real) + 0 + 0 + 0 = 0 := by mach_ring
         rw [e2] at u; exact u
       have hx1 : (1 : Real) ≤ x := le_trans hX₀ hxX₀
       have hnodepos : 0 < exp (A.eval x) - log (B.eval x) := hpos x hxX₀
@@ -197,7 +207,7 @@ theorem decayFloorUpTo_succ {j m : Nat} (hprev : DecayFloorUpTo j)
         have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
         rw [e]
         exact exp_monotone (le_trans
-          (neg_le_neg_wit (const_add_tower_le_succ m hxC₂ hx1)) (hL x hx1))
+          (neg_le_neg_wit (const_add_tower_le_succ m hxC₂ hx1)) (hL x hxXL))
       · have hgrow : exp (A.eval x) ≤ exp (A.eval x) - log (B.eval x) := by
           have u := add_le_add_wit (le_refl (exp (A.eval x)))
             (neg_le_neg_wit (le_of_lt hln))
@@ -207,7 +217,7 @@ theorem decayFloorUpTo_succ {j m : Nat} (hprev : DecayFloorUpTo j)
           rw [e1, e2] at u; exact u
         refine le_trans ?_ hgrow
         exact exp_monotone (le_trans
-          (neg_le_neg_wit (const_add_tower_le_succ m hxC₂ hx1)) (hL x hx1))
+          (neg_le_neg_wit (const_add_tower_le_succ m hxC₂ hx1)) (hL x hxXL))
 
 /-! ## §4 — the step reproduces `(dt)`, height and all
 
@@ -222,7 +232,7 @@ theorem nodeDecayBound_two : NodeDecayBound 2 1 := by
 theorem lowerEnvBound_two : LowerEnvBound 2 1 := by
   intro A hA
   obtain ⟨C, hC⟩ := depth_le_two_lower_on_ray A hA
-  refine ⟨C, fun x hx => le_trans ?_ (hC x hx)⟩
+  refine ⟨C, 1, le_refl 1, fun x hx => le_trans ?_ (hC x hx)⟩
   have hxe : x ≤ exp x := le_of_lt (exp_grows_strictly_thm x)
   have u := neg_le_neg_wit (add_le_add_wit (le_refl C) hxe)
   have e : -(C + x) = -C - x := by mach_ring
@@ -233,5 +243,89 @@ theorem lowerEnvBound_two : LowerEnvBound 2 1 := by
 agree, which is the evidence that `decayFloorUpTo_succ` is the right generalisation. -/
 theorem decayFloorUpTo_three_via_step : DecayFloorUpTo 3 :=
   decayFloorUpTo_succ (j := 2) (m := 1) decayFloorUpTo_two nodeDecayBound_two lowerEnvBound_two
+
+/-! ## §5 — the depth-3 lower envelope, so depth 4 rests on ONE thing
+
+`(du)` flagged a friction and declined to call this assembly. Resolving it took giving
+`LowerEnvBound` a **ray**, which is what the corpus does everywhere else and what the depth-2 growth
+envelope forces: `depth_le_two_growth_envelope` holds only past a tree-dependent `X₀`, and absorbing
+that into the constant would need every EML germ to be bounded on `[1, X₀]` — true, presumably, and
+not something this base can prove (no compactness, no continuity).
+
+With the ray, this is assembly after all: `node_lower_of_right_upper` turns an **upper** bound on the
+right child into a **lower** bound on the node, and `depth_le_two_growth_envelope` supplies it.
+
+Two details worth keeping. The envelope's `M` may be **negative**, so `E = exp (exp x + K) + M` can
+fail `node_lower_of_right_upper`'s `0 ≤ E`; replacing `M` by `exp M` fixes both at once, since
+`exp M > M`. And `exp (exp x + K) ≤ towerFn 3 x` is exactly `const_add_tower_le_succ` at `m = 1` —
+the lemma written for the step turns out to do the arithmetic here too.
+
+**So depth 4 now rests on `NodeDecayBound 3 m` alone.** -/
+
+/-- **The depth-≤3 lower envelope**, at tower height `3`. -/
+theorem lowerEnvBound_three : LowerEnvBound 3 3 := by
+  intro A _
+  cases A with
+  | const c =>
+      refine ⟨exp (-c), 1, le_refl 1, fun x hx => ?_⟩
+      show -(exp (-c) + EMLTree.towerFn 3 x) ≤ c
+      have hTp : (0 : Real) ≤ EMLTree.towerFn 3 x :=
+        le_trans (le_of_lt zero_lt_one_ax) (towerFn_ge_one 3 hx)
+      have h2 : -exp (-c) ≤ c := by
+        have u := neg_le_neg_wit (le_of_lt (exp_grows_strictly_thm (-c)))
+        have e : -(-c) = c := by mach_ring
+        rw [e] at u; exact u
+      exact le_trans (neg_le_neg_wit (le_add_nonneg' hTp)) h2
+  | var =>
+      refine ⟨0, 1, le_refl 1, fun x hx => ?_⟩
+      show -((0 : Real) + EMLTree.towerFn 3 x) ≤ x
+      have hTp : (0 : Real) ≤ EMLTree.towerFn 3 x :=
+        le_trans (le_of_lt zero_lt_one_ax) (towerFn_ge_one 3 hx)
+      have e : (0 : Real) + EMLTree.towerFn 3 x = EMLTree.towerFn 3 x := by mach_ring
+      rw [e]
+      have u := neg_le_neg_wit hTp
+      have e2 : -(0 : Real) = 0 := by mach_ring
+      rw [e2] at u
+      exact le_trans u (le_trans (le_of_lt zero_lt_one_ax) hx)
+  | eml P Q =>
+      have hQ : Q.depth ≤ 2 := by
+        simp only [EMLTree.depth] at *
+        have := Nat.le_max_right P.depth Q.depth; omega
+      obtain ⟨K, M, XU, hXU, hU⟩ := depth_le_two_growth_envelope Q hQ
+      have hKp : (0 : Real) ≤ exp K := le_of_lt (exp_pos K)
+      refine ⟨exp M, XU + exp K, le_trans hXU (le_add_nonneg' hKp), fun x hx => ?_⟩
+      have hxXU : XU ≤ x := le_trans (le_add_nonneg' hKp) hx
+      have hx1 : (1 : Real) ≤ x := le_trans hXU hxXU
+      have hxK : K < x := by
+        have e : XU + exp K = exp K + XU := by mach_ring
+        rw [e] at hx
+        refine lt_of_lt_of_le (exp_grows_strictly_thm K) (le_trans (le_add_nonneg' ?_) hx)
+        exact le_trans (le_of_lt zero_lt_one_ax) hXU
+      have hE0 : ∀ y : Real, XU ≤ y → (0 : Real) ≤ exp (exp y + K) + exp M := fun y _ =>
+        le_of_lt (lt_of_lt_of_le (exp_pos _) (le_add_nonneg' (le_of_lt (exp_pos M))))
+      have hEup : ∀ y : Real, XU ≤ y → Q.eval y ≤ exp (exp y + K) + exp M := by
+        intro y hy
+        exact le_trans (hU y hy)
+          (add_le_add_wit (le_refl (exp (exp y + K))) (le_of_lt (exp_grows_strictly_thm M)))
+      have hlow :=
+        node_lower_of_right_upper P Q (fun y => exp (exp y + K) + exp M) XU hE0 hEup x hxXU
+      refine le_trans (neg_le_neg_wit ?_) hlow
+      -- exp (exp x + K) + exp M ≤ exp M + towerFn 3 x
+      have habs : K + EMLTree.towerFn 1 x ≤ EMLTree.towerFn 2 x :=
+        const_add_tower_le_succ 1 hxK hx1
+      have e1 : K + EMLTree.towerFn 1 x = exp x + K := by
+        show K + exp x = exp x + K
+        mach_ring
+      rw [e1] at habs
+      have hmono : exp (exp x + K) ≤ EMLTree.towerFn 3 x := exp_monotone habs
+      have u := add_le_add_wit hmono (le_refl (exp M))
+      have e3 : EMLTree.towerFn 3 x + exp M = exp M + EMLTree.towerFn 3 x := by mach_ring
+      rw [e3] at u
+      exact u
+
+/-- **Depth 4 rests on one proposition.** Supply `NodeDecayBound 3 m` for any `m ≥ 3` and the rung
+follows; the lower envelope is no longer part of the debt. -/
+theorem decayFloorUpTo_four_of_nodeDecay (h : NodeDecayBound 3 3) : DecayFloorUpTo 4 :=
+  decayFloorUpTo_succ (j := 3) (m := 3) decayFloorUpTo_three h lowerEnvBound_three
 
 end MachLib

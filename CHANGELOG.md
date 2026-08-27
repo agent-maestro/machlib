@@ -5,6 +5,66 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dv)
+
+### Depth 4 now rests on exactly one proposition
+
+`(du)` left depth 4 needing two inputs and flagged the second as unresolved. It is resolved.
+
+```
+lowerEnvBound_three            : LowerEnvBound 3 3                       ← PROVED
+decayFloorUpTo_four_of_nodeDecay : NodeDecayBound 3 3 → DecayFloorUpTo 4  ← PROVED
+```
+
+#### The friction, and which way it had to go
+
+`LowerEnvBound` quantified over all `x ≥ 1` with no per-tree ray. Absorbing
+`depth_le_two_growth_envelope`'s tree-dependent `X₀` into the constant would require every EML germ to
+be bounded on `[1, X₀]` — presumably true, and **not something this base can prove**: no compactness,
+no continuity. So the definition grew the ray, which is what the corpus does everywhere else.
+
+That is a definition changed one commit after shipping it. Worth saying plainly rather than quietly:
+the flag in `(du)` was the right call and the resolution was the *other* branch of the two named.
+
+With the ray it is assembly after all — `node_lower_of_right_upper` turns an **upper** bound on the
+right child into a **lower** bound on the node, and the depth-2 growth envelope supplies it.
+
+Two details that were not obvious until the proof was written:
+
+* **The envelope's `M` may be negative**, so `E = exp (exp x + K) + M` can fail
+  `node_lower_of_right_upper`'s `0 ≤ E` hypothesis. Replacing `M` by `exp M` fixes the sign and keeps
+  the bound, since `exp M > M`. A hypothesis that looks like bookkeeping (`0 ≤ E`) turning out to be
+  load-bearing against a *negative additive constant* is the kind of thing only writing the proof
+  finds.
+* **`exp (exp x + K) ≤ towerFn 3 x` is exactly `const_add_tower_le_succ` at `m = 1`** — the lemma
+  written for the step does the arithmetic here too, unchanged.
+
+#### The state of the ladder
+
+```
+depth ≤ 2   decayFloor_upTo_two          height 0    proved
+depth ≤ 3   decayFloorUpTo_three         height 2    proved
+depth ≤ 4   decayFloorUpTo_four_of_...   height 4    ONE input: NodeDecayBound 3 3
+```
+
+`NodeDecayBound 3 3` is the depth-4 analogue of `Depth3DecayExp`: how small can
+`exp (A x) − log (B x)` be, positive, with `A` and `B` at depth ≤ 3. Reading the **discharged** column
+first — the habit that paid off in `(dt)` — turns up `ExpExpGapBelow`, `BoundedCellApproach`,
+`BoundedEmlCellApproach` and `BoundedEmlCellApproachLarge`, which are the cell decomposition of
+`Depth3DecayExp`. **All four are stated at depth ≤ 2**, so they are the machinery for the rung below,
+not for this one. The habit is still right; this time it returns nothing, and saying so is the point.
+
+Its hypotheses must stay **pointwise** — that is what keeps the whole ladder free of `evSign_all` and
+the analytic block, and it is a constraint on whoever proves it.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`. `DecayFloor` untouched; ledger unchanged at 21 rows /
+9 open rows / 6 distinct open.
+
+Gates, every figure read off the gate that produced it: build **752 jobs**, aggregator 749 of 1055,
+consistency PASS, claims 466, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (du)
 
 ### The rung, as a step — and a correction: `(di)` does not block depth 4
@@ -54,6 +114,8 @@ Two inputs at `j = 3`, and they are not the same kind of thing:
   at: `LowerEnvBound` quantifies over all `x ≥ 1` with no per-tree ray, while
   `depth_le_two_growth_envelope` holds only past a tree-dependent `X₀`. Either the constant absorbs
   the ray or the definition grows one, and which is cheaper has not been checked.
+
+  > **⚠ RESOLVED in `(dv)`** — the definition grew the ray, and `lowerEnvBound_three` is proved.
 
 The `NodeDecayBound` hypotheses are **pointwise** by design, copied from `Depth3DecayExp` — that is
 what keeps the step free of `evSign_all` and the analytic block, and it is a constraint on whoever
