@@ -9550,6 +9550,54 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "valuegap-reverse-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a node floor\ngives a value floor and vice versa"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.node_mul_le_value_gap",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "valuegap-brackets-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The pair brackets the gap between the factors `q` and `exp u`"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.value_gap_brackets",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "valuegap-le-exp-sub-one-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "for **every** `d`, no sign hypothesis"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.le_exp_sub_one",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }

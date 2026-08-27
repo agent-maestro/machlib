@@ -299,4 +299,64 @@ theorem decayFloorUpTo_four_of_valueGap (hg : ValueGapBound 3 7) : DecayFloorUpT
     (nodeDecayBound_of_valueGap hg expUpperBound_three)
     (lowerEnvBound_mono (by omega) lowerEnvBound_three)
 
+/-! ## §5 — the transfer runs both ways, so §3 is a REFORMULATION, not a shrink
+
+`(dw)` called §3 a factoring. That word suggests the value-level statement is *easier* than the
+node-level one. It is not obviously so, and the reason is that the same substitution gives the
+**reverse** inequality for free:
+
+```
+value_gap_le_node_mul  :  exp u − q  ≤  (u − log q) * exp u      -- value gap ⟹ node gap
+node_mul_le_value_gap  :  q * (u − log q)  ≤  exp u − q          -- node gap ⟹ value gap
+```
+
+The two bracket the gap between the factors `q` and `exp u`. So a node floor gives a value floor and
+vice versa, **provided the other factor is itself bounded** — `exp u ≤ …` for one direction (that is
+`ExpUpperBound`, and §4 proves it) and `q ≥ …` for the other.
+
+**And `q ≥ …` is exactly a `DecayFloor` for `B`** — which at depth ≤ 3 is `decayFloorUpTo_three`, in
+hand. So the two obligations are equivalent up to one thing, and it is worth naming precisely:
+
+> The converse needs `B` positive on a **ray**, because `decayFloorUpTo_three` is an eventual
+> statement. `ValueGapBound`'s `0 < B.eval x` is **pointwise**, inside the `∀ x`. From positivity at
+> one point no ray follows, so the converse does not go through as stated.
+
+That is the same pointwise/eventual distinction that made `(dt)` work, cutting the other way. It was
+worth the pointwise form there — it kept `evSign_all` and the analytic block out of the entire ladder
+— and it is worth it here too, but the price is that §3 cannot be *proved* to be a genuine reduction,
+only observed not to be obviously one.
+
+**So: §3 buys vocabulary, not difficulty.** `ValueGapBound 3 7` is stated where `ExpExpGapBelow` and
+the `…CellApproach` family are stated, which is where the depth-≤2 answers live and where a depth-≤3
+answer would be found. That was the claim `(dw)` should have made, and this section makes it. -/
+
+/-- `d ≤ exp d − 1`, for **every** `d` — the mirror of `exp_sub_one_le_mul`, and from the same
+lemma. Note it needs no sign hypothesis, where `exp_gt_one_plus_self` would demand `0 < d`. -/
+theorem le_exp_sub_one (d : Real) : d ≤ exp d - 1 := by
+  have h := log_le_sub_one (exp_pos d)
+  rw [log_exp] at h
+  exact h
+
+/-- **The reverse transfer.** A node gap gives a value gap, losing only the factor `q`. -/
+theorem node_mul_le_value_gap (u q : Real) (hq : 0 < q) :
+    q * (u - log q) ≤ exp u - q := by
+  have hd := le_exp_sub_one (u - log q)
+  have hE : q * exp (u - log q) = exp u := by
+    calc q * exp (u - log q)
+        = exp (log q) * exp (u - log q) := by rw [exp_log hq]
+      _ = exp (log q + (u - log q)) := by rw [exp_add]
+      _ = exp u := by
+            have e : log q + (u - log q) = u := by mach_ring
+            rw [e]
+  have h3 := mul_le_mul_of_nonneg_left hd (le_of_lt hq)
+  have eR : q * (exp (u - log q) - 1) = q * exp (u - log q) - q := by mach_ring
+  rw [eR, hE] at h3
+  exact h3
+
+/-- **The two transfers bracket the gap**, between the factors `q` and `exp u`. Stated together so
+the symmetry is on the record rather than inferred. -/
+theorem value_gap_brackets (u q : Real) (hq : 0 < q) :
+    q * (u - log q) ≤ exp u - q ∧ exp u - q ≤ (u - log q) * exp u :=
+  ⟨node_mul_le_value_gap u q hq, value_gap_le_node_mul u q hq⟩
+
 end MachLib

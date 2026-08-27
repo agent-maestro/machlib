@@ -5,12 +5,64 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dx)
+
+### The transfer runs both ways — `(dw)` factored nothing, it renamed something usefully
+
+`(dw)` called §3 a factoring. That word says the value-level statement is *easier* than the
+node-level one. **It is not obviously so**, and the same substitution shows why for free:
+
+```
+value_gap_le_node_mul  :  exp u − q         ≤  (u − log q) * exp u     -- value ⟹ node
+node_mul_le_value_gap  :  q * (u − log q)   ≤  exp u − q               -- node ⟹ value
+```
+
+The pair brackets the gap between the factors `q` and `exp u` (`value_gap_brackets`). So a node floor
+gives a value floor and vice versa, **provided the other factor is bounded** — `exp u ≤ …` one way,
+which is `ExpUpperBound` and `(dw)` §4 proves it; `q ≥ …` the other way, which is **a `DecayFloor`
+for `B`**, and at depth ≤ 3 that is `decayFloorUpTo_three`, already in hand.
+
+#### Why the converse still does not close, and it is the same distinction as `(dt)`
+
+> `decayFloorUpTo_three` is an **eventual** statement — it needs `B` positive on a **ray**.
+> `ValueGapBound`'s `0 < B.eval x` is **pointwise**, inside the `∀ x`. From positivity at one point no
+> ray follows, so the converse does not go through as stated.
+
+That is exactly the pointwise/eventual distinction that made `(dt)` work, cutting the other way. The
+pointwise form was worth it there — it keeps `evSign_all` and the analytic block out of the **entire**
+ladder — and it is worth it here. The price is that §3 cannot be *proved* a genuine reduction, only
+observed not to be obviously one.
+
+**So the honest claim is the one about shape.** `ValueGapBound 3 7` is stated where `ExpExpGapBelow`
+and the `…CellApproach` family are stated — where the depth-≤2 answers live, and where a depth-≤3
+answer would be found. `(dw)` said that too, alongside a word that claimed more. The word is now
+qualified in place.
+
+`le_exp_sub_one` is worth noting on its own: `d ≤ exp d − 1` for **every** `d`, no sign hypothesis,
+straight from `log_le_sub_one` at `exp d` — where `exp_gt_one_plus_self` would demand `0 < d`. The
+corpus's tangent axiom is one-sided; `log_le_sub_one` is not, and the two are the same fact.
+
+**Nothing was reduced, nothing was discharged, and the ledger does not move: 21 rows / 9 open rows /
+6 distinct open.** This is a correction plus two lemmas.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates, every figure read off the gate that produced it: build **753 jobs**, aggregator 750 of 1056,
+consistency PASS, claims 474, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (dw)
 
 ### The convexity transfer, once, at every depth — depth 4 down to one value-level residue
 
 New module `MachLib/EMLValueGap`. `(dv)` left depth 4 resting on `NodeDecayBound 3 3`. This factors
 *that*, the way `(du)` factored the rung.
+
+> **⚠ QUALIFIED by `(dx)` — "factors" claims too much.** The transfer runs **both ways**
+> (`node_mul_le_value_gap`), so a node floor gives a value floor and vice versa, provided the other
+> factor is bounded. §3 buys **vocabulary, not difficulty**. The claim that survives is the one about
+> shape, below.
 
 ```
 nodeDecayBound_of_valueGap        : ValueGapBound j m → ExpUpperBound j m → NodeDecayBound j (m+1)
