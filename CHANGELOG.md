@@ -5,6 +5,63 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (ea)
+
+### The mirror harness — and it immediately found a parser bug in a shipped gate
+
+`(dz)` found `ValueGapBound` had consumers and no producers, and noted the corpus has a harness for
+the *opposite* direction only: `witness_audit.py` watches capstones nobody instantiates; nothing
+watched hypotheses nobody satisfies. New measurement harness `tools/hypothesis_audit.py`, built to
+the same design — pinned **set**, not count, so the ratchet turns one way.
+
+> A Prop with consumers and no producers is not exercised; it is **assumed**. That is the easy half
+> to miss, precisely because the consumers make it look exercised.
+
+**It fires on the real defect, not a synthetic one.** Removing `valueGapBound_zero` from the
+declaration set makes `ValueGapBound` reappear, consumed by `nodeDecayBound_of_valueGap` and
+`decayFloorUpTo_four_of_valueGap`; putting it back silences it. That is the historical state this was
+built for, reproduced exactly.
+
+Four canaries, all synthetic so none can go stale: consumed-never-produced **fires**; adding a
+producer **silences**; a Prop with *neither* consumer nor producer stays silent (nothing rests on it —
+that is the aggregator's job, not this one's); and an `↔` is **not** a producer, the same rule as the
+ledger's canary 9 and for the same reason.
+
+Like `witness_audit` and `closerate`, this is a **measurement harness, not an eighth CI gate**. The
+gate set stays at seven.
+
+#### The parser bug it found on its first real run
+
+The audit reported `PIrred` as never produced. `CLAUDE.md` says `pIrred_X` is the corpus's first
+`PIrred` construction, and it is — in a *top-level* file, so it was scanned. The fault was in
+`obligation_ledger_check.dischargers_of`, which the new tool imports:
+
+```lean
+theorem pIrred_X : PIrred ([0, 1] : List Real)
+```
+
+Its comment claims the conclusion is "the tail after the last **top-level** `:`". The implementation
+was `rsplit(":", 1)`, which is **not top-level aware** — it split at the *type ascription's* colon and
+returned `List Real)`, so the corpus's only `PIrred` construction was invisible to a shipped gate.
+
+Fixed by `conclusion_of`, which takes the tail after the **first colon at bracket depth 0**. First,
+not last: binders are always bracketed, so the separator is the first unbracketed colon — and a
+`∀ x : T,` *inside* a conclusion then cannot be mistaken for it either, which `rsplit` also got wrong.
+
+**The ledger gate's verdicts are byte-identical before and after** — all 21 rows, all 18 canaries —
+so this is a latent defect removed, not a behaviour change. It was latent because no ledger row's
+discharger happened to contain a bracketed colon. **A gate can be correct on every case it has ever
+seen and still have the wrong parser**; what surfaced it was a second tool asking a different question
+of the same code.
+
+Baseline: **34 consumed-but-unproduced props**, triaged in the file. Most are correct — named open
+obligations (which are *meant* to be here) and definitional predicates like `Lipschitz`, `MonotoneOn`,
+`Rounds`, supplied from outside rather than proved. The signal is weaker than `witness_audit`'s and
+the baseline says so. What to watch for is the shape `ValueGapBound` had: **a new name that is neither
+an obligation you deliberately opened nor a predicate.**
+
+**No Lean changed.** Ledger unchanged: 21 rows / 9 open rows / 6 distinct open.
+
 ## [Unreleased] — 2026-08-27 (dz)
 
 ### `ValueGapBound` had no specimen — self-audit, and the specimen

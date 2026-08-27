@@ -76,13 +76,40 @@ def declarations(text):
         yield m.group(1), m.group(2), sig
 
 
+def conclusion_of(sig):
+    """The tail after the binder/conclusion separator — the FIRST colon at bracket depth 0.
+
+    `rsplit(":", 1)` was used here and its comment claimed "the last top-level `:`". It is not
+    top-level aware, and a **type ascription inside the conclusion** breaks it:
+
+        theorem pIrred_X : PIrred ([0, 1] : List Real)
+
+    splits at the ascription's colon and yields `List Real)`, so the theorem does not read as
+    concluding `PIrred` and the corpus's only `PIrred` construction was invisible. Found 2026-08-27
+    by `tools/hypothesis_audit.py`, which reported `PIrred` as consumed-and-never-produced.
+
+    The FIRST depth-0 colon is the right one, not the last: binders are always bracketed, so the
+    separator is the first colon outside brackets, and a `∀ x : T,` *inside* the conclusion then
+    cannot be mistaken for it either — which `rsplit` also got wrong.
+    """
+    depth = 0
+    for i, ch in enumerate(sig):
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif ch == ":" and depth == 0:
+            return sig[i + 1:]
+    return sig
+
+
 def refuters_of(prop, decls):
     """Theorems whose conclusion is `¬ prop` — what a "refuted" row must cite."""
     out = []
     for kind, name, sig in decls:
         if not kind.endswith("theorem"):
             continue
-        tail = sig.rsplit(":", 1)[-1].strip()
+        tail = conclusion_of(sig).strip()
         if re.match(r"^¬\s*" + re.escape(prop) + r"\b", tail):
             out.append(name)
     return out
@@ -97,7 +124,7 @@ def dischargers_of(prop, decls):
         # strip binders `(h : Prop)` so a consumer does not read as a discharger
         stripped = re.sub(r"\([^()]*:\s*" + re.escape(prop) + r"\b[^()]*\)", "", sig)
         # conclusion is the tail after the last top-level `:`
-        tail = stripped.rsplit(":", 1)[-1].strip()
+        tail = conclusion_of(stripped).strip()
         # An EQUIVALENCE is not a discharge. `foo : P ↔ Q` prefix-matches `P` and would otherwise be
         # counted as concluding it -- which is how a reduction reads as a solution. Found 2026-08-24
         # when `signHardCase_iff_compareExpExpPos` silently made canary 5 stop firing.
@@ -192,7 +219,8 @@ def proved_equivalences(rows, decls):
     for kind, name, sig in decls:
         if not kind.endswith("theorem"):
             continue
-        head, _, tail = sig.rpartition(":")
+        tail = conclusion_of(sig)
+        head = sig[:len(sig) - len(tail) - 1]
         m = re.fullmatch(r"([A-Za-z0-9_'.]+)\s*↔\s*([A-Za-z0-9_'.]+)", tail.strip())
         if not m:
             continue
