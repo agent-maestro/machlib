@@ -429,7 +429,7 @@ import MachLib.EMLDecayNotIterating
 import MachLib.EMLDecayFloor
 import MachLib.EMLDecayFloorIsGrowth
 import MachLib.EMLLadderMeasure
-import MachLib.EMLNodeSeparation
+import MachLib.EMLGermApproach
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

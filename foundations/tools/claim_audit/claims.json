@@ -9024,13 +9024,13 @@
       ]
     },
     {
-      "id": "sep-decayfloor-from-changelog",
+      "id": "approach-decayfloor-from-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "The forward direction needs no induction at all"
+        "the depth cost drops from `+3` to `+2`"
       ],
-      "module": "MachLib.EMLNodeSeparation",
-      "theorem": "MachLib.decayFloor_of_emlNodeSeparation",
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.decayFloor_of_emlGermApproach",
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical",
@@ -9040,13 +9040,13 @@
       ]
     },
     {
-      "id": "sep-converse-changelog",
+      "id": "approach-converse-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "a **third name for one obligation, not a shrink**"
+        "Both proved. **Not progress on difficulty.**"
       ],
-      "module": "MachLib.EMLNodeSeparation",
-      "theorem": "MachLib.emlNodeSeparation_of_decayFloor",
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.emlGermApproach_of_decayFloor",
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical",
@@ -9056,13 +9056,13 @@
       ]
     },
     {
-      "id": "sep-iff-changelog",
+      "id": "approach-iff-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "it, `DecayFloor` and the separation are one object"
+        "obligation would be worse than three"
       ],
-      "module": "MachLib.EMLNodeSeparation",
-      "theorem": "MachLib.emlNodeSeparation_iff_decayFloor",
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.emlGermApproach_iff_decayFloor",
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical",
@@ -9072,13 +9072,13 @@
       ]
     },
     {
-      "id": "sep-exact-cancellation-changelog",
+      "id": "approach-nonpos-no-cancel-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "the node is identically `0`, at every `A` and every `x`"
+        "nothing cancels and the floor is a plain lower bound on `A`"
       ],
-      "module": "MachLib.EMLNodeSeparation",
-      "theorem": "MachLib.exact_cancellation_node_zero",
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.approach_gap_ge_exp_of_nonpos",
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical",
@@ -9088,14 +9088,13 @@
       ]
     },
     {
-      "id": "sep-gap-node-changelog",
+      "id": "approach-exact-meeting-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "their difference is **exactly the constant `c`**",
-        "Separation is not controlled by growth rate."
+        "Two EML germs **can** meet; where they do no envelope exists"
       ],
-      "module": "MachLib.EMLNodeSeparation",
-      "theorem": "MachLib.gapNode_eval",
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.exact_meeting_gap_zero",
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical",
@@ -9105,13 +9104,13 @@
       ]
     },
     {
-      "id": "sep-decaying-node-changelog",
+      "id": "approach-gap-target-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "whose node is `exp (1 − x)`, infimum `0`, and it meets the height-`0` floor"
+        "**Approach is not controlled by growth rate.**"
       ],
-      "module": "MachLib.EMLNodeSeparation",
-      "theorem": "MachLib.decaying_node_meets_floor",
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.gapTarget_gap",
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical",
@@ -9121,13 +9120,13 @@
       ]
     },
     {
-      "id": "sep-clamped-branch-changelog",
+      "id": "approach-decaying-gap-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "excluded by hypothesis, covered by `decayFloor_clamped`"
+        "still meets the height-`0` floor"
       ],
-      "module": "MachLib.EMLNodeSeparation",
-      "theorem": "MachLib.clamped_node_is_exp",
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.decaying_gap_meets_floor",
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical",

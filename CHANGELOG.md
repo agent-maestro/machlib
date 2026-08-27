@@ -5,12 +5,104 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-26 (do)
+
+### The obligation was under-restricted — by its own criterion
+
+`(dn)` adopted a rule and then failed to apply it fully: *put into the obligation whatever the
+downstream proof actually needs, and nothing else.* `EmlNodeSeparation` assumed a general positive
+right child `B`. **The downstream proof never supplies one.** Every `B` it hands over is an `eTree`,
+because that is how `posEmbed` manufactures a right child positive *everywhere*. So the positivity
+was an **assumed hypothesis standing in for a structural fact** — precisely the shape this corpus has
+learned to distrust.
+
+Writing `B = eTree C` and cancelling `log ∘ exp` leaves an **approach** question:
+
+```
+EmlGermApproach :
+  ∀ j, ∃ k, ∀ A C X₀,  A.depth ≤ j → C.depth ≤ j → 1 ≤ X₀ →
+    (∀ x ≥ X₀, C.eval x < exp (A.eval x)) →
+    ∃ X₁ ≥ X₀, ∀ x ≥ X₁, exp (-(towerFn k x)) ≤ exp (A.eval x) - C.eval x
+```
+
+> **An EML germ that stays strictly below `exp ∘ A` on a ray stays below it by an effective
+> envelope.**
+
+**One hypothesis fewer** — positivity is now discharged by the shape of the statement rather than
+demanded of whoever supplies it — and the depth cost drops from `+3` to `+2`. New module
+`MachLib/EMLGermApproach` **replaces** `EMLNodeSeparation`, which is deleted: four names for one
+obligation would be worse than three.
+
+#### Still an equivalence, still said out loud
+
+```
+Approach j   ⟸ DecayFloor (j+2)     via the tree  eml A (eTree C)
+DecayFloor j ⟸ Approach (j+2)       via the target  1 − t x,  with A := const 0
+```
+
+Both proved. **Not progress on difficulty.** The three-row cycle stands and the gate still reports
+`3 rows, ONE open obligation`.
+
+#### Where cancellation cannot happen
+
+`approach_gap_ge_exp_of_nonpos`: a **non-positive target** leaves the gap at least `exp (A x)`, so
+nothing cancels and the floor is a plain lower bound on `A`. **Cancellation requires a positive
+target.** That does not shrink the obligation — the positive-target branch still needs the envelope,
+and `(di)` showed that branch re-embeds the whole problem — but it is the first thing a counterexample
+hunt should stop spending time on.
+
+#### The counterexample hunt
+
+Four probes, and **no counterexample was found**. Stated carefully, because a failed hunt is not
+evidence of absence — this corpus has a 12 208-sample grid search in its history that missed a
+transcendental witness:
+
+* **exact meeting** — `C = eTree A` matches `exp ∘ A` on the nose, gap identically `0`, strict
+  hypothesis fails exactly there. Two EML germs **can** meet; where they do no envelope exists, so
+  the hypothesis is load-bearing and cannot be dropped.
+* **near-meeting of two arbitrarily fast-growing germs** — `gapTarget n c`: both germs at tower
+  height `n + 1`, gap **exactly the constant `c`**, at every `x`, every `n`, every `c`.
+
+  > The germs live at height `n + 1`; the floor their gap needs is height **0**.
+  > **Approach is not controlled by growth rate.**
+
+  This is the case a growth-based argument would be expected to handle and cannot even see, and it
+  retro-explains why `(dm)`'s germ-height parameter was never the right instrument.
+* **a gap that tends to zero** — `approachTarget decayFast` has gap `exp (1 − x)`, infimum `0`, and
+  still meets the height-`0` floor. Read as *"bounded away from zero"* the obligation is **false
+  here**, on a member of its own class.
+* **non-positive target** — no cancellation at all.
+
+What the probes establish is narrower than "it is probably true": the two ways to make the gap small
+that a first attempt reaches for — **outrunning the target by growth**, and **driving the gap to
+zero** — are both *satisfied instances* rather than counterexamples, and the hypothesis boundary sits
+exactly at germs meeting. A counterexample, if one exists, is not of either shape.
+
+#### Still no axiom
+
+The row stays **open**, **243 axioms pinned**. An external mathematical input is not automatically an
+axiom; until it is deliberately accepted without proof it is an obligation nobody has discharged.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates, every figure read off the gate that produced it: build **749 jobs**, aggregator 746 of 1052,
+consistency PASS, claims 445 (7 retired with `EMLNodeSeparation`, 7 registered), obligations
+**21 rows / 9 open rows / 6 distinct open** with 18 canaries, discovered 290/294, AxiomLedger
+**243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-26 (dn)
 
 ### The missing input, named — and it is a separation, not a bound away from zero
 
 New module `MachLib/EMLNodeSeparation`. **No axiom was added and the count of open obligations did
 not move.** That is the point of the entry.
+
+> **⚠ SUPERSEDED by `(do)` — this obligation was under-restricted, by the criterion stated below it.**
+> Every `B` the downstream proof supplies is an `eTree`, so the assumed `0 < B` was standing in for a
+> structural fact. `EmlGermApproach` replaces it with one hypothesis fewer and a `+2` rather than
+> `+3` depth cost. Everything else in this entry — the envelope-not-a-constant point, the
+> equivalence, the stress cases — carries over unchanged.
 
 #### It is not "bounded away from zero"
 
@@ -8520,8 +8612,8 @@ in commit archaeology:
 | --- | --- | --- |
 | `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`); `towerReducesToSign_iff_towerLowerBound` makes this row and `TowerReducesToSign` ONE obligation |
 | `SignHardCase` | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
-| `DecayFloor` | **reduced** | `decayFloor_of_emlNodeSeparation` → `EmlNodeSeparation` — an *equivalence*, not a shrink; a three-row cycle, one open obligation (clamped half: `decayFloor_clamped`) |
-| `EmlNodeSeparation` | **reduced** | `emlNodeSeparation_of_growthEnvelope` → `GrowthEnvelope` — closes the cycle; the missing input stated as a *separation* of two germs, the idiom an external theorem would be cited in |
+| `DecayFloor` | **reduced** | `decayFloor_of_emlGermApproach` → `EmlGermApproach` — an *equivalence*, not a shrink; a three-row cycle, one open obligation (clamped half: `decayFloor_clamped`) |
+| `EmlGermApproach` | **reduced** | `emlGermApproach_of_growthEnvelope` → `GrowthEnvelope` — closes the cycle; the missing input as an *approach* question between two germs, the idiom an external theorem would be cited in |
 | `GrowthEnvelope` | **reduced** | `growthEnvelope_of_decayFloor` → `DecayFloor` — the other half of the same cycle |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |

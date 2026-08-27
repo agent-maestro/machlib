@@ -11336,8 +11336,8 @@ this sentence.) Their status, as of the last edit:
 | --- | --- | --- | --- |
 | `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`); `towerReducesToSign_iff_towerLowerBound` makes this row and `TowerReducesToSign` ONE obligation |
 | `SignHardCase` | here | **discharged** | `signHardCase_holds` (`EMLAnalyticDischarge`), on `eml_tree_analytic_on_interval` + `analytic_finite_zeros_compact` + `rolle_ct` |
-| `DecayFloor` | `EMLDecayFloor` | **reduced** | `decayFloor_of_emlNodeSeparation` → `EmlNodeSeparation` — an *equivalence*, not a shrink; a three-row cycle, one open obligation (clamped half: `decayFloor_clamped`) |
-| `EmlNodeSeparation` | `EMLNodeSeparation` | **reduced** | `emlNodeSeparation_of_growthEnvelope` → `GrowthEnvelope` — closes the cycle; the missing input stated as a *separation* of two germs, the idiom an external theorem would be cited in |
+| `DecayFloor` | `EMLDecayFloor` | **reduced** | `decayFloor_of_emlGermApproach` → `EmlGermApproach` — an *equivalence*, not a shrink; a three-row cycle, one open obligation (clamped half: `decayFloor_clamped`) |
+| `EmlGermApproach` | `EMLGermApproach` | **reduced** | `emlGermApproach_of_growthEnvelope` → `GrowthEnvelope` — closes the cycle; the missing input as an *approach* question between two germs, the idiom an external theorem would be cited in |
 | `GrowthEnvelope` | `EMLDecayFloorIsGrowth` | **reduced** | `growthEnvelope_of_decayFloor` → `DecayFloor` — the other half of the same cycle |
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
