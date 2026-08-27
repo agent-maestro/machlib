@@ -247,9 +247,12 @@ touching it, because each was learned the expensive way:
    non-structural arguments are untouched.
 2. **The missing input is named and placed.** `EmlGermApproach` (`EMLGermApproach`) is the obligation
    at its narrowest, equivalent to `DecayFloor`. Its *per-pair* form is a corollary of Hardy (1912);
-   **the entire open content is the position of one `∃ k`** — see
-   `monogate-research/exploration/germ_approach_literature_2026_08_27/NOTE.md`. **No axiom has been
-   spent on it, deliberately.**
+   **the entire open content is the position of one `∃ k`**. **No axiom has been spent on it,
+   deliberately.** It is now a **separate research programme with its own file — read
+   `EmlGermApproachResearch.md` before writing any Lean against it.** That file carries the exact
+   conjecture, the adversarial families already built, the three failed descent mechanisms, the
+   surgical question for a specialist, and **exit criteria for PROVED / REFUTED / ASSUMED decided in
+   advance.** Engineering effort on the other five open obligations should not wait on it.
 3. **The ladder reaches the obligation.** `decayFloor_of_ladderInputs` (`EMLValueGap`): `DecayFloor`
    follows from per-depth `NodeDecayBound` + `LowerEnvBound`, footprint-clean. `decayFloorUpTo_three`
    is proved (the top was depth 2 for the whole arc); depth 4 needs `NodeDecayBound 3`, whose only
