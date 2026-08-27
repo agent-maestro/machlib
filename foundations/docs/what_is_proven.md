@@ -436,6 +436,37 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   as *lenses that compute a claim*, not proofs — e.g. restatements of open
   problems, never solutions. They are not part of what this library proves.
 
+- **The EML depth/decay programme** (2026-08, `EMLLadderMeasure`, `EMLGermApproach`,
+  `EMLHeightInterface`, `EMLDepth3Rung`, `EMLDecayLadderStep`, `EMLValueGap`) — the largest lane by
+  volume this month, and the one most likely to be over-read, so its asterisks in full:
+
+  **What is proved.** *(a)* `DecayFloor`, `GrowthEnvelope` and `EmlGermApproach` are **one
+  obligation** written three ways — all three implications are theorems, and the obligations ledger
+  reports the cycle as a single open debt rather than three. *(b)* The search for an induction
+  parameter is **closed on both sides**: no `Nat`-valued measure on trees descending to both children
+  can carry it, syntactically (`recipTree` costs two steps where a step buys one) or on germs (growth
+  does not descend to the right child, unboundedly). *(c)* `decayFloorUpTo_three` — bounded rungs to
+  depth 3, where the ceiling had been depth 2. *(d)* `decayFloor_of_ladderInputs` — the obligation
+  itself follows from per-depth node bounds and lower envelopes, footprint-clean.
+
+  **What is open, and it is the whole thing.** `DecayFloor` is **not proved**. The bounded rungs do
+  not approach it — depth 4 already needs an enumeration this project has measured and declined. The
+  missing mathematical input is `EmlGermApproach`, whose *per-pair* form is a corollary of Hardy
+  (1912) and whose open content is **the position of a single `∃ k`** (uniformity in the depth bound).
+  **No axiom has been spent on it**, deliberately: an external mathematical input is not automatically
+  an axiom, and until it is accepted without proof it is an obligation nobody has discharged.
+
+  **Asterisks, stated rather than implied.** The impossibility result covers *local scalar growth
+  descent through the syntax tree* — **not** every well-founded induction; lexicographic orders,
+  ordinal ranks and non-structural arguments are untouched. The `HeightModel` interface proves
+  nothing on its own: a height that is identically `0` satisfies every one of its closure axioms and
+  refutes its floor property outright. And the growth envelope has **no eml-stdlib consumer** — that
+  was pre-registered before the size-indexed version was built, and it held. Nothing in this lane is
+  compiler-facing.
+
+  Literature placement, with its own limits recorded (abstracts only, no paper read in full):
+  `monogate-research/exploration/germ_approach_literature_2026_08_27/NOTE.md`.
+
 ---
 
 ## 8. The through-line

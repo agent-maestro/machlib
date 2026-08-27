@@ -7,9 +7,9 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 034 `.lean` files** (718 top-level + 316 in subdirectories) /
-**~228 k lines** / **7 962 theorems**, re-exported through the aggregator
-**`foundations/MachLib.lean`** (636 imports) — a module not reachable from there is **invisible to
+material). `foundations/MachLib/` holds **1 056 `.lean` files** (740 top-level + 316 in subdirectories) /
+**~235 k lines** / **8 231 theorems**, re-exported through the aggregator
+**`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 (Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
 commands, do not trust the figure. An earlier revision said 5 851 theorems by an unrecorded method —
@@ -25,23 +25,27 @@ frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`**
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **242 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **243 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
-220  MachLib.*   axioms in the environment after `import MachLib`
+221  MachLib.*   axioms in the environment after `import MachLib`
  22  Certcom.*   IEEE-754 floor axioms
 ---
-242  = what the ledger pins
+243  = what the ledger pins
 ```
+
+(Re-derive the split with a `#eval` over `getEnv` partitioning `.axiomInfo` by name prefix — that is
+how these two were measured, not by grep.)
 
 A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
 base, not project axioms: `propext`, `Classical.choice`, `Quot.sound`, `sorryAx`, `Quot.lcInv`,
 `Lean.{ofReduceBool,ofReduceNat,trustCompiler}`, `isScalarObj`, and the `lc*` compiler internals.
 
-**Why grep disagrees:** `grep -c '^ *axiom '` over `MachLib/*.lean` returns **277**, of which **16
-are prose inside docstrings** (261 real) and **17 sit in unreachable modules** (244), and unreachable
-modules are not in the environment at all. Use the environment (`getEnv`, `.axiomInfo`), never grep —
+**Why grep disagrees:** `grep -c '^ *axiom '` over `MachLib/*.lean` returns **278** (511 including
+subdirectories, which the environment mostly does not see). When this was last decomposed by hand the
+gap was docstring prose plus axioms in unreachable modules; those two sub-counts are **not**
+re-derived here and should not be quoted as current. Use the environment (`getEnv`, `.axiomInfo`), never grep —
 this is the same rule as *"axiom-absence claims must be read off `#print axioms`."*
 
 ## Where the content comes from
@@ -60,8 +64,8 @@ lake build                                     # 719 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
-lake env lean AxiomLedger.lean                 # "242 axioms pinned; 57 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 385 claims resolve against #print axioms"
+lake env lean AxiomLedger.lean                 # "243 axioms pinned; 57 headline footprints ⊆ trusted"
+python3 tools/claim_audit/claim_audit.py       # "all 477 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
@@ -69,7 +73,7 @@ bash tools/check_obligations.sh                # EMLDepthTameness's open/dischar
 gate. It reports every registered claim-theorem that takes hypotheses and is referenced nowhere else
 in `MachLib/` — i.e. nobody has ever supplied its hypotheses. That is the one signal that was present
 and unread when `positive_branch_impossible` was vacuous: it had no caller and no specimen. The
-baseline is pinned as a **set** (`tools/witness_baseline.json`, 37 entries), not a count, so the
+baseline is pinned as a **set** (`tools/witness_baseline.json`, 36 entries), not a count, so the
 ratchet turns one way — a new entry fails, a witnessed one must be removed. It carries two convict
 specimens of its own. Read its scope note before trusting it: no-caller is not a defect on its own,
 and it cannot see vacuity, only drift.
@@ -94,7 +98,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**728 of 1034 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**750 of 1056 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
@@ -179,9 +183,11 @@ its footprint tally for exactly this reason.
 
 ## Status
 
-Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (731 build jobs) at **true exit
+Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (753 build jobs) at **true exit
 codes** — note `gate | tail` reads `tail`'s status, not the gate's. `sorryAx`: 1, allowlisted.
-**242 axioms pinned — unchanged across the whole 2026-08 EML arc, including the repair below.**
+**243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
+the entire depth/decay programme below. Obligations ledger: **21 rows, 9 open rows, 6 distinct open
+obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The `S > 0` branch was VACUOUS and is now repaired** (`a10b3b5b`, 2026-08-24). Two pole hypotheses
 were unsatisfiable for every `q`: `∀ r, DerivCoprime q r` (false at `r = 0`) and
@@ -205,11 +211,40 @@ asymmetric — only one factor per product is ever dirty), so no denominator *bo
 `EvNonvanish` (non-zero on a tail) is required over "not eventually zero", because germs have zero
 divisors and the weak form silently breaks properness.
 
-**Still open, all elsewhere:** `SignHardCase` (the sign of `exp a − log b`), `TowerLowerBound` and
-`TowerReducesToSign` (both `EMLCertifiedSynthesis`).
+**Still open.** `SignHardCase` is **discharged** (`signHardCase_holds`, `d7b8d28c`) — this line said
+otherwise for weeks; read the ledger, not this paragraph, and if they disagree the ledger is right
+because a gate checks it. The six distinct open obligations are: the
+`DecayFloor` ⇄ `EmlGermApproach` ⇄ `GrowthEnvelope` cycle (**one** obligation, three rows),
+`TowerLowerBound` ⇄ `TowerReducesToSign` (one obligation, two rows, equivalent since `SignHardCase`
+fell), `NegativeTranslationGrowingLeft`, `OneQueryDichotomy`, `BoundedGermTranscendence`,
+`OneQueryLevelSet`.
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then
 `s(1/x) ∈ {7,9,11}` proved, `d(1/x)` frozen at `{3,4}`, and a depth- and size-indexed **growth
 envelope** built. Start here:
 `monogate-research/exploration/inv_x_termination_route_2026_08_06/EML_STATUS.md`, and
 `FRONTIER_BRIEF_3.md` for the open questions.
+
+**2026-08-26/27 — the decay programme, `(dk)`–`(dy)`.** Four things a new session should know before
+touching it, because each was learned the expensive way:
+
+1. **The induction search is closed, on both sides.** `EMLLadderMeasure`: no `Nat`-valued measure on
+   trees that descends to both children can carry it — syntactic (`recipTree` costs two steps while a
+   step buys one) or germ-based (`EMLGermApproach` §4: growth does not descend to the *right* child,
+   unboundedly). Stated at that width and no wider: lexicographic orders, ordinal ranks and
+   non-structural arguments are untouched.
+2. **The missing input is named and placed.** `EmlGermApproach` (`EMLGermApproach`) is the obligation
+   at its narrowest, equivalent to `DecayFloor`. Its *per-pair* form is a corollary of Hardy (1912);
+   **the entire open content is the position of one `∃ k`** — see
+   `monogate-research/exploration/germ_approach_literature_2026_08_27/NOTE.md`. **No axiom has been
+   spent on it, deliberately.**
+3. **The ladder reaches the obligation.** `decayFloor_of_ladderInputs` (`EMLValueGap`): `DecayFloor`
+   follows from per-depth `NodeDecayBound` + `LowerEnvBound`, footprint-clean. `decayFloorUpTo_three`
+   is proved (the top was depth 2 for the whole arc); depth 4 needs `NodeDecayBound 3`, whose only
+   known route is the depth-≤2 cell enumeration that `FRONTIER_BRIEF_3` §4 Q2 measured and
+   **rejected**. Do not start it without deciding that a bounded rung is worth it — bounded rungs do
+   not move the ledger.
+4. **Everything above is pointwise on purpose.** The hypotheses of `NodeDecayBound` and
+   `ValueGapBound` are guarded *inside* the `∀ x`. An eventual reading would need `evSign_all` and
+   with it the analytic block, across the entire ladder. It also blocks two converses — see `(dx)`,
+   `(dy)` — and that is the accepted price.
