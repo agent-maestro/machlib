@@ -78,6 +78,18 @@ ratchet turns one way — a new entry fails, a witnessed one must be removed. It
 specimens of its own. Read its scope note before trusting it: no-caller is not a defect on its own,
 and it cannot see vacuity, only drift.
 
+`python3 tools/hypothesis_audit.py` is `witness_audit`'s **mirror**, and also not a CI gate. Where
+the witness audit finds *capstones nobody instantiates* (a conclusion with no consumer), this finds
+**propositions consumed as hypotheses that nothing ever concludes** — a premise with no producer.
+Both are "conditional theorem, unvalidated"; only one had a harness until 2026-08-27, when
+`ValueGapBound` was introduced, taken as a hypothesis by two theorems, and satisfied by nothing at
+any depth. **A Prop with consumers and no producers is not exercised; it is assumed** — and that is
+the easy half to miss, because the consumers make it look exercised. Baseline
+`tools/hypothesis_baseline.json`, 34 entries, a **set** not a count. Read its triage note before
+trusting a hit: most entries are correct (named open obligations belong there, and definitional
+predicates like `Lipschitz` are supplied from outside rather than proved). What to watch for is a new
+name that is *neither*.
+
 `lake env lean tools/sorry_audit.lean` is useful (`1 sorryAx`, allowlisted) but is **not** a CI gate,
 and note its scope: it walks the **environment** after `import MachLib`, so it cannot see
 `Discovered/`. Neither is `scripts/closerate.sh`, which is a *measurement* harness (close-rate,
