@@ -9310,6 +9310,38 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "depth3-rung-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "dispatches on tree *shape*, never\non germ sign"
+      ],
+      "module": "MachLib.EMLDepth3Rung",
+      "theorem": "MachLib.decayFloorUpTo_three",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "depth3-clamped-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "It lands at height `1`, not height `0`"
+      ],
+      "module": "MachLib.EMLDepth3Rung",
+      "theorem": "MachLib.depth3_clamped_floor",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }

@@ -5,6 +5,79 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (ds)
+
+### The depth-3 rung, down to one finite case analysis
+
+`decayFloor_upTo_two` has been the top of the ladder for the whole arc. `(de)` refuted `V₃`, the
+route meant to lift it; `(dj)` showed the reciprocal repair consumes `U 5` to produce `D 3`, which
+nobody has. Depth 3 has stood untouched. New module `MachLib/EMLDepth3Rung`.
+
+#### Why depth 3 specifically is worth attacking
+
+**It is the one place `(di)`'s re-embedding does not reach.** `posEmbed` shows the positive-`B` branch
+at depth `j + 4` contains all of `DecayFloor` at depth `j` — which says nothing at `j = 3`, since
+`3 − 4 < 0`. So unlike every higher rung, **the depth-3 positive branch is not known to be as hard as
+the general obligation.** That asymmetry has been sitting in the corpus since `(di)` and nobody had
+read it as an opening.
+
+```
+Depth3NodeFloor        the node case at depth 3, both children depth ≤ 2   ← the residue
+decayFloorUpTo_three   Depth3NodeFloor ⟹ DecayFloorUpTo 3                  ← proved
+depth3_clamped_floor   the clamped half of the residue                     ← proved
+```
+
+#### The reduction costs no axioms, and that was a design choice
+
+The obvious way to split the node case is on the eventual sign of `B` — which needs `evSign_all`, and
+with it the entire analytic block (`rolle_ct`, `analytic_finite_zeros_compact`,
+`eml_tree_analytic_on_interval`). **`Depth3NodeFloor` is stated so no split is needed**: it takes the
+node as given and asks only for the floor, so `decayFloorUpTo_three` dispatches on tree *shape*, never
+on germ sign. The clamped half then becomes a theorem *about* the residue rather than a step *in* the
+reduction.
+
+**Footprint clean** — and this is the first place in the arc where staying clean required arranging
+the statement rather than just checking afterwards. The sign split is now paid for only by whoever
+finishes the branch.
+
+#### The clamped half, and what its height says
+
+`depth3_clamped_floor` runs on `depth_le_two_lower_on_ray` (a depth-≤2 germ is `≥ −C − x`), so a
+clamped node is `exp ∘ A ≥ exp (−C − x)`, and `C + x < exp x` clears the tower. The ray is pushed to
+`X₀ + exp C`, past both `X₀` and `C`, since `exp C > C` — which avoids needing a `max` on `Real`, a
+thing this corpus does not have.
+
+**It lands at height `1`, not height `0`** — and that is a property of the *route*, not of depth 3.
+The linear floor `−C − x` carries an additive constant, and `exp (−C − x) < exp (−x)` whenever
+`C > 0`.
+
+> The sharper statement — that a depth-3 clamped node never dips below `exp (−x)` — appears to be
+> **true**, and needs the depth-≤1 classification rather than the linear envelope. The largest
+> depth-≤1 germ is `exp x + K`, whose log exceeds `x` by `log (1 + K e^{−x})` — **exponentially
+> small** — while `exp (P x)` for depth-≤1 `P` decays at worst **polynomially** (`P` bottoms out at
+> `≈ −log x`) and therefore dominates it. **That gap between `e^{−x}` and `1/x` is the entire
+> margin.**
+
+So the cheap route lands one rung above the conjecture `max (0, d − 3)` from `(dr)`, and the
+conjecture survives. **Not proved** — recorded so the next session does not mistake `1` for the true
+value, which is exactly the kind of slip a bounded result invites.
+
+#### What is left
+
+One finite case analysis: `A` and `B` both depth ≤ 2, `B` eventually positive, the node eventually
+positive, and a floor wanted. `depth_le_two_normal_form` puts both children in the form
+`exp a − log b` with `a`, `b` depth-1 forms, so the space is finite. It is also exactly the shape
+`FRONTIER_BRIEF_3` warned was a trap at larger scale — **but at depth 3 the parameter regimes are the
+four depth-1 closed forms, not an unbounded stratification**, and the trap it warns about is the
+regime split, which here is finite too.
+
+`DecayFloor` itself is untouched and the ledger is unchanged: **21 rows, 9 open rows, 6 distinct
+open.** A bounded rung is not the obligation.
+
+Gates, every figure read off the gate that produced it: build **751 jobs**, aggregator 748 of 1054,
+consistency PASS, claims 458, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (dr)
 
 ### The height reframing, built — and it routes the question rather than answering it
