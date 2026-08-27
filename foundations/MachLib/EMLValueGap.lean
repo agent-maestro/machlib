@@ -423,4 +423,128 @@ theorem decayFloor_of_ladderInputs (h : LadderInputs) : DecayFloor := by
 theorem ladderInputs_at_two : ∃ m : Nat, NodeDecayBound 2 m ∧ LowerEnvBound 2 m :=
   ⟨1, nodeDecayBound_two, lowerEnvBound_two⟩
 
+/-! ## §7 — a specimen for `ValueGapBound`, because it had none
+
+`ValueGapBound` was introduced in §2 and consumed as a hypothesis by
+`nodeDecayBound_of_valueGap` and `decayFloorUpTo_four_of_valueGap`. **Nothing satisfied it, at any
+depth.** By this corpus's own rule that makes both of those unvalidated: a conditional theorem is not
+evidence until its hypotheses are instantiated, and `positive_branch_impossible` sat vacuous for
+weeks with every gate green because it had no caller and no specimen. This one had callers but no
+specimen — half the tell-tale, which is exactly the half that is easy to miss.
+
+`valueGapBound_zero` closes that. It is the leaf case, and all four pairings appear:
+
+* `const a` / `const b` — the gap is a **fixed** positive constant, so `C = −log (gap)` serves. The
+  branch where `b ≥ exp (exp a)` is vacuous, and needs the case split *before* `C` is chosen, since
+  `C` is committed outside the `∀ x`.
+* `const a` / `var` — the guard `x < exp (exp a)` is **eventually false**; push the ray past
+  `exp (exp (exp a))` and the branch empties.
+* `var` / `const b` — `exp (exp x)` outruns `b`, so `C = 0` and one rung of ray.
+* `var` / `var` — `exp (exp x) ≥ x + 1` on the ray, from `exp x > 2x`.
+
+Two of the four are **vacuous by ray**, which is worth stating rather than hiding: a specimen whose
+branches are mostly empty is weak evidence, and this one is the weakest form that still counts —
+it shows the Prop is *satisfiable*, not that it is satisfiable *interestingly*. What it rules out is
+the failure mode where `ValueGapBound j m` is unsatisfiable for every `j`, which would have made the
+whole of §3–§4 an elaborate way of assuming `False`. -/
+
+private theorem exp_neg_le_one {x : Real} (hx : (0 : Real) ≤ x) : exp (-x) ≤ 1 := by
+  have hz : exp (0 : Real) = 1 := exp_zero
+  rw [← hz]
+  refine exp_monotone ?_
+  have u := neg_le_neg_wit hx
+  have e : -(0 : Real) = 0 := by mach_ring
+  rw [e] at u; exact u
+
+private theorem gap_pos_of_lt {b E : Real} (h : b < E) : 0 < E - b := by
+  have u := add_lt_add_left h (-b)
+  have e1 : -b + b = (0 : Real) := by mach_ring
+  have e2 : -b + E = E - b := by mach_ring
+  rw [e1, e2] at u; exact u
+
+private theorem one_le_gap {b E : Real} (h : b + 1 ≤ E) : 1 ≤ E - b := by
+  have u := add_le_add_wit (le_refl (-b)) h
+  have e1 : -b + (b + 1) = (1 : Real) := by mach_ring
+  have e2 : -b + E = E - b := by mach_ring
+  rw [e1, e2] at u; exact u
+
+/-- **`ValueGapBound` is satisfiable** — at the leaves, where all four shape pairings are checked. -/
+theorem valueGapBound_zero : ValueGapBound 0 0 := by
+  intro A B hA hB
+  cases A with
+  | eml P Q => simp only [EMLTree.depth] at hA; omega
+  | const a =>
+      cases B with
+      | eml P Q => simp only [EMLTree.depth] at hB; omega
+      | const b =>
+          rcases lt_total b (exp (exp a)) with hlt | heq | hgt
+          · refine ⟨-log (exp (exp a) - b), 1, le_refl 1, fun x hx _ _ => ?_⟩
+            have hg : (0 : Real) < exp (exp a) - b := gap_pos_of_lt hlt
+            have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx
+            show exp (-(-log (exp (exp a) - b) + EMLTree.towerFn 0 x)) ≤ exp (exp a) - b
+            have hT : EMLTree.towerFn 0 x = x := rfl
+            rw [hT]
+            have hstep : -(-log (exp (exp a) - b) + x) ≤ log (exp (exp a) - b) := by
+              have u := add_le_add_wit (le_refl (log (exp (exp a) - b))) (neg_le_neg_wit hx0)
+              have e1 : log (exp (exp a) - b) + -x
+                  = -(-log (exp (exp a) - b) + x) := by mach_ring
+              have e2 : log (exp (exp a) - b) + -(0 : Real)
+                  = log (exp (exp a) - b) := by mach_ring
+              rw [e1, e2] at u; exact u
+            exact le_trans (exp_monotone hstep) (le_of_eq (exp_log hg))
+          · refine ⟨0, 1, le_refl 1, fun x _ _ hcon => ?_⟩
+            exact absurd (heq ▸ hcon) (lt_irrefl_ax _)
+          · refine ⟨0, 1, le_refl 1, fun x _ _ hcon => ?_⟩
+            exact absurd (lt_of_lt_of_le hcon (le_of_lt hgt)) (lt_irrefl_ax _)
+      | var =>
+          -- the guard `x < exp (exp a)` is eventually false
+          refine ⟨0, 1 + exp (exp (exp a)), le_add_nonneg' (le_of_lt (exp_pos _)),
+            fun x hx _ hcon => ?_⟩
+          have h1 : exp (exp a) < exp (exp (exp a)) := exp_grows_strictly_thm _
+          have h2 : exp (exp (exp a)) ≤ 1 + exp (exp (exp a)) := by
+            have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp (exp (exp a))))
+            have e : (0 : Real) + exp (exp (exp a)) = exp (exp (exp a)) := by mach_ring
+            rw [e] at u; exact u
+          have : exp (exp a) < x :=
+            lt_of_lt_of_le h1 (le_trans h2 hx)
+          exact absurd (lt_of_lt_of_le hcon (le_of_lt this)) (lt_irrefl_ax _)
+  | var =>
+      cases B with
+      | eml P Q => simp only [EMLTree.depth] at hB; omega
+      | const b =>
+          refine ⟨0, 1 + exp (b + 1), le_add_nonneg' (le_of_lt (exp_pos _)), fun x hx _ _ => ?_⟩
+          have hx1 : (1 : Real) ≤ x := le_trans (le_add_nonneg' (le_of_lt (exp_pos _))) hx
+          have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+          have hb1 : b + 1 < x := by
+            have h1 : b + 1 < exp (b + 1) := exp_grows_strictly_thm _
+            have h2 : exp (b + 1) ≤ 1 + exp (b + 1) := by
+              have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp (b + 1)))
+              have e : (0 : Real) + exp (b + 1) = exp (b + 1) := by mach_ring
+              rw [e] at u; exact u
+            exact lt_of_lt_of_le h1 (le_trans h2 hx)
+          have hxx : x < exp (exp x) :=
+            lt_of_lt_of_le (exp_grows_strictly_thm x) (le_of_lt (exp_grows_strictly_thm _))
+          show exp (-((0 : Real) + EMLTree.towerFn 0 x)) ≤ exp (exp x) - b
+          have hT : (0 : Real) + EMLTree.towerFn 0 x = x := by
+            show (0 : Real) + x = x
+            mach_ring
+          rw [hT]
+          exact le_trans (exp_neg_le_one hx0)
+            (one_le_gap (le_of_lt (lt_of_lt_of_le hb1 (le_of_lt hxx))))
+      | var =>
+          refine ⟨0, 1, le_refl 1, fun x hx _ _ => ?_⟩
+          have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx
+          have h2 : (1 + 1) * x < exp x := exp_gt_two_x x
+          have e2 : (1 + 1) * x = x + x := by mach_ring
+          rw [e2] at h2
+          have hx1 : x + 1 ≤ x + x := add_le_add_wit (le_refl x) hx
+          have hxe : x + 1 < exp (exp x) :=
+            lt_of_lt_of_le (lt_of_le_of_lt hx1 h2) (le_of_lt (exp_grows_strictly_thm _))
+          show exp (-((0 : Real) + EMLTree.towerFn 0 x)) ≤ exp (exp x) - x
+          have hT : (0 : Real) + EMLTree.towerFn 0 x = x := by
+            show (0 : Real) + x = x
+            mach_ring
+          rw [hT]
+          exact le_trans (exp_neg_le_one hx0) (one_le_gap (le_of_lt hxe))
+
 end MachLib

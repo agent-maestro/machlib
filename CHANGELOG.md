@@ -5,6 +5,65 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dz)
+
+### `ValueGapBound` had no specimen — self-audit, and the specimen
+
+An audit of the Props introduced across `(dk)`–`(dy)`, asking of each whether **anything satisfies
+it**, found one that nothing does:
+
+```
+LadderMeasure          depthMeasure, sizeMeasure          ✓
+HeightModel            zeroModel                          ✓ (and its floor property REFUTED for it)
+EmlGermApproach        two theorems conclude it           ✓
+NodeDecayBound         nodeDecayBound_two                 ✓
+LowerEnvBound          lowerEnvBound_two, …_three         ✓
+ExpUpperBound          expUpperBound_three                ✓
+ValueGapBound          — nothing —                        ✗
+LadderInputs           — nothing, correctly: it IS the open thing (ladderInputs_at_two shows the shape)
+```
+
+`ValueGapBound` was introduced in `(dw)` §2 and consumed as a hypothesis by
+`nodeDecayBound_of_valueGap` and `decayFloorUpTo_four_of_valueGap`. **Nothing satisfied it, at any
+depth.** By this corpus's own rule that made both of those unvalidated.
+
+> The `positive_branch_impossible` tell-tale was *"no caller and no specimen"*. This had **callers but
+> no specimen** — half the signal, and the half that is easy to miss, because the callers make it look
+> exercised. A Prop with consumers and no producers is not exercised; it is assumed.
+
+#### The specimen
+
+`valueGapBound_zero : ValueGapBound 0 0`, at the leaves, with all four shape pairings:
+
+* `const a` / `const b` — the gap is a **fixed** positive constant, so `C = −log (gap)` serves. The
+  `b ≥ exp (exp a)` branch is vacuous and the case split must happen **before** `C` is chosen, since
+  `C` is committed outside the `∀ x`.
+* `const a` / `var` — the guard `x < exp (exp a)` is eventually false; push the ray past
+  `exp (exp (exp a))`.
+* `var` / `const b` — `exp (exp x)` outruns `b`; `C = 0` and one rung of ray.
+* `var` / `var` — `exp (exp x) ≥ x + 1` on the ray, from `exp x > 2x`.
+
+**Two of the four are vacuous by ray, and that is stated rather than hidden.** A specimen whose
+branches are mostly empty is weak evidence — this is the weakest form that still counts. What it
+rules out is the failure mode where `ValueGapBound j m` is unsatisfiable for *every* `j`, which would
+have made all of `(dw)`'s §3–§4 an elaborate way of assuming `False`.
+
+#### What the audit does not cover
+
+It asks "does anything conclude this Prop", which is a *syntactic* question. It cannot see vacuity in
+the other direction — a Prop that is satisfiable but whose *hypotheses* are unsatisfiable at the
+instances that matter. That is the `positive_branch_impossible` failure exactly, and the only defence
+remains a specimen discharging every hypothesis at a concrete point. `valueGapBound_zero` does that
+for the leaf case and for nothing above it.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`. Ledger unchanged: 21 rows / 9 open rows / 6 distinct
+open.
+
+Gates, every figure read off the gate that produced it: build **753 jobs**, aggregator 750 of 1056,
+consistency PASS, claims 478, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (dy)
 
 ### The capstone: the ladder machinery reaches `DecayFloor` itself — and why depth 4 is different in kind

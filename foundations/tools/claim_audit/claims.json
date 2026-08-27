@@ -9646,6 +9646,22 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "valuegap-specimen-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "at the leaves, with all four shape pairings"
+      ],
+      "module": "MachLib.EMLValueGap",
+      "theorem": "MachLib.valueGapBound_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }
