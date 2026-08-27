@@ -5,6 +5,68 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dt)
+
+### `DecayFloorUpTo 3` — the ladder's top moves for the first time in the arc
+
+`(ds)` reduced the depth-3 rung to one residue and called it "a finite case analysis". **It was
+already done.** `decayFloorUpTo_three` is now an **unconditional theorem**, and `Depth3NodeFloor` is
+deleted rather than left standing as an obligation nobody needs.
+
+#### The residue was a discharged ledger row, one module away
+
+`Depth3DecayExp` — discharged since 2026-08-18 — *is* the hard half of the node case:
+
+```
+Depth3DecayExp : ∀ A B, A.depth ≤ 2 → B.depth ≤ 2 → ∃ C X₀, 1 ≤ X₀ ∧ ∀ x ≥ X₀,
+    0 < log (B.eval x) → 0 < exp (A.eval x) − log (B.eval x) →
+      -log (exp (A.eval x) − log (B.eval x)) ≤ C + exp x
+```
+
+The load-bearing detail is that `0 < log (B x)` sits **inside** the `∀ x` — it is a hypothesis *at
+each point*, not an eventual one. So the node splits by a **pointwise trichotomy** on the sign of
+`log (B x)`, and no eventual-sign machinery is needed:
+
+* `log (B x) > 0` — `Depth3DecayExp` bounds `−log (node)` by `C₁ + exp x` outright.
+* `log (B x) = 0` — the node **is** `exp (A x)`.
+* `log (B x) < 0` — the node **exceeds** `exp (A x)`.
+
+The last two are floored by `depth_le_two_lower_on_ray` (`A ≥ −C₂ − x`), and `tower_two_dominates`
+puts `C₁ + exp x` and `C₂ + x` both under `exp (exp x)`. **Footprint clean** — had that hypothesis
+been eventual rather than pointwise, the split would have needed `evSign_all` and with it the whole
+analytic block, and it would have looked like a real obstruction.
+
+> **A discharged row is a tool, not a trophy.** `Depth3DecayExp` was closed as bookkeeping for its
+> refuted sibling `Depth3DecayHard`; nothing pointed from it to the rung it unlocks. **The ledger
+> records status, not applicability**, and the gap between those two is where results go to be
+> forgotten. Worth a habit: before naming a new residue, read the *discharged* column, not just the
+> open one.
+
+#### What moved
+
+**`decayFloor_upTo_two` has been the top of the ladder for the whole arc.** It is now
+`decayFloorUpTo_three`. `(de)` refuted `V₃`, the route meant to lift it, and `(dj)` showed the
+reciprocal repair consumes `U 5` to produce `D 3`; the rung came from neither, but from `(di)`'s
+`+4` re-embedding **not reaching `j = 3`** and from a row already in hand.
+
+The height is **`2`, not the `1` `(ds)` guessed** — `Depth3DecayExp` gives `C + exp x`, which `exp x`
+cannot absorb and `exp (exp x)` can. Against `(dr)`'s bracket depth 3 is now `[0, 2]`, improved from
+`[0, 3]`; the conjecture `max (0, d − 3) = 0` is still open here, and `depth3_clamped_floor`'s
+height-`1` clamped bound remains the best one-sided evidence for it.
+
+#### Scope
+
+**`DecayFloor` is untouched and the ledger does not move: 21 rows, 9 open rows, 6 distinct open.** A
+bounded rung is not the obligation, and `DecayFloorUpTo 3` says nothing about depth 4 — `deepDecay 0`
+sits at depth 4 and already defeats height 0 there.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates, every figure read off the gate that produced it: build **751 jobs**, aggregator 748 of 1054,
+consistency PASS, claims 461, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (ds)
 
 ### The depth-3 rung, down to one finite case analysis
@@ -73,6 +135,11 @@ regime split, which here is finite too.
 
 `DecayFloor` itself is untouched and the ledger is unchanged: **21 rows, 9 open rows, 6 distinct
 open.** A bounded rung is not the obligation.
+
+> **⚠ SUPERSEDED by `(dt)` — the residue was already discharged.** `Depth3DecayExp`, a **discharged**
+> ledger row, *is* the hard half of `Depth3NodeFloor`, and its `0 < log (B x)` is **pointwise**. So
+> `decayFloorUpTo_three` is now an unconditional theorem at height `2`, and `Depth3NodeFloor` is
+> deleted. The reasoning below about why depth 3 is attackable stands and is what led there.
 
 Gates, every figure read off the gate that produced it: build **751 jobs**, aggregator 748 of 1054,
 consistency PASS, claims 458, obligations **21 rows / 9 open rows / 6 distinct open** with 18

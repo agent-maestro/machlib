@@ -9342,6 +9342,54 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "depth3-rung-proved-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is now an **unconditional theorem**"
+      ],
+      "module": "MachLib.EMLDepth3Rung",
+      "theorem": "MachLib.decayFloorUpTo_three",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "depth3-node-floor-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the node splits by a **pointwise trichotomy**"
+      ],
+      "module": "MachLib.EMLDepth3Rung",
+      "theorem": "MachLib.depth3_node_floor",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "depth3-tower-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "both under `exp (exp x)`"
+      ],
+      "module": "MachLib.EMLDepth3Rung",
+      "theorem": "MachLib.tower_two_dominates",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }

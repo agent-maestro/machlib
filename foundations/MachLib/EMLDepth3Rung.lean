@@ -61,41 +61,167 @@ theorem floor_lift {k d : Nat} (t : EMLTree) {X₁ : Real} (hX₁ : 1 ≤ X₁)
   have hmono := towerFn_mono k d hx1
   exact le_trans (exp_monotone (neg_le_neg_wit hmono)) (h x hx)
 
-/-! ## §2 — the residue, and the rung that rests on it -/
+/-! ## §2 — the node case, proved
 
-/-- **The depth-3 node case.** Both children at depth ≤ 2, the node eventually positive, and a
-height-`1` floor wanted. No sign hypothesis on `B`: the split belongs to whoever discharges this,
-not to the reduction. -/
-def Depth3NodeFloor : Prop :=
-  ∀ (A B : EMLTree) (X₀ : Real), A.depth ≤ 2 → B.depth ≤ 2 → 1 ≤ X₀ →
-    (∀ x : Real, X₀ ≤ x → 0 < (EMLTree.eml A B).eval x) →
+`Depth3DecayExp` — a **discharged** ledger row since `(bz)` — is *exactly* the hard half of the node
+case, and its hypotheses are **pointwise**:
+
+```
+Depth3DecayExp : ∀ A B, A.depth ≤ 2 → B.depth ≤ 2 → ∃ C X₀, 1 ≤ X₀ ∧ ∀ x ≥ X₀,
+    0 < log (B.eval x) → 0 < exp (A.eval x) − log (B.eval x) →
+      -log (exp (A.eval x) − log (B.eval x)) ≤ C + exp x
+```
+
+Because `0 < log (B x)` is a hypothesis *at each `x`* rather than an eventual one, the node splits by
+a **pointwise trichotomy** and no eventual-sign machinery is needed:
+
+* `log (B x) ≤ 0` — then `−log (B x) ≥ 0`, so the node is `≥ exp (A x)`, and
+  `depth_le_two_lower_on_ray` floors `A` at `−C₂ − x`.
+* `log (B x) > 0` — then `Depth3DecayExp` bounds `−log (node)` by `C₁ + exp x` directly.
+
+Both floors clear `towerFn 2 x = exp (exp x)`, so **the node case is a theorem and so is the rung**.
+
+## What this cost, and what it did not
+
+Nothing. The residue `(ds)` isolated was already sitting in the ledger, discharged, one module away.
+The work was noticing that its `0 < log (B x)` is pointwise — an eventual reading would have forced
+`evSign_all` and the whole analytic block, and would have looked like a genuine obstruction.
+
+> **A discharged row is a tool, not a trophy.** `Depth3DecayExp` was closed on 2026-08-18 as
+> bookkeeping for a refuted sibling; nothing pointed from it to the rung it unlocks. The ledger
+> records status, not applicability, and the gap between those is where results go to be forgotten.
+
+**The height is `2`, not the `1` `(ds)` conjectured** — `Depth3DecayExp`'s bound is `C + exp x`, which
+`exp x` cannot absorb but `exp (exp x)` can. Against `(dr)`'s bracket the depth-3 rung is now
+`[d − 3, 2] = [0, 2]`, improved from `[0, 3]`, and `(dr)`'s conjecture `max (0, d − 3) = 0` is still
+open here.
+-/
+
+/-- Past `C`, the height-2 tower dominates both `C + x` and `C + exp x`. Two applications of
+`exp_gt_two_x`, one at `x` and one at `exp x`. -/
+theorem tower_two_dominates {C x : Real} (hCx : C < x) :
+    C + exp x ≤ exp (exp x) ∧ C + x ≤ exp (exp x) := by
+  have h2x : (1 + 1) * x < exp x := exp_gt_two_x x
+  have e2x : (1 + 1) * x = x + x := by mach_ring
+  rw [e2x] at h2x
+  have hxlt : x < exp x := exp_grows_strictly_thm x
+  have hee : exp x < exp (exp x) := exp_grows_strictly_thm (exp x)
+  have h2e : (1 + 1) * exp x < exp (exp x) := exp_gt_two_x (exp x)
+  have e2e : (1 + 1) * exp x = exp x + exp x := by mach_ring
+  rw [e2e] at h2e
+  constructor
+  · have hCe : C < exp x := lt_of_lt_of_le hCx (le_of_lt hxlt)
+    have u := add_lt_add_left hCe (exp x)
+    have ec : exp x + C = C + exp x := by mach_ring
+    rw [ec] at u
+    exact le_of_lt (lt_of_lt_of_le u (le_of_lt h2e))
+  · have u := add_lt_add_left hCx x
+    have ec : x + C = C + x := by mach_ring
+    rw [ec] at u
+    exact le_of_lt (lt_of_lt_of_le u (le_of_lt (lt_of_lt_of_le h2x (le_of_lt hee))))
+
+/-- **The depth-3 node case, proved.** Both children at depth ≤ 2, the node eventually positive, and
+a height-`2` floor delivered — by a pointwise split on the sign of `log (B x)`, which needs no
+`evSign_all` and therefore none of the analytic block. -/
+theorem depth3_node_floor (A B : EMLTree) (X₀ : Real) (hA : A.depth ≤ 2) (hB : B.depth ≤ 2)
+    (hX₀ : 1 ≤ X₀) (hpos : ∀ x : Real, X₀ ≤ x → 0 < (EMLTree.eml A B).eval x) :
     ∃ X₁ : Real, X₀ ≤ X₁ ∧ ∀ x : Real, X₁ ≤ x →
-      exp (-(EMLTree.towerFn 1 x)) ≤ (EMLTree.eml A B).eval x
+      exp (-(EMLTree.towerFn 2 x)) ≤ (EMLTree.eml A B).eval x := by
+  obtain ⟨C₂, hL⟩ := depth_le_two_lower_on_ray A hA
+  obtain ⟨C₁, XD, hXD, hD⟩ := depth3DecayExp_holds A B hA hB
+  have hXDp : (0 : Real) ≤ XD := le_trans (le_of_lt zero_lt_one_ax) hXD
+  have he1 : (0 : Real) ≤ exp C₁ := le_of_lt (exp_pos C₁)
+  have he2 : (0 : Real) ≤ exp C₂ := le_of_lt (exp_pos C₂)
+  have hX0p : (0 : Real) ≤ X₀ := le_trans (le_of_lt zero_lt_one_ax) hX₀
+  refine ⟨X₀ + XD + exp C₁ + exp C₂, ?_, ?_⟩
+  · exact le_trans (le_trans (le_add_nonneg' hXDp) (le_add_nonneg' he1)) (le_add_nonneg' he2)
+  intro x hx
+  -- the four ray facts
+  have hxX₀ : X₀ ≤ x :=
+    le_trans (le_trans (le_trans (le_add_nonneg' hXDp) (le_add_nonneg' he1))
+      (le_add_nonneg' he2)) hx
+  have hxXD : XD ≤ x := by
+    have e : X₀ + XD + exp C₁ + exp C₂ = XD + (X₀ + exp C₁ + exp C₂) := by mach_ring
+    rw [e] at hx
+    exact le_trans (le_add_nonneg' (by
+      have u := add_le_add_wit (add_le_add_wit hX0p he1) he2
+      have e2 : (0 : Real) + 0 + 0 = 0 := by mach_ring
+      rw [e2] at u; exact u)) hx
+  have hxC₁ : C₁ < x := by
+    have e : X₀ + XD + exp C₁ + exp C₂ = exp C₁ + (X₀ + XD + exp C₂) := by mach_ring
+    rw [e] at hx
+    refine lt_of_lt_of_le (exp_grows_strictly_thm C₁) (le_trans (le_add_nonneg' ?_) hx)
+    have u := add_le_add_wit (add_le_add_wit hX0p hXDp) he2
+    have e2 : (0 : Real) + 0 + 0 = 0 := by mach_ring
+    rw [e2] at u; exact u
+  have hxC₂ : C₂ < x := by
+    have e : X₀ + XD + exp C₁ + exp C₂ = exp C₂ + (X₀ + XD + exp C₁) := by mach_ring
+    rw [e] at hx
+    refine lt_of_lt_of_le (exp_grows_strictly_thm C₂) (le_trans (le_add_nonneg' ?_) hx)
+    have u := add_le_add_wit (add_le_add_wit hX0p hXDp) he1
+    have e2 : (0 : Real) + 0 + 0 = 0 := by mach_ring
+    rw [e2] at u; exact u
+  have hx1 : (1 : Real) ≤ x := le_trans hX₀ hxX₀
+  have hnode : 0 < exp (A.eval x) - log (B.eval x) := hpos x hxX₀
+  have hT2 : EMLTree.towerFn 2 x = exp (exp x) := rfl
+  show exp (-(EMLTree.towerFn 2 x)) ≤ exp (A.eval x) - log (B.eval x)
+  rw [hT2]
+  rcases lt_total 0 (log (B.eval x)) with hlp | hlz | hln
+  · -- log (B x) > 0 : the discharged row does it
+    obtain ⟨hd1, _⟩ := tower_two_dominates hxC₁
+    have hb := hD x hxXD hlp hnode
+    have hlog : -(C₁ + exp x) ≤ log (exp (A.eval x) - log (B.eval x)) := by
+      have u := neg_le_neg_wit hb
+      have e : -(-log (exp (A.eval x) - log (B.eval x)))
+          = log (exp (A.eval x) - log (B.eval x)) := by mach_ring
+      rw [e] at u; exact u
+    have hstep : exp (-(exp (exp x))) ≤ exp (-(C₁ + exp x)) :=
+      exp_monotone (neg_le_neg_wit hd1)
+    have hfin := exp_monotone hlog
+    rw [exp_log hnode] at hfin
+    exact le_trans hstep hfin
+  · -- log (B x) = 0 : the node IS exp (A x)
+    obtain ⟨_, hd2⟩ := tower_two_dominates hxC₂
+    rw [← hlz]
+    have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
+    rw [e]
+    refine exp_monotone (le_trans ?_ (hL x hx1))
+    have u := neg_le_neg_wit hd2
+    have e2 : -(C₂ + x) = -C₂ - x := by mach_ring
+    rw [e2] at u; exact u
+  · -- log (B x) < 0 : the node exceeds exp (A x)
+    obtain ⟨_, hd2⟩ := tower_two_dominates hxC₂
+    have hgrow : exp (A.eval x) ≤ exp (A.eval x) - log (B.eval x) := by
+      have u := add_le_add_wit (le_refl (exp (A.eval x))) (neg_le_neg_wit (le_of_lt hln))
+      have e1 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+      have e2 : exp (A.eval x) + -(0 : Real) = exp (A.eval x) := by mach_ring
+      rw [e1, e2] at u; exact u
+    refine le_trans ?_ hgrow
+    refine exp_monotone (le_trans ?_ (hL x hx1))
+    have u := neg_le_neg_wit hd2
+    have e2 : -(C₂ + x) = -C₂ - x := by mach_ring
+    rw [e2] at u; exact u
 
-/-- **The rung, modulo the residue.** Everything at depth ≤ 2 is `decayFloor_upTo_two`, lifted to
-height `1` where the statement needs it; the leaves at depth 3 are depth 0; the node is the residue.
-Dispatch is on tree shape alone — no germ-sign analysis, hence no analytic axioms. -/
-theorem decayFloorUpTo_three (h : Depth3NodeFloor) : DecayFloorUpTo 3 := by
+/-- **The rung, unconditionally.** Depth ≤ 2 is `decayFloor_upTo_two` at height `0`; the depth-3
+leaves are depth `0`; the depth-3 node is `depth3_node_floor` at height `2`. -/
+theorem decayFloorUpTo_three : DecayFloorUpTo 3 := by
   intro j hj
   match j, hj with
-  | 0, _ =>
-      exact ⟨0, fun t X₀ hd hX₀ hpos => decayFloor_upTo_two t X₀ (by omega) hX₀ hpos⟩
-  | 1, _ =>
-      exact ⟨0, fun t X₀ hd hX₀ hpos => decayFloor_upTo_two t X₀ (by omega) hX₀ hpos⟩
-  | 2, _ =>
-      exact ⟨0, fun t X₀ hd hX₀ hpos => decayFloor_upTo_two t X₀ (by omega) hX₀ hpos⟩
+  | 0, _ => exact ⟨0, fun t X₀ hd hX₀ hpos => decayFloor_upTo_two t X₀ (by omega) hX₀ hpos⟩
+  | 1, _ => exact ⟨0, fun t X₀ hd hX₀ hpos => decayFloor_upTo_two t X₀ (by omega) hX₀ hpos⟩
+  | 2, _ => exact ⟨0, fun t X₀ hd hX₀ hpos => decayFloor_upTo_two t X₀ (by omega) hX₀ hpos⟩
   | 3, _ =>
-      refine ⟨1, ?_⟩
+      refine ⟨2, ?_⟩
       intro t X₀ hd hX₀ hpos
       cases t with
       | const c =>
           obtain ⟨X₁, hX₁, hf⟩ :=
             decayFloor_upTo_two (EMLTree.const c) X₀ (by simp only [EMLTree.depth]; omega) hX₀ hpos
-          exact ⟨X₁, hX₁, floor_lift (d := 1) _ (le_trans hX₀ hX₁) hf⟩
+          exact ⟨X₁, hX₁, floor_lift (d := 2) _ (le_trans hX₀ hX₁) hf⟩
       | var =>
           obtain ⟨X₁, hX₁, hf⟩ :=
             decayFloor_upTo_two EMLTree.var X₀ (by simp only [EMLTree.depth]; omega) hX₀ hpos
-          exact ⟨X₁, hX₁, floor_lift (d := 1) _ (le_trans hX₀ hX₁) hf⟩
+          exact ⟨X₁, hX₁, floor_lift (d := 2) _ (le_trans hX₀ hX₁) hf⟩
       | eml A B =>
           have hA : A.depth ≤ 2 := by
             simp only [EMLTree.depth] at hd
@@ -103,7 +229,7 @@ theorem decayFloorUpTo_three (h : Depth3NodeFloor) : DecayFloorUpTo 3 := by
           have hB : B.depth ≤ 2 := by
             simp only [EMLTree.depth] at hd
             have := Nat.le_max_right A.depth B.depth; omega
-          exact h A B X₀ hA hB hX₀ hpos
+          exact depth3_node_floor A B X₀ hA hB hX₀ hpos
 
 /-! ## §3 — the clamped half of the residue, discharged -/
 
