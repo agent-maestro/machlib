@@ -44,8 +44,19 @@ converse route included, `+3` and `+6`.
 **This bounds nothing and discharges nothing.** It is a route-closure: it says where not to look,
 and `GrowthEnvelope` stays open, unchanged, as one obligation with `DecayFloor`. In particular it
 does *not* say no proof exists — only that no induction whose parameter is a grammar-respecting
-measure can run the reciprocal transfer as its step. A parameter that is not of this shape (one that
-can *decrease* under `recipTree`, or that is not a function of the tree at all) is untouched.
+measure can run the reciprocal transfer as its step.
+
+**And "grammar-respecting" is not a restriction** — that is §3. Every `Nat`-valued measure strictly
+descending to both children *is* a `LadderMeasure` with `step = 1`, definitionally, and descending to
+both children is exactly what the ladder step needs (it recurses left for the envelope and right for
+the floor). So the class is not a shape chosen to make the theorem come out; it is the set of
+measures that can carry a structural induction at all. The escape route *"then use a measure that
+does not grow under `recipTree`"* closes with it (`no_structural_induction_of_cheap_recip`): such
+measures exist, and none of them descends.
+
+**The honest residual.** What is left untouched is a parameter that is not a `Nat`-valued measure on
+the tree — a lexicographic pair with an unbounded second component, an ordinal, or an induction on
+the *germ* rather than on the syntax. That is where a proof would now have to come from.
 
 **Where the escape hatch is, and why it is not one.** The hypothesis doing the work is `step_pos`.
 A measure that prices an `eml` node at `0` evades `recip_ge` — but then `step_children` hands back
@@ -221,5 +232,66 @@ two specimens are known to be the *same* obstruction and not two coincidences. -
 theorem depth_ladder_fails (t : EMLTree) :
     ¬ ((recipTree t).depth ≤ t.depth + 1) :=
   depthMeasure.recip_not_at_one_step t
+
+/-! ## §3 — the hypothesis is not a restriction
+
+`§1` reads as a theorem about a *class* of measures, which invites the reply *"then use a measure
+outside the class"*. There is nowhere to go. A structural induction on an EML tree recurses into its
+children, and the ladder step recurses into **both** — left for the envelope, right for the floor.
+A `Nat`-valued measure supporting that must strictly descend to both children, and any measure that
+does **is** a `LadderMeasure` with `step = 1`, definitionally: `Nat.lt n m` *is* `n + 1 ≤ m`, so the
+two descent hypotheses are the two fields, verbatim and with no proof. -/
+
+/-- **Strict descent to both children is a ladder measure**, with `step = 1`. -/
+def LadderMeasure.ofStrictDescent (m : EMLTree → Nat)
+    (hl : ∀ A B : EMLTree, m A < m (EMLTree.eml A B))
+    (hr : ∀ A B : EMLTree, m B < m (EMLTree.eml A B)) : LadderMeasure where
+  μ := m
+  step := 1
+  step_pos := Nat.zero_lt_one
+  left_le := hl
+  right_le := hr
+
+/-- **Every measure that can carry the induction pays two steps for the reciprocal.** The
+`LadderMeasure` packaging drops out and what is left is a statement about any `Nat`-valued measure
+whatsoever that descends to both children. -/
+theorem recip_not_at_one_step_of_strict_descent (m : EMLTree → Nat)
+    (hl : ∀ A B : EMLTree, m A < m (EMLTree.eml A B))
+    (hr : ∀ A B : EMLTree, m B < m (EMLTree.eml A B)) (t : EMLTree) :
+    ¬ (m (recipTree t) ≤ m t + 1) :=
+  (LadderMeasure.ofStrictDescent m hl hr).recip_not_at_one_step t
+
+/-- **The escape route, closed by contraposition.** *"Then find a measure that does not grow under
+`recipTree`."* Such measures exist — the constant `0` is one — but none of them strictly descends to
+both children, so there is no induction left for it to be the parameter of. **Cheap reciprocals and
+structural descent cannot be had together.**
+
+Stated on a single `t`, because that is all it takes: one tree priced cheaply is enough to refute
+descent everywhere. -/
+theorem no_structural_induction_of_cheap_recip (m : EMLTree → Nat) (t : EMLTree)
+    (hcheap : m (recipTree t) ≤ m t + 1) :
+    ¬ ((∀ A B : EMLTree, m A < m (EMLTree.eml A B)) ∧
+       (∀ A B : EMLTree, m B < m (EMLTree.eml A B))) := by
+  intro h
+  exact recip_not_at_one_step_of_strict_descent m h.1 h.2 t hcheap
+
+/-- **Discrimination — the incompatibility is not vacuous on the descent side.** `depth` really does
+strictly descend to both children, so the hypothesis of
+`recip_not_at_one_step_of_strict_descent` is satisfiable and the theorem is not about an empty class.
+`sizeMeasure` gives a second witness, at a different `step`. -/
+theorem depth_strict_descent (A B : EMLTree) :
+    A.depth < (EMLTree.eml A B).depth ∧ B.depth < (EMLTree.eml A B).depth :=
+  ⟨depthMeasure.left_le A B, depthMeasure.right_le A B⟩
+
+/-- **And not vacuous on the cheap side either — the theorem is fired, not merely stated.** The
+constant measure prices every reciprocal at `0`, so it satisfies the hypothesis; what
+`no_structural_induction_of_cheap_recip` returns is that it descends nowhere, which is exactly
+right and is the whole point. A transfer no measure satisfies would prove nothing. -/
+theorem const_measure_not_descending :
+    ¬ ((∀ A B : EMLTree, (fun _ : EMLTree => (0 : Nat)) A
+          < (fun _ : EMLTree => (0 : Nat)) (EMLTree.eml A B)) ∧
+       (∀ A B : EMLTree, (fun _ : EMLTree => (0 : Nat)) B
+          < (fun _ : EMLTree => (0 : Nat)) (EMLTree.eml A B))) :=
+  no_structural_induction_of_cheap_recip (fun _ => 0) EMLTree.var (by show (0 : Nat) ≤ 0 + 1; omega)
 
 end MachLib

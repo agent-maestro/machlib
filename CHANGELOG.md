@@ -5,6 +5,58 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-26 (dl)
+
+### "Grammar-respecting" was not a restriction — it is the condition for a structural induction
+
+`(dk)` proved the reciprocal transfer costs `2 * step` for every measure in a class it called
+grammar-respecting, and that reads as a theorem about a *class*, inviting the reply **"then use a
+measure outside the class"**. This closes that reply. There is nowhere to go.
+
+A structural induction on an EML tree recurses into its children, and the ladder step recurses into
+**both** — left for the envelope, right for the floor. A `Nat`-valued measure supporting that must
+strictly descend to both children. And any measure that does **is** a `LadderMeasure` with
+`step = 1`, *definitionally*: `Nat.lt n m` is `n + 1 ≤ m`, so the two descent hypotheses are the two
+structure fields verbatim, with no proof at all (`LadderMeasure.ofStrictDescent`).
+
+```
+recip_not_at_one_step_of_strict_descent
+  (∀ A B, m A < m (eml A B)) → (∀ A B, m B < m (eml A B)) → ¬ (m (recipTree t) ≤ m t + 1)
+```
+
+The `LadderMeasure` packaging drops out; what remains is a statement about **any** `Nat`-valued
+measure on trees that descends to both children.
+
+#### The escape route of `(dk)`'s own scope note, closed by contraposition
+
+That note left open *"a parameter that can decrease under `recipTree`"*.
+`no_structural_induction_of_cheap_recip` disposes of it: a measure pricing `recipTree t` within one
+step of `t` **does not strictly descend to both children**, so there is no induction left for it to
+be the parameter of.
+
+> **Cheap reciprocals and structural descent cannot be had together.** One tree priced cheaply
+> refutes descent everywhere, which is why the statement needs only a single `t`.
+
+Both sides are exercised rather than asserted. `depth_strict_descent` shows the descent hypothesis
+is satisfiable, so the theorem is not about an empty class; and `const_measure_not_descending`
+**fires** the contrapositive on the constant measure — which does price every reciprocal at `0`, and
+what comes back is that it descends nowhere. A transfer no measure satisfies would prove nothing.
+
+#### The residual, stated honestly
+
+What is genuinely untouched is a parameter that is **not** a `Nat`-valued measure on the tree: a
+lexicographic pair with an unbounded second component, an ordinal, or an induction on the **germ**
+rather than on the syntax. That is where a proof would now have to come from, and it is a materially
+narrower opening than `(dk)` left. `GrowthEnvelope` stays open, unchanged, still one obligation with
+`DecayFloor`; nothing here bounds or discharges anything.
+
+**Footprint clean** — the same `[propext, Real, Quot.sound, Real.oneR, Real.zeroR]`, and
+`ofStrictDescent` needs only `[Real]`.
+
+Gates: build 748 jobs, aggregator 745 of 1051, consistency PASS, claims 434, obligations 20 rows /
+8 open rows / 6 distinct open, discovered 290/294, AxiomLedger 243 pinned, sorry-audit 1 allowlisted,
+witness audit 36.
+
 ## [Unreleased] — 2026-08-26 (dk)
 
 ### The ladder fails for **every** grammar-respecting measure — and the open count was 7, not 6

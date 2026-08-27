@@ -8909,6 +8909,54 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "ladder-strict-descent-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "measure on trees that descends to both children"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.recip_not_at_one_step_of_strict_descent",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-cheap-recip-no-descent-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Cheap reciprocals and structural descent cannot be had together."
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.no_structural_induction_of_cheap_recip",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "ladder-const-fires-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "what comes back is that it descends nowhere"
+      ],
+      "module": "MachLib.EMLLadderMeasure",
+      "theorem": "MachLib.const_measure_not_descending",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }
