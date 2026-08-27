@@ -430,6 +430,7 @@ import MachLib.EMLDecayFloor
 import MachLib.EMLDecayFloorIsGrowth
 import MachLib.EMLLadderMeasure
 import MachLib.EMLGermApproach
+import MachLib.EMLHeightInterface
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

@@ -5,6 +5,110 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dr)
+
+### The height reframing, built — and it routes the question rather than answering it
+
+New module `MachLib/EMLHeightInterface`. The instruction was to stop attacking `DecayFloor` and build
+the smallest interface under which it becomes almost automatic: a **height filtration** closed under
+the grammar's operations, in which subtraction stays inside its layer instead of escaping upward the
+way every syntactic measure does. Two lemmas were named — `(1)` EML depth ⟹ bounded height,
+`(2)` nonzero bounded-height germ ⟹ leading-monomial floor. **Both are now stated, `(1)` is proved,
+`DecayFloor` follows, and no axiom was spent.**
+
+#### `(1)` is free — four lines, and it is what the axioms *say*
+
+`HeightModel` asks for exactly the closure the reframing calls for, on **germs** rather than trees
+(a height that reads syntax is a tree measure, and `EMLLadderMeasure` already disposed of those):
+leaves cost `0`, `exp` costs at most one, `log` costs nothing, and **subtraction stays in the layer**.
+From those alone,
+
+```
+HeightModel.eh_le_depth :  M.eh t.eval ≤ t.depth
+```
+
+by structural induction, in four lines, for **every** model. That is lemma `(1)` — and it is not an
+achievement of transseries. It is the definition of "closed under subtraction, one per `exp`".
+
+#### And the closure half cannot be where the content is
+
+`zeroModel` — height identically `0` — satisfies **every** closure axiom. So satisfying them is no
+evidence of anything, and lemma `(1)` is vacuous for it.
+
+`not_leadingMonomialFloor_zeroModel` shows that is not a quibble: for the zero height the floor
+property is **outright false**. The refutation is a family `deepDecay m = exp(1 − towerFn (m+1) x)`
+of eventually-positive EML germs falling below `exp(−towerFn m x)` for every `m`, so no single tower
+height serves them all.
+
+> **The interface exposes a trade-off, not a decomposition.** A *coarse* height makes `(1)` trivial
+> and `(2)` false. A height as fine as `depth` makes `(1)` trivial and `(2)` **is** `DecayFloor`,
+> circularly. What is wanted is the **coarsest germ-invariant height for which `(2)` is still true**
+> — and that, not the closure, is what transseries theory would have to supply.
+
+That is worth having: it **routes** the question. Anyone bringing a height function now has a
+mechanical check — satisfy four axioms, then prove the floor — and the corpus says immediately
+whether their model is too coarse. `decayFloor_of_heightModel` and `emlGermApproach_of_heightModel`
+are the payoff, with no induction on the tree anywhere.
+
+#### The counterexample machine, replaced by a proof
+
+The machine was to enumerate small trees and measure *(depth, exp count, log count, leading-monomial
+height)* to decide whether the conjecture should be `h ≤ d`, `h ≤ 2d`, or subtler. `deepDecay`
+answers it exactly, so the search is unnecessary: `deepDecay m` has depth **`m + 4`** on the nose and
+defeats the height-`m` floor.
+
+```
+eh_le_depth                          height ≤ depth
+height_m_fails_at_depth_m_add_four   height m FAILS at depth m + 4
+```
+
+> **The required tower height is at most `d` and at least `d − 3`. It is `d` up to an additive
+> constant** — not `2d`, not `log d`, and certainly not bounded.
+
+Two things follow. The obligation is **not** asking for a bounded height, so an attempt hoping to
+find one is misreading it. And the slope is `1`: **one `eml` node buys exactly one tower level of
+decay in the worst case** — the same exchange rate `(dj)` found for *growth*, which is what one
+expects if `DecayFloor` and `GrowthEnvelope` are one obligation, and is an independent check that
+they are. The three-node gap is the wrapper `deepDecay` needs to make its right child positive, the
+same `+3`/`+4` constant `posEmbed` and `approachTarget` pay; an artifact of the encoding, not of the
+mathematics.
+
+#### What is not claimed
+
+**No transseries were formalised, no embedding constructed, no axiom added.** `M.eh` is an abstract
+`Nat`-valued function on germs; nothing here says a transseries height exists, is germ-invariant, or
+satisfies the floor. Germ-invariance — the property that separates a real height from `depth` — is
+deliberately **not** an axiom, because adding it would leave the structure uninhabited by anything
+this corpus can exhibit, and an uninstantiated abstraction is the failure mode already paid for once
+(`positive_branch_impossible`).
+
+#### The bracket, as a theorem at both ends
+
+`§6` puts the growth rate into the corpus's usual bounded form, the one `TowerLowerBoundUpTo` uses:
+
+```
+decayFloorUpTo_two        depth ≤ 2 is DISCHARGED at height 0 — optimal, 0 being least
+decayFloorUpTo_height_ge  depth ≤ m+4 forces height ≥ m + 1
+```
+
+The second needs `towerFn` monotone in height (`towerFn_mono`, also new), since a height `k ≤ m`
+would yield a height-`m` floor and `deepDecay m` refutes that. So the required height is **`0` for
+`d ≤ 2` and at least `d − 3` after**, against the standing upper bound `d`. Every witness the corpus
+has sits on the **lower** edge — `decayFast` (depth 3, height 0), `decayFaster` (depth 4, height 1),
+`deepDecay m` (depth `m+4`, height `m+1`) — so the conjecture the data supports is `max (0, d − 3)`
+exactly.
+
+Nothing here proves the upper half at any `d ≥ 3`; that is `DecayFloor` and stays open. What the
+bracket buys is a **falsifiable target**: a proposed construction yielding height `2d`, or even `d`,
+is not merely unsharp — it is above a boundary the corpus can now name.
+
+**Footprint clean** — no `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates, every figure read off the gate that produced it: build **750 jobs**, aggregator 747 of 1053,
+consistency PASS, claims 456, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (dq)
 
 ### Exponentiating does not create near-cancellation — and the obstruction shows up a third time

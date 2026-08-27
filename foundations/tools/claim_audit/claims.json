@@ -9182,6 +9182,134 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "height-eh-le-depth-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "by structural induction, in four lines, for **every** model"
+      ],
+      "module": "MachLib.EMLHeightInterface",
+      "theorem": "MachLib.HeightModel.eh_le_depth",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "height-payoff-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "with no induction on the tree anywhere"
+      ],
+      "module": "MachLib.EMLHeightInterface",
+      "theorem": "MachLib.decayFloor_of_heightModel",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "height-zero-model-refuted-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "for the zero height the floor\nproperty is **outright false**"
+      ],
+      "module": "MachLib.EMLHeightInterface",
+      "theorem": "MachLib.not_leadingMonomialFloor_zeroModel",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "height-growth-calibration-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "It is `d` up to an additive\n> constant"
+      ],
+      "module": "MachLib.EMLHeightInterface",
+      "theorem": "MachLib.height_m_fails_at_depth_m_add_four",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "height-deepdecay-depth-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "has depth **`m + 4`** on the nose"
+      ],
+      "module": "MachLib.EMLHeightInterface",
+      "theorem": "MachLib.deepDecay_depth",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "height-upto-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "depth ≤ 2 is DISCHARGED at height 0"
+      ],
+      "module": "MachLib.EMLHeightInterface",
+      "theorem": "MachLib.decayFloorUpTo_two",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "height-bracket-lower-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "depth ≤ m+4 forces height ≥ m + 1"
+      ],
+      "module": "MachLib.EMLHeightInterface",
+      "theorem": "MachLib.decayFloorUpTo_height_ge",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "height-tower-mono-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "needs `towerFn` monotone in height"
+      ],
+      "module": "MachLib.EMLHeightInterface",
+      "theorem": "MachLib.towerFn_mono",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }
