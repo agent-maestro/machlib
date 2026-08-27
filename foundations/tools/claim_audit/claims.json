@@ -9150,6 +9150,38 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "peel-gap-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Exponentiation is not where approach comes\n> from.**"
+      ],
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.gap_ge_target_mul_log_gap",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
+    },
+    {
+      "id": "peel-gap-one-le-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is the only regime that matters"
+      ],
+      "module": "MachLib.EMLGermApproach",
+      "theorem": "MachLib.gap_ge_log_gap_of_one_le",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "eml_tree_analytic_on_interval",
+        "rolle_ct"
+      ]
     }
   ]
 }

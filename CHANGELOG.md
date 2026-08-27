@@ -5,6 +5,74 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (dq)
+
+### Exponentiating does not create near-cancellation — and the obstruction shows up a third time
+
+The transseries follow-up `(dp)` left open, and one theorem out of it. New `§5` of
+`MachLib/EMLGermApproach`. **No axiom spent; no row changed; 243 pinned; distinct-open still 6.**
+
+#### What the literature answered, and what it did not
+
+The question was: *does the exponential **depth** of a term bound the exponential **height** of the
+germ, uniformly?* Transseries theory carries both notions — *"the exponential and logarithmic depth
+of an exp-log transseries, the maximal numbers of iterations of `exp` and `log` occurring in it, must
+be finite"* — and the governing rule is:
+
+> if a function is unbounded, the exponential height of its exponential composition increases by
+> `1`; if it is bounded, the height stays the same.
+
+So height tracks `exp`-nesting **for a transmonomial**. It is *differences* that break it:
+subtraction can drop height arbitrarily, and at exact cancellation it drops to nothing. **That is
+this obligation restated in the literature's own vocabulary** — good evidence the statement is in the
+right terms, and not an answer.
+
+#### The theorem it did buy
+
+If `exp` raises height by exactly one, it should not be able to *manufacture* approach — only
+inherit it. Provable, and now proved, from the disclosed tangent axiom and nothing analytic:
+
+```
+gap_ge_target_mul_log_gap :  C x * (A x − log (C x))  ≤  exp (A x) − C x     (C x > 0)
+gap_ge_log_gap_of_one_le  :      A x − log (C x)      ≤  exp (A x) − C x     (C x ≥ 1)
+```
+
+> **The multiplicative gap dominates the additive gap, scaled by the target.** Two germs close
+> *after* exponentiating were already close *before* it. **Exponentiation is not where approach comes
+> from.**
+
+`C x ≥ 1` is the only regime that matters: `approach_gap_ge_exp_of_nonpos` disposes of `C ≤ 0`, and a
+target in `(0,1)` has `log C < 0`, so the gap already exceeds `exp (A x)`.
+
+#### A third independent sighting of the same obstruction
+
+`A − log C` sits one depth **above** `A` and `C`, because `log C` costs an `eml` node
+(`log C = 1 − (eml (const 0) C).eval`). So peeling an exponential to expose the additive gap moves
+**up** the ladder — exactly as `recipTree` does in `(dj)` and `posEmbed` in `(di)`.
+
+**Three constructions that look unrelated, one direction of travel.** `EMLLadderMeasure` is the
+reason, and this is its cleanest confirmation yet, because nobody was looking for it: the peeling
+lemma was written to record a fact about `exp`, and the depth bookkeeping came out the same way for
+the third time.
+
+The bound is genuinely lossy where the germs are large — on `gapTarget n c` the true gap is the
+constant `c` while `A − log C` is of order `c · exp(−towerFn n x)`, astronomically smaller. It is a
+*floor*, which is what this obligation is about.
+
+#### Honest limit
+
+The transseries follow-up was **also abstracts only**. Three searches have now returned the same
+framing and no theorem. **The next step is a specialist, not another search** — the precise question
+is in the note, and it is a question about the literature rather than about this corpus.
+
+**Footprint clean** — `exp_gt_one_plus_self` (the disclosed tangent axiom, deliberately) and the
+ordinary field/order/`exp` base. No `sorryAx`, no `analytic_finite_zeros_compact`, no
+`eml_tree_analytic_on_interval`, no `rolle_ct`.
+
+Gates, every figure read off the gate that produced it: build **749 jobs**, aggregator 746 of 1052,
+consistency PASS, claims 448, obligations **21 rows / 9 open rows / 6 distinct open** with 18
+canaries, discovered 290/294, AxiomLedger **243 pinned**, sorry-audit 1 allowlisted, witness audit 36.
+
 ## [Unreleased] — 2026-08-27 (dp)
 
 ### The literature places the obligation: everything but one quantifier is a theorem of 1912

@@ -322,4 +322,96 @@ theorem emlGermApproachPerPair_of_emlGermApproach (h : EmlGermApproach) :
   obtain ⟨X₁, hX₁, hf⟩ := hk A C X₀ (by omega) (by omega) hX₀ hlt
   exact ⟨k, X₁, hX₁, hf⟩
 
+/-! ## §5 — exponentiating does not create new near-cancellation
+
+`§4` says the open content is the uniformity. This section says something about the *shape* of that
+content, and it comes out of the transseries notion `§4` cites: exponential **height** rises by
+exactly one each time `exp` is applied to an unbounded argument. What that suggests, and what is
+proved here, is that `exp` cannot manufacture approach — it can only inherit it.
+
+Where the target `C` is positive, write `u = A x − log (C x)`. Then `exp (A x) = C x · exp u` and
+`exp u − 1 > u`, so
+
+```
+gap_ge_target_mul_log_gap :  C x * (A x − log (C x))  ≤  exp (A x) − C x
+```
+
+> **The multiplicative gap dominates the additive gap, scaled by the target.** Two germs that are
+> close *after* exponentiating were already close *before* it, up to the factor `C`. Exponentiation
+> is not where approach comes from.
+
+For `C x ≥ 1` the factor helps rather than hurts and the gap is at least `A x − log (C x)` outright.
+
+**And this is a third independent sighting of the same obstruction.** `A − log C` is a difference of
+EML germs at depth *one above* `A` and `C`, because `log C` costs an `eml` node
+(`log C = 1 − (eml (const 0) C).eval`). So peeling an exponential to expose the additive gap moves
+**up** the depth ladder — exactly as `recipTree` does in `(dj)` and as `posEmbed` does in `(di)`.
+Three unrelated-looking constructions, one direction of travel; `EMLLadderMeasure` is why.
+
+The bound is genuinely lossy where the germs are large — on `gapTarget n c` the true gap is the
+constant `c` while `A − log C` is of order `c · exp (−towerFn n x)`, which is astronomically smaller.
+It is a *floor*, and floors are what this obligation is about. -/
+
+section Peeling
+
+open Real
+
+/-- **Peeling one exponential.** Where the target is positive and strictly below `exp ∘ A`, the gap
+is at least the target times the gap one `log` down. Uses the disclosed tangent axiom
+`exp_gt_one_plus_self` and nothing analytic. -/
+theorem gap_ge_target_mul_log_gap (A C : EMLTree) (x : Real)
+    (hC : 0 < C.eval x) (hgap : C.eval x < exp (A.eval x)) :
+    C.eval x * (A.eval x - log (C.eval x)) ≤ exp (A.eval x) - C.eval x := by
+  have hlt : log (C.eval x) < A.eval x := by
+    have h := log_lt_log hC hgap
+    rw [log_exp] at h; exact h
+  have hu : 0 < A.eval x - log (C.eval x) := by
+    have u := add_lt_add_left hlt (-(log (C.eval x)))
+    have e1 : -log (C.eval x) + log (C.eval x) = 0 := by mach_ring
+    have e2 : -log (C.eval x) + A.eval x = A.eval x - log (C.eval x) := by mach_ring
+    rw [e1, e2] at u; exact u
+  have hkey : C.eval x * exp (A.eval x - log (C.eval x)) = exp (A.eval x) := by
+    have e : log (C.eval x) + (A.eval x - log (C.eval x)) = A.eval x := by mach_ring
+    calc C.eval x * exp (A.eval x - log (C.eval x))
+        = exp (log (C.eval x)) * exp (A.eval x - log (C.eval x)) := by rw [exp_log hC]
+      _ = exp (log (C.eval x) + (A.eval x - log (C.eval x))) := by rw [exp_add]
+      _ = exp (A.eval x) := by rw [e]
+  have h1 : 1 + (A.eval x - log (C.eval x)) < exp (A.eval x - log (C.eval x)) :=
+    exp_gt_one_plus_self _ hu
+  have h2 : A.eval x - log (C.eval x) ≤ exp (A.eval x - log (C.eval x)) - 1 := by
+    have u := add_lt_add_left h1 (-(1 : Real))
+    have e1 : -(1 : Real) + (1 + (A.eval x - log (C.eval x))) = A.eval x - log (C.eval x) := by
+      mach_ring
+    have e2 : -(1 : Real) + exp (A.eval x - log (C.eval x))
+        = exp (A.eval x - log (C.eval x)) - 1 := by mach_ring
+    rw [e1, e2] at u; exact le_of_lt u
+  have h3 := mul_le_mul_of_nonneg_left h2 (le_of_lt hC)
+  have e3 : C.eval x * (exp (A.eval x - log (C.eval x)) - 1)
+      = C.eval x * exp (A.eval x - log (C.eval x)) - C.eval x := by mach_ring
+  rw [e3, hkey] at h3
+  exact h3
+
+/-- **At target `≥ 1` the factor is free**: the gap dominates the additive gap outright. This is the
+regime where cancellation can actually happen — `approach_gap_ge_exp_of_nonpos` disposes of `C ≤ 0`,
+and a target in `(0, 1)` has `log C < 0`, so the gap already exceeds `exp (A x)`. -/
+theorem gap_ge_log_gap_of_one_le (A C : EMLTree) (x : Real)
+    (hC : 1 ≤ C.eval x) (hgap : C.eval x < exp (A.eval x)) :
+    A.eval x - log (C.eval x) ≤ exp (A.eval x) - C.eval x := by
+  have hCpos : 0 < C.eval x := lt_of_lt_of_le zero_lt_one_ax hC
+  have hstep := gap_ge_target_mul_log_gap A C x hCpos hgap
+  have hlt : log (C.eval x) < A.eval x := by
+    have h := log_lt_log hCpos hgap
+    rw [log_exp] at h; exact h
+  have hu : (0 : Real) ≤ A.eval x - log (C.eval x) := by
+    have u := add_lt_add_left hlt (-(log (C.eval x)))
+    have e1 : -log (C.eval x) + log (C.eval x) = 0 := by mach_ring
+    have e2 : -log (C.eval x) + A.eval x = A.eval x - log (C.eval x) := by mach_ring
+    rw [e1, e2] at u; exact le_of_lt u
+  have hone := mul_le_mul_of_nonneg_right hC hu
+  have e : (1 : Real) * (A.eval x - log (C.eval x)) = A.eval x - log (C.eval x) := by mach_ring
+  rw [e] at hone
+  exact le_trans hone hstep
+
+end Peeling
+
 end MachLib
