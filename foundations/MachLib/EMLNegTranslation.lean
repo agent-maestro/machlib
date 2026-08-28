@@ -461,4 +461,406 @@ theorem negativeTranslationGrowingLeft_of_pinned (h : PinnedRightChild) :
   intro c hc A B hA hB hgrow heq
   exact h c hc B hB (growingLeft_pins_right c A B hA hB hgrow heq)
 
+/-! ## §5 — the residue: no depth-≤2 tree has `exp x − x − c` as its logarithm
+
+The germ `u x := exp x − x − c` is the whole content. `log (B x) = u x` forces `B x = exp (u x)`, and
+a depth-2 `B = eml A₁ B₁` then needs `exp (A₁ x) − log (B₁ x) = exp (u x)` — a doubly-exponential
+target hit by a depth-≤1 form perturbed by something at most linear. The perturbation is too small to
+matter, so `A₁ x` is pinned to within `1` of `u x`, and none of the five depth-≤1 forms can sit there.
+
+**Why `−x` is the obstruction.** `u x` carries a `−x` term. Of the five forms, the two that reach
+`exp x` (`exp x − d`, `exp x − log x`) subtract only a constant or a logarithm, and the three that do
+not reach `exp x` are hopeless anyway. Producing a `−x` would need `log (b x) = x + c` for `b` of
+depth `0`, and neither `log (const)` nor `log x` is affine in `x`. -/
+
+/-- `exp w − w − c` is positive once `w` is past the linear threshold — needed before the equation
+can be inverted through `exp`, since the totalised `log` is `0` on non-positives. Uses `c < 0`, which
+is the *first* place in this whole development the sign of the translation is consumed. -/
+private theorem u_pos {c w : Real} (hc : c < 0) (h3 : (1 + 1 + 1) * w ≤ exp w) (hw1 : 1 ≤ w) :
+    0 < exp w - w - c := by
+  have htwo : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+  have h2w : c < (1 + 1) * w := by
+    have hb : (1 : Real) + 1 ≤ (1 + 1) * w := by
+      have v := mul_le_mul_of_nonneg_left hw1 (le_of_lt htwo)
+      have e : ((1 : Real) + 1) * 1 = 1 + 1 := by mach_ring
+      rw [e] at v; exact v
+    exact lt_of_lt_of_le (lt_trans_ax hc htwo) hb
+  have hstep : w + c < exp w := by
+    refine lt_of_lt_of_le (add_lt_add_left h2w w) ?_
+    have e : w + (1 + 1) * w = (1 + 1 + 1) * w := by mach_mpoly [w]
+    rw [e]; exact h3
+  have v := add_lt_add_left hstep (-(w + c))
+  have l : -(w + c) + (w + c) = (0 : Real) := by mach_mpoly [w, c]
+  have r : -(w + c) + exp w = exp w - w - c := by mach_mpoly [w, c, exp w]
+  rw [l, r] at v; exact v
+
+/-- **The depth-≤1 half of the residue.** `log (B x)` is at most linear there, and `exp x − x − c` is
+not. Nothing subtle: the whole case is one linear-versus-exponential comparison. -/
+private theorem pinned_depth_le_one (c : Real) (B : EMLTree) (hB : B.depth ≤ 1)
+    (hpin : ∀ x : Real, 0 < x → log (B.eval x) = exp x - x - c) : False := by
+  obtain ⟨C, hlin⟩ := depth_le_one_log_le_linear B hB
+  obtain ⟨X₃, hX₃, hlin3⟩ := exp_beats_linear_eventually (1 + 1 + 1)
+  obtain ⟨w, hw3, _, _, hwd, hw1⟩ := exists_big X₃ X₃ X₃ (c + C)
+  have hw0 : (0 : Real) < w := lt_of_lt_of_le zero_lt_one_ax hw1
+  -- `exp w - w - c = log (B w) ≤ w + C`
+  have heq := hpin w hw0
+  have hup : exp w - w - c ≤ w + C := by rw [← heq]; exact hlin w hw1
+  -- against `3w ≤ exp w`
+  have hbad : w ≤ c + C := by
+    have h3 := hlin3 w hw3
+    have hchain : (1 + 1 + 1) * w - w - c ≤ w + C := le_trans (by
+      have v := add_le_add_wit (add_le_add_wit h3 (le_refl (-w))) (le_refl (-c))
+      have e1 : exp w + -w + -c = exp w - w - c := by mach_mpoly [exp w, w, c]
+      have e2 : (1 + 1 + 1) * w + -w + -c = (1 + 1 + 1) * w - w - c := by mach_mpoly [w, c]
+      rw [e1, e2] at v; exact v) hup
+    have v := add_le_add_wit hchain (le_refl (-w + c))
+    have l : (1 + 1 + 1) * w - w - c + (-w + c) = w := by mach_mpoly [w, c]
+    have r : w + C + (-w + c) = c + C := by mach_mpoly [w, C, c]
+    rw [l, r] at v; exact v
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hwd hbad)
+
+/-- `exists_big` re-read as a *threshold* rather than a point (named `far_enough` because
+`big_threshold` is already taken by `EMLRationalGerm` with an unrelated signature): past `X`, all four bounds hold. The
+band lemma needs "for every far enough `w`", not "for some `w`", because the five-form case split
+happens afterwards and each form brings its own constant to dominate. -/
+private theorem far_enough (a b c d : Real) :
+    ∃ X : Real, 1 ≤ X ∧ ∀ w : Real, X ≤ w → a ≤ w ∧ b ≤ w ∧ c ≤ w ∧ d ≤ w := by
+  obtain ⟨w₀, h1, h2, h3, h4, h5⟩ := exists_big a b c d
+  exact ⟨w₀, h5, fun w hw =>
+    ⟨le_trans h1 hw, le_trans h2 hw, le_trans h3 hw, le_trans (le_of_lt h4) hw⟩⟩
+
+/-- **The perturbation is too small to move the exponent.** Writing `u = exp w − w − c`, the equation
+gives `exp (A₁ w) = exp u + log (B₁ w)`, where `log (B₁ w)` is bracketed between `−(e^{C₂} + log w)`
+and `w + C₁` — at most linear either way, against a target `exp u` that is exponential in `u`. One
+step of `exp` swallows the whole perturbation, so `A₁ w` is pinned to `u ± 1`.
+
+Both folds run on the same identity `exp (u ± 1) = e^{±1}·exp u` and both reduce, after `self_le_exp`
+turns `exp u ≥ u`, to a linear-versus-exponential comparison. The only thing needing care is that the
+*lower* bound consumes `B₁`'s sign split: the decay bound holds only where `B₁` is positive, and
+where it is not the totalised `log 0 = 0` is already above the bound being claimed. -/
+private theorem pinned_band (A₁ B₁ : EMLTree) (hB₁ : B₁.depth ≤ 1) (c : Real) (hc : c < 0)
+    (hpin : ∀ x : Real, 0 < x →
+      log (exp (A₁.eval x) - log (B₁.eval x)) = exp x - x - c) :
+    ∃ X : Real, 1 ≤ X ∧ ∀ w : Real, X ≤ w →
+      exp w - w - c - 1 ≤ A₁.eval w ∧ A₁.eval w ≤ exp w - w - c + 1 := by
+  obtain ⟨C₁, hlin1⟩ := depth_le_one_log_le_linear B₁ hB₁
+  obtain ⟨C₂, X₀, _, hdec⟩ := depth_le_two_decay_on_ray B₁ (by omega)
+  obtain ⟨X₃, _, hlin3⟩ := exp_beats_linear_eventually (1 + 1 + 1)
+  obtain ⟨X, hX1, hdom⟩ := far_enough X₃ X₀ (C₁ + c) (exp C₂ + 1 + c)
+  refine ⟨X, hX1, ?_⟩
+  intro w hw
+  obtain ⟨hw3, hwX₀, hwC₁, hwC₂⟩ := hdom w hw
+  have hw1 : (1 : Real) ≤ w := le_trans hX1 hw
+  have hw0 : (0 : Real) < w := lt_of_lt_of_le zero_lt_one_ax hw1
+  have h3 := hlin3 w hw3
+  have hu : (0 : Real) < exp w - w - c := u_pos hc h3 hw1
+  have hval := hpin w hw0
+  have hlogw : log w ≤ w := by
+    have h := self_le_exp (log w); rw [exp_log hw0] at h; exact h
+  have hlogw0 : (0 : Real) ≤ log w := by
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    have hm := log_le_log zero_lt_one_ax hw1
+    rw [hl1] at hm; exact hm
+  have htwo : (1 : Real) + 1 ≤ exp 1 := one_add_le_exp_of_one_le (le_refl 1)
+  -- the node's value is positive, else its totalised log would be `0`, and `u > 0`
+  have hpos : (0 : Real) < exp (A₁.eval w) - log (B₁.eval w) := by
+    rcases lt_total 0 (exp (A₁.eval w) - log (B₁.eval w)) with h | h | h
+    · exact h
+    · exact absurd (by rw [← hval, ← h, log_nonpos (le_refl 0)]) (ne_of_lt hu)
+    · exact absurd (by rw [← hval, log_nonpos (le_of_lt h)]) (ne_of_lt hu)
+  have hE : exp (A₁.eval w) = exp (exp w - w - c) + log (B₁.eval w) := by
+    have h : exp (A₁.eval w) - log (B₁.eval w) = exp (exp w - w - c) := by
+      rw [← hval, exp_log hpos]
+    have v : exp (A₁.eval w) - log (B₁.eval w) + log (B₁.eval w)
+        = exp (exp w - w - c) + log (B₁.eval w) := by rw [h]
+    have l : exp (A₁.eval w) - log (B₁.eval w) + log (B₁.eval w) = exp (A₁.eval w) := by
+      mach_mpoly [exp (A₁.eval w), log (B₁.eval w)]
+    rw [l] at v; exact v
+  -- `log (B₁ w)` bracketed: linear above, and below by the decay bound or by totalisation
+  have hupB : log (B₁.eval w) ≤ w + C₁ := hlin1 w hw1
+  have hlowB : -(exp C₂ + log w) ≤ log (B₁.eval w) := by
+    have hnn : (0 : Real) ≤ exp C₂ + log w :=
+      le_trans (le_of_lt (exp_pos C₂)) (le_addr hlogw0)
+    rcases lt_total 0 (B₁.eval w) with h | h | h
+    · have hstep : -log (B₁.eval w) ≤ exp C₂ + log w :=
+        le_trans (hdec w hwX₀ h) (add_le_add_wit (self_le_exp C₂) (le_refl (log w)))
+      have v := neg_le_neg_wit hstep
+      have e : - -log (B₁.eval w) = log (B₁.eval w) := by mach_ring
+      rw [e] at v; exact v
+    · rw [← h, log_nonpos (le_refl 0)]
+      have v := neg_le_neg_wit hnn
+      have e : -(0 : Real) = 0 := by mach_ring
+      rw [e] at v; exact v
+    · rw [log_nonpos (le_of_lt h)]
+      have v := neg_le_neg_wit hnn
+      have e : -(0 : Real) = 0 := by mach_ring
+      rw [e] at v; exact v
+  -- linear quantities sit under `u` itself, hence under `exp u` and `exp (u−1)`
+  have hlinU : w + C₁ ≤ exp w - w - c := by
+    have hstep : (1 + 1 + 1) * w - w - c ≤ exp w - w - c := by
+      have v := add_le_add_wit (add_le_add_wit h3 (le_refl (-w))) (le_refl (-c))
+      have e1 : exp w + -w + -c = exp w - w - c := by mach_mpoly [exp w, w, c]
+      have e2 : (1 + 1 + 1) * w + -w + -c = (1 + 1 + 1) * w - w - c := by mach_mpoly [w, c]
+      rw [e1, e2] at v; exact v
+    refine le_trans ?_ hstep
+    have v := add_le_add_wit (le_refl w) hwC₁
+    have e : w + (C₁ + c) = w + C₁ + c := by mach_mpoly [w, C₁, c]
+    have e2 : w + w = (1 + 1) * w := by mach_mpoly [w]
+    have hgoal : w + C₁ + c ≤ (1 + 1 + 1) * w - w - c + c := by
+      have e3 : ((1 : Real) + 1 + 1) * w - w - c + c = (1 + 1) * w := by mach_mpoly [w, c]
+      rw [e3, ← e2]; rw [← e]; exact v
+    have v2 := add_le_add_wit hgoal (le_refl (-c))
+    have l : w + C₁ + c + -c = w + C₁ := by mach_mpoly [w, C₁, c]
+    have r : ((1 : Real) + 1 + 1) * w - w - c + c + -c = (1 + 1 + 1) * w - w - c := by
+      mach_mpoly [w, c]
+    rw [l, r] at v2; exact v2
+  have hlinL : exp C₂ + log w ≤ exp w - w - c - 1 := by
+    have hstep : (1 + 1 + 1) * w - w - c - 1 ≤ exp w - w - c - 1 := by
+      have v := add_le_add_wit (add_le_add_wit (add_le_add_wit h3 (le_refl (-w)))
+        (le_refl (-c))) (le_refl (-(1 : Real)))
+      have e1 : exp w + -w + -c + -1 = exp w - w - c - 1 := by mach_mpoly [exp w, w, c]
+      have e2 : (1 + 1 + 1) * w + -w + -c + -1 = (1 + 1 + 1) * w - w - c - 1 := by
+        mach_mpoly [w, c]
+      rw [e1, e2] at v; exact v
+    refine le_trans ?_ hstep
+    have hle : exp C₂ + log w ≤ exp C₂ + w := add_le_add_wit (le_refl (exp C₂)) hlogw
+    refine le_trans hle ?_
+    have v := add_le_add_wit (le_refl w) hwC₂
+    have e : w + (exp C₂ + 1 + c) = exp C₂ + w + (1 + c) := by mach_mpoly [w, C₂, c, exp C₂]
+    have e2 : ((1 : Real) + 1 + 1) * w - w - c - 1 + (1 + c) = (1 + 1) * w := by mach_mpoly [w, c]
+    have e3 : w + w = ((1 : Real) + 1) * w := by mach_mpoly [w]
+    rw [e] at v
+    have v2 := add_le_add_wit v (le_refl (-(1 + c)))
+    have l : exp C₂ + w + (1 + c) + -(1 + c) = exp C₂ + w := by mach_mpoly [C₂, w, c, exp C₂]
+    have r : w + w + -(1 + c) = (1 + 1) * w - 1 - c := by mach_mpoly [w, c]
+    rw [l, r] at v2
+    refine le_trans v2 (le_of_eq ?_)
+    mach_mpoly [w, c]
+  -- upper fold
+  have hupper : A₁.eval w ≤ exp w - w - c + 1 := by
+    have hb : exp (A₁.eval w) ≤ exp (exp w - w - c) + exp (exp w - w - c) := by
+      rw [hE]
+      exact add_le_add_wit (le_refl _)
+        (le_trans hupB (le_trans hlinU (self_le_exp (exp w - w - c))))
+    have hmul : ((1 : Real) + 1) * exp (exp w - w - c) ≤ exp 1 * exp (exp w - w - c) :=
+      mul_le_mul_of_nonneg_right htwo (le_of_lt (exp_pos _))
+    have edist : ((1 : Real) + 1) * exp (exp w - w - c)
+        = exp (exp w - w - c) + exp (exp w - w - c) := by mach_mpoly [exp (exp w - w - c)]
+    rw [edist] at hmul
+    have efold : exp 1 * exp (exp w - w - c) = exp (exp w - w - c + 1) := by
+      rw [← exp_add]
+      have e : (1 : Real) + (exp w - w - c) = exp w - w - c + 1 := by mach_mpoly [exp w, w, c]
+      rw [e]
+    rw [efold] at hmul
+    have hfin := log_le_log (exp_pos (A₁.eval w)) (le_trans hb hmul)
+    rw [log_exp, log_exp] at hfin; exact hfin
+  -- lower fold
+  have hlower : exp w - w - c - 1 ≤ A₁.eval w := by
+    have hsplit : exp (exp w - w - c)
+        = exp (exp w - w - c - 1) + exp (exp w - w - c - 1) * (exp 1 - 1) := by
+      have e : exp w - w - c = (exp w - w - c - 1) + 1 := by mach_mpoly [exp w, w, c]
+      rw [e, exp_add]
+      have e2 : (exp w - w - c - 1 + 1) - 1 = exp w - w - c - 1 := by mach_mpoly [exp w, w, c]
+      rw [e2]
+      mach_mpoly [exp (exp w - w - c - 1), exp 1]
+    have hone : (1 : Real) ≤ exp 1 - 1 := by
+      have v := add_le_add_wit htwo (le_refl (-(1 : Real)))
+      have l : (1 : Real) + 1 + -1 = 1 := by mach_ring
+      have r : exp 1 + -(1 : Real) = exp 1 - 1 := by mach_mpoly [exp 1]
+      rw [l, r] at v; exact v
+    have hgap : exp (exp w - w - c - 1) ≤ exp (exp w - w - c - 1) * (exp 1 - 1) := by
+      have v := mul_le_mul_of_nonneg_left hone (le_of_lt (exp_pos (exp w - w - c - 1)))
+      have e : exp (exp w - w - c - 1) * (1 : Real) = exp (exp w - w - c - 1) := by mach_ring
+      rw [e] at v; exact v
+    have hpert : exp C₂ + log w ≤ exp (exp w - w - c - 1) :=
+      le_trans hlinL (self_le_exp (exp w - w - c - 1))
+    have hb : exp (exp w - w - c - 1) ≤ exp (A₁.eval w) := by
+      rw [hE]
+      -- `exp u` splits as `exp (u−1)` plus a gap that is itself at least `exp (u−1)`,
+      -- and the perturbation fits inside that gap
+      have step2 : exp (exp w - w - c - 1) + (exp C₂ + log w) ≤ exp (exp w - w - c) := by
+        rw [hsplit]
+        exact add_le_add_wit (le_refl _) (le_trans hpert hgap)
+      have step3 := add_le_add_wit step2 (le_refl (-(exp C₂ + log w)))
+      have l : exp (exp w - w - c - 1) + (exp C₂ + log w) + -(exp C₂ + log w)
+          = exp (exp w - w - c - 1) := by
+        mach_mpoly [exp (exp w - w - c - 1), exp C₂, log w]
+      rw [l] at step3
+      exact le_trans step3 (add_le_add_wit (le_refl (exp (exp w - w - c))) hlowB)
+    have hfin := log_le_log (exp_pos (exp w - w - c - 1)) hb
+    rw [log_exp, log_exp] at hfin; exact hfin
+  exact ⟨hlower, hupper⟩
+
+/-- **A form bounded above by a constant cannot meet the lower band.** `u − 1 ≤ M` says
+`exp w ≤ M + w + c + 1`, and `3w ≤ exp w` then caps `2w`; since `w ≤ 2w`, any `w` past `M + c + 1`
+is absurd. Forms `α` and `c′ − log x` both land here — the latter because `−log w ≤ 0`. -/
+private theorem band_lower_const_absurd {c w M : Real}
+    (h3 : (1 + 1 + 1) * w ≤ exp w) (hw1 : 1 ≤ w)
+    (hband : exp w - w - c - 1 ≤ M) (hlt : M + c + 1 < w) : False := by
+  have hexp : exp w ≤ M + w + c + 1 := by
+    have v := add_le_add_wit hband (le_refl (w + c + 1))
+    have l : exp w - w - c - 1 + (w + c + 1) = exp w := by mach_mpoly [exp w, w, c]
+    have r : M + (w + c + 1) = M + w + c + 1 := by mach_mpoly [M, w, c]
+    rw [l, r] at v; exact v
+  have h2w : (1 + 1) * w ≤ M + c + 1 := by
+    have hchain : (1 + 1 + 1) * w ≤ M + w + c + 1 := le_trans h3 hexp
+    have v := add_le_add_wit hchain (le_refl (-w))
+    have l : (1 + 1 + 1) * w + -w = (1 + 1) * w := by mach_mpoly [w]
+    have r : M + w + c + 1 + -w = M + c + 1 := by mach_mpoly [M, w, c]
+    rw [l, r] at v; exact v
+  have hww : w ≤ (1 + 1) * w := by
+    have hw0 : (0 : Real) ≤ w := le_trans (le_of_lt zero_lt_one_ax) hw1
+    have v := add_le_add_wit (le_refl w) hw0
+    have l : w + (0 : Real) = w := by mach_ring
+    have r : w + w = (1 + 1) * w := by mach_mpoly [w]
+    rw [l, r] at v; exact v
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlt (le_trans hww h2w))
+
+/-- **The residue is discharged.** `PinnedRightChild` holds: no depth-≤2 tree has `exp x − x − c` as
+its logarithm.
+
+Depth ≤1 is one linear-versus-exponential comparison. Depth 2 goes through `pinned_band`, which pins
+`A₁ w` to `u ± 1`, and then the five depth-≤1 forms are exhausted:
+
+| form | which half of the band kills it | why |
+|---|---|---|
+| `α` | lower | a constant cannot reach `u − 1 → ∞` |
+| `x` | lower | would force `exp w ≤ 2w + c + 1` |
+| `c′ − log x` | lower | `−log w ≤ 0`, so it is bounded by `c′` |
+| `exp x − d` | upper | would force `w ≤ d − c + 1` |
+| `exp x − log x` | upper | would force `w + c − 1 ≤ log w`, against `2 log w ≤ w` |
+
+The two `exp x − …` forms are the only ones that reach the right *size*; they die on the `−x` term,
+which is exactly the sentence the route predicted would be the whole proof. -/
+theorem pinnedRightChild_holds : PinnedRightChild := by
+  intro c hc B hB hpin
+  cases Nat.lt_or_ge B.depth 2 with
+  | inl hlt => exact pinned_depth_le_one c B (by omega) hpin
+  | inr hge =>
+      cases B with
+      | const p =>
+          have e : (EMLTree.const p).depth = 0 := rfl
+          rw [e] at hge; omega
+      | var =>
+          have e : (EMLTree.var).depth = 0 := rfl
+          rw [e] at hge; omega
+      | eml A₁ B₁ =>
+          have hd : 1 + Nat.max A₁.depth B₁.depth ≤ 2 := hB
+          have hm1 : A₁.depth ≤ Nat.max A₁.depth B₁.depth := Nat.le_max_left _ _
+          have hm2 : B₁.depth ≤ Nat.max A₁.depth B₁.depth := Nat.le_max_right _ _
+          have hA₁ : A₁.depth ≤ 1 := by omega
+          have hB₁ : B₁.depth ≤ 1 := by omega
+          obtain ⟨X, _, hband⟩ := pinned_band A₁ B₁ hB₁ c hc hpin
+          obtain ⟨X₃, _, hlin3⟩ := exp_beats_linear_eventually (1 + 1 + 1)
+          obtain ⟨X₄, hX₄, hlin2⟩ := exp_beats_linear_eventually (1 + 1)
+          rcases depth_le_one_classification A₁ hA₁ with
+              ⟨α, hf⟩ | hf | ⟨c', _, hf⟩ | ⟨d, hf⟩ | hf
+          · obtain ⟨w, hwX, hw3, _, hwd, hw1⟩ := exists_big X X₃ X₃ (α + c + 1)
+            have hw0 : (0 : Real) < w := lt_of_lt_of_le zero_lt_one_ax hw1
+            obtain ⟨hlow, _⟩ := hband w hwX
+            rw [hf w hw0] at hlow
+            exact band_lower_const_absurd (hlin3 w hw3) hw1 hlow hwd
+          · obtain ⟨w, hwX, hw3, _, hwd, hw1⟩ := exists_big X X₃ X₃ (c + 1)
+            have hw0 : (0 : Real) < w := lt_of_lt_of_le zero_lt_one_ax hw1
+            obtain ⟨hlow, _⟩ := hband w hwX
+            rw [hf w hw0] at hlow
+            -- `u − 1 ≤ w` forces `exp w ≤ 2w + c + 1`, against `3w ≤ exp w`
+            have hexp : exp w ≤ w + w + c + 1 := by
+              have v := add_le_add_wit hlow (le_refl (w + c + 1))
+              have l : exp w - w - c - 1 + (w + c + 1) = exp w := by mach_mpoly [exp w, w, c]
+              have r : w + (w + c + 1) = w + w + c + 1 := by mach_mpoly [w, c]
+              rw [l, r] at v; exact v
+            have hbad : w ≤ c + 1 := by
+              have hchain : (1 + 1 + 1) * w ≤ w + w + c + 1 := le_trans (hlin3 w hw3) hexp
+              have v := add_le_add_wit hchain (le_refl (-(w + w)))
+              have l : (1 + 1 + 1) * w + -(w + w) = w := by mach_mpoly [w]
+              have r : w + w + c + 1 + -(w + w) = c + 1 := by mach_mpoly [w, c]
+              rw [l, r] at v; exact v
+            exact lt_irrefl_ax _ (lt_of_lt_of_le hwd hbad)
+          · obtain ⟨w, hwX, hw3, _, hwd, hw1⟩ := exists_big X X₃ X₃ (c' + c + 1)
+            have hw0 : (0 : Real) < w := lt_of_lt_of_le zero_lt_one_ax hw1
+            obtain ⟨hlow, _⟩ := hband w hwX
+            rw [hf w hw0] at hlow
+            -- `c′ − log w ≤ c′` because `log w ≥ 0`
+            have hlogw0 : (0 : Real) ≤ log w := by
+              have hl1 : log (1 : Real) = 0 := by
+                have hz : exp (0 : Real) = 1 := exp_zero
+                rw [← hz, log_exp]
+              have hm := log_le_log zero_lt_one_ax hw1
+              rw [hl1] at hm; exact hm
+            have hcap : c' - log w ≤ c' := by
+              have v := add_le_add_wit (le_refl c') (neg_le_neg_wit hlogw0)
+              have l : c' + -log w = c' - log w := by mach_mpoly [c', log w]
+              have r : c' + -(0 : Real) = c' := by mach_ring
+              rw [l, r] at v; exact v
+            exact band_lower_const_absurd (hlin3 w hw3) hw1 (le_trans hlow hcap) hwd
+          · obtain ⟨w, hwX, _, _, hwd, hw1⟩ := exists_big X X₃ X₃ (d - c + 1)
+            have hw0 : (0 : Real) < w := lt_of_lt_of_le zero_lt_one_ax hw1
+            obtain ⟨_, hup⟩ := hband w hwX
+            rw [hf w hw0] at hup
+            -- `exp w − d ≤ u + 1` forces `w ≤ d − c + 1`
+            have hbad : w ≤ d - c + 1 := by
+              have v := add_le_add_wit hup (le_refl (d - exp w))
+              have l : exp w - d + (d - exp w) = (0 : Real) := by mach_mpoly [exp w, d]
+              have r : exp w - w - c + 1 + (d - exp w) = d - c + 1 - w := by
+                mach_mpoly [exp w, w, c, d]
+              rw [l, r] at v
+              have v2 := add_le_add_wit v (le_refl w)
+              have l2 : (0 : Real) + w = w := by mach_ring
+              have r2 : d - c + 1 - w + w = d - c + 1 := by mach_mpoly [d, c, w]
+              rw [l2, r2] at v2; exact v2
+            exact lt_irrefl_ax _ (lt_of_lt_of_le hwd hbad)
+          · obtain ⟨w, hwX, _, hw4, hwd, hw1⟩ := exists_big X X₃ (exp X₄) (1 + 1 - (1 + 1) * c)
+            have hw0 : (0 : Real) < w := lt_of_lt_of_le zero_lt_one_ax hw1
+            obtain ⟨_, hup⟩ := hband w hwX
+            rw [hf w hw0] at hup
+            -- `exp w − log w ≤ u + 1` forces `w + c − 1 ≤ log w`; but `2 log w ≤ w`
+            have hlogge : w + c - 1 ≤ log w := by
+              have v := add_le_add_wit hup (le_refl (log w - exp w))
+              have l : exp w - log w + (log w - exp w) = (0 : Real) := by
+                mach_mpoly [exp w, log w]
+              have r : exp w - w - c + 1 + (log w - exp w) = log w - w - c + 1 := by
+                mach_mpoly [exp w, w, c, log w]
+              rw [l, r] at v
+              have v2 := add_le_add_wit v (le_refl (w + c - 1))
+              have l2 : (0 : Real) + (w + c - 1) = w + c - 1 := by mach_mpoly [w, c]
+              have r2 : log w - w - c + 1 + (w + c - 1) = log w := by mach_mpoly [log w, w, c]
+              rw [l2, r2] at v2; exact v2
+            have hlogw : X₄ ≤ log w := by
+              have h := log_le_log (exp_pos X₄) hw4
+              rw [log_exp] at h; exact h
+            have h2log : (1 + 1) * log w ≤ w := by
+              have h := hlin2 (log w) hlogw
+              rw [exp_log hw0] at h; exact h
+            have hbad : w ≤ 1 + 1 - (1 + 1) * c := by
+              have hdouble : (1 + 1) * (w + c - 1) ≤ (1 + 1) * log w :=
+                mul_le_mul_of_nonneg_left hlogge
+                  (le_of_lt (add_pos zero_lt_one_ax zero_lt_one_ax))
+              have hchain : (1 + 1) * (w + c - 1) ≤ w := le_trans hdouble h2log
+              have v := add_le_add_wit hchain (le_refl (-w + (1 + 1) - (1 + 1) * c))
+              have l : ((1 : Real) + 1) * (w + c - 1) + (-w + (1 + 1) - (1 + 1) * c) = w := by
+                mach_mpoly [w, c]
+              have r : w + (-w + ((1 : Real) + 1) - (1 + 1) * c) = 1 + 1 - (1 + 1) * c := by
+                mach_mpoly [w, c]
+              rw [l, r] at v; exact v
+            exact lt_irrefl_ax _ (lt_of_lt_of_le hwd hbad)
+
+/-- **And therefore the obligation itself.** `NegativeTranslationGrowingLeft` is a theorem. -/
+theorem negativeTranslationGrowingLeft_holds : NegativeTranslationGrowingLeft :=
+  negativeTranslationGrowingLeft_of_pinned pinnedRightChild_holds
+
+/-- **Non-vacuity, shipped with the capstone.** An impossibility theorem is worth exactly as much as
+its hypotheses are satisfiable *individually*: if no depth-≤2 tree could satisfy `Hgrow` at all, the
+result above would be true and would say nothing about negative translations. That is the
+`positive_branch_impossible` failure mode, and it is cheap to rule out here — `var` satisfies `Hgrow`
+on the nose.
+
+So the configuration space the theorem empties is not empty for a trivial reason: what it rules out
+is the *conjunction* of a satisfiable growth condition with the equation. -/
+theorem growingLeft_growth_hypothesis_satisfiable :
+    ∃ A : EMLTree, A.depth ≤ 2 ∧ ∃ T : Real, ∀ x : Real, T ≤ x → exp x ≤ exp (A.eval x) :=
+  ⟨EMLTree.var, Nat.zero_le 2, 0, fun _ _ => le_refl _⟩
+
 end MachLib

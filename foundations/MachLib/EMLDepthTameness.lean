@@ -11347,8 +11347,8 @@ this sentence.) Their status, as of the last edit:
 | `BoundedEmlCellApproach` | here | **discharged** | `boundedEmlCellApproach_holds` |
 | `BoundedEmlCellApproachLarge` | here | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — equivalent to `TowerLowerBound` ever since `signHardCase_holds` discharged its antecedent (`towerReducesToSign_iff_towerLowerBound`, `EMLTowerAfterSign`) |
-| `NegativeTranslationGrowingLeft` | `EMLDepthTameness` | **reduced** | `negativeTranslationGrowingLeft_of_pinned` → `PinnedRightChild` (`EMLNegTranslation`) — the left child collapses to `var` before any enumeration, so what is left is one child and one equation (bounded-left branch was already closed by `mirrorBand_not_depth_three_bounded_left`) |
-| `PinnedRightChild` | `EMLNegTranslation` | **open** | — the residue: a depth-≤2 tree whose logarithm is the germ `exp x − x − c`; no depth-≤1 form carries the `−x` term |
+| `NegativeTranslationGrowingLeft` | `EMLDepthTameness` | **discharged** | `negativeTranslationGrowingLeft_holds` (`EMLNegTranslation`), through `PinnedRightChild`; non-vacuity shipped as `growingLeft_growth_hypothesis_satisfiable` |
+| `PinnedRightChild` | `EMLNegTranslation` | **discharged** | `pinnedRightChild_holds` — the band pins `A₁` to `u ± 1` and the five depth-≤1 forms are exhausted; the two that reach `exp x` die on the `−x` term |
 | `FQueryLowerBound` | `EMLBasisOverhead` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | `EMLOneQueryForm` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
 | `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |

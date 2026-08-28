@@ -477,25 +477,30 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   Literature placement, with its own limits recorded (abstracts only, no paper read in full):
   `monogate-research/exploration/germ_approach_literature_2026_08_27/NOTE.md`.
 
-- **`NegativeTranslationGrowingLeft` reduced to one child and one equation** (2026-08-28,
-  `EMLNegTranslation`) — a separate open obligation from the decay programme above, and the one place
-  this month where an obligation moved.
+- **`NegativeTranslationGrowingLeft` is DISCHARGED** (2026-08-28, `EMLNegTranslation`) — a separate
+  obligation from the decay programme above, and **the only one to close in the 2026-08 arc**. The
+  ledger went from six distinct open obligations to five.
 
   **What is proved.** A log-growth cap for depth ≤2 (`depth_le_two_log_growth_on_ray`, the mirror of
   the existing decay bound) squeezes the left child into `x ≤ A x ≤ x + 1`; inside that band a
   depth-≤2 tree is provably `var` (`band_depth_le_two_is_var`); the equation then pins the right
   child, and `negativeTranslationGrowingLeft_of_pinned` closes the reduction. No new axioms.
 
-  **What is open: all of it that matters.** The residue `PinnedRightChild` — a depth-≤2 tree whose
-  logarithm is `exp x − x − c` — is an open ledger row, and **the distinct-open count did not move**.
-  A reduction to an open residue relocates a debt. The obligations gate is what enforces that
-  reading: it reported the conditional capstone as a false discharge within a minute of it compiling,
-  and the row had to be re-registered as `reduced` before it would pass.
+  **The residue fell the same day.** `pinnedRightChild_holds`: the equation pins `A₁` to within `1`
+  of the germ `u = exp x − x − c` (the perturbation is at most linear against a target exponential in
+  `u`, so one step of `exp` swallows it), and the five depth-≤1 forms are then exhausted — the three
+  that cannot reach `exp x` die on the lower band, the two that can die on the `−x` term.
 
-  **Asterisk.** The interesting negative fact is that `c < 0` is used **nowhere** in the reduction.
-  The left child's collapse is a fact about the band, not about the sign of the translation, so
-  nothing here explains the positive/negative asymmetry recorded in `EMLDepthTameness` §4 — it only
-  localises where the asymmetry must live.
+  **Asterisk on the discharge.** This is an impossibility theorem, so it is worth what its hypotheses
+  are *individually* satisfiable for. `growingLeft_growth_hypothesis_satisfiable` ships with it: `var`
+  satisfies the growth condition, so the emptied configuration space was not empty for a trivial
+  reason. Footprints are base `Real` field axioms; no `sorryAx`, no analysis axioms.
+
+  **Where the sign finally enters.** `c < 0` is used **nowhere** in the reduction — the left child's
+  collapse is a property of the band, not of the sign. It is consumed in exactly one place, `u_pos`,
+  to know that `exp w − w − c > 0` so the equation can be inverted through `exp`. That is a thin use,
+  and it means this proof does **not** explain the positive/negative asymmetry of `d(x + c)`; the
+  asymmetry recorded in `EMLDepthTameness` §4 stands, now with one more of its branches closed.
 
 ---
 

@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 058 `.lean` files** (742 top-level + 316 in subdirectories) /
-**235 430 lines** / **7 354 theorems**, re-exported through the aggregator
+**235 832 lines** / **7 357 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 354
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 103
+  | paste -sd+ | bc                                    # 7 357
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 106
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -79,7 +79,7 @@ bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "243 axioms pinned; 57 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 482 claims resolve against #print axioms"
+python3 tools/claim_audit/claim_audit.py       # "all 485 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
@@ -99,7 +99,7 @@ Both are "conditional theorem, unvalidated"; only one had a harness until 2026-0
 `ValueGapBound` was introduced, taken as a hypothesis by two theorems, and satisfied by nothing at
 any depth. **A Prop with consumers and no producers is not exercised; it is assumed** — and that is
 the easy half to miss, because the consumers make it look exercised. Baseline
-`tools/hypothesis_baseline.json`, 35 entries, a **set** not a count. Read its triage note before
+`tools/hypothesis_baseline.json`, 34 entries, a **set** not a count. Read its triage note before
 trusting a hit: most entries are correct (named open obligations belong there, and definitional
 predicates like `Lipschitz` are supplied from outside rather than proved). What to watch for is a new
 name that is *neither*.
@@ -190,8 +190,8 @@ behind it is missing — registration is still a human act.
 - **`find … -not -path '*/Discovered/*'` UNQUOTED silently double-counts.** The shell expands
   `*/Discovered/*` against the working directory before `find` sees it, so `-not -path` excludes one
   matched file and every *other* match becomes an extra search root — the same files are then walked
-  twice. Measured 2026-08-28: the correctly quoted form gives **7 354** theorems, the unquoted form
-  **8 846**. (Both drift with the corpus — the *gap* is the point, not the numbers; re-measure rather
+  twice. Measured 2026-08-28: the correctly quoted form gives **7 357** theorems, the unquoted form
+  **8 849**. (Both drift with the corpus — the *gap* is the point, not the numbers; re-measure rather
   than trusting these.) It fails *upward* and reads as a bigger corpus, which is why it survived into
   this file.
   Sanity check any corpus count against the all-files total; an "excluding X" figure that exceeds it
@@ -221,7 +221,7 @@ its footprint tally for exactly this reason.
 Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (755 build jobs) at **true exit
 codes** — note `gate | tail` reads `tail`'s status, not the gate's. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
-the entire depth/decay programme below. Obligations ledger: **22 rows, 9 open rows, 6 distinct open
+the entire depth/decay programme below. Obligations ledger: **22 rows, 8 open rows, 5 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The `S > 0` branch was VACUOUS and is now repaired** (`a10b3b5b`, 2026-08-24). Two pole hypotheses
@@ -248,12 +248,12 @@ divisors and the weak form silently breaks properness.
 
 **Still open.** `SignHardCase` is **discharged** (`signHardCase_holds`, `d7b8d28c`) — this line said
 otherwise for weeks; read the ledger, not this paragraph, and if they disagree the ledger is right
-because a gate checks it. The six distinct open obligations are: the
+because a gate checks it. **`NegativeTranslationGrowingLeft` is now discharged too**
+(`negativeTranslationGrowingLeft_holds`, 2026-08-28, `EMLNegTranslation`) — the first obligation to
+close in the 2026-08 arc, taking the count from six to five. The five distinct open obligations are: the
 `DecayFloor` ⇄ `EmlGermApproach` ⇄ `GrowthEnvelope` cycle (**one** obligation, three rows),
 `TowerLowerBound` ⇄ `TowerReducesToSign` (one obligation, two rows, equivalent since `SignHardCase`
-fell), **`PinnedRightChild`** (`NegativeTranslationGrowingLeft` reduced to it on 2026-08-28 —
-`EMLNegTranslation`; the count did not move, a reduction relocates a debt), `OneQueryDichotomy`,
-`BoundedGermTranscendence`, `OneQueryLevelSet`.
+fell), `OneQueryDichotomy`, `BoundedGermTranscendence`, `OneQueryLevelSet`.
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then
 `s(1/x) ∈ {7,9,11}` proved, `d(1/x)` frozen at `{3,4}`, and a depth- and size-indexed **growth

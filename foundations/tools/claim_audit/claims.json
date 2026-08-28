@@ -9726,6 +9726,50 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "negative-translation-growing-left-discharged-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "negativeTranslationGrowingLeft_holds` closes it",
+        "Footprints of both capstones are base"
+      ],
+      "module": "MachLib.EMLNegTranslation",
+      "theorem": "MachLib.negativeTranslationGrowingLeft_holds",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "pinned-right-child-discharged-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "pinnedRightChild_holds",
+        "the band pins `A₁` to"
+      ],
+      "module": "MachLib.EMLNegTranslation",
+      "theorem": "MachLib.pinnedRightChild_holds",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "negative-translation-non-vacuity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "growingLeft_growth_hypothesis_satisfiable` rules it out"
+      ],
+      "module": "MachLib.EMLNegTranslation",
+      "theorem": "MachLib.growingLeft_growth_hypothesis_satisfiable",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }

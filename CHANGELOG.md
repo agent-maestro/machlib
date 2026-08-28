@@ -5,6 +5,84 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (ef)
+
+### `NegativeTranslationGrowingLeft` is DISCHARGED — six distinct open obligations become five
+
+`(ee)`, an hour earlier, reduced this obligation to `PinnedRightChild` and said the residue's proof
+was *"one sentence; formalising it needs a two-sided bound on `exp (A₁ x)`, whose lower half costs"*.
+It cost about what that predicted. **`negativeTranslationGrowingLeft_holds` closes it**, and the
+ledger moves for the first time in the 2026-08 arc: **22 rows, 8 open rows, 5 distinct open
+obligations**.
+
+**No new axioms — 243 pinned.** Footprints of both capstones are base `Real` field axioms: no
+`sorryAx`, no `rolle`, no `analytic_finite_zeros`.
+
+#### The residue, and why the perturbation never mattered
+
+Write `u x = exp x − x − c`. The equation forces `B x = exp (u x)`, so a depth-2 `B = eml A₁ B₁` needs
+
+```
+exp (A₁ x) = exp (u x) + log (B₁ x)
+```
+
+with `log (B₁ x)` bracketed between `−(e^{C₂} + log x)` and `x + C₁` — **at most linear either way,
+against a target exponential in `u`.** One step of `exp` swallows it: both folds run on
+`exp (u ± 1) = e^{±1}·exp u`, and after `self_le_exp` turns `exp u ≥ u` each reduces to a
+linear-versus-exponential comparison. So `pinned_band` pins `A₁ x` to `u ± 1`.
+
+Then the five depth-≤1 forms are exhausted, and **which half of the band kills each one is the whole
+story**:
+
+| form | killed by | why |
+|---|---|---|
+| `α` | lower | a constant cannot reach `u − 1 → ∞` |
+| `x` | lower | would force `exp w ≤ 2w + c + 1` |
+| `c′ − log x` | lower | `−log w ≤ 0`, so it is capped by `c′` |
+| `exp x − d` | **upper** | would force `w ≤ d − c + 1` |
+| `exp x − log x` | **upper** | would force `w + c − 1 ≤ log w`, against `2 log w ≤ w` |
+
+**The two forms that reach the right size are exactly the two that die on the `−x` term** — which is
+the sentence `(ee)` predicted would be the entire proof, and it was.
+
+#### Where the sign of the translation is actually used
+
+`c < 0` appears in **one place**: `u_pos`, to know `exp w − w − c > 0` so the equation can be inverted
+through the totalised `log`. Nowhere else — not in the band, not in the five-form split.
+
+That is a thin use, and it is worth stating plainly: **this proof does not explain the
+positive/negative asymmetry of `d(x + c)`.** `EMLDepthTameness` §4's table stands as recorded
+(`c > 0` gives exactly 4; `c < 0` gives `{3, 4}`); one more branch of it is now closed, and the
+asymmetry itself is untouched.
+
+#### Non-vacuity, shipped with the capstone
+
+An impossibility theorem is worth what its hypotheses are *individually* satisfiable for. If no
+depth-≤2 tree could satisfy `Hgrow`, the result would be true and would say nothing —
+`positive_branch_impossible` all over again. `growingLeft_growth_hypothesis_satisfiable` rules it out:
+`var` satisfies the growth condition on the nose, so the configuration space being emptied was not
+empty for a trivial reason. What is ruled out is the **conjunction**.
+
+#### Ledger and baseline, both directions
+
+`NegativeTranslationGrowingLeft` and `PinnedRightChild` are both **discharged**; the row that was
+`reduced` for one hour is now a closure, and the residue registered beside it closed with it.
+`hypothesis_baseline.json` drops `PinnedRightChild` (35 → 34) — the audit's ratchet turns the other
+way too: *"now has a producer — remove it from the baseline"*, and a prop that gained one must not
+stay pinned as unproduced.
+
+Worth noting what the ledger did across `(ee)` and `(ef)`: **open → reduced → discharged**, all three
+states in one day, each one checked. The intermediate `reduced` was not bureaucracy — for the hour it
+stood it was the only honest description, and the gate refused the alternative.
+
+Route: `monogate-research/exploration/negative_translation_growing_left_2026_08_28/ROUTE.md`. Its
+Step 4 prediction — *"the fallback is to bound `exp (A₁ x)` one side at a time and use only the upper
+half, which kills forms `α`, `x` and `c′ − log x`, leaving the two `exp x − …` forms to be killed by
+the lower half"* — had the two halves **the wrong way round**: it is the *lower* band that kills the
+first three and the *upper* that kills the last two. The route's structure was right and its
+orientation was not, which is the kind of error a written-first route makes visible instead of
+absorbing.
+
 ## [Unreleased] — 2026-08-28 (ee)
 
 ### `NegativeTranslationGrowingLeft` reduced to one child and one equation — the enumeration was avoidable
@@ -9758,8 +9836,8 @@ in commit archaeology:
 | `BoundedEmlCellApproach` | **discharged** | `boundedEmlCellApproach_holds` |
 | `BoundedEmlCellApproachLarge` | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | **open** | — equivalent to `TowerLowerBound` ever since `signHardCase_holds` discharged its antecedent (`towerReducesToSign_iff_towerLowerBound`, `EMLTowerAfterSign`) |
-| `NegativeTranslationGrowingLeft` | **reduced** | `negativeTranslationGrowingLeft_of_pinned` → `PinnedRightChild` (`EMLNegTranslation`) — the left child collapses to `var` before any enumeration, so what is left is one child and one equation (bounded-left branch was already closed by `mirrorBand_not_depth_three_bounded_left`) |
-| `PinnedRightChild` | **open** | — the residue: a depth-≤2 tree whose logarithm is the germ `exp x − x − c`; no depth-≤1 form carries the `−x` term |
+| `NegativeTranslationGrowingLeft` | **discharged** | `negativeTranslationGrowingLeft_holds` (`EMLNegTranslation`), through `PinnedRightChild`; non-vacuity shipped as `growingLeft_growth_hypothesis_satisfiable` |
+| `PinnedRightChild` | **discharged** | `pinnedRightChild_holds` — the band pins `A₁` to `u ± 1` and the five depth-≤1 forms are exhausted; the two that reach `exp x` die on the `−x` term |
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
 | `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
