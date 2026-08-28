@@ -1055,6 +1055,36 @@ def self_test() -> int:
           f"them from closures — a dashboard counting green claims would have read a "
           f"reduction campaign as a closure campaign.{RST}")
 
+    print(f"{YELLOW}{BOLD}[self-test] canary 16: the binding must PRINT an identity, not just compute one …{RST}")
+    # Canary 14 proves the fingerprint SEES uncommitted content. This one proves the message SAYS
+    # which tree that was. Two fingerprints sharing a HEAD, differing only below it — exactly the
+    # shape of an edit made while the audit runs.
+    head_c = "4957a7e6d278c0ffee" + "0" * 22
+    fp_a = head_c + "\n" + "a" * 64 + "\n" + "b" * 64
+    fp_b = head_c + "\n" + "a" * 64 + "\n" + "c" * 64      # same HEAD, same porcelain, other content
+    old_label_a, old_label_b = fp_a.splitlines()[0][:12], fp_b.splitlines()[0][:12]
+    new_label_a, new_label_b = fingerprint_id(fp_a), fingerprint_id(fp_b)
+    if old_label_a != old_label_b:
+        print(f"{RED}[self-test] BROKEN: the specimen does not reproduce the defect — the two "
+              f"fingerprints must share a HEAD, or this canary proves nothing.{RST}")
+        return 1
+    if new_label_a == new_label_b:
+        print(f"{RED}[self-test] FAILED: the printed id does not distinguish two trees that share "
+              f"a HEAD. The binding would report the same identity for materially different "
+              f"trees — which is the whole thing it exists to prevent.{RST}")
+        return 1
+    if fingerprint_id(fp_a) != fingerprint_id(fp_a):
+        print(f"{RED}[self-test] FAILED: the id is not deterministic.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 16 fires: two trees sharing a HEAD printed the SAME old label "
+          f"({old_label_a}) and print DIFFERENT ids now ({new_label_a}, {new_label_b}). \u2713{RST}")
+    print(f"{DIM}           Added 2026-08-28. The binding computed the right thing and reported "
+          f"the wrong one: both\n           messages printed HEAD, so every dirty tree on one "
+          f"commit logged an identical identity. The\n           STALE branch printed HEAD for "
+          f"BOTH sides, so the commonest case \u2014 an edit to an already-dirty\n           file, "
+          f"which does not move HEAD \u2014 announced a change above two identical lines. Found by "
+          f"reading\n           a PASSING gate's output, not by it failing.{RST}")
+
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
     text = print_axioms_output(canary_src)
@@ -1159,6 +1189,25 @@ def tree_fingerprint() -> str:
         return ""
 
 
+def fingerprint_id(fp: str) -> str:
+    """A short id for a WHOLE fingerprint — HEAD, the dirty list, AND the dirty file contents.
+
+    Both binding messages used to print `fp.splitlines()[0]`, which is HEAD alone. HEAD is not an
+    identity for what this gate certifies: the fingerprint deliberately includes uncommitted content
+    (canary 14 exists because it once did not), so every dirty tree on one commit printed the same
+    twelve characters. Two runs over materially different trees were indistinguishable in a log,
+    which defeats the purpose of binding a verdict to a tree at all.
+
+    The STALE branch was the worse of the two. It printed HEAD for *both* sides, so the commonest
+    staleness case — an edit to an already-dirty file, which does not move HEAD — reported "the
+    worktree changed" directly above two identical lines. A reader would reasonably conclude the
+    gate was malfunctioning rather than that they had edited during the run.
+
+    Canary 16 pins it: two fingerprints sharing a HEAD must get different ids.
+    """
+    return hashlib.sha256(fp.encode("utf-8")).hexdigest()[:12]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="MachLib prose-claim auditor.")
     ap.add_argument("--self-test", action="store_true",
@@ -1193,11 +1242,15 @@ def main() -> int:
         print(f"{RED}{BOLD}[tree-binding] STALE{RST}  {RED}the worktree changed while the audit "
               f"ran — this verdict describes the tree as it was {len(claims)} claims ago, not the "
               f"one on disk now. Re-run before trusting it.{RST}")
-        print(f"{DIM}    audited  {before.splitlines()[0]}\n    current  "
-              f"{after.splitlines()[0]}{RST}")
+        print(f"{DIM}    audited  tree {fingerprint_id(before)}  (HEAD "
+              f"{before.splitlines()[0][:12]})\n    current  tree {fingerprint_id(after)}  (HEAD "
+              f"{after.splitlines()[0][:12]}){RST}")
+        if before.splitlines()[0] == after.splitlines()[0]:
+            print(f"{DIM}    HEAD did not move, so the change is UNCOMMITTED — an edit to a "
+                  f"working file while the audit ran.{RST}")
         return 2
-    print(f"{DIM}[tree-binding] verdict bound to {before.splitlines()[0][:12]} "
-          f"(worktree unchanged during the run){RST}")
+    print(f"{DIM}[tree-binding] verdict bound to tree {fingerprint_id(before)} "
+          f"(HEAD {before.splitlines()[0][:12]}, worktree unchanged during the run){RST}")
     return rc
 
 

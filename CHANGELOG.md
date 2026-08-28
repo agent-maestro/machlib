@@ -5,6 +5,76 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (ed)
+
+### The claim auditor computed the right identity and printed the wrong one
+
+Found while verifying `(ec)` — by **reading a passing gate's output**, not by it failing. Same
+discovery mode as the defect canary 14 exists for, and its note says so in as many words.
+
+#### What was wrong
+
+`tree_fingerprint()` is sound and has been since `(bx)`: HEAD, the porcelain, **and a content digest
+of every dirty path**, taken before and after the run. Canary 14 pins that it sees *content* — three
+trees with byte-identical porcelain must give three different digests.
+
+Both binding messages then printed `fp.splitlines()[0]`, which is **HEAD alone**.
+
+The fingerprint deliberately includes uncommitted content. HEAD deliberately does not. So every dirty
+tree on one commit logged the *same twelve characters*, and two runs over materially different trees
+were indistinguishable in the record. That is precisely what binding a verdict to a tree exists to
+prevent — see `(bx)`'s own framing, *"a gate certifies a repository state, not a work session"*.
+
+**The `STALE` branch was worse.** It printed HEAD for *both* sides. The commonest staleness case is
+an edit to an already-dirty file, which does not move HEAD — so the gate announced *"the worktree
+changed while the audit ran"* directly above two identical lines. A reader would sooner conclude the
+gate was broken than that they had edited during the run.
+
+**Scope, stated rather than implied: no verdict was ever wrong.** The `before != after` comparison
+uses the whole fingerprint and always did. What was wrong was the *record of what had been
+certified* — a reporting defect in a gate whose entire job is establishing what it certified, which
+is why it is worth a fix rather than a footnote.
+
+#### The fix
+
+`fingerprint_id(fp)` digests the **whole** fingerprint to twelve characters. Both messages now print
+`tree <id> (HEAD <head12>)` — the id identifies, HEAD stays for orientation. `STALE` additionally
+says when HEAD did not move, so the reader is told the change was uncommitted instead of being left
+to infer it from two hashes that look the same.
+
+#### Canary 16, and it fires
+
+Two fingerprints sharing a HEAD and differing only below it — the exact shape of a mid-run edit. The
+canary asserts the *old* label is identical across them (or the specimen does not reproduce the
+defect and proves nothing) and the new one is not.
+
+Verified against a **reverted copy** before being trusted: with `fingerprint_id` restored to
+`fp.splitlines()[0][:12]`, both specimens return `4957a7e6d278` and canary 16 rejects it. A canary
+that has never been seen to fail is a comment.
+
+**The lesson, which is the transferable part: canary 14 tested DETECTION, and nothing tested the
+MESSAGE.** A gate can compute the right thing and report the wrong one, and the reporting path is
+exactly where that failure is invisible — the check passes, the output looks like an identity, and
+the error only shows up when someone tries to *use* the record. Every gate that prints an identity,
+a count, or a fingerprint needs a specimen for the printing, not only for the computing.
+
+#### What it prints now
+
+The first real run after the fix, on a dirty tree:
+
+```
+[self-test] canary 16 fires: two trees sharing a HEAD printed the SAME old label
+            (4957a7e6d278) and print DIFFERENT ids now (94ad9ab6d30d, 8c09125c2681). ✓
+CLAIM-AUDIT PASS — all 482 claims resolve against #print axioms.
+[tree-binding] verdict bound to tree d4b50ba222f4 (HEAD 6d2bec17c571, worktree unchanged …)
+```
+
+**`d4b50ba222f4` is not `6d2bec17c571`**, and that gap is the whole defect made visible: the tree
+carries uncommitted work, so its identity is not its commit's. Under the old scheme this run and
+every other run on `6d2bec17` — including the one that certified `(ec)` against a *different* set of
+uncommitted files — logged the same twelve characters.
+
+
 ## [Unreleased] — 2026-08-27 (ec)
 
 ### Depth was never the parameter, and the reduction to `LeadingMonomialFloor` was lossy
