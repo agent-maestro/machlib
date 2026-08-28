@@ -1,0 +1,33 @@
+{
+  "_comment": "Prose claims that something DOES NOT EXIST in the corpus. `absence_audit.py` re-runs each registered search and fails if it now matches. Registering an absence claim WITHOUT a search that could falsify it is the anti-pattern this registry exists to discourage -- a claim nothing can refute is not checked, it is merely written down.",
+  "_provenance": "Seeded 2026-08-28 after three claims in CLAUDE.md were found false: mul_lt_mul_of_pos_left (exists), min and abs (both exist in Basic.lean and are used). Every entry below was re-verified against the corpus at registration; the ones that failed were fixed rather than registered.",
+  "claims": [
+    {
+      "id": "claudemd-order-lemmas-absent",
+      "source_file": "../CLAUDE.md",
+      "claim_text": ["These order lemmas do NOT exist here"],
+      "search": {"pattern": "^(theorem|axiom|private theorem) (lt_or_ge|lt_trans|lt_irrefl|le_or_lt|add_lt_add_right) ", "paths": "MachLib"},
+      "expect": "no_match",
+      "recorded": "2026-08-28",
+      "note": "mul_lt_mul_of_pos_left was on this list and DOES exist; removed from the prose and from this pattern."
+    },
+    {
+      "id": "claudemd-tactics-absent",
+      "source_file": "../CLAUDE.md",
+      "claim_text": ["`set`, `linarith`, `ring` do not exist here"],
+      "search": {"pattern": "^(syntax|macro|elab) \"(set|linarith|ring)\"", "paths": "MachLib"},
+      "expect": "no_match",
+      "recorded": "2026-08-28",
+      "note": "Tactic declarations, not lemma names. mach_ring/mach_mpoly are the replacements."
+    },
+    {
+      "id": "no-complex-in-machlib",
+      "source_file": "../CLAUDE.md",
+      "claim_text": ["there is no Mathlib, no `Complex`"],
+      "search": {"pattern": "^(structure|inductive|def|noncomputable def) Complex\\b", "paths": "MachLib"},
+      "expect": "no_match",
+      "recorded": "2026-08-28",
+      "note": "Load-bearing: the Frontier G work is non-transportable BECAUSE of this. If a Complex type ever lands, several 'does not transport' claims need re-reading."
+    }
+  ]
+}

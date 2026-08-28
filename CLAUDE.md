@@ -104,6 +104,22 @@ trusting a hit: most entries are correct (named open obligations belong there, a
 predicates like `Lipschitz` are supplied from outside rather than proved). What to watch for is a new
 name that is *neither*.
 
+`python3 tools/absence_audit.py` closes the gap this file names two paragraphs down: the claim
+auditor *"is structurally blind to a claim about a theorem that does not [exist]"*, and
+`check_obligations.sh` covers **one** case of that. The general shape — *"these lemmas do not exist
+here"*, *"the existing machinery cannot answer this"* — was checked by nothing and **decays
+silently**: someone adds the thing, and the sentence saying it is missing keeps reading as true.
+
+It registers each absence claim with a **search that could falsify it** (`tools/absence_claims.json`)
+and fails when that search starts matching. Not a CI gate yet; it carries four canaries including a
+control, and — more to the point — a **firing specimen against a real defect**: run against this
+file's former *"`min` and `abs` do not exist"*, it reports `NOW-FALSE, 2 hits`.
+
+**It found three false claims in this file on its first pass** (`mul_lt_mul_of_pos_left`, `min`,
+`abs` — all three exist, and the `min`/`abs` entry told the reader to hand-roll a replacement). An
+unchecked absence claim is not merely stale; it costs work. Registering one *without* a falsifying
+search is the anti-pattern the registry exists to discourage.
+
 `lake env lean tools/sorry_audit.lean` is useful (`1 sorryAx`, allowlisted) but is **not** a CI gate,
 and note its scope: it walks the **environment** after `import MachLib`, so it cannot see
 `Discovered/`. Neither is `scripts/closerate.sh`, which is a *measurement* harness (close-rate,
@@ -134,16 +150,22 @@ behind it is missing — registration is still a human act.
 - **`open MachLib.Real` + `open …AerospaceActuatorGuardBandRate (le_min …)` collide.** Both export a
   `le_min`; a bare `apply le_min` is then ambiguous. Qualify it. (This broke 5 `Applications/`
   modules for an unknown length of time — they were in an unreachable island, so no gate saw it.)
-- **These order lemmas do NOT exist here**: `lt_or_ge`, `lt_trans`, `lt_irrefl`,
-  `mul_lt_mul_of_pos_left`, `le_or_lt`, `add_lt_add_right`. The local idioms are
-  `rcases lt_total`, `lt_of_lt_of_le … (le_of_lt …)`, `(ne_of_lt h) rfl`, `mul_lt_mul_pos_left`,
-  `add_le_add_wit`, `add_lt_add_left`.
+- **These order lemmas do NOT exist here**: `lt_or_ge`, `lt_trans`, `lt_irrefl`, `le_or_lt`,
+  `add_lt_add_right`. The local idioms are `rcases lt_total`, `lt_of_lt_of_le … (le_of_lt …)`,
+  `(ne_of_lt h) rfl`, `add_le_add_wit`, `add_lt_add_left`.
+  (`mul_lt_mul_of_pos_left` **was on this list and does exist** —
+  `WitnessResidualGrowthCompetitionNumeric`. Removed 2026-08-28; registered in
+  `tools/absence_claims.json` so the remaining five are re-checked rather than trusted.)
 - **A new module needs `open Real`** inside `namespace MachLib`, or `exp`/`log` are unknown.
 - **Casing on a tree then applying a lemma with an implicit tree argument leaves a metavariable** —
   pass `(A := EMLTree.const c)` explicitly, or the shape-specific proof term fails to typecheck.
 - **Forward references bite**: a theorem is only usable *below* its declaration in the same file.
-- **`min` and `abs` do not exist.** Use `two_bound_witness` (`a·b·exp(−a−b)` is positive and strictly
-  below both `a` and `b`) rather than hand-rolling a fourth bespoke two-constraint expression.
+- **`min`, `max` and `abs` DO exist** — `MachLib/Basic.lean`, under `namespace MachLib.Real`, and
+  they are used (`abs` in `EMLFTranscendence`, `min` across `Applications/`). This entry previously
+  read *"`min` and `abs` do not exist"* and told the reader to hand-roll `two_bound_witness` instead.
+  **That was false and cost work**; it is the finding that motivated `tools/absence_audit.py`.
+  `two_bound_witness` is still the right tool when you need a value strictly *below both* of two
+  positives without a case split — which is a different job from `min`.
 - **`mach_mpoly` stalls in `Lean.Meta.acLt` when nested `(1+1)` constants must be DISTRIBUTED over
   sums.** Four specimens pin it: nested `64` under pure commutativity is fine (1 s); the same
   constant in a degree-3 identity with subtractions dies (69 s at 4 000 000 heartbeats); the

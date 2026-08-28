@@ -5,6 +5,60 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (ek)
+
+### `absence_audit.py` — the class of claim nothing checked, and three false ones in `CLAUDE.md`
+
+`CLAUDE.md` has said for weeks that the claim auditor *"is structurally blind to a claim about a
+theorem that does not [exist] — including 'this obligation is still open'. `check_obligations.sh`
+covers that one case."* **One case.** The general shape was checked by nothing:
+
+* *"These order lemmas do NOT exist here: … `mul_lt_mul_of_pos_left` …"* — **it exists**
+  (`WitnessResidualGrowthCompetitionNumeric`).
+* *"`min` and `abs` do not exist."* — **both exist**, in `Basic.lean`, under `namespace MachLib.Real`,
+  and are used (`abs` in `EMLFTranscendence`, `min` across `Applications/`). That entry then told the
+  reader to hand-roll `two_bound_witness` instead.
+
+**An unchecked absence claim is not merely stale; it costs work.** All three are corrected in place,
+with what replaced them.
+
+#### Why now
+
+This session made **six** wrong claims about what the corpus contains, every one under-estimating it.
+The split is the argument for the tool:
+
+* **Two were duplicate definitions** — `depth_le_two_exp_bounded_or_grows`, `pevTerm`. The compiler
+  caught both in seconds, and only because I had picked the name the corpus already used. A creative
+  name would have shipped the twin silently.
+* **Four were assertions of ABSENCE** — and nothing caught them. One surfaced only via a duplicate
+  name I happened to choose identically; **twice they became recommendations against machinery built
+  for exactly that purpose**.
+
+The compiler catches duplication. Nothing caught "this isn't there."
+
+#### What it does
+
+Each registered claim carries a **search that could falsify it**; the audit re-runs it and fails when
+it starts matching. `TEXT-GONE` if the prose was edited away, `NOW-FALSE` if the search now hits,
+`UNAVAILABLE` (exit 2, never a pass) if a source cannot be read.
+
+Four canaries including a control, and — the part that matters — **a firing specimen against a real
+defect rather than a synthetic one**: run against the former `min`/`abs` line it reports
+`NOW-FALSE — 2 hit(s), first: MachLib/Basic.lean:221:noncomputable def abs`. The gate is validated by
+the bug it was built for.
+
+Seeded with three claims re-verified at registration: the five surviving absent order lemmas, the
+absent `set`/`linarith`/`ring` tactics, and **no `Complex` in `MachLib`** — that last one load-bearing,
+since the Frontier G work is non-transportable *because* of it, and several "does not transport"
+claims would need re-reading if a `Complex` type ever landed.
+
+#### Scope, and the limit that does not go away
+
+It checks **searches, not meanings**. A vague absence claim can be registered with a search too narrow
+to falsify it, and no script fixes that. It cannot find absence claims nobody registered —
+registration stays a human act, the same limit `claim_audit` has. And an absence claim can be true and
+useless. This measures decay, not value.
+
 ## [Unreleased] — 2026-08-28 (ej)
 
 ### The query germ as an `L_F` term, with an explicit zero bound on the positive branch
