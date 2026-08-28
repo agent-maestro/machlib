@@ -5,6 +5,59 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (ej)
+
+### The query germ as an `L_F` term, with an explicit zero bound on the positive branch
+
+`(eh)` reduced `OneQueryDichotomy` to a ray-relative uniform zero bound for
+`bipev N x (Fbasis (pev P x / pev Q x))`; `(ei)` gave such a bound for **any** `L_F` term with safe
+divisions and positive `F`-arguments. What sat between them was the germ itself as an `FTerm`.
+`MachLib/EMLQueryGermTerm.lean` (new, 11 theorems, 179 lines) builds it.
+
+No new axioms — 243 pinned; footprint is `rolle_ct` + `analytic_finite_zeros_compact`, inherited from
+the descent. No `sorryAx`, no `zero_count_bound_classical`.
+
+`queryTerm_zero_bound`: on `Icc a b` where `pev Q ≠ 0` and `pev P / pev Q > 0`, the germ's zeros are
+bounded by `encBound (toEML (queryTerm N P Q))` — **a `Nat` built from `N`, `P`, `Q` alone, with no
+`a` or `b` in it.** The two hypotheses are exactly the two the germ's shape leaves, and
+`ratGerm_eventual_sign` (`PevSignGerm`) supplies both on a ray for the positive branch.
+
+#### A false claim I made and then had to disprove
+
+The module docstring first read: *"one `div` and **one** `F`. So `fOcc (queryTerm N P Q) = 1` — it is
+a one-query term in the sense `OneQueryLevelSet` uses."*
+
+**That is wrong.** Horner writes `u` once per coefficient level, so `fOcc (queryTerm N P Q) =
+N.length` — the degree, not one. The germ is one-query in the sense of **one distinct `F`-argument**,
+which is a different statement, and `EMLOneQueryGlobal` exists precisely to stop that conflation:
+*"Conflating the two is the error this file exists to make impossible."* I made it anyway, in prose,
+one file away.
+
+`queryTerm_fOcc` and `bipevTerm_fOcc` now pin the actual number so the claim cannot drift back. The
+correction is recorded in the docstring rather than silently applied — a docstring that quietly
+changes its arithmetic teaches nothing.
+
+#### Duplication, caught twice, both times by the obvious name
+
+`pevTerm`/`pevTerm_eval` already existed in `EMLRationalGerm`, with the identical Horner definition
+and the identical justification. I wrote them again; Lean rejected the duplicate name in seconds.
+
+That is the second duplication of the session, and **both were caught the same way — because I picked
+the name the corpus had already picked.** A construction given its obvious name collides audibly; the
+same construction under a creative name ships silently beside its twin and nothing notices. Worth
+preferring the obvious name for that reason alone, quite apart from readability.
+
+Six wrong claims-about-the-corpus now, every one under-estimating it. The two cheap ones were the
+name collisions; the four expensive ones were assertions of absence that no tool checks.
+
+#### Scope: the positive branch only
+
+`ratGerm_eventual_sign` splits a rational germ three ways and this module handles one. Where `u < 0`
+eventually, totalisation gives `Fbasis u = exp u`, killing the log level — no `LogArgPos` obligation,
+but also no `FTree` route, which is `ExpRationalKhovanskii`'s territory. Where `u` is eventually zero
+the germ collapses to a polynomial in `x`. Neither is attempted, and the module says so rather than
+letting "the germ is handled" form.
+
 ## [Unreleased] — 2026-08-28 (ei)
 
 ### `LogArgPosOn` through the change of basis — the link between `L_F ⊆ EML` and the explicit bound
