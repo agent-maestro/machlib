@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 057 `.lean` files** (741 top-level + 316 in subdirectories) /
-**234 962 lines** / **7 347 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 058 `.lean` files** (742 top-level + 316 in subdirectories) /
+**235 430 lines** / **7 354 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 347
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 096
+  | paste -sd+ | bc                                    # 7 354
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 103
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -25,7 +25,7 @@ method is right — the same figure was recorded independently when this was las
 
 **Two revisions of this file have carried a theorem count nobody can reproduce**: `5 851` by an
 unrecorded method, then `8 231`, which exceeds the largest number the corpus can produce by any
-file set (`8 097`, every `.lean` in the repo outside `.lake`). It is almost certainly the
+file set (`8 097` as measured when it was caught, every `.lean` outside `.lake`). It is almost certainly the
 **unquoted-glob inflation** below. Do not restate a count without re-running the command above.
 
 **`MachLib/Discovered/` (294 files) is deliberately outside the aggregator**: each file is
@@ -74,12 +74,12 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 754 jobs, ~3 s warm
+lake build                                     # 755 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "243 axioms pinned; 57 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 477 claims resolve against #print axioms"
+python3 tools/claim_audit/claim_audit.py       # "all 482 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
@@ -99,7 +99,7 @@ Both are "conditional theorem, unvalidated"; only one had a harness until 2026-0
 `ValueGapBound` was introduced, taken as a hypothesis by two theorems, and satisfied by nothing at
 any depth. **A Prop with consumers and no producers is not exercised; it is assumed** — and that is
 the easy half to miss, because the consumers make it look exercised. Baseline
-`tools/hypothesis_baseline.json`, 34 entries, a **set** not a count. Read its triage note before
+`tools/hypothesis_baseline.json`, 35 entries, a **set** not a count. Read its triage note before
 trusting a hit: most entries are correct (named open obligations belong there, and definitional
 predicates like `Lipschitz` are supplied from outside rather than proved). What to watch for is a new
 name that is *neither*.
@@ -124,7 +124,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**751 of 1057 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**752 of 1058 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
@@ -190,8 +190,10 @@ behind it is missing — registration is still a human act.
 - **`find … -not -path '*/Discovered/*'` UNQUOTED silently double-counts.** The shell expands
   `*/Discovered/*` against the working directory before `find` sees it, so `-not -path` excludes one
   matched file and every *other* match becomes an extra search root — the same files are then walked
-  twice. Measured live: the correctly quoted form gives **7 347** theorems, the unquoted form
-  **8 839**. It fails *upward* and reads as a bigger corpus, which is why it survived into this file.
+  twice. Measured 2026-08-28: the correctly quoted form gives **7 354** theorems, the unquoted form
+  **8 846**. (Both drift with the corpus — the *gap* is the point, not the numbers; re-measure rather
+  than trusting these.) It fails *upward* and reads as a bigger corpus, which is why it survived into
+  this file.
   Sanity check any corpus count against the all-files total; an "excluding X" figure that exceeds it
   is impossible.
 - **A gate's own self-test can go stale when the corpus improves.** `obligation_ledger_check.py`'s
@@ -216,10 +218,10 @@ its footprint tally for exactly this reason.
 
 ## Status
 
-Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (754 build jobs) at **true exit
+Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (755 build jobs) at **true exit
 codes** — note `gate | tail` reads `tail`'s status, not the gate's. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
-the entire depth/decay programme below. Obligations ledger: **21 rows, 9 open rows, 6 distinct open
+the entire depth/decay programme below. Obligations ledger: **22 rows, 9 open rows, 6 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The `S > 0` branch was VACUOUS and is now repaired** (`a10b3b5b`, 2026-08-24). Two pole hypotheses
@@ -249,8 +251,9 @@ otherwise for weeks; read the ledger, not this paragraph, and if they disagree t
 because a gate checks it. The six distinct open obligations are: the
 `DecayFloor` ⇄ `EmlGermApproach` ⇄ `GrowthEnvelope` cycle (**one** obligation, three rows),
 `TowerLowerBound` ⇄ `TowerReducesToSign` (one obligation, two rows, equivalent since `SignHardCase`
-fell), `NegativeTranslationGrowingLeft`, `OneQueryDichotomy`, `BoundedGermTranscendence`,
-`OneQueryLevelSet`.
+fell), **`PinnedRightChild`** (`NegativeTranslationGrowingLeft` reduced to it on 2026-08-28 —
+`EMLNegTranslation`; the count did not move, a reduction relocates a debt), `OneQueryDichotomy`,
+`BoundedGermTranscendence`, `OneQueryLevelSet`.
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then
 `s(1/x) ∈ {7,9,11}` proved, `d(1/x)` frozen at `{3,4}`, and a depth- and size-indexed **growth

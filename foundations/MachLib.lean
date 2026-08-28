@@ -332,6 +332,7 @@ import MachLib.EMLDepth2InvX
 import MachLib.EMLNetlistDepth
 import MachLib.EMLCertifiedSynthesis
 import MachLib.EMLDepthTameness
+import MachLib.EMLNegTranslation
 import MachLib.EMLUnaryBasis
 import MachLib.EMLBasisEquivalence
 import MachLib.EMLQueryComplexity

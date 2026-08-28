@@ -477,6 +477,26 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   Literature placement, with its own limits recorded (abstracts only, no paper read in full):
   `monogate-research/exploration/germ_approach_literature_2026_08_27/NOTE.md`.
 
+- **`NegativeTranslationGrowingLeft` reduced to one child and one equation** (2026-08-28,
+  `EMLNegTranslation`) — a separate open obligation from the decay programme above, and the one place
+  this month where an obligation moved.
+
+  **What is proved.** A log-growth cap for depth ≤2 (`depth_le_two_log_growth_on_ray`, the mirror of
+  the existing decay bound) squeezes the left child into `x ≤ A x ≤ x + 1`; inside that band a
+  depth-≤2 tree is provably `var` (`band_depth_le_two_is_var`); the equation then pins the right
+  child, and `negativeTranslationGrowingLeft_of_pinned` closes the reduction. No new axioms.
+
+  **What is open: all of it that matters.** The residue `PinnedRightChild` — a depth-≤2 tree whose
+  logarithm is `exp x − x − c` — is an open ledger row, and **the distinct-open count did not move**.
+  A reduction to an open residue relocates a debt. The obligations gate is what enforces that
+  reading: it reported the conditional capstone as a false discharge within a minute of it compiling,
+  and the row had to be re-registered as `reduced` before it would pass.
+
+  **Asterisk.** The interesting negative fact is that `c < 0` is used **nowhere** in the reduction.
+  The left child's collapse is a fact about the band, not about the sign of the translation, so
+  nothing here explains the positive/negative asymmetry recorded in `EMLDepthTameness` §4 — it only
+  localises where the asymmetry must live.
+
 ---
 
 ## 8. The through-line

@@ -5,6 +5,95 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (ee)
+
+### `NegativeTranslationGrowingLeft` reduced to one child and one equation — the enumeration was avoidable
+
+The obligation's own docstring calls it *"the same species of difficulty as `ExpExpGapBelow` and
+`BoundedCellApproach`, which took an arc each"*, and expects a twenty-five-cell enumeration against a
+cancelling equation. **It does not need one.** `MachLib/EMLNegTranslation.lean` (new, in the
+aggregator) proves everything except a residue that is strictly narrower than the parent: no `A`, no
+growth hypothesis, one child, one equation.
+
+**No new axioms — 243 pinned, unchanged.** Footprints of all seven new theorems are base `Real` field
+axioms: no `sorryAx`, no `rolle`, no `analytic_finite_zeros`.
+
+#### Why it collapses
+
+`Hgrow` gives `exp (A x) ≥ exp x`, so `log (B x) = exp (A x) − x − c → ∞` and *both* sides of the node
+sit near `exp x` and **cancel** to leave `x + c`. No growth-rate argument can separate them — which is
+what the docstring is pointing at, and it is right as far as it goes. The way in is that the
+cancellation is **too exact to survive the depth-1 classification**:
+
+1. **§1, the one genuinely new lemma.** `depth_le_two_log_growth_on_ray` — `log (t x) ≤ exp x + K` on
+   a ray. The *growth* mirror of the existing `depth_le_two_decay_on_ray`; together they bracket
+   `log (t x)` for a depth-≤2 tree. It follows from `depth_le_two_growth_envelope` by folding the
+   envelope's additive `M` into its own exponential, using `1 + 1 ≤ exp 1`.
+2. **§2, the squeeze.** With §1, `exp (A x) = x + c + log (B x) ≤ exp x + x + c + K`, and
+   `exp (x+1) = e·exp x` has room to spare — so `x ≤ A x ≤ x + 1` on a ray. The band is deliberately
+   width `1`; the sharp `A x − x = O(x e^{−x})` is true and costs more for nothing.
+3. **§3, the band admits only `var`.** Three constructor cases. A constant cannot stay above the
+   identity. A node dies to `depth_le_one_exp_bounded_or_grows` on its *left grandchild*: bounded
+   loses to `Hgrow` (the node is then `≤ Kb + C + log x`, logarithmic — the mechanism of
+   `mirrorBand_not_depth_three_bounded_left`, reused one level down), and growing loses to the band
+   (the node is then `≥ exp x − (x + C)`). **That dichotomy does the work an enumeration would.**
+   Nothing is assumed about the right grandchild beyond its depth.
+
+**So the enumeration was avoidable because the destination was constrained first** — `A` is collapsed
+to a single form *before* any shape analysis, and twenty-five cells never appear.
+
+Worth recording separately: **`c < 0` is not used anywhere in §1–§3.** The collapse of `A` is a fact
+about the band, not about the sign of the translation, so the negative side's difficulty lives
+entirely in the residue and not in the geometry that reaches it.
+
+#### What is left, named and open
+
+```lean
+def PinnedRightChild : Prop :=
+  ∀ c : Real, c < 0 → ∀ B : EMLTree, B.depth ≤ 2 →
+    (∀ x : Real, 0 < x → log (B.eval x) = exp x - x - c) → False
+```
+
+`log (B x) = exp x − x − c` forces `B x = exp (exp x − x − c)`, so a depth-2 `B = eml A₁ B₁` needs
+`A₁ x → exp x − x − c`. The depth-≤1 forms are `α`, `x`, `c′ − log x`, `exp x − d`, `exp x − log x`,
+and **none carries a `−x` term** — producing one needs `log (b x) = x + c` for `b` of depth 0, and
+neither `log (const)` nor `log x` is affine in `x`. That sentence is the remaining proof; formalising
+it needs a two-sided bound on `exp (A₁ x)`, whose lower half costs, because it needs the decay bound
+on `B₁` with its sign split.
+
+#### The ledger: a reduction is not a discharge, and the gate said so first
+
+`negativeTranslationGrowingLeft_of_pinned (h : PinnedRightChild) : NegativeTranslationGrowingLeft` is
+written with a **binder**, per the standing rule — and that is exactly why
+`obligation_ledger_check.py` immediately reported
+
+```
+STALE  NegativeTranslationGrowingLeft: marked open but discharged by negativeTranslationGrowingLeft_of_pinned
+OBLIGATION-LEDGER FAIL — 1/21 row(s) do not match the corpus
+```
+
+**The gate was right.** Something *does* now conclude the obligation; what the `open` row failed to
+say is that it concludes it *from an open residue*. That is precisely what the `reduced` status
+encodes, and the row is now `reduced → PinnedRightChild` with `PinnedRightChild` opened beside it.
+
+**The count is unchanged: 22 rows, 9 open rows, 6 distinct open obligations.** A reduction to an open
+residue relocates a debt; it does not remove one, and a ledger that let this read as a discharge would
+have converted an honest reduction into a false closure — the failure mode `(dj)` and `(eb)` were both
+about. Here the mechanism worked in the intended direction, unprompted, within a minute of the
+theorem compiling.
+
+`tools/hypothesis_baseline.json` gains `PinnedRightChild` (34 → 35), and the audit's own triage note
+says why it belongs: *"named open obligations — meant to be consumed and unproved; that is what
+'open' means"*. The shape that note tells you to watch for is a new name there that is **not** an
+obligation you deliberately opened. This one is, and it was opened in the same commit that consumes
+it.
+
+Route, with its predictions and their outcomes:
+`monogate-research/exploration/negative_translation_growing_left_2026_08_28/ROUTE.md`. Two of its
+three "how this could be wrong" items fired as predicted (ray arithmetic, the sign split); the one it
+missed is that `set` does not exist in this corpus, so "pick one big point" became the shared
+`exists_big` lemma instead of a local definition.
+
 ## [Unreleased] — 2026-08-28 (ed)
 
 ### The claim auditor computed the right identity and printed the wrong one
@@ -9669,7 +9758,8 @@ in commit archaeology:
 | `BoundedEmlCellApproach` | **discharged** | `boundedEmlCellApproach_holds` |
 | `BoundedEmlCellApproachLarge` | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | **open** | — equivalent to `TowerLowerBound` ever since `signHardCase_holds` discharged its antecedent (`towerReducesToSign_iff_towerLowerBound`, `EMLTowerAfterSign`) |
-| `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
+| `NegativeTranslationGrowingLeft` | **reduced** | `negativeTranslationGrowingLeft_of_pinned` → `PinnedRightChild` (`EMLNegTranslation`) — the left child collapses to `var` before any enumeration, so what is left is one child and one equation (bounded-left branch was already closed by `mirrorBand_not_depth_three_bounded_left`) |
+| `PinnedRightChild` | **open** | — the residue: a depth-≤2 tree whose logarithm is the germ `exp x − x − c`; no depth-≤1 form carries the `−x` term |
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
 | `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
