@@ -496,6 +496,17 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   satisfies the growth condition, so the emptied configuration space was not empty for a trivial
   reason. Footprints are base `Real` field axioms; no `sorryAx`, no analysis axioms.
 
+  **And the asymmetry cell is closed.** `x_plus_neg_c_depth_exact_four` (same module, §6):
+  `d_(0,∞)(x + c) = 4` for every `c < 0`, so with the positive side the value is **4 for every
+  `c ≠ 0`**. §4's table had `{3, 4}` here and called it *"the first question this family raises that
+  the existing machinery cannot answer"*; the machinery could, once the growing-left branch fell —
+  the closure is pure assembly over `depth_le_two_exp_bounded_or_grows`, which had been in
+  `EMLDepthTameness` all along with a docstring naming this exact use.
+
+  **What stays asymmetric is the proof, not the value.** The positive side runs through
+  `IntermediateBand` with `x < f x`; the negative side needs the mirror band, the depth-≤2 dichotomy,
+  and a separate module for one of its two branches.
+
   **Where the sign finally enters.** `c < 0` is used **nowhere** in the reduction — the left child's
   collapse is a property of the band, not of the sign. It is consumed in exactly one place, `u_pos`,
   to know that `exp w − w − c > 0` so the equation can be inverted through `exp`. That is a thin use,

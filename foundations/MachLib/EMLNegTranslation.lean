@@ -1,5 +1,6 @@
 import MachLib.EMLDepthTameness
 import MachLib.EMLDecayFloorIsGrowth
+import MachLib.EMLAdditionClosureFailure
 
 /-!
 # The negative translation, growing-left branch
@@ -862,5 +863,127 @@ is the *conjunction* of a satisfiable growth condition with the equation. -/
 theorem growingLeft_growth_hypothesis_satisfiable :
     ∃ A : EMLTree, A.depth ≤ 2 ∧ ∃ T : Real, ∀ x : Real, T ≤ x → exp x ≤ exp (A.eval x) :=
   ⟨EMLTree.var, Nat.zero_le 2, 0, fun _ _ => le_refl _⟩
+
+/-! ## §6 — `d(x + c) = 4` for `c < 0`: §4's open cell, closed by assembly
+
+`EMLDepthTameness` §4 leaves one cell open:
+
+```
+c > 0   d(x + c) = 4  exactly      c = 0   d(x) = 0      c < 0   d(x + c) ∈ {3, 4}
+```
+
+and calls it *"the first question this family raises that the existing machinery cannot answer."*
+
+**The existing machinery could answer it; what was missing was §5.** The depth-3 exclusion for `c < 0`
+splits on the left child's exponential — `depth_le_two_exp_bounded_or_grows` (`EMLDepthTameness`,
+whose docstring already calls itself *"the brick a depth-3 band argument needs on its left child"*).
+The bounded branch went to `mirrorBand_not_depth_three_bounded_left` and was closed; the growing
+branch was the obligation discharged in §5. With both branches closed and the dichotomy exhaustive,
+the cell closes by **assembly**: one small lemma (`x + c` is a mirror-band target) and a case split.
+
+> **A correction worth keeping.** I opened this section by writing a depth-≤2 dichotomy from scratch,
+> having concluded from a `grep … | head -6` that none existed. It existed, seven hits down the list
+> the `head` had truncated. **Absence read off a truncated search is not absence** — and the failure
+> is invisible, because a short result list looks the same as a short answer. Lean caught it with
+> "has already been declared"; nothing else would have. The duplicate is deleted and the original
+> used.
+-/
+
+/-- **`x + c` is a mirror-band target for `c < 0`.** The below-identity half is
+`x_plus_neg_c_belowIdentity`; this supplies the super-logarithmic half.
+
+`C + log w < w + c` needs `C − c < w − log w`, and the clean way to get it **strictly** without
+dividing by two is to make `log w` do double duty: past `exp X₄` we have `2 log w ≤ w`, hence
+`log w ≤ w − log w`; and past `exp (C − c)` we have `C − c < log w`. Chaining them gives the strict
+inequality with no halving step. -/
+theorem x_plus_neg_c_mirrorBand (c : Real) (hc : c < 0) : MirrorBand (fun x => x + c) := by
+  refine ⟨x_plus_neg_c_belowIdentity c hc, ?_⟩
+  intro C X
+  obtain ⟨X₄, _, hlin2⟩ := exp_beats_linear_eventually (1 + 1)
+  obtain ⟨w, hwX, hw4, _, hwd, hw1⟩ := exists_big X (exp X₄) X (exp (C - c))
+  have hw0 : (0 : Real) < w := lt_of_lt_of_le zero_lt_one_ax hw1
+  refine ⟨w, hwX, hw1, ?_⟩
+  show C + log w < w + c
+  have hlogw : X₄ ≤ log w := by
+    have h := log_le_log (exp_pos X₄) hw4
+    rw [log_exp] at h; exact h
+  have h2log : (1 + 1) * log w ≤ w := by
+    have h := hlin2 (log w) hlogw
+    rw [exp_log hw0] at h; exact h
+  have hhalf : log w ≤ w - log w := by
+    have v := add_le_add_wit h2log (le_refl (-log w))
+    have l : ((1 : Real) + 1) * log w + -log w = log w := by mach_mpoly [log w]
+    have r : w + -log w = w - log w := by mach_mpoly [w, log w]
+    rw [l, r] at v; exact v
+  have hstrict : C - c < log w := by
+    have h := log_lt_log (exp_pos (C - c)) hwd
+    rw [log_exp] at h; exact h
+  have hchain : C - c < w - log w := lt_of_lt_of_le hstrict hhalf
+  have v := add_lt_add_left hchain (c + log w)
+  have l : c + log w + (C - c) = C + log w := by mach_mpoly [c, C, log w]
+  have r : c + log w + (w - log w) = w + c := by mach_mpoly [c, w, log w]
+  rw [l, r] at v; exact v
+
+/-- **No depth-3 tree computes `x + c` for `c < 0`.** The two branches of the dichotomy are now
+exhaustive, and each is already closed: bounded by the mirror band, growing by §5. -/
+theorem x_plus_neg_c_not_depth_le_three (c : Real) (hc : c < 0) (t : EMLTree) (ht : t.depth ≤ 3)
+    (h : ∀ x : Real, 0 < x → t.eval x = x + c) : False := by
+  cases Nat.lt_or_ge t.depth 3 with
+  | inl hlt => exact x_plus_neg_c_not_depth_le_two c hc t (by omega) h
+  | inr hge =>
+      cases t with
+      | const p =>
+          have e : (EMLTree.const p).depth = 0 := rfl
+          rw [e] at hge; omega
+      | var =>
+          have e : (EMLTree.var).depth = 0 := rfl
+          rw [e] at hge; omega
+      | eml A B =>
+          have hd : 1 + Nat.max A.depth B.depth ≤ 3 := ht
+          have hm1 : A.depth ≤ Nat.max A.depth B.depth := Nat.le_max_left _ _
+          have hm2 : B.depth ≤ Nat.max A.depth B.depth := Nat.le_max_right _ _
+          have hA : A.depth ≤ 2 := by omega
+          have hB : B.depth ≤ 2 := by omega
+          have heq : ∀ x : Real, 0 < x → exp (A.eval x) - log (B.eval x) = x + c := h
+          rcases depth_le_two_exp_bounded_or_grows A hA with ⟨K, XK, _, hK⟩ | ⟨T, hT⟩
+          · exact mirrorBand_not_depth_three_bounded_left (fun x => x + c)
+              (x_plus_neg_c_mirrorBand c hc) A B hB K XK hK heq
+          · exact negativeTranslationGrowingLeft_holds c hc A B hA hB ⟨T, hT⟩ heq
+
+/-- **`d_(0,∞)(x + c) = 4` for every `c < 0` — the open cell of §4's table, closed.**
+
+Upper bound: `eml_const_offset_closure` at `K = 1 − c` (positive since `c < 0`, with `K + c = 1`),
+which `negOffset_depth` places at depth `2 + 2 + 0 = 4`. That construction was already general in
+`c`; the open half was always the lower bound.
+
+**So the value is the same on both sides of zero.** The `{3, 4}` uncertainty was an artefact of the
+missing dichotomy, exactly as §4 suspected but could not decide. What is *not* symmetric, and stays
+that way, is the argument: the positive side runs through `IntermediateBand` with `x < f x`, while
+the negative side needs the mirror band, a depth-≤2 dichotomy that did not exist, and a separate
+module for one of its two branches. Equal answers, unequal proofs. -/
+theorem x_plus_neg_c_depth_exact_four (c : Real) (hc : c < 0) :
+    (∀ t : EMLTree, t.depth ≤ 3 → (∀ x : Real, 0 < x → t.eval x = x + c) → False)
+    ∧ (∃ t : EMLTree, t.depth = 4 ∧ ∀ x : Real, 0 < x → t.eval x = x + c) := by
+  refine ⟨fun t ht hh => x_plus_neg_c_not_depth_le_three c hc t ht hh, ?_⟩
+  have hK : (0 : Real) < 1 - c := by
+    have v := add_lt_add_left hc (1 : Real)
+    have r : (1 : Real) + 0 = 1 := by mach_ring
+    rw [r] at v
+    have w := add_lt_add_left v (-c)
+    have l2 : -c + (1 + c) = 1 := by mach_mpoly [c]
+    have r2 : -c + (1 : Real) = 1 - c := by mach_mpoly [c]
+    rw [l2, r2] at w
+    exact lt_trans_ax zero_lt_one_ax w
+  have hKc : (0 : Real) < 1 - c + c := by
+    have e : (1 : Real) - c + c = 1 := by mach_mpoly [c]
+    rw [e]; exact zero_lt_one_ax
+  refine ⟨negOffset (log (1 - c + c)) (negOffset (log (1 - c)) EMLTree.var), ?_, ?_⟩
+  · rw [negOffset_depth, negOffset_depth]
+    have e : (EMLTree.var).depth = 0 := rfl
+    rw [e]
+  · intro x _
+    have h := eml_const_offset_closure EMLTree.var hK hKc x
+    have e : (EMLTree.var).eval x = x := rfl
+    rw [e] at h; exact h
 
 end MachLib

@@ -4959,10 +4959,11 @@ The class is not empty at depth 3 without the logarithmic condition: `log x` is 
 the identity and *is* depth 3 (§4). So `Hlog` is what does the separating, exactly as it did in the
 positive case where its absence once broke a sharpness composition.
 
-**Status: half proved.** The bounded-left case closes below. The growing-left case is where
-`exp(A x)` and `log(B x)` are both near `exp x` and cancel, which is the same difficulty
-`ExpExpGapBelow` and `BoundedCellApproach` were introduced for. It is stated as an obligation rather
-than assumed. -/
+**Status: BOTH cases now closed.** The bounded-left case closes below. The growing-left case — where
+`exp(A x)` and `log(B x)` are both near `exp x` and cancel — was stated as an obligation rather than
+assumed, and was discharged on 2026-08-28 by `negativeTranslationGrowingLeft_holds`
+(`EMLNegTranslation`). Together with `depth_le_two_exp_bounded_or_grows` the two are exhaustive, which
+is what closes `d(x + c) = 4` for `c < 0`. -/
 
 /-- Unbounded above, eventually below the identity, and super-logarithmic. -/
 def MirrorBand (f : Real → Real) : Prop :=
@@ -5075,17 +5076,27 @@ the exclusion above is unavailable, and not merely inconvenient. The grammar is 
 translation: `log` is totalised at `0` and the whole envelope theory is stated on right-hand rays.
 
 What survives is the weaker class of §4: `x + c` is unbounded above and eventually below the
-identity, which excludes depth `≤ 2` but not depth `3`. So the two sides are genuinely different at
-the present state of knowledge:
+identity, which excludes depth `≤ 2` but not depth `3`.
 
 ```
     c > 0    d_(0,∞)(x + c)  =  4          exactly
     c = 0    d(x)            =  0          it is `var`
-    c < 0    d_(0,∞)(x + c)  ∈  {3, 4}     lower bound 3, upper bound 4
+    c < 0    d_(0,∞)(x + c)  =  4          exactly   (2026-08-28, EMLNegTranslation §6)
 ```
 
-Whether the negative gap is real or an artefact of the missing instrument is **open**, and it is the
-first question this family raises that the existing machinery cannot answer. -/
+**The `{3, 4}` cell is closed, and the gap was NOT the missing instrument.** This paragraph used to
+end *"whether the negative gap is real or an artefact of the missing instrument is open, and it is the
+first question this family raises that the existing machinery cannot answer"* — and that reading was
+wrong twice over. The instrument it wanted, `depth_le_two_exp_bounded_or_grows`, was already in this
+file (§ above), and the actual blocker was the **growing-left branch**, which
+`negativeTranslationGrowingLeft_holds` discharged. Once that fell, `x_plus_neg_c_depth_exact_four`
+followed by assembly: the dichotomy splits the left child exhaustively, bounded goes to
+`mirrorBand_not_depth_three_bounded_left` and growing to §5.
+
+**What is genuinely asymmetric is the proof, not the value.** The positive side runs through
+`IntermediateBand` with `x < f x`. The negative side needs the mirror band, the depth-≤2 dichotomy,
+and a separate module for one of its two branches. Equal answers, unequal arguments — and it is the
+argument that carries the mathematics. -/
 
 /-- `x + c` is unbounded above yet eventually strictly below the identity, for `c < 0`. -/
 theorem x_plus_neg_c_belowIdentity (c : Real) (hc : c < 0) :
@@ -5128,8 +5139,9 @@ theorem x_plus_neg_c_belowIdentity (c : Real) (hc : c < 0) :
     have l : x + (0 : Real) = x := by mach_ring
     rw [l] at v; exact v
 
-/-- **`x + c` is unreachable at depth ≤ 2 for `c < 0`.** With the depth-4 construction this pins
-`d_(0,∞)(x + c) ∈ {3, 4}` — and which of the two is **open**. -/
+/-- **`x + c` is unreachable at depth ≤ 2 for `c < 0`.** This once pinned
+`d_(0,∞)(x + c) ∈ {3, 4}` with the choice open; depth 3 is now excluded too
+(`x_plus_neg_c_not_depth_le_three`, `EMLNegTranslation`), so the value is exactly `4`. -/
 theorem x_plus_neg_c_not_depth_le_two (c : Real) (hc : c < 0) (t : EMLTree) (ht : t.depth ≤ 2)
     (h : ∀ x : Real, 0 < x → t.eval x = x + c) : False :=
   belowIdentityUnbounded_not_depth_le_two (fun x => x + c) (x_plus_neg_c_belowIdentity c hc) t ht h

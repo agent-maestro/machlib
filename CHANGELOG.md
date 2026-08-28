@@ -5,6 +5,94 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (eg)
+
+### `d(x + c) = 4` for `c < 0` — §4's open cell closed, and the instrument was never missing
+
+`EMLDepthTameness` §4 carried one open cell and a strong claim about it:
+
+```
+c > 0   d(x + c) = 4  exactly      c = 0   d(x) = 0      c < 0   d(x + c) ∈ {3, 4}
+```
+
+> *"Whether the negative gap is real or an artefact of the missing instrument is **open**, and it is
+> the first question this family raises that the existing machinery cannot answer."*
+
+**Both halves of that sentence were wrong.** `x_plus_neg_c_depth_exact_four` closes the cell, and the
+existing machinery could answer it — the blocker was never an instrument, it was `(ef)`'s obligation.
+
+**No new axioms — 243 pinned.** Footprints are base `Real` field axioms.
+
+#### What actually closes it
+
+The depth-3 exclusion splits on the left child's exponential, and both branches were already
+available once `(ef)` landed:
+
+* **bounded** → `mirrorBand_not_depth_three_bounded_left`, with `x_plus_neg_c_mirrorBand` supplying
+  the target's super-logarithmicity (the only genuinely new lemma here, and it is four lines);
+* **growing** → `negativeTranslationGrowingLeft_holds`, discharged this morning in `(ef)`.
+
+The split is exhaustive by `depth_le_two_exp_bounded_or_grows`. The upper bound is
+`eml_const_offset_closure` at `K = 1 − c`, general in `c` since it was written. **So the whole cell
+is assembly**, and the `{3,4}` uncertainty was an artefact of one open obligation, not of missing
+theory.
+
+A note on the one new lemma: `C + log w < w + c` wants `C − c < w − log w`, and the clean way to get
+it **strictly** without halving is to make `log w` do double duty — past `exp X₄`, `2 log w ≤ w` gives
+`log w ≤ w − log w`; past `exp (C − c)`, `C − c < log w`. Chain them.
+
+#### The error worth recording: absence read off a truncated grep
+
+I wrote this section by first proving a depth-≤2 exponential dichotomy from scratch, having recorded
+in the route note that *"there is no depth-≤2 counterpart in the corpus — I grepped"*.
+
+**`depth_le_two_exp_bounded_or_grows` has been in `EMLDepthTameness` (line 3143) all along**, with a
+docstring reading *"the brick a depth-3 band argument needs on its left child"* — written for exactly
+this use.
+
+The grep that "established" its absence ended in `| head -6`. The lemma was below the cut.
+
+> **Absence read off a truncated search is not absence**, and the failure mode is that it is
+> *invisible*: a short result list is indistinguishable from a short answer. Nothing in this repo
+> would have caught it — not a gate, not the claim auditor, not re-reading the note. Lean caught it,
+> with `has already been declared`, only because I had duplicated the name.
+
+This was the **third** wrong prediction in that route note, and all three had one shape: **a claim
+about what the corpus does not contain, made without exhaustively searching it.** The other two were
+"the depth-4 construction may not carry to negative `c`" (already general) and "the friction will be
+the ray bookkeeping" (none — the existing dichotomy's bounded disjunct already has the shape the
+mirror-band interface wants, because it was written for it). The mathematics in the note was sound
+throughout; the *inventory* was wrong three times.
+
+#### Prose corrected where it had gone false
+
+The §4 table, `x_plus_neg_c_not_depth_le_two`'s docstring, and `MirrorBand`'s *"Status: half proved"*
+were all describing a state that no longer holds. All three are updated in place with what replaced
+them, rather than silently rewritten — the table now records the closure and says explicitly that the
+gap was **not** the missing instrument. This is the class of prose no gate can see: the claim auditor
+pins claims about theorems that *exist*, and is structurally blind to a paragraph asserting something
+is open.
+
+**What stays asymmetric is the proof, not the value.** The positive side runs through
+`IntermediateBand` with `x < f x`; the negative needs the mirror band, the dichotomy, and a whole
+module for one branch. Equal answers, unequal arguments.
+
+#### An unexercised theorem, now exercised — found by the ratchet turning the other way
+
+`hypothesis_audit` reported `FIXED MirrorBand: now has a producer — remove it from the baseline`, and
+that line says something worth reading twice: **until today nothing in the corpus produced a
+`MirrorBand`.** `mirrorBand_not_depth_three_bounded_left` has been a *conditional theorem nobody had
+instantiated* since it was written — the exact shape of the `positive_branch_impossible` failure,
+where a green corpus says `True` rather than "the one you need".
+
+It was not vacuous: `x_plus_neg_c_mirrorBand` now supplies an instance, so the hypothesis was
+satisfiable all along. But that was **not known** before this commit, and no gate was asserting it.
+The audit built for capstones-with-no-callers caught it from the premise side, which is what the
+mirror harness exists for. Baseline 34 → 33.
+
+Route, with all three predictions scored:
+`monogate-research/exploration/x_plus_neg_c_depth_2026_08_28/ROUTE.md`.
+
 ## [Unreleased] — 2026-08-28 (ef)
 
 ### `NegativeTranslationGrowingLeft` is DISCHARGED — six distinct open obligations become five

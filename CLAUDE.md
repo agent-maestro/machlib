@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 058 `.lean` files** (742 top-level + 316 in subdirectories) /
-**235 832 lines** / **7 357 theorems**, re-exported through the aggregator
+**235 967 lines** / **7 360 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 357
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 106
+  | paste -sd+ | bc                                    # 7 360
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 109
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -99,7 +99,7 @@ Both are "conditional theorem, unvalidated"; only one had a harness until 2026-0
 `ValueGapBound` was introduced, taken as a hypothesis by two theorems, and satisfied by nothing at
 any depth. **A Prop with consumers and no producers is not exercised; it is assumed** — and that is
 the easy half to miss, because the consumers make it look exercised. Baseline
-`tools/hypothesis_baseline.json`, 34 entries, a **set** not a count. Read its triage note before
+`tools/hypothesis_baseline.json`, 33 entries, a **set** not a count. Read its triage note before
 trusting a hit: most entries are correct (named open obligations belong there, and definitional
 predicates like `Lipschitz` are supplied from outside rather than proved). What to watch for is a new
 name that is *neither*.
@@ -190,8 +190,8 @@ behind it is missing — registration is still a human act.
 - **`find … -not -path '*/Discovered/*'` UNQUOTED silently double-counts.** The shell expands
   `*/Discovered/*` against the working directory before `find` sees it, so `-not -path` excludes one
   matched file and every *other* match becomes an extra search root — the same files are then walked
-  twice. Measured 2026-08-28: the correctly quoted form gives **7 357** theorems, the unquoted form
-  **8 849**. (Both drift with the corpus — the *gap* is the point, not the numbers; re-measure rather
+  twice. Measured 2026-08-28: the correctly quoted form gives **7 360** theorems, the unquoted form
+  **8 852**. (Both drift with the corpus — the *gap* is the point, not the numbers; re-measure rather
   than trusting these.) It fails *upward* and reads as a bigger corpus, which is why it survived into
   this file.
   Sanity check any corpus count against the all-files total; an "excluding X" figure that exceeds it
