@@ -5,6 +5,77 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (ei)
+
+### `LogArgPosOn` through the change of basis — the link between `L_F ⊆ EML` and the explicit bound
+
+`EMLBasisEquivalence` proves `L_F ⊆ EML` (`toEML`, `toEML_eval`). `EMLZeroBoundAssembly` gives an
+explicit, **interval-independent** zero bound for any EML tree (`encBound`, `encBound_bounds`).
+**Nothing connected them**, because `encBound_bounds` wants `LogArgPosOn t (Icc a b)` and no result
+said when `toEML T` has it. `MachLib/EMLBasisLogArgPos.lean` (new, 19 theorems, 308 lines) supplies it.
+
+No new axioms — 243 pinned. Footprint: `rolle_ct` + `analytic_finite_zeros_compact` (inherited from
+the Khovanskii descent, this lane's accepted analytic base), **no `sorryAx`, no
+`zero_count_bound_classical`**.
+
+#### The observation that made it mechanical
+
+**At every generator the `LogArgPosOn` side condition is exactly the `eval` side condition already
+carried.** `subTree_eval` needs `0 < a.eval x`; so does `LogArgPosOn (subTree a b)`. `mulTree_eval`
+needs `1 < a.eval x`; so does `LogArgPosOn (mulTree a b)`. `mulPos_eval` needs both factors positive;
+so does `LogArgPosOn (mulPos a b)`. **The positivity a generator needs to compute the right value is
+the positivity it needs to keep its logs in range** — so nothing new had to be discovered about the
+constructions, only stated.
+
+The consequence is the useful half: **the `Gen` layer is unconditional.** `subGen`, `addGen`,
+`mulGen`, `negGen` all shift through `domTree u = exp (1 − u)`, positive for a structural reason, so
+their obligations discharge with no hypothesis on `u` or `v` — mirroring exactly why `EMLRingClosure`
+could drop the positivity hypotheses from `+`, `−`, `×` in the first place.
+
+So in
+
+```lean
+logArgPosOn_toEML (T) (S) (DivSafe on S) (FArgsPos T S) : LogArgPosOn (toEML T) S
+```
+
+**five of the seven constructors carry no positivity at all**; `div` consumes `DivSafe`, which
+`toEML_eval` already required, and **only `F` consumes `FArgsPos`**. That is the honest answer to
+"when can an `L_F` germ be fed to the encoder": when `F`'s arguments are positive, and the question
+arises nowhere else.
+
+#### The payoff
+
+`fterm_encBound_bounds`: any `L_F` term with safe divisions and positive `F`-arguments on `Icc a b`,
+plus a nonzero witness, has its zero count bounded by `encBound (toEML T)` — **a `Nat` built from the
+term alone, with no `a` or `b` in it**. That is the `UniformZeroBoundFrom` shape that `(eh)`'s
+`oneQueryDichotomy_of_uniformBoundsFrom` asks for.
+
+#### Correcting `(eh)`: the EML route is the right one, and that was miss number five
+
+`(eh)` recommended **against** routing the query germ through EML trees, on the grounds that
+`addTree`/`mulTree` carry positivity conditions a bivariate polynomial cannot meet.
+
+**That was wrong.** `EMLRingClosure` had already retired those conditions, and says so in its own
+header — *"the positivity side conditions on `subTree`/`addTree`/`mulPos` were never about the
+class"*. I read the conditional lemmas, did not read the `Gen` layer built to replace them, and
+recommended against the route those generators exist to enable.
+
+Five wrong claims-about-the-corpus in one session, every one under-estimating what it contains:
+the depth-4 construction, the ray bookkeeping, the depth-≤2 dichotomy, gap 1, and now the `Gen`
+layer. **Reading a conditional lemma is not reading the module** — the unconditional replacement sat
+forty lines below, under a header that stated the whole point.
+
+#### What is left
+
+Exhibit `bipev N x (Fbasis (pev P x / pev Q x))` as an `FTerm` and discharge `FArgsPos` — i.e.
+`pev P x / pev Q x > 0` on a ray. A ratio of polynomials has eventually constant sign, so it splits
+three ways: `u > 0` eventually (this module applies directly); `u < 0` eventually (totalisation gives
+`Fbasis u = exp u`, no log level, `ExpRationalKhovanskii`'s territory); `P ≡ 0` (`Fbasis 0 = 1`,
+polynomial in `x`).
+
+Survey, with all five misses scored:
+`monogate-research/exploration/query_vein_survey_2026_08_28/INVENTORY.md`.
+
 ## [Unreleased] — 2026-08-28 (eh)
 
 ### The query vein, surveyed — its classical bottom is closed, and the antecedent now matches its producers
