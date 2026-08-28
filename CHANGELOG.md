@@ -5,6 +5,110 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-27 (ec)
+
+### Depth was never the parameter, and the reduction to `LeadingMonomialFloor` was lossy
+
+Two unrelated things, both found by taking a measurement seriously: a new module that sharpens the
+decay programme's central bound, and a theorem count in `CLAUDE.md` that nobody can reproduce.
+
+#### Where the question came from, since the Lean does not say
+
+Frontier G — the complex-analysis frontier, opened the same day — measured the branch-point locus of
+EML trees over `ℂ`. Findings 1–6 were all one tree, so the obvious next probe was whether they
+generalise. **They do not**, and the way they fail names a parameter.
+
+The branch points of a node's `log` are the zeros of its right child, one equation per inner sheet,
+so the locus is a question about right children. Measured by keyhole winding count, there are at
+least four regimes — empty (`exp z` on sheet `0`: an exponential never vanishes), finite (`1 − Log z`
+on sheet `0`: one point, forever), comb (`exp z − Log z`: `R/π + O(1)`), and exponential
+(`exp(exp z − Log z) − Log z`: `d(log N)/dR = 0.935`, confirmed by an independent root count) — and
+**the regime can change from sheet to sheet within one tree**.
+
+What selects the regime is **exponential height**, not depth. The discriminator is two pairs of
+*equal depth*: at depth 1, `1 − Log z` (height 0) has `N(R) ≡ 1` out to `R = 53.4` while
+`exp z − Log z` (height 1) has `4, 6, 8, 12, 18`; at depth 2, `e/z − Log z` (height 0) has `N ≡ 1`
+while `exp(exp z − Log z) − Log z` (height 2) has `6, 14, 38`. Artifacts and failure record:
+`monogate-research/exploration/Frontier_G_monodromy_2026_08_27/` (Findings 7–8).
+
+**None of that transports.** `MachLib.Real` has no `Complex`. What transported was which statement
+was worth proving.
+
+#### `EMLHeightVsDepth` — twelve theorems, no new axioms
+
+`EMLHeightInterface` proves `eh_le_depth` and its docstring calls `eh_sub` *"the axiom the whole
+reframing turns on, and the one no tree measure satisfies"*. `EMLLadderMeasure` proves no `Nat`-valued
+measure descending strictly to both children carries the induction. Neither file said what happens
+jointly. Syntactic exponential height
+
+    ehTree (eml A B) = Nat.max (ehTree A + 1) (ehTree B)
+
+reads the `HeightModel` closure axioms off the tree, and `eh_le_ehTree` bounds **every** model by it.
+
+**(1) The old reduction was lossy.** `decayFloor_of_heightModel` spends `eh_le_depth` and concludes
+`DecayFloor`, which quantifies over `depth ≤ j`. But `LeadingMonomialFloor` constrains *height*, so
+it was always giving a floor for every tree of height `≤ j` and the depth-indexed conclusion threw
+the rest away. `decayFloorByHeight_of_heightModel` takes the **same hypothesis** and draws a
+**strictly larger** conclusion — one lemma swapped. `decayFloor_of_decayFloorByHeight` recovers the
+original, so nothing is lost. The gain is exhibited, not assumed: right spines of any length have
+height 1, so at level 1 the height index already covers a family the depth index never reaches
+(`height_index_covers_more`, `ehTree_lt_depth_witness` — depth 3, height 1). It buys **coverage and
+not a shorter tower**: `LeadingMonomialFloor` gives one `m` per level with no monotonicity, and the
+docstring says so rather than implying otherwise.
+
+**(2) Height fails `right_le`, on the same side the germ route fails.** It satisfies `left_le` by one,
+always. Going right the gap is **exactly zero**, not merely too small — `eml var (eml var var)` has a
+right child of height 1 and node height `max(0+1, 1) = 1` — so `no_ladderMeasure_with_ehTree` rules
+it out for *any* positive step. `tower_height_does_not_descend_right` (`EMLLadderMeasure`) reaches
+the identical obstruction analytically, by building a node non-positive on `[1,∞)` whose right child
+is an arbitrarily tall tower. The two share no machinery: `Nat.max` arithmetic on one side, towers on
+the other. **One obstruction, two routes, one side.**
+
+**(3) `ehTree` itself overcounts, and the witness is machine-checked.**
+`ehTree_overcounts_witness`: `eml (eml (const 0) var) var` has height 2 but evaluates on `x > 0` to
+`e/x − log x`, whose true height is 0. The `exp` is applied to `1 − log x`, which does not grow, so
+it buys no level; the slack sits in `eh_exp`, whose `≤` is strict exactly there. So the chain
+`eh ≤ ehTree ≤ depth` has slack at **both** steps, and closing the first needs `eh` of a quotient,
+which `HeightModel` does not axiomatise — a limit of the interface, not of the tree.
+
+Non-vacuity ships with the capstone, per the `positive_branch_impossible` lesson: `depth_ne_ehTree`
+instantiates `no_ladderMeasure_with_ehTree` at `depthMeasure`, so the theorem demonstrably rules
+something out rather than holding for want of a subject.
+
+**What this is not.** It does not move the ledger — still **6 distinct open obligations, 9 open rows,
+243 axioms pinned**. It does not touch `LeadingMonomialFloor`, which is where
+`decayFloor_of_heightModel` is actually stuck: lemma (1) was always free and lemma (2) is the whole
+problem. It sharpens a bound and explains an obstruction. Neither is progress on the obligation, and
+the ledger correctly refuses to move.
+
+#### `CLAUDE.md` carried a theorem count nobody can reproduce — for the second time
+
+The file said **8 231 theorems**. No method reproduces it. The correct figure, by the command now
+written into the file, is **7 347**:
+
+```bash
+find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
+  | paste -sd+ | bc      # 7 347   (all files: 8 096 — the 749 difference IS Discovered/)
+```
+
+That 749 is the cross-derivation: the commit that last set the count recorded "749 more in
+`Discovered/`" independently, and it matches exactly, which is what says the method is right rather
+than merely different.
+
+**The cause, reproduced live.** `find … -not -path '*/Discovered/*'` **unquoted** lets the shell
+expand the glob first, so `-not -path` excludes one matched file and every *other* match becomes an
+extra search root — the same files are walked twice. Measured: quoted **7 347**, unquoted **8 839**.
+It fails *upward*, which is why it reads as a healthy corpus and survived a review. `8 231` exceeds
+`8 097`, the largest count the repo can produce from any file set outside `.lake`, so it was
+detectable from inside the document all along.
+
+Both the corrected figure with its command and the glob gotcha are now in `CLAUDE.md`. The lesson for
+the Counts policy: **"re-derive it" is not enough if the derivation is a one-liner with a quoting
+trap. Write the exact command, and sanity-check any "excluding X" figure against the all-files
+total** — an exclusion that exceeds the total is impossible, and that check costs nothing.
+
+Also corrected: 1 056 → **1 057** files, 750/1056 → **751/1057** reachable, 753 → **754** build jobs.
+
 ## [Unreleased] — 2026-08-27 (eb)
 
 ### The claim auditor's REDUCED rule silently stopped applying — to the rows a cycle keeps open

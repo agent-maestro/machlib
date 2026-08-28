@@ -7,13 +7,27 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 056 `.lean` files** (740 top-level + 316 in subdirectories) /
-**~235 k lines** / **8 231 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 057 `.lean` files** (741 top-level + 316 in subdirectories) /
+**234 962 lines** / **7 347 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
-(Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
-commands, do not trust the figure. An earlier revision said 5 851 theorems by an unrecorded method —
-a number nobody can reproduce is worse than one that names how it was taken.)
+
+The theorem count is exactly this command, run from `foundations/`, and nothing else:
+
+```bash
+find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
+  | paste -sd+ | bc                                    # 7 347
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 096
+```
+
+The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
+method is right — the same figure was recorded independently when this was last measured.
+
+**Two revisions of this file have carried a theorem count nobody can reproduce**: `5 851` by an
+unrecorded method, then `8 231`, which exceeds the largest number the corpus can produce by any
+file set (`8 097`, every `.lean` in the repo outside `.lake`). It is almost certainly the
+**unquoted-glob inflation** below. Do not restate a count without re-running the command above.
+
 **`MachLib/Discovered/` (294 files) is deliberately outside the aggregator**: each file is
 self-contained and they cannot be imported together; it is the Forge `@verify(lean)` corpus and has
 its own harness, `scripts/closerate.sh`. The numeric
@@ -60,7 +74,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 719 jobs, ~3 s warm
+lake build                                     # 754 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
@@ -110,7 +124,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**750 of 1056 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**751 of 1057 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
@@ -173,6 +187,13 @@ behind it is missing — registration is still a human act.
 - **`obtain` on a `GEvEq` entry against `expCoeffs` yields an UNREDUCED application** —
   `a x = (fun C x => bipev C x (exp (S x))) C x` — so `rw [← e]` will not match the beta-reduced
   goal. Bind it through a typed `have e' : a x = bipev C x (exp (S x)) := e x hx`.
+- **`find … -not -path '*/Discovered/*'` UNQUOTED silently double-counts.** The shell expands
+  `*/Discovered/*` against the working directory before `find` sees it, so `-not -path` excludes one
+  matched file and every *other* match becomes an extra search root — the same files are then walked
+  twice. Measured live: the correctly quoted form gives **7 347** theorems, the unquoted form
+  **8 839**. It fails *upward* and reads as a bigger corpus, which is why it survived into this file.
+  Sanity check any corpus count against the all-files total; an "excluding X" figure that exceeds it
+  is impossible.
 - **A gate's own self-test can go stale when the corpus improves.** `obligation_ledger_check.py`'s
   canary 9 is a literal specimen, and its `open` row must name something no theorem can conclude —
   it named live obligations twice and both were discharged the same day, failing the gate because
@@ -195,7 +216,7 @@ its footprint tally for exactly this reason.
 
 ## Status
 
-Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (753 build jobs) at **true exit
+Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (754 build jobs) at **true exit
 codes** — note `gate | tail` reads `tail`'s status, not the gate's. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **21 rows, 9 open rows, 6 distinct open
@@ -259,7 +280,23 @@ touching it, because each was learned the expensive way:
    known route is the depth-≤2 cell enumeration that `FRONTIER_BRIEF_3` §4 Q2 measured and
    **rejected**. Do not start it without deciding that a bounded rung is worth it — bounded rungs do
    not move the ledger.
-4. **Everything above is pointwise on purpose.** The hypotheses of `NodeDecayBound` and
+4. **Depth was never the parameter — height is, and `EMLHeightVsDepth` proves the gap.** Syntactic
+   exponential height `ehTree (eml A B) = Nat.max (ehTree A + 1) (ehTree B)` bounds every
+   `HeightModel` (`eh_le_ehTree`), so the existing `eh_le_depth` **factors through it**, and the
+   factorisation is strict: a right spine of depth 3 has height 1. The payoff is not cosmetic —
+   `decayFloorByHeight_of_heightModel` gets a **strictly larger** conclusion from the *same*
+   `LeadingMonomialFloor` input, covering right spines of any length at level 1 where the
+   depth-indexed form needs level 3. The old reduction was lossy and nobody had noticed.
+   Two further facts, both machine-checked: height satisfies `left_le` and **fails `right_le` with a
+   gap of exactly zero** (`no_ladderMeasure_with_ehTree`) — the *same side* the germ route fails on,
+   by a completely different argument; and `ehTree` itself **overcounts**
+   (`ehTree_overcounts_witness`: `eml (eml (const 0) var) var` has height 2 but evaluates to
+   `e/x - log x`), so the chain `eh ≤ ehTree ≤ depth` has slack at both steps. **None of it moves the
+   ledger** — still 6 distinct open obligations — and none of it touches `LeadingMonomialFloor`,
+   which is where `decayFloor_of_heightModel` is actually stuck. The prompt to look here came from a
+   complex-analytic measurement that does *not* transport; see the module docstring.
+
+5. **Everything above is pointwise on purpose.** The hypotheses of `NodeDecayBound` and
    `ValueGapBound` are guarded *inside* the `∀ x`. An eventual reading would need `evSign_all` and
    with it the analytic block, across the entire ladder. It also blocks two converses — see `(dx)`,
    `(dy)` — and that is the accepted price.

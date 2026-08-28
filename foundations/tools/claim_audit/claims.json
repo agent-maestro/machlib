@@ -9666,6 +9666,66 @@
         "eml_tree_analytic_on_interval",
         "rolle_ct"
       ]
+    },
+    {
+      "id": "height-model-bounded-by-ehtree-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "eh_le_ehTree",
+        "bounds **every** model by it"
+      ],
+      "module": "MachLib.EMLHeightVsDepth",
+      "theorem": "MachLib.HeightModel.eh_le_ehTree",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "decayfloor-by-height-same-input-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "decayFloorByHeight_of_heightModel",
+        "one lemma swapped"
+      ],
+      "module": "MachLib.EMLHeightVsDepth",
+      "theorem": "MachLib.decayFloorByHeight_of_heightModel",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "height-is-not-a-ladder-measure-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no_ladderMeasure_with_ehTree",
+        "for *any* positive step"
+      ],
+      "module": "MachLib.EMLHeightVsDepth",
+      "theorem": "MachLib.no_ladderMeasure_with_ehTree",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "ehtree-overcounts-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "ehTree_overcounts_witness",
+        "whose true height is 0"
+      ],
+      "module": "MachLib.EMLHeightVsDepth",
+      "theorem": "MachLib.EMLTree.ehTree_overcounts_witness",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }

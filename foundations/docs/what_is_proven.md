@@ -437,7 +437,7 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   problems, never solutions. They are not part of what this library proves.
 
 - **The EML depth/decay programme** (2026-08, `EMLLadderMeasure`, `EMLGermApproach`,
-  `EMLHeightInterface`, `EMLDepth3Rung`, `EMLDecayLadderStep`, `EMLValueGap`) — the largest lane by
+  `EMLHeightInterface`, `EMLHeightVsDepth`, `EMLDepth3Rung`, `EMLDecayLadderStep`, `EMLValueGap`) — the largest lane by
   volume this month, and the one most likely to be over-read, so its asterisks in full:
 
   **What is proved.** *(a)* `DecayFloor`, `GrowthEnvelope` and `EmlGermApproach` are **one
@@ -447,7 +447,13 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   can carry it, syntactically (`recipTree` costs two steps where a step buys one) or on germs (growth
   does not descend to the right child, unboundedly). *(c)* `decayFloorUpTo_three` — bounded rungs to
   depth 3, where the ceiling had been depth 2. *(d)* `decayFloor_of_ladderInputs` — the obligation
-  itself follows from per-depth node bounds and lower envelopes, footprint-clean.
+  itself follows from per-depth node bounds and lower envelopes, footprint-clean. *(e)* **the reduction
+  to `LeadingMonomialFloor` was lossy, and is not any more**: syntactic exponential height
+  `ehTree` bounds every `HeightModel` (`eh_le_ehTree`), so `eh_le_depth` factors through it, and
+  `decayFloorByHeight_of_heightModel` draws a **strictly larger** conclusion from the *same* input —
+  covering right spines of any length at level 1 where the depth-indexed form needs level 3. The
+  strictness is exhibited, not assumed (`ehTree_lt_depth_witness`, `height_index_covers_more`), and
+  the converse `DecayFloor → DecayFloorByHeight` is **not proved**.
 
   **What is open, and it is the whole thing.** `DecayFloor` is **not proved**. The bounded rungs do
   not approach it — depth 4 already needs an enumeration this project has measured and declined. The
@@ -458,7 +464,11 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
 
   **Asterisks, stated rather than implied.** The impossibility result covers *local scalar growth
   descent through the syntax tree* — **not** every well-founded induction; lexicographic orders,
-  ordinal ranks and non-structural arguments are untouched. The `HeightModel` interface proves
+  ordinal ranks and non-structural arguments are untouched. *(e)* sharpens the **bound** and not the
+  obligation: `LeadingMonomialFloor` is exactly as unproved as before, and a larger conclusion drawn
+  from an input nobody has supplied moves nothing. `ehTree` also **overcounts** — it is syntactic, so
+  it cannot see `exp (1 - log x) = e/x` collapse a level (`ehTree_overcounts_witness`) — which means
+  even the sharpened chain `eh ≤ ehTree ≤ depth` has slack at both steps. The `HeightModel` interface proves
   nothing on its own: a height that is identically `0` satisfies every one of its closure axioms and
   refutes its floor property outright. And the growth envelope has **no eml-stdlib consumer** — that
   was pre-registered before the size-indexed version was built, and it held. Nothing in this lane is
