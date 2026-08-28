@@ -5,6 +5,84 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (eh)
+
+### The query vein, surveyed — its classical bottom is closed, and the antecedent now matches its producers
+
+Three of the five open obligations live here. This entry is mostly an **inventory**, because the
+survey found more than the work did: the vein is much further along than its docstrings say.
+
+#### `OneQueryDichotomy` is one gap from done, and it is not a classical one
+
+```
+OneQueryDichotomy
+  ⇐ oneQueryDichotomy_of_uniformBounds        (EMLZeroBoundRay)
+  ⇐ a Khovanskii bound for the chain carrying  Fbasis x = exp x + log x
+  ⇐ IsExpLogRecipW — recip arm, dispatch, recursion, base all proven
+  ⇐ exp_step + log_step  ⇐  exp_hard + log_hard
+```
+
+**Both cores are proven** — `exp_hard_proof` (`PfaffianExpHard`, *"exp arm CLOSED"*) and
+`log_hard_proof` — giving `eml_eval_boundedZeros_unconditional`. Footprint read directly rather than
+off prose: `rolle_ct`, `analytic_finite_zeros_compact`, `analytic_ne_zero_nbhd`, `HasDerivAt` — **no
+`sorryAx`, no `zero_count_bound_classical`**. That is this lane's accepted analytic base, not new debt.
+
+**And the interval-uniformity is done too.** `combined_descent_3_explicit`
+(`EMLExplicitBoundComposition`) + `enc_combinedBound` + `encBound` (`EMLZeroBoundAssembly`) give an
+explicit **interval-independent** bound for any EML tree. That track exists because `∃K` per interval
+*"is too weak for `sin/cos_not_in_eml`"* — built for a different consumer, and it happens to serve
+this one exactly.
+
+#### What this commit adds: the antecedent stated where it can be met
+
+`bipolyNoOscillation_of_uniformBounds` demands a bound on **every** interval; its conclusion needs
+only the ray-relative one, and `eventually_nonzero_of_uniformZeroBoundFrom` was already there.
+`EMLZeroBoundRay`'s own note says demanding more *"quantifies past the use"* and *"makes the
+remaining work look larger than it is"* — and here that is load-bearing rather than stylistic:
+**every plausible producer goes through logs of `pev P x / pev Q x`, positive only past some `R`**,
+and below `R` it has nothing to say, exactly as `SignHardUniformZeroBound` had nothing to say below
+its own `X₀`.
+
+* `bipolyNoOscillation_of_uniformBoundsFrom`
+* `oneQueryDichotomy_of_uniformBoundsFrom`
+* `oneQueryDichotomy_of_uniformBounds_via_ray` — the interval form as a **corollary**, so the two do
+  not carry separate proofs.
+
+No new axioms; footprints are base field axioms.
+
+#### The single remaining gap, and the route not to take
+
+Exhibit `bipev N x (Fbasis (pev P x / pev Q x))` as something the explicit descent accepts, on a ray.
+
+**Not through EML trees.** The combinators exist (`polyTree`, `addTree`, `mulTree`, `expOf`,
+`logTree`) but `addTree_eval` needs `0 < a.eval x` and `mulTree_eval` needs `1 < a.eval x ∧ 0 < b.eval x`.
+A bivariate polynomial has coefficients of both signs, so that route means threading a positivity
+certificate through every node — difficulty created entirely by the routing.
+
+**Through the chain directly.** `combined_descent_3_explicit` takes a `PfaffianChain` and
+`ChainTags`, **not** an EML tree; the encoder is one client, not the interface. The natural chain is
+`1/Q` and `1/u` (recip), `exp u` and `log u` (exp, log), with `bipev N` lifted to a `MultiPoly 4`.
+Every side condition is then about `P, Q` on a ray — where `Q ≠ 0` and `u > 0` are the antecedent's
+own hypotheses.
+
+#### `BoundedGermTranscendence`: hard, with evidence rather than reputation
+
+`PevDeriv`: on the bounded branch `F ∘ S` is polynomially enveloped, *"so every instrument in this
+corpus has a false hypothesis"* — the growth tools do not merely fail there, their hypotheses are
+unsatisfiable. `BoundedGermEnvelope`: progress *"must come from somewhere other than growth"*. Both
+unbounded rates are theorems and constant `S` is a counterexample, so the statement is correctly
+narrowed and the missing instrument is real. **Do not start there.**
+
+#### The session's running error, now four for four
+
+Every structural prediction I made about this vein was wrong, always in the same direction —
+**under-estimating what the corpus already contains**: the depth-4 construction (already general),
+the ray bookkeeping (no friction), the depth-≤2 dichotomy (already present, found by Lean rejecting
+a duplicate name), and now gap 1 (already done, in a track named for a different purpose). The
+mathematics was sound each time; the *inventory* was wrong each time.
+
+Survey with the full map: `monogate-research/exploration/query_vein_survey_2026_08_28/INVENTORY.md`.
+
 ## [Unreleased] — 2026-08-28 (eg)
 
 ### `d(x + c) = 4` for `c < 0` — §4's open cell closed, and the instrument was never missing

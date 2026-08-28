@@ -312,4 +312,72 @@ theorem oneQueryDichotomy_of_uniformBounds
   oneQueryDichotomy_of_bipoly
     (bipolyDichotomy_iff_noOscillation.mpr (bipolyNoOscillation_of_uniformBounds h))
 
+/-! ## The antecedent, weakened to the ray — the form the producers can actually supply
+
+`bipolyNoOscillation_of_uniformBounds` demands a bound on **every** interval. Its own conclusion needs
+no such thing: `eventually_nonzero_of_uniformZeroBoundFrom` shows the *ray-relative* bound already
+suffices, and this file's §"ray" note says why demanding more *"quantifies past the use"* and
+*"makes the remaining work look larger than it is"*.
+
+That is not a stylistic point here. Every plausible producer for this antecedent goes through an EML
+encoding whose `LogArgPos` side condition holds only **eventually** — `encBound_bounds`
+(`EMLZeroBoundAssembly`) needs `LogArgPosOn` on the interval it is asked about, and the germs in
+question have logs of `pev P x / pev Q x`, positive only past some `R`. Asked for a bound on
+intervals below `R`, such a producer has nothing to say, exactly as `SignHardUniformZeroBound` had
+nothing to say below its own `X₀`.
+
+So the two theorems below are the same chain with the antecedent stated where it can be met. -/
+
+/-- **A ray-relative conditional bound already gives no-oscillation.** Same proof as
+`bipolyNoOscillation_of_uniformBounds`, one bridge lemma swapped — and the hypothesis is now one a
+producer with an eventual positivity condition can supply. -/
+theorem bipolyNoOscillation_of_uniformBoundsFrom
+    (h : ∀ (N : List (List Real)) (P Q : List Real),
+        ¬ EvZeroF (fun x => bipev N x (Fbasis (pev P x / pev Q x))) →
+        ∃ (K : Nat) (R : Real),
+          UniformZeroBoundFrom (fun x => bipev N x (Fbasis (pev P x / pev Q x))) R K) :
+    BipolyNoOscillation := by
+  intro N P Q _ _ _ hne
+  obtain ⟨K, R, hK⟩ := h N P Q hne
+  exact eventually_nonzero_of_uniformZeroBoundFrom hK
+
+/-- **`OneQueryDichotomy` from the ray-relative antecedent.** The full chain again — ray-relative
+uniform bounds ⟹ no oscillation ⟹ the bivariate dichotomy ⟹ the dichotomy for every context — with
+the entry point moved to where the remaining work actually lives.
+
+`oneQueryDichotomy_of_uniformBounds` is now a corollary of this one (via
+`uniformZeroBoundFrom_of_uniformZeroBound`), so the two do not carry separate proofs. -/
+theorem oneQueryDichotomy_of_uniformBoundsFrom
+    (h : ∀ (N : List (List Real)) (P Q : List Real),
+        ¬ EvZeroF (fun x => bipev N x (Fbasis (pev P x / pev Q x))) →
+        ∃ (K : Nat) (R : Real),
+          UniformZeroBoundFrom (fun x => bipev N x (Fbasis (pev P x / pev Q x))) R K) :
+    ∀ (C : FCtx) (P Q : List Real) (X : Real), 1 ≤ X →
+      (∀ x : Real, X ≤ x → pev Q x ≠ 0) →
+      (∀ x : Real, X ≤ x → DivDenomsOK C x (Fbasis (pev P x / pev Q x))) →
+      (∀ x : Real, X ≤ x → bipev (ctxFrac C).2 x (Fbasis (pev P x / pev Q x)) ≠ 0) →
+        EvZeroF (fun x => FCtx.eval C x (Fbasis (pev P x / pev Q x)))
+        ∨ ∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x →
+            FCtx.eval C x (Fbasis (pev P x / pev Q x)) ≠ 0 :=
+  oneQueryDichotomy_of_bipoly
+    (bipolyDichotomy_iff_noOscillation.mpr (bipolyNoOscillation_of_uniformBoundsFrom h))
+
+/-- **The interval form is subsumed.** Anyone holding the stronger hypothesis can still enter here,
+and does so through the weaker one rather than through a second proof. -/
+theorem oneQueryDichotomy_of_uniformBounds_via_ray
+    (h : ∀ (N : List (List Real)) (P Q : List Real),
+        ¬ EvZeroF (fun x => bipev N x (Fbasis (pev P x / pev Q x))) →
+        ∃ K : Nat, UniformZeroBound (fun x => bipev N x (Fbasis (pev P x / pev Q x))) K) :
+    ∀ (C : FCtx) (P Q : List Real) (X : Real), 1 ≤ X →
+      (∀ x : Real, X ≤ x → pev Q x ≠ 0) →
+      (∀ x : Real, X ≤ x → DivDenomsOK C x (Fbasis (pev P x / pev Q x))) →
+      (∀ x : Real, X ≤ x → bipev (ctxFrac C).2 x (Fbasis (pev P x / pev Q x)) ≠ 0) →
+        EvZeroF (fun x => FCtx.eval C x (Fbasis (pev P x / pev Q x)))
+        ∨ ∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x →
+            FCtx.eval C x (Fbasis (pev P x / pev Q x)) ≠ 0 :=
+  oneQueryDichotomy_of_uniformBoundsFrom
+    (fun N P Q hne =>
+      let ⟨K, hK⟩ := h N P Q hne
+      ⟨K, 0, uniformZeroBoundFrom_of_uniformZeroBound 0 hK⟩)
+
 end MachLib
