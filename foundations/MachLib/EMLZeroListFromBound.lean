@@ -2,6 +2,7 @@ import MachLib.EMLQueryGermUniform
 import MachLib.EMLSignNotZeroQuery
 import MachLib.PolynomialCanonical
 import MachLib.EMLQueryGermAntecedent
+import MachLib.ZeroCountGlue
 
 /-!
 # From a uniform zero bound to an explicit finite zero list
@@ -233,5 +234,19 @@ theorem queryGerm_finite_zeros_on_ray (N : List (List Real)) (P Q : List Real)
   obtain ⟨E, hE⟩ := zeroList_of_uniformZeroBoundFrom _ R K hb
   have hE' : ∀ x : Real, R < x → bipev N x (Fbasis (pev P x / pev Q x)) = 0 → x ∈ E := hE
   exact ⟨R, E, hE'⟩
+
+/-! ## The same predicate, three types -/
+
+/-- `UniformZeroBound` is `ZeroCountOn` quantified over every interval — definitionally, so the glue
+lemmas in `ZeroCountGlue` apply to it without translation. -/
+theorem uniformZeroBound_iff_zeroCountOn (f : Real → Real) (N : Nat) :
+    UniformZeroBound f N ↔ ∀ a b : Real, a < b → ZeroCountOn (fun z => f z = 0) a b N :=
+  Iff.rfl
+
+/-- The ray-relative form, likewise. -/
+theorem uniformZeroBoundFrom_iff_zeroCountOn (f : Real → Real) (R : Real) (N : Nat) :
+    UniformZeroBoundFrom f R N ↔
+      ∀ a b : Real, R ≤ a → a < b → ZeroCountOn (fun z => f z = 0) a b N :=
+  Iff.rfl
 
 end MachLib

@@ -1,5 +1,6 @@
 import MachLib.EMLExplicitBound
 import MachLib.MultiVarBucket
+import MachLib.ZeroCountGlue
 import MachLib.SinNotInEML
 
 /-!
@@ -57,48 +58,8 @@ in `(a,b)` splits into those `< m` (bounded by `K1`, via `hK1`), those `= m` (at
 nodup), and those `> m` (bounded by `K2`, via `hK2`). -/
 theorem BoundedZerosBy.glue {f : PfaffianFn} {a m b : Real} {K1 K2 : Nat}
     (hK1 : BoundedZerosBy f a m K1) (hK2 : BoundedZerosBy f m b K2) :
-    BoundedZerosBy f a b (K1 + K2 + 1) := by
-  haveI : DecidableEq Real := fun x y => Classical.propDecidable (x = y)
-  intro zeros hnd hz
-  have hlo_bound : (zeros.filter (fun z => decide (z < m))).length ≤ K1 := by
-    apply hK1 _ (hnd.filter _)
-    intro z hzmem
-    rw [List.mem_filter] at hzmem
-    obtain ⟨hzz, hzlt⟩ := hzmem
-    obtain ⟨hza, hzb, hfz⟩ := hz z hzz
-    exact ⟨hza, of_decide_eq_true hzlt, hfz⟩
-  have hnd_hi : (zeros.filter (fun z => !decide (z < m))).Nodup := hnd.filter _
-  have heqm_bound :
-      ((zeros.filter (fun z => !decide (z < m))).filter (fun z => decide (z = m))).length ≤ 1 := by
-    apply length_le_one_of_forall_eq _ (hnd_hi.filter _)
-    intro z hzmem
-    rw [List.mem_filter] at hzmem
-    exact of_decide_eq_true hzmem.2
-  have hgtm_bound : ((zeros.filter (fun z => !decide (z < m))).filter
-      (fun z => !decide (z = m))).length ≤ K2 := by
-    apply hK2 _ (hnd_hi.filter _)
-    intro z hzmem
-    rw [List.mem_filter] at hzmem
-    obtain ⟨hzhi, hzne⟩ := hzmem
-    rw [List.mem_filter] at hzhi
-    obtain ⟨hzz, hzge⟩ := hzhi
-    obtain ⟨hza, hzb, hfz⟩ := hz z hzz
-    have hzgem : ¬ z < m := of_decide_eq_false (by simpa using hzge)
-    have hzneqm : z ≠ m := of_decide_eq_false (by simpa using hzne)
-    have hzgtm : m < z := by
-      rcases lt_total m z with h | h | h
-      · exact h
-      · exact absurd h.symm hzneqm
-      · exact absurd h hzgem
-    exact ⟨hzgtm, hzb, hfz⟩
-  have hpart_lo : (zeros.filter (fun z => decide (z < m))).length
-      + (zeros.filter (fun z => !decide (z < m))).length = zeros.length :=
-    length_filter_partition (fun z => decide (z < m)) zeros
-  have hpart_hi : ((zeros.filter (fun z => !decide (z < m))).filter (fun z => decide (z = m))).length
-      + ((zeros.filter (fun z => !decide (z < m))).filter (fun z => !decide (z = m))).length
-      = (zeros.filter (fun z => !decide (z < m))).length :=
-    length_filter_partition (fun z => decide (z = m)) (zeros.filter (fun z => !decide (z < m)))
-  omega
+    BoundedZerosBy f a b (K1 + K2 + 1) :=
+  MachLib.ZeroCountOn.glue (p := fun z => f.eval z = 0) hK1 hK2
 
 /-- **The other key fact the branch-switching strategy needs, formalized.** Wherever `t2`'s
 value is `≤ 0`, `eml t1 t2` evaluates EXACTLY like `eml t1 (const 1)` — both clamp/compute

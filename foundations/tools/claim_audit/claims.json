@@ -9728,6 +9728,45 @@
       ]
     },
     {
+      "id": "zero-count-glue-six-axioms-changelog",
+      "_comment": "The headline is a COUNT (six) and a composition claim (order only, no arithmetic). The forbid list is therefore the arithmetic and analysis this lemma claims not to touch: if the glue ever picks up addR/mulR or an analytic axiom, the sentence 'the order on Real and no arithmetic whatsoever' is false and the gate must say so. Real.ltR and lt_total are ALLOWED -- they are the six.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the **order** on `Real` and no arithmetic whatsoever",
+        "`lt_total` for the"
+      ],
+      "module": "MachLib.ZeroCountGlue",
+      "theorem": "MachLib.ZeroCountOn.glue",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle",
+        "HasDerivAt",
+        "MachLib.Real.addR",
+        "MachLib.Real.mulR",
+        "MachLib.Real.divR"
+      ]
+    },
+    {
+      "id": "pieces-bounded-separation-changelog",
+      "_comment": "The anti-vacuity specimen. It is registered because the CHANGELOG asserts the separation as a fact about a theorem, and because a specimen nobody checks is how the S>0 branch stayed vacuous for weeks. Arithmetic IS allowed here -- naming 1+1 needs addR -- which is exactly why it gets its own entry instead of sharing the glue's forbid list.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "piecesBounded_is_weaker_than_the_conclusion` exhibits the separation",
+        "while `ZeroCountOn p 0 3 1` **fails**"
+      ],
+      "module": "MachLib.ZeroCountGlue",
+      "theorem": "MachLib.piecesBounded_is_weaker_than_the_conclusion",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle",
+        "HasDerivAt"
+      ]
+    },
+    {
       "id": "zero-list-bridge-no-analysis-changelog",
       "_comment": "The bridge's whole selling point is that it is order+list combinatorics: 26 axioms, none of them analysis. So the forbid list is the ANALYSIS one, which is exactly what a substring match is good for here -- `analytic_` catches the whole family, and rolle/HasDerivAt/exp/log are named because the prose names them. If this ever picks up an analytic axiom the claim is false and the gate must say so.",
       "source_file": "CHANGELOG.md",

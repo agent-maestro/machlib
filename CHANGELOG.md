@@ -287,6 +287,68 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-29 (ex)
+
+### Zero counting, glued — one lemma for three predicates, at six axioms
+
+New module `MachLib/ZeroCountGlue.lean`, importing `MultiVarBucket` **and nothing else**.
+
+#### Three predicates, one statement
+
+```
+BoundedZerosBy f a b K     (EMLExplicitBound)  -- f : PfaffianFn, one interval
+UniformZeroBound f N       (EMLZeroBoundRay)   -- f : Real → Real, EVERY interval
+UniformZeroBoundFrom f R N                     -- f : Real → Real, every interval past R
+```
+
+All three unfold to *"every duplicate-free list of points in the interval where a predicate holds is
+at most `K` long"*. `ZeroCountOn p a b K` is that with the predicate abstract, and the identifications
+are **definitional** — `uniformZeroBound_iff_zeroCountOn` and `uniformZeroBoundFrom_iff_zeroCountOn`
+are both `Iff.rfl`.
+
+#### What that buys, measured
+
+| theorem | axioms |
+|---|---|
+| `ZeroCountOn.glue` | **6** — `Classical.choice`, `Real`, `ltR`, `lt_total`, `Quot.sound`, `propext` |
+| `ZeroCountOn.glueList` | **6**, the same six |
+| `piecesBounded_is_weaker_than_the_conclusion` | 12 (the extra six only to *name* `0`, `1`, `1+1`) |
+
+Six. The gluing needs the **order** on `Real` and no arithmetic whatsoever — `lt_total` for the
+trichotomy at the cut, and nothing else. That content had been sitting inside a `PfaffianFn`-typed
+lemma where nothing else could reach it.
+
+`EMLExplicitBoundGlue.BoundedZerosBy.glue` now cites the general lemma: **−42 lines, +3**. Generalised
+beside the original and then the original deleted in the same commit, rather than leaving the
+duplicate to be cleaned up later.
+
+#### The `+ 1` per cut is not slack
+
+A cut point lies in *neither* adjacent open interval, so a zero sitting exactly on it is invisible to
+both pieces and must be paid for once per cut. Over `n` cuts: `(n + 1) * K + n`.
+
+#### A vacuous draft, caught by writing the specimen
+
+`glueList`'s first draft assumed `∀ u v, ZeroCountOn p u v K` — a bound on **every** interval, which
+is `UniformZeroBound` itself. Its hypothesis therefore implied its conclusion and the theorem said
+nothing, exactly the shape of
+`feedback_a_theorem_can_be_vacuous_and_all_gates_pass`: it compiles, cites no bad axiom, and is
+worthless.
+
+The fix is `PiecesBounded p K a cuts b`, a recursion asking for a bound on **each named piece** and
+on nothing else. And because a hypothesis being weaker is the whole point,
+`piecesBounded_is_weaker_than_the_conclusion` exhibits the separation: the zero set of
+`(x - 1)·(x - 2)` cut at `1` satisfies `PiecesBounded` at `K = 1` — `(0,1)` holds no zero, `(1,3)`
+holds one — while `ZeroCountOn p 0 3 1` **fails**, because `(0,3)` holds two. Reinstating the draft's
+hypothesis now fails to compile.
+
+#### Where this is going
+
+`OneQueryLevelSet` needs a bound on every interval for a germ whose defining tree changes at the
+poles of its rational argument. Those poles are finitely many and depend on `P`, `Q` alone — not on
+the interval — so they are the cut list, and `glueList` is what converts per-piece bounds into the
+interval-independent one. That is the remaining half; `(ew)` closed the ray half.
+
 ## [Unreleased] — 2026-08-29 (ew)
 
 ### A uniform zero bound now yields the LIST — and one-query germs have finitely many zeros on a ray
