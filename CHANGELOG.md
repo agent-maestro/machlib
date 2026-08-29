@@ -84,6 +84,33 @@ refute is not checked, merely written down. Canary 5 pins that.
 
 Registry: 6 claims, all passing.
 
+#### Registry 6 → 8, and an asymmetry between the two check kinds
+
+Triaging the corpus's other 41 *"there is no …"* sentences confirmed most are mathematical prose
+(*"there is no positive arch"*, *"no third behaviour"*) rather than capability claims — but four were
+not, and two are worth pinning:
+
+* **`there is no #eval path at all`** (`EMLCertifiedSynthesis`) — the best kind of absence claim to
+  register, because it is **safety-relevant**: it is the reason a numerical spot-check cannot inhabit
+  `Meets` and be mistaken for a discharged obligation. 0 occurrences at registration; if one ever
+  lands, that argument needs re-reading before the prose is re-worded.
+* **`OfNat Real` for `0` and `1` only** (`SymmetricTriple`) — why numerals must be written `natCast N`,
+  which is the corpus's single most repeated tactic gotcha.
+
+**The two check kinds fail in opposite directions, and only one is safe.** A malformed *probe* is
+caught — if the expected error does not appear it is reported broken, so it cannot pass by accident.
+A malformed *search* is not:
+
+* too **broad** → false `NOW-FALSE`: loud, annoying, self-correcting. This happened at registration —
+  a `(?!Zero|One)` lookahead, unsupported by POSIX ERE, matched `instOfNatOne`.
+* too **narrow** → matches nothing and passes **silently**, indistinguishable from the claim being
+  true. **No automatic guard exists for this.**
+
+The only defence is writing the search so it *would* have matched the thing before it was removed, and
+checking that it does. Done here: the corrected pattern was run against synthetic `nat_lit 2` and
+`nat_lit 64` lines and matches both while leaving `nat_lit 1` alone. That check is now the documented
+expectation for every search entry, in the tool's header and in the entry's own note.
+
 ## [Unreleased] — 2026-08-28 (ej)
 
 ### The query germ as an `L_F` term, with an explicit zero bound on the positive branch

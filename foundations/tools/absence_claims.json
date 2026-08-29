@@ -85,6 +85,34 @@
       "expect": "no_match",
       "recorded": "2026-08-28",
       "note": "Narrowed at registration: the prose said 'measure AND integration theory', but a monotone Riemann integral (RiemannIntegralMonotone) and several Gaussian integrals DO exist, added the same day. Measure theory is the part that is genuinely absent, and is what the search checks."
+    },
+    {
+      "id": "no-eval-path-in-machlib",
+      "source_file": "MachLib/EMLCertifiedSynthesis.lean",
+      "claim_text": [
+        "because there is no `#eval` path at all"
+      ],
+      "search": {
+        "pattern": "^ *#eval ",
+        "paths": "MachLib"
+      },
+      "expect": "no_match",
+      "recorded": "2026-08-28",
+      "note": "SAFETY-RELEVANT, and the best kind of absence claim to register: it is the reason a numerical spot-check cannot inhabit `Meets` and be mistaken for a discharged obligation. If an #eval ever lands in MachLib/, that argument needs re-reading before the claim is re-worded. 0 occurrences at registration."
+    },
+    {
+      "id": "ofnat-real-zero-and-one-only",
+      "source_file": "MachLib/Geometry/Apollonius/SymmetricTriple.lean",
+      "claim_text": [
+        "there is no other way to write a constant at this layer"
+      ],
+      "search": {
+        "pattern": "OfNat Real \\(nat_lit ([2-9]|[0-9][0-9])",
+        "paths": "MachLib"
+      },
+      "expect": "no_match",
+      "recorded": "2026-08-28",
+      "note": "MachLib.Real carries OfNat for 0 and 1 only (Basic.lean:38-39). This is why numerals must be written as natCast N, which is the single most repeated tactic gotcha in the corpus. Verified: exactly 2 OfNat Real instances at registration. NOTE ON THE PATTERN: it first used a negative lookahead `(?!Zero|One)`, which grep -E does not support (POSIX ERE has none), so it matched instOfNatOne and reported a false NOW-FALSE. That failure was LOUD. The dangerous direction is the opposite one -- a search too NARROW to match anything passes silently, and nothing in this auditor detects it."
     }
   ]
 }
