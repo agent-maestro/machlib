@@ -339,6 +339,7 @@ import MachLib.EMLBasisLogArgPos
 import MachLib.EMLQueryGermTerm
 import MachLib.EMLQueryGermZeroBranch
 import MachLib.EMLQueryGermNegBranch
+import MachLib.EMLRayIdentity
 import MachLib.EMLQueryComplexity
 import MachLib.EMLGeneratorFamily
 import MachLib.EMLBasisOverhead

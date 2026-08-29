@@ -101,6 +101,51 @@ the representation, not the object.
 Seventh duplication caught: `Fbasis_of_nonpos` already exists in `EMLQueryComplexity`. Third one
 caught **because the obvious name was chosen** — a creative name would have shipped the twin.
 
+## [Unreleased] — 2026-08-28 (ep)
+
+### The shared gap closed: vanishing on one subinterval of a ray forces `EvZeroF`
+
+`(eo)` recorded that two of the query germ's three branches are **interval-local** — `encBound_bounds`
+wants a nonzero witness *inside* `(a,b)` and `¬ EvZeroF` gives non-vanishing only eventually — and
+that both await one shared lemma. `MachLib/EMLRayIdentity.lean` (new) supplies it.
+
+`evZeroF_of_vanishes_on_subinterval`: if an EML tree with log-positivity on a ray vanishes identically
+on **some** subinterval of it, it is `EvZeroF`. Contrapositive
+(`exists_nonzero_in_subinterval`): a tree that is *not* eventually zero has a nonzero point in
+**every** subinterval of the ray — precisely the per-interval witness both branches were assuming.
+
+The argument: vanishing on `(p,q)`, take the interval `(p, x+2)` for any `x ≥ q`; log-positivity holds
+there, so the tree is analytic on `Icc m (x+1)` for `m` strictly inside; the identity theorem then
+propagates the vanishing across `Ioo m (x+1)`, which contains `x`. The `+2`/`+1` are not slack —
+`eml_tree_analytic_on_interval` is stated *strictly inside* its interval, because analyticity at a
+point needs a neighbourhood while `LogArgPos` controls only the open interval.
+
+#### The axiom cost, measured after I claimed it wrongly
+
+`analytic_zero_on_subinterval_imp_zero` is a **theorem** (from `analytic_finite_zeros_compact`), not a
+new assumption — so I wrote that the lemma "consumes no axiom the branches don't already stand on".
+**Then I measured:**
+
+```
+exists_nonzero_in_subinterval   analytic_finite_zeros_compact, eml_tree_analytic_on_interval
+queryTerm_zero_bound            analytic_finite_zeros_compact, analytic_ne_zero_nbhd, rolle_ct
+```
+
+`eml_tree_analytic_on_interval` is **not** in the positive branch's footprint. It is a pinned corpus
+axiom used elsewhere in this lane, so **the total does not move — 243 unchanged** — but composing
+this lemma with either branch makes *that branch* strictly more trusting, and the branch footprint is
+what a reader of those theorems actually cares about.
+
+This is the arc's recurring error in its smallest form: an optimistic guess about cost, one
+`#print axioms` away from settled. The disclosure is in the module docstring, not just here.
+
+#### A small standing annoyance, recorded
+
+`a < a + 1` is defined **privately** in `EMLZeroBoundRay`, `EMLAnalyticDischarge`, `EMLDepthTameness`
+(as `lt_succ_self`) and `EMLZeroBoundAssembly`. This module needed a fifth copy, because `private`
+guarantees the next module writes it again. Not worth a refactor; worth a line, since the pattern will
+keep recurring until one of them is made public.
+
 ## [Unreleased] — 2026-08-28 (ek)
 
 ### `absence_audit.py` — the class of claim nothing checked, and three false ones in `CLAUDE.md`
