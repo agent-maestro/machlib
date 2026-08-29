@@ -5,6 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-28 (en)
+
+### The query germ's ZERO branch, closed — and it costs one analytic axiom less
+
+`ratGerm_eventual_sign` splits a rational germ three ways and
+`oneQueryDichotomy_of_uniformBoundsFrom` needs a uniform bound on each. `(ej)` did the **positive**
+branch; `MachLib/EMLQueryGermZeroBranch.lean` (new) does the **zero** branch. Two of three.
+
+**Totalisation does the work.** Where `u x = 0`, `Fbasis (u x) = exp 0 + log₀ 0 = 1` — the totalised
+`log` annihilates itself at the boundary — so on that ray
+
+```
+bipev N x (Fbasis (u x))  =  bipev N x 1  =  pev (sumCoeffs N) x
+```
+
+an ordinary univariate polynomial, its coefficients the **row-wise sum** of `N`, because Horner at
+`y = 1` just adds them. **No transcendental survives, so none of the Khovanskii machinery is
+needed**: `poly_root_count_bound` applies directly and its bound is `degreeUpper`, which mentions no
+interval — exactly the `UniformZeroBoundFrom` shape.
+
+**And the footprint is strictly lighter than the positive branch's.** Both carry `rolle_ct`; the zero
+branch does **not** carry `analytic_finite_zeros_compact`, which the Khovanskii descent needs and
+polynomial root-counting does not. One fewer analytic axiom on this branch, which is the kind of
+difference worth measuring rather than assuming — I expected "much lighter" and the honest answer is
+"one axiom lighter", since Rolle underlies both.
+
+`¬ EvZeroF` is what makes the polynomial non-trivial: without it the germ could be identically zero
+and no bound would exist — the same conditioning `EMLZeroBoundRay` explains at length for the general
+antecedent, appearing again in the smallest case.
+
+**What is left is one branch**: `u < 0` eventually, where totalisation gives `Fbasis u = exp u` and
+the germ is a polynomial in `x` and `exp (P/Q)` — no log level, so no `FTree` route, and
+`ExpRationalKhovanskii` is the relevant track.
+
+Gotcha paid again, and it is in `CLAUDE.md` already: `obtain` on the `EvZeroF` existential yields an
+**unreduced** `(fun x => …) x`, so `rw` cannot match the beta-reduced goal. Bind it through a typed
+`have`. Third time this pattern has cost a build in this arc.
+
 ## [Unreleased] — 2026-08-28 (ek)
 
 ### `absence_audit.py` — the class of claim nothing checked, and three false ones in `CLAUDE.md`
