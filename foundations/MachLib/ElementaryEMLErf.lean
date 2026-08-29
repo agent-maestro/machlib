@@ -34,8 +34,12 @@ expectations": it formalizes the kernel side (erf composed with an
 EML-finite argument lands EML-finite) for an arbitrary EML-finite argument,
 not just the one Gaussian instance. It does **not** touch the other half of
 that target theorem — the actual expectation/convolution operator
-`E[f(W_T)]` over an EML-∞ Brownian path — since that needs measure and
-integration theory, which does not exist anywhere in MachLib
+`E[f(W_T)]` over an EML-∞ Brownian path — since that needs
+measure theory, which does not exist anywhere in MachLib
+(*integration* partly does: `RiemannIntegralMonotone` covers monotone integrands and
+`GaussianIntegral`/`GaussianImproperIntegral` cover specific Gaussians. This sentence used to say
+"measure **and integration** theory" and was imprecise from the day it was written — all three files
+landed 2026-07-24. Registered in `tools/absence_claims.json` so the narrowed claim is re-checked.)
 (see `MachLib.ProbabilisticBound`'s header for the established "probability
 as stated hypothesis" precedent). That remains open.
 -/

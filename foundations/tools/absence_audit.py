@@ -35,8 +35,17 @@ For each registered claim: the claim TEXT still appears in its source file, and 
 still returns nothing. If the search now matches, the absence claim has become false -- FAIL.
 
   claim_text  substrings that must appear (whitespace-normalised), as in claim_audit
-  search      a regex, and the paths to run it over
-  expect      "no_match" -- the only supported expectation; absence is the whole subject
+  search      a regex and the paths to run it over -- for "no such DECLARATION" claims
+  probe       a Lean snippet that must FAIL to compile -- for "no such TACTIC" claims
+
+The two kinds are not interchangeable, and the difference is the point. A grep for
+`^syntax "linarith"` proves nobody DECLARED it here; it does not prove it is unavailable, since a
+tactic can arrive from a dependency. Only compiling a snippet answers the question the gotcha
+actually asks -- "can I write this?" -- so tactic claims use probes.
+
+A probe failing for the WRONG reason is not evidence of absence: if the expected error does not
+appear, the probe is reported broken rather than passing. Fail closed -- a typo in a probe would
+otherwise read exactly like the absence it was meant to establish.
 
 WHAT IT CANNOT
 --------------
@@ -85,6 +94,27 @@ def run_search(pattern: str, paths: str) -> list:
     return [ln for ln in r.stdout.splitlines() if "/Discovered/" not in ln]
 
 
+def run_probe(snippet: str, expect_err: str) -> tuple:
+    """(compiled_clean, saw_expected_error) for a snippet compiled against `import MachLib`."""
+    import os
+    import tempfile
+    fd, path = tempfile.mkstemp(suffix=".lean")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write("import MachLib\n" + snippet + "\n")
+        r = subprocess.run(["lake", "env", "lean", path], cwd=ROOT,
+                           capture_output=True, text=True, timeout=600)
+        out = r.stdout + r.stderr
+        return (r.returncode == 0, expect_err in out)
+    except Exception:                                             # noqa: BLE001
+        return (None, None)
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
 def check(entry: dict) -> list:
     """Problems with one registered absence claim; empty means it still holds."""
     problems = []
@@ -98,12 +128,26 @@ def check(entry: dict) -> list:
         if norm(frag) not in text:
             problems.append(("TEXT-GONE",
                              f"claim text no longer in {entry['source_file']}: {frag[:60]!r}"))
-    hits = run_search(entry["search"]["pattern"], entry["search"]["paths"])
-    if hits is None:
-        return problems + [("UNAVAILABLE", "search could not be run")]
-    if hits:
-        problems.append(("NOW-FALSE",
-                         f"{len(hits)} hit(s), first: {hits[0][:100]}"))
+    if "search" in entry:
+        hits = run_search(entry["search"]["pattern"], entry["search"]["paths"])
+        if hits is None:
+            return problems + [("UNAVAILABLE", "search could not be run")]
+        if hits:
+            problems.append(("NOW-FALSE", f"{len(hits)} hit(s), first: {hits[0][:100]}"))
+    if "probe" in entry:
+        clean, saw = run_probe(entry["probe"]["snippet"], entry["probe"]["must_fail_with"])
+        if clean is None:
+            problems.append(("UNAVAILABLE", "probe could not be run"))
+        elif clean:
+            problems.append(("NOW-FALSE",
+                             "the probe COMPILED — what it says is unavailable is available"))
+        elif not saw:
+            problems.append(("UNAVAILABLE",
+                             f"probe failed but not with {entry['probe']['must_fail_with']!r} — "
+                             f"a broken probe is not evidence of absence"))
+    if "search" not in entry and "probe" not in entry:
+        problems.append(("UNAVAILABLE",
+                         "registered with neither a search nor a probe — nothing could falsify it"))
     return problems
 
 
@@ -144,6 +188,15 @@ def self_test() -> int:
         print(f"{RED}[self-test] FAILED: a true absence claim reported problems.{RST}"); ok = False
     else:
         print(f"{GREEN}[self-test] canary 4 stays silent. ✓{RST}")
+    print(f"{YELLOW}{BOLD}[self-test] canary 5: a claim with NOTHING that could falsify it is "
+          f"UNAVAILABLE …{RST}")
+    naked = {"id": "c5", "source_file": "MachLib.lean", "claim_text": ["import"]}
+    if not any(k == "UNAVAILABLE" for k, _ in check(naked)):
+        print(f"{RED}[self-test] FAILED: an unfalsifiable registration read as a pass. That is the "
+              f"anti-pattern this registry exists to discourage; it must not be silent.{RST}")
+        ok = False
+    else:
+        print(f"{GREEN}[self-test] canary 5 fires. ✓{RST}")
     print(f"{DIM}           A gate whose control also fires convicts everything and discriminates "
           f"nothing.{RST}\n")
     return 0 if ok else 1

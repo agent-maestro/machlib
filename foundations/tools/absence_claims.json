@@ -5,8 +5,13 @@
     {
       "id": "claudemd-order-lemmas-absent",
       "source_file": "../CLAUDE.md",
-      "claim_text": ["These order lemmas do NOT exist here"],
-      "search": {"pattern": "^(theorem|axiom|private theorem) (lt_or_ge|lt_trans|lt_irrefl|le_or_lt|add_lt_add_right) ", "paths": "MachLib"},
+      "claim_text": [
+        "These order lemmas do NOT exist here"
+      ],
+      "search": {
+        "pattern": "^(theorem|axiom|private theorem) (lt_or_ge|lt_trans|lt_irrefl|le_or_lt|add_lt_add_right) ",
+        "paths": "MachLib"
+      },
       "expect": "no_match",
       "recorded": "2026-08-28",
       "note": "mul_lt_mul_of_pos_left was on this list and DOES exist; removed from the prose and from this pattern."
@@ -14,20 +19,72 @@
     {
       "id": "claudemd-tactics-absent",
       "source_file": "../CLAUDE.md",
-      "claim_text": ["`set`, `linarith`, `ring` do not exist here"],
-      "search": {"pattern": "^(syntax|macro|elab) \"(set|linarith|ring)\"", "paths": "MachLib"},
+      "claim_text": [
+        "`set`, `linarith`, `ring` do not exist here"
+      ],
       "expect": "no_match",
       "recorded": "2026-08-28",
-      "note": "Tactic declarations, not lemma names. mach_ring/mach_mpoly are the replacements."
+      "note": "Upgraded 2026-08-28 from a grep for `^syntax \"linarith\"` to a compile probe. The grep proved nobody DECLARED it here; only compiling proves it is unavailable, which is what the gotcha actually claims.",
+      "probe": {
+        "snippet": "example : (1:Nat) = 1 := by linarith",
+        "must_fail_with": "unknown tactic"
+      }
     },
     {
       "id": "no-complex-in-machlib",
       "source_file": "../CLAUDE.md",
-      "claim_text": ["there is no Mathlib, no `Complex`"],
-      "search": {"pattern": "^(structure|inductive|def|noncomputable def) Complex\\b", "paths": "MachLib"},
+      "claim_text": [
+        "there is no Mathlib, no `Complex`"
+      ],
+      "search": {
+        "pattern": "^(structure|inductive|def|noncomputable def) Complex\\b",
+        "paths": "MachLib"
+      },
       "expect": "no_match",
       "recorded": "2026-08-28",
       "note": "Load-bearing: the Frontier G work is non-transportable BECAUSE of this. If a Complex type ever lands, several 'does not transport' claims need re-reading."
+    },
+    {
+      "id": "by-contra-absent",
+      "source_file": "MachLib/EMLHeightInterface.lean",
+      "claim_text": [
+        "`by_contra` does not exist here"
+      ],
+      "probe": {
+        "snippet": "example (p : Prop) (h : ¬¬p) : p := by by_contra hc; exact absurd hc h",
+        "must_fail_with": "unknown tactic"
+      },
+      "expect": "no_match",
+      "recorded": "2026-08-28",
+      "note": "Verified by compilation at registration: reports `unknown tactic`. The local idiom is `rcases Nat.lt_or_ge`."
+    },
+    {
+      "id": "conv-lhs-absent",
+      "source_file": "MachLib/RatLogDeriv.lean",
+      "claim_text": [
+        "`conv_lhs` does not exist here"
+      ],
+      "probe": {
+        "snippet": "example : (1:Nat) = 1 := by conv_lhs => rfl",
+        "must_fail_with": "unknown tactic"
+      },
+      "expect": "no_match",
+      "recorded": "2026-08-28",
+      "note": "Verified by compilation at registration. Rewrite through the equation instead."
+    },
+    {
+      "id": "no-measure-theory",
+      "source_file": "MachLib/ElementaryEMLErf.lean",
+      "claim_text": [
+        "measure theory, which does not exist anywhere in MachLib"
+      ],
+      "search": {
+        "pattern": "^(structure|class|def|noncomputable def|axiom) (Measure|Measurable|MeasureSpace)\\b",
+        "paths": "MachLib"
+      },
+      "expect": "no_match",
+      "recorded": "2026-08-28",
+      "note": "Narrowed at registration: the prose said 'measure AND integration theory', but a monotone Riemann integral (RiemannIntegralMonotone) and several Gaussian integrals DO exist, added the same day. Measure theory is the part that is genuinely absent, and is what the search checks."
     }
   ]
 }

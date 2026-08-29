@@ -110,10 +110,22 @@ auditor *"is structurally blind to a claim about a theorem that does not [exist]
 here"*, *"the existing machinery cannot answer this"* — was checked by nothing and **decays
 silently**: someone adds the thing, and the sentence saying it is missing keeps reading as true.
 
-It registers each absence claim with a **search that could falsify it** (`tools/absence_claims.json`)
-and fails when that search starts matching. Not a CI gate yet; it carries four canaries including a
-control, and — more to the point — a **firing specimen against a real defect**: run against this
-file's former *"`min` and `abs` do not exist"*, it reports `NOW-FALSE, 2 hits`.
+It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
+6 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
+
+* **search** — a regex, for *"no such declaration"*;
+* **probe** — a Lean snippet that must FAIL to compile, for *"no such tactic"*. A grep for
+  `^syntax "linarith"` proves nobody *declared* it here; only compiling proves it is **unavailable**,
+  which is what the gotcha actually claims, since a tactic can arrive from a dependency. `by_contra`,
+  `conv_lhs` and `set`/`linarith`/`ring` are all registered this way and verified by compilation.
+
+A probe that fails for the *wrong* reason is reported broken, not passing — a typo in a probe would
+otherwise read exactly like the absence it was meant to establish. And a claim registered with
+**neither** is `UNAVAILABLE`: an absence claim nothing can refute is not checked, merely written down.
+
+Not a CI gate yet; five canaries including a control, and — more to the point — a **firing specimen
+against a real defect**: run against this file's former *"`min` and `abs` do not exist"*, it reports
+`NOW-FALSE, 2 hits`.
 
 **It found three false claims in this file on its first pass** (`mul_lt_mul_of_pos_left`, `min`,
 `abs` — all three exist, and the `min`/`abs` entry told the reader to hand-roll a replacement). An

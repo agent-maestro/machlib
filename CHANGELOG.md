@@ -59,6 +59,31 @@ to falsify it, and no script fixes that. It cannot find absence claims nobody re
 registration stays a human act, the same limit `claim_audit` has. And an absence claim can be true and
 useless. This measures decay, not value.
 
+#### Extended the same day: probes, and three more claims
+
+A grep is the wrong instrument for *"this tactic does not exist"*. `^syntax "linarith"` proves nobody
+**declared** it here; it does not prove it is **unavailable**, because a tactic can arrive from a
+dependency. So the auditor gained a second check kind — a Lean snippet that must fail to compile —
+and the tactic entry was upgraded from grep to probe.
+
+Three claims added, each verified at registration rather than assumed:
+
+* `by_contra` (`EMLHeightInterface`) — probe reports `unknown tactic` ✓
+* `conv_lhs` (`RatLogDeriv`) — same ✓
+* **no measure theory** (`ElementaryEMLErf`) — and this one had to be **narrowed before it could be
+  registered.** The prose said *"measure **and integration** theory, which does not exist anywhere in
+  MachLib"*, but `RiemannIntegralMonotone` (monotone integrands) and `GaussianIntegral` /
+  `GaussianImproperIntegral` all exist — and `git log --diff-filter=A` says all three files landed on
+  **2026-07-24**, the same day. So it was never stale; it was **imprecise from the day it was
+  written**. Measure theory is the part genuinely absent, and is what the search now checks.
+
+Two further guards, both fail-closed: a probe failing for the *wrong* reason is reported broken rather
+than passing (a typo in a probe reads exactly like the absence it was meant to establish), and a claim
+registered with **neither** a search nor a probe is `UNAVAILABLE` — an absence claim nothing can
+refute is not checked, merely written down. Canary 5 pins that.
+
+Registry: 6 claims, all passing.
+
 ## [Unreleased] — 2026-08-28 (ej)
 
 ### The query germ as an `L_F` term, with an explicit zero bound on the positive branch
