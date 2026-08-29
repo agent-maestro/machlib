@@ -248,6 +248,45 @@ takes the `Fbasis` route through `toEML`; `u < 0` lets totalisation kill the log
 tree. Rays are combined as `X + X'` rather than a maximum — both are `≥ 1`, so the sum dominates each,
 and the corpus has no `Real.max` lemmas to hand.
 
+## [Unreleased] — 2026-08-29 (eu)
+
+### `divClamp`, and its value-preservation half
+
+`MachLib/EMLCtxDivClamp.lean` (new) defines the clamp `(et)` specified and proves the half that makes
+it sound: **`divClamp_eval` — on a ray, the clamped context evaluates exactly as the original.**
+
+`divClamp` replaces every `div` node whose **divisor is eventually zero** by `const 0`. `a / 0 = 0`
+is what makes that an equality rather than an approximation, and it is the third distinct use of
+totalisation in this vein — after `Fbasis 0 = 1` (zero branch) and `Fbasis u = exp u` (negative
+branch).
+
+#### Why `declamp`'s uniformity problem does not recur
+
+`declamp t a b` is a **different tree per interval**, because a log argument's sign can differ from
+interval to interval — hence `declampVariants`, and hence
+`variantBounds_hypothesis_unsatisfiable`. Here the trigger is `EvZeroF`, a **ray property**: once the
+ray is far enough out the clamped context is *fixed*. No variant list, no reachability subtlety, no
+unsatisfiable-hypothesis trap. That is a real structural difference, not a lucky one.
+
+#### What is left
+
+The denominator half: that the clamped context's `bipev (ctxFrac ·).2` is eventually non-zero. The
+argument is known — clamping swaps the divisor's *numerator* (zero) for `const 0`'s *denominator*
+`[[1]]`, and the surviving factors compose via `bipolyNoOscillation_holds`, since a bipev germ that is
+not eventually zero is eventually non-zero and a finite product of such is non-vanishing.
+
+#### Three small things the proof cost, all worth a line
+
+* **`qGerm` as an `abbrev` broke `rw`.** The goal displays unfolded, so `rw` could not match the
+  folded form. It survives only as the clamp's *condition*, where nothing rewrites through it; the
+  theorem statement writes `FCtx.eval` out.
+* **`obtain ⟨…⟩ := hz` consumes `hz`**, which `if_pos hz` still needed one line later. `id hz` fixes
+  it. Obvious in retrospect and invisible in the error, which reported `hz` as an unknown identifier
+  rather than as consumed.
+* **`le_addr`/`le_addl` restated a sixth and seventh time**, no import path reaching
+  `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
+  now applies to three separate helpers.
+
 ## [Unreleased] — 2026-08-29 (et)
 
 ### Which hypothesis the witness breaks — and it is not the one `(es)` named
