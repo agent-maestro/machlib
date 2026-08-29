@@ -380,4 +380,47 @@ theorem oneQueryDichotomy_of_uniformBounds_via_ray
       let ⟨K, hK⟩ := h N P Q hne
       ⟨K, 0, uniformZeroBoundFrom_of_uniformZeroBound 0 hK⟩)
 
+/-- **The antecedent, narrowed to the `Q` the consumer actually supplies.**
+
+`bipolyNoOscillation_of_uniformBoundsFrom` above demands a bound for **every** `Q` — including one
+that vanishes identically, where `pev P x / pev Q x` is `divR _ 0`, and `divR` is an **opaque axiom**
+with `div_def` stated only for a non-zero denominator. So that antecedent asks for a zero bound on a
+function nothing in the corpus constrains, and no producer can supply it.
+
+`BipolyNoOscillation` hands over `X`, `1 ≤ X` and `∀ x ≥ X, pev Q x ≠ 0`, and the proof above
+discards all three as `_`. **That is the same over-quantification the §"ray" note complains about,
+committed in the same edit that fixed it** — I narrowed the *interval* quantifier and left the `Q`
+quantifier wide.
+
+This form passes them through. It is strictly weaker as a hypothesis, so strictly easier to supply,
+and it is what the three `ratGerm_eventual_sign` branches can actually produce — `RatGerm` is
+*defined* by exactly this non-vanishing. -/
+theorem bipolyNoOscillation_of_ratUniformBounds
+    (h : ∀ (N : List (List Real)) (P Q : List Real) (X : Real), 1 ≤ X →
+        (∀ x : Real, X ≤ x → pev Q x ≠ 0) →
+        ¬ EvZeroF (fun x => bipev N x (Fbasis (pev P x / pev Q x))) →
+        ∃ (K : Nat) (R : Real),
+          UniformZeroBoundFrom (fun x => bipev N x (Fbasis (pev P x / pev Q x))) R K) :
+    BipolyNoOscillation := by
+  intro N P Q X hX1 hQ hne
+  obtain ⟨K, R, hK⟩ := h N P Q X hX1 hQ hne
+  exact eventually_nonzero_of_uniformZeroBoundFrom hK
+
+/-- **And the dichotomy from it.** Same chain, entered at the narrowed antecedent. -/
+theorem oneQueryDichotomy_of_ratUniformBounds
+    (h : ∀ (N : List (List Real)) (P Q : List Real) (X : Real), 1 ≤ X →
+        (∀ x : Real, X ≤ x → pev Q x ≠ 0) →
+        ¬ EvZeroF (fun x => bipev N x (Fbasis (pev P x / pev Q x))) →
+        ∃ (K : Nat) (R : Real),
+          UniformZeroBoundFrom (fun x => bipev N x (Fbasis (pev P x / pev Q x))) R K) :
+    ∀ (C : FCtx) (P Q : List Real) (X : Real), 1 ≤ X →
+      (∀ x : Real, X ≤ x → pev Q x ≠ 0) →
+      (∀ x : Real, X ≤ x → DivDenomsOK C x (Fbasis (pev P x / pev Q x))) →
+      (∀ x : Real, X ≤ x → bipev (ctxFrac C).2 x (Fbasis (pev P x / pev Q x)) ≠ 0) →
+        EvZeroF (fun x => FCtx.eval C x (Fbasis (pev P x / pev Q x)))
+        ∨ ∃ Y : Real, 1 ≤ Y ∧ ∀ x : Real, Y ≤ x →
+            FCtx.eval C x (Fbasis (pev P x / pev Q x)) ≠ 0 :=
+  oneQueryDichotomy_of_bipoly
+    (bipolyDichotomy_iff_noOscillation.mpr (bipolyNoOscillation_of_ratUniformBounds h))
+
 end MachLib

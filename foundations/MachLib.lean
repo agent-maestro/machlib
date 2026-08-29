@@ -341,6 +341,7 @@ import MachLib.EMLQueryGermZeroBranch
 import MachLib.EMLQueryGermNegBranch
 import MachLib.EMLRayIdentity
 import MachLib.EMLQueryGermUniform
+import MachLib.EMLQueryGermAntecedent
 import MachLib.EMLQueryComplexity
 import MachLib.EMLGeneratorFamily
 import MachLib.EMLBasisOverhead

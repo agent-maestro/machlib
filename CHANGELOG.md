@@ -196,6 +196,58 @@ evaporated** and the change is a unilateral improvement rather than a response t
 justification that quietly outlives its reason is the kind of prose this session has spent all day
 correcting.
 
+## [Unreleased] — 2026-08-28 (er)
+
+### `BipolyNoOscillation` is a theorem — and a second over-quantification, in this morning's own fix
+
+`MachLib/EMLQueryGermAntecedent.lean` (new) joins the three branches through
+`ratGerm_eventual_sign`, proving the antecedent and hence `BipolyNoOscillation` outright. No
+`sorryAx`, no `zero_count_bound_classical`; the footprint is the lane's accepted analytic base
+(`rolle_ct`, `analytic_finite_zeros_compact`, `analytic_ne_zero_nbhd`,
+`eml_tree_analytic_on_interval`).
+
+#### It does NOT discharge the obligation, and the gate says so
+
+```
+OneQueryDichotomy    ∀ C P Q X, 1 ≤ X → (∀x≥X, pev Q x ≠ 0) → …
+proved here          ∀ C P Q X, 1 ≤ X → (∀x≥X, pev Q x ≠ 0) →
+                       (∀x≥X, DivDenomsOK C x …) →
+                       (∀x≥X, bipev (ctxFrac C).2 x … ≠ 0) → …
+```
+
+**Two extra hypotheses** — the div side conditions along the curve, unaddressed. `check_obligations`
+independently confirms it: *"OneQueryDichotomy: open, no theorem concludes it"*, and the count stays
+at **5 distinct open obligations**. The warning is at the *top* of the module docstring, because
+"the antecedent is proved" is one short step from "the obligation is discharged" and here they are
+separated by exactly two hypotheses.
+
+#### The over-quantification, found in `(eh)`'s own theorem
+
+`bipolyNoOscillation_of_uniformBoundsFrom` — written this morning — demanded a bound for **every**
+`Q`, including one vanishing identically. There `pev P x / pev Q x` is `divR _ 0`, and **`divR` is an
+opaque axiom whose `div_def` is stated only for a non-zero denominator**. So the antecedent asked for
+a zero bound on a function nothing in the corpus constrains: **no producer could ever have supplied
+it.**
+
+`BipolyNoOscillation` hands over `X`, `1 ≤ X` and `∀ x ≥ X, pev Q x ≠ 0`. The proof discarded all
+three as `_`.
+
+That is the *same* defect `(eh)` was written to fix — *"a hypothesis quantified far past its use makes
+the remaining work look larger than it is"* — and I committed it in the same edit, narrowing the
+**interval** quantifier while leaving the **`Q`** quantifier wide. One over-quantification fixed, one
+introduced, in one theorem.
+
+`bipolyNoOscillation_of_ratUniformBounds` passes them through. Strictly weaker as a hypothesis,
+strictly easier to supply, and it is what `RatGerm` — *defined* by exactly this non-vanishing —
+naturally produces.
+
+#### The assembly
+
+Three cases, each already a theorem: `u` eventually zero collapses the germ to a polynomial; `u > 0`
+takes the `Fbasis` route through `toEML`; `u < 0` lets totalisation kill the log and uses the log-free
+tree. Rays are combined as `X + X'` rather than a maximum — both are `≥ 1`, so the sum dominates each,
+and the corpus has no `Real.max` lemmas to hand.
+
 ## [Unreleased] — 2026-08-28 (ek)
 
 ### `absence_audit.py` — the class of claim nothing checked, and three false ones in `CLAUDE.md`
