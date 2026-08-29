@@ -287,6 +287,88 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-29 (ew)
+
+### A uniform zero bound now yields the LIST — and one-query germs have finitely many zeros on a ray
+
+New module `MachLib/EMLZeroListFromBound.lean`. Two bridges and a specimen, plus the composition
+with `(ev)`'s antecedent.
+
+#### The gap, measured before it was filled
+
+`UniformZeroBound f N` says every interval holds at most `N` distinct zeros; every "the level set is
+finite" statement in this corpus wants a `List Real` containing the zeros, because a `List` is how
+this corpus spells finite. Nothing bridged the two. An **exhaustive** `grep -rn ': UniformZeroBound '`
+across `MachLib/` — not a truncated one — finds exactly one theorem *concluding* the global form, and
+it is a specimen: `uniformZeroBound_specimen` (`x - 1`, bound `1`). **No producer.**
+
+I first wrote "no producer and no consumer either", and the same grep refutes the second half:
+`eventually_nonzero_of_uniformZeroBound` and `uniformZeroBoundFrom_mono` (`EMLDeclampUniform`, a
+module I did not know existed until the search printed it) both consume a bound. The search answered
+*is anything concluded*; the sentence claimed *is anything used*. Two different questions, and the
+one I ran was not the one I wrote down — the recurring shape behind
+`absence_from_a_truncated_search_is_not_absence`, here with an untruncated search and a drifted
+predicate instead.
+
+#### What closed it
+
+`nat_least_element` (`PolynomialCanonical`) is well-ordering in the form this corpus carries it. Take
+the least `n` with **no** nodup zero list of length `n`; the bound makes `N + 1` such an `n`, and the
+empty list makes `n ≠ 0`, so `n` has a predecessor whose witness list is **maximal**. A zero outside
+it would cons on — `List.nodup_cons` wants exactly non-membership — and reach the impossible length.
+
+```
+zeroList_of_uniformZeroBoundFrom : UniformZeroBoundFrom f R N → ∃ E, ∀ x, R < x → f x = 0 → x ∈ E
+zeroList_of_uniformZeroBound     : UniformZeroBound f N       → ∃ E, ∀ x,        f x = 0 → x ∈ E
+```
+
+**Footprint: 26 axioms, and not one of them is analysis.** No `rolle`, no `analytic_*`, no
+`HasDerivAt`, no `exp`, no `log` — order, field and `Classical.choice`. Same virtue as
+`eventually_nonzero_of_uniformZeroBound`: it cannot be wrong for chain-shape reasons, so it serves
+any future zero-counting result.
+
+`zeroList_specimen` instantiates it on the corpus's only `UniformZeroBound` and exhibits `1 ∈ E`.
+Both halves are needed: without a satisfiable hypothesis the theorem is vacuous, and without a
+*member* the produced `E` could be `[]` with the statement still typechecking.
+
+#### The composition — the first FINITE statement about a level-1 germ
+
+```
+queryGerm_finite_zeros_on_ray :
+  1 ≤ X → (∀ x ≥ X, pev Q x ≠ 0) → ¬ EvZeroF (bipev N · (Fbasis (pev P ·/ pev Q ·)))
+    → ∃ R E, ∀ x, R < x → bipev N x (Fbasis (pev P x / pev Q x)) = 0 → x ∈ E
+```
+
+71 axioms — *identical count to `oneQueryDichotomy_holds`*, and the 26 above are a subset, so the
+bridge costs nothing on top of the antecedent it consumes. Every previous level-1 result said
+**eventually non-zero**; this one says **finitely many, here is the list**.
+
+#### The adversarial pass on `OneQueryLevelSet`, and where the residue actually is
+
+Before writing any of this I spent the hour trying to **refute** `OneQueryLevelSet` — a germ
+identically `c` on a region with interior but not off a finite set. No counterexample. Any candidate
+needs a non-trivial rational relation between `x` and `exp(S(x))` holding on an interval, with `S`
+rational; that is false mathematically, and the corpus's transcendence inputs
+(`BoundedGermTranscendence`, `FS_not_algebraic_of_*`) are all **tail**-shaped.
+
+The residue is **narrower than the obvious guess**, and the reason is worth carrying:
+
+| branch | evaluation agreement needs | analyticity needs |
+|---|---|---|
+| negative (`negGermTree`) | `pev Q x ≠ 0` **and** `S x ≤ 0` | `pev Q x ≠ 0` **only** |
+| positive (`toEML (queryTerm …)`) | `pev Q x ≠ 0` and `0 < S x` | `pev Q x ≠ 0` and `0 < S x` |
+
+Read off `negGermTree_logArgPos`, which takes only `hQ`, against `negGermTree_eval`, which takes both.
+So on the negative branch an identity **does** cross a sign change of `S` — the tree is analytic
+there — and `analytic_zero_on_subinterval_imp_zero` carries it to the whole pole-free component. The
+sign changes are not the obstruction. **The poles are**: an identity established inside a *bounded*
+component between two roots of `pev Q` has nowhere to propagate to, and the tail machinery never sees
+it. That is the whole remaining gap, and it is one component-shape, not a general transcendence
+question.
+
+I had this wrong an hour earlier — I wrote that the sign change blocked propagation. It blocks the
+*agreement*, not the *analyticity*, and only the second matters for the identity theorem.
+
 ## [Unreleased] — 2026-08-29 (ev)
 
 ### `OneQueryDichotomy` DISCHARGED — four distinct open obligations

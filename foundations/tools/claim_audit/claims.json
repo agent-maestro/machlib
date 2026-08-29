@@ -9728,6 +9728,41 @@
       ]
     },
     {
+      "id": "zero-list-bridge-no-analysis-changelog",
+      "_comment": "The bridge's whole selling point is that it is order+list combinatorics: 26 axioms, none of them analysis. So the forbid list is the ANALYSIS one, which is exactly what a substring match is good for here -- `analytic_` catches the whole family, and rolle/HasDerivAt/exp/log are named because the prose names them. If this ever picks up an analytic axiom the claim is false and the gate must say so.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Footprint: 26 axioms, and not one of them is analysis",
+        "no `HasDerivAt`, no `exp`, no `log`"
+      ],
+      "module": "MachLib.EMLZeroListFromBound",
+      "theorem": "MachLib.zeroList_of_uniformZeroBound",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle",
+        "HasDerivAt",
+        "MachLib.Real.exp",
+        "MachLib.Real.log"
+      ]
+    },
+    {
+      "id": "query-germ-finite-zeros-ray-changelog",
+      "_comment": "The composition. Same two-entry forbid list as the capstone it consumes, and for the same reason -- it rests on analytic_finite_zeros_compact, so `analytic_finite_zeros` must NOT appear here (substring match). See zero-list-bridge-no-analysis-changelog for the contrast: that one CAN forbid the family, this one cannot.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "queryGerm_finite_zeros_on_ray",
+        "this one says **finitely many, here is the list**"
+      ],
+      "module": "MachLib.EMLZeroListFromBound",
+      "theorem": "MachLib.queryGerm_finite_zeros_on_ray",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical"
+      ]
+    },
+    {
       "id": "one-query-dichotomy-discharged-changelog",
       "_comment": "NOTE the forbid list is TWO entries, not the usual three: `forbid_axioms` is a SUBSTRING match, so `analytic_finite_zeros` would match `analytic_finite_zeros_compact`, which this footprint legitimately contains (the whole lane rests on it). Adding it would fail a true claim. The second obligation closed in the 2026-08 arc. `(er)` argued this statement was UNPROVABLE because `divR _ 0` looked unconstrained; the grep run to support that argument surfaced `div_zero`, which is now load-bearing in the proof. Registered so the prose cannot outlive the footprint: `div_zero` is ALLOWED here and deliberately not forbidden.",
       "source_file": "CHANGELOG.md",

@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 067 `.lean` files** (751 top-level + 316 in subdirectories) /
-**237 600 lines** / **7 425 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 068 `.lean` files** (752 top-level + 316 in subdirectories) /
+**237 833 lines** / **7 433 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 425
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 174
+  | paste -sd+ | bc                                    # 7 433
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 182
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -266,7 +266,7 @@ its footprint tally for exactly this reason.
 
 Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green at **true exit codes** — note
 `gate | tail` reads `tail`'s status, not the gate's. The aggregator prints its own coverage on every
-run (**761 of 1 067 modules reachable, 12 documented unreachable** as of 2026-08-29); quote it from
+run (**762 of 1 068 modules reachable, 12 documented unreachable** as of 2026-08-29); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **22 rows, 7 open rows, 4 distinct open
