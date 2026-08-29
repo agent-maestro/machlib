@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 060 `.lean` files** (744 top-level + 316 in subdirectories) /
-**236 522 lines** / **7 393 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 061 `.lean` files** (745 top-level + 316 in subdirectories) /
+**236 627 lines** / **7 396 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 393
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 142
+  | paste -sd+ | bc                                    # 7 396
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 145
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -74,7 +74,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 757 jobs, ~3 s warm
+lake build                                     # 758 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
@@ -152,7 +152,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**754 of 1060 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**755 of 1061 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
@@ -224,9 +224,12 @@ behind it is missing — registration is still a human act.
 - **`find … -not -path '*/Discovered/*'` UNQUOTED silently double-counts.** The shell expands
   `*/Discovered/*` against the working directory before `find` sees it, so `-not -path` excludes one
   matched file and every *other* match becomes an extra search root — the same files are then walked
-  twice. Measured 2026-08-28: the correctly quoted form gives **7 393** theorems, the unquoted form
-  **8 885**. (Both drift with the corpus — the *gap* is the point, not the numbers; re-measure rather
-  than trusting these.) It fails *upward* and reads as a bigger corpus, which is why it survived into
+  twice. **Measured once, 2026-08-28, under `bash` from `foundations/`**: quoted **7 393**, unquoted
+  **8 888**. Deliberately *not* refreshed with the other counts, because the figure is fragile in
+  exactly the way it documents — a script recomputing it broke twice, and the reason is worth more
+  than the number: **the unquoted form gives 8 888 under `bash` and NOTHING under `sh`**, since the
+  two shells differ on an unmatched glob. So it varies with the corpus, the working directory *and*
+  the shell. It fails *upward* under bash and reads as a bigger corpus, which is why it survived into
   this file.
   Sanity check any corpus count against the all-files total; an "excluding X" figure that exceeds it
   is impossible.
@@ -252,7 +255,7 @@ its footprint tally for exactly this reason.
 
 ## Status
 
-Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (757 build jobs) at **true exit
+Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (758 build jobs) at **true exit
 codes** — note `gate | tail` reads `tail`'s status, not the gate's. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **22 rows, 8 open rows, 5 distinct open
