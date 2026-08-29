@@ -43,6 +43,64 @@ Gotcha paid again, and it is in `CLAUDE.md` already: `obtain` on the `EvZeroF` e
 **unreduced** `(fun x => …) x`, so `rw` cannot match the beta-reduced goal. Bind it through a typed
 `have`. Third time this pattern has cost a build in this arc.
 
+## [Unreleased] — 2026-08-28 (eo)
+
+### The negative branch — and a correction: only ONE of the three branches is a `UniformZeroBoundFrom` producer
+
+`MachLib/EMLQueryGermNegBranch.lean` closes the last of `ratGerm_eventual_sign`'s three cases, and
+writing it surfaced an over-claim in `(ej)` that needs stating first.
+
+#### The correction
+
+I described the **positive** branch as closed. It is proved, but it is **interval-local**:
+`queryTerm_zero_bound` takes a nonzero witness *inside* `(a,b)` as a hypothesis, because
+`encBound_bounds` needs one there. `¬ EvZeroF` does **not** supply it — that gives non-vanishing
+arbitrarily far out, not inside a nominated bounded interval.
+
+So the honest count is:
+
+| branch | reaches `UniformZeroBoundFrom`? |
+|---|---|
+| `u` eventually zero | **yes** — `poly_root_count_bound` needs a witness only *somewhere*, then bounds every interval |
+| `u > 0` eventually | no — interval-local |
+| `u < 0` eventually | no — interval-local |
+
+**One of three, not two.** What the other two await is a single shared lemma: the germ is non-vanishing
+*somewhere in every subinterval beyond the ray*, which follows from analyticity plus `¬ EvZeroF` by an
+identity-theorem argument and is not proved. Writing the third branch is what made the gap visible —
+the second instance of a pattern where building the "harder" case exposes that the "easy" one was
+weaker than recorded.
+
+#### The negative branch, and why it needed no declamping
+
+Where `u < 0`, totalisation gives `Fbasis u = exp u + log₀ u = exp u`, so the germ is a polynomial in
+`x` and `exp (P/Q)` — **no logarithm anywhere.**
+
+The obvious route was `EMLDeclampEncoder`: the `Fbasis`-built tree fails `LogArgPosOn` at its
+`logTree` node, and `declamp` rewrites exactly such nodes. **That route is a trap worth recording.**
+Its natural uniformity fix — bound every `declampVariant` — is *provably impossible*:
+`variantBounds_hypothesis_unsatisfiable` exhibits a variant that is identically zero while the node it
+came from never vanishes. The reachable form avoids it, but `declamp_logArgPos` gives positivity only
+on the `(a,b)` declamped for, which is not the shape the reachable form then asks for.
+
+**None of it was needed.** Once totalisation has removed the log, `exp (u x)` is directly an EML node
+(`expOf t = eml t (const 1)`, log argument the constant `1`). Assembling the germ from `expOf` and the
+`Gen` combinators makes the `LogArgPosOn` obligation **unconditional except for `pev Q x ≠ 0`**:
+
+| piece | cost |
+|---|---|
+| `polyE L = toEML (pevTerm L)` | nothing — no `F`, no `div` |
+| `addGen`, `mulGen` | nothing — they shift through `domTree` |
+| `divGen a b` | `b.eval x ≠ 0` |
+| `expOf t` | nothing |
+
+**So the branch that looked hardest needs the fewest hypotheses**, because the failing positivity was
+an artefact of routing through `Fbasis`. Same lesson this arc keeps paying for: the difficulty was in
+the representation, not the object.
+
+Seventh duplication caught: `Fbasis_of_nonpos` already exists in `EMLQueryComplexity`. Third one
+caught **because the obvious name was chosen** — a creative name would have shipped the twin.
+
 ## [Unreleased] — 2026-08-28 (ek)
 
 ### `absence_audit.py` — the class of claim nothing checked, and three false ones in `CLAUDE.md`
