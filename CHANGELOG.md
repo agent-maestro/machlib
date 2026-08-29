@@ -248,6 +248,57 @@ takes the `Fbasis` route through `toEML`; `u < 0` lets totalisation kill the log
 tree. Rays are combined as `X + X'` rather than a maximum — both are `≥ 1`, so the sum dominates each,
 and the corpus has no `Real.max` lemmas to hand.
 
+## [Unreleased] — 2026-08-29 (es)
+
+### The degenerate-denominator route is FALSE — refuted with a witness, not a corrected sentence
+
+`(er)`'s adversarial pass ended by proposing a two-case split to close `OneQueryDichotomy`'s remaining
+gap, the second case being: *denominator germ eventually zero → `a / 0 = 0` collapses the node → the
+`EvZeroF` branch holds outright*.
+
+**That case is false.** `MachLib/EMLCtxDegenerate.lean` (new) carries the witness.
+
+```
+C = hole + (1 / 0)
+```
+
+`ctxFrac (div a b) = (num_a · den_b, den_a · num_b)`, so dividing by something with numerator `0`
+gives that node denominator `0`; `ctxFrac (add a b)` multiplies denominators, so **the whole
+context's normal-form denominator is identically zero.** But `FCtx.eval (add a b) = eval a + eval b`
+and `1 / 0 = 0`, so the context evaluates to the hole — take `y = Fbasis 0 = 1` and it is never zero.
+
+`denom_evZero_does_not_imply_eval_evZero` proves exactly that, with `P = []`, `Q = [1]`.
+
+**A degenerate denominator does not make the value degenerate**, because `add` keeps the live part
+alive. The `ctxFrac` normal form discards information `FCtx.eval` retains.
+
+#### The prediction I attached was also wrong, and differently
+
+`(er)` predicted the cost would be in `div`/`mul` — *"where a germ can be eventually zero without
+either operand being"*. The failure is in **`add`**, and it is not about germs multiplying to zero at
+all: the normal form's denominator is a product over the *whole tree*, so one degenerate leaf zeroes
+it, while the value only degenerates if that leaf sits on a multiplicative path to the root.
+
+So the prediction was wrong about the location *and* the mechanism. Recorded because a plan whose
+refutation lives only in prose gets re-attempted; one that lives as a `False`-producing witness does
+not.
+
+#### The corrected route
+
+A **div-clamp**, exactly analogous to `declamp` for EML trees: replace each `div` node whose divisor
+is degenerate on the ray by `const 0` — justified by the same `a / 0 = 0` — and apply
+`oneQueryDichotomy_divConditioned` to the clamped context, which then satisfies `DivDenomsOK`.
+
+`declamp`'s uniformity problem does **not** arise here: "eventually zero" is a ray property, so the
+clamped context is fixed once the ray is far enough out rather than varying per interval. That is the
+one respect in which this is easier than the EML analogue.
+
+#### Gotcha, fourth time today
+
+`obtain`/application on an `EvZeroF` existential yields an **unreduced** `(fun x => …) Y`, so `rw`
+cannot match. Bind through a typed `have`. It is in `CLAUDE.md`; reading it is evidently not the same
+as recognising its shape mid-proof.
+
 ## [Unreleased] — 2026-08-28 (ek)
 
 ### `absence_audit.py` — the class of claim nothing checked, and three false ones in `CLAUDE.md`
