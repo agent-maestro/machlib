@@ -222,12 +222,22 @@ lines of reassociating sums and the mathematics disappears into it.
 
 (`set` does not exist in this corpus — hence an existential rather than a local definition.) -/
 
-private theorem le_addr {a b : Real} (hb : 0 ≤ b) : a ≤ a + b := by
+/-- Made **public** on 2026-08-28. The immediate cause evaporated — `EMLQueryGermUniform` wanted it,
+could not reach it (no import path), and I inlined the two lines there instead. Kept public anyway,
+because the general point stands and this file is where I had caused it: `private` on a
+general-purpose arithmetic helper does not hide complexity, it guarantees the next module rewrites
+it. `EMLRayIdentity` records the same complaint about `a < a + 1`, which has four private copies and
+needed a fifth.
+
+Recorded honestly rather than dressed up as a fix that was used: the change is a small unilateral
+improvement, not a response to a live need. -/
+theorem le_addr {a b : Real} (hb : 0 ≤ b) : a ≤ a + b := by
   have v := add_le_add_wit (le_refl a) hb
   have e : a + (0 : Real) = a := by mach_ring
   rw [e] at v; exact v
 
-private theorem le_addl {a b : Real} (ha : 0 ≤ a) : b ≤ a + b := by
+/-- Public for the same reason as `le_addr`. -/
+theorem le_addl {a b : Real} (ha : 0 ≤ a) : b ≤ a + b := by
   have v := add_le_add_wit ha (le_refl b)
   have e : (0 : Real) + b = b := by mach_ring
   rw [e] at v; exact v

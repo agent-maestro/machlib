@@ -146,6 +146,56 @@ This is the arc's recurring error in its smallest form: an optimistic guess abou
 guarantees the next module writes it again. Not worth a refactor; worth a line, since the pattern will
 keep recurring until one of them is made public.
 
+## [Unreleased] — 2026-08-28 (eq)
+
+### Both interval-local branches upgraded to `UniformZeroBoundFrom` producers
+
+`(ep)` supplied the missing per-interval witness; this joins it to the two branches that needed it.
+`MachLib/EMLQueryGermUniform.lean` (new) does the upgrade **once**, as a lemma about EML trees rather
+than twice about germs — the branches differ only in which tree they hand over.
+
+```lean
+uniformZeroBoundFrom_of_rayTree (t) (f) (X) (hX1)
+  (hagree : ∀ x ≥ X, t.eval x = f x)
+  (hlog   : ∀ a b, X ≤ a → a < b → LogArgPosOn t (Icc a b))
+  (hne    : ¬ EvZeroF f) :
+    UniformZeroBoundFrom f X (encBound t)
+```
+
+`hlog` is used twice and both uses are needed: on `Icc` it feeds `encBound_bounds`; narrowed to the
+open interval it feeds `exists_nonzero_in_subinterval`, which supplies the witness `¬ EvZeroF` does
+not give.
+
+So all three branches now produce `UniformZeroBoundFrom`:
+
+| branch | producer | constant |
+|---|---|---|
+| `u` eventually zero | `queryGerm_zero_branch_bound` | `degreeUpper (pevPoly (sumCoeffs N))` |
+| `u > 0` eventually | `queryGerm_pos_branch_uniform` | `encBound (toEML (queryTerm N P Q))` |
+| `u < 0` eventually | `queryGerm_neg_branch_uniform` | `encBound (negGermTree N P Q)` |
+
+The negative branch's hypothesis list is **shorter** than the positive branch's — no positivity —
+which is the asymmetry `(eo)` recorded, now visible in the two statements side by side.
+
+#### What this does NOT do, said before anyone reads the table above and concludes otherwise
+
+**It discharges nothing.** Composing the three into
+`oneQueryDichotomy_of_uniformBoundsFrom`'s antecedent still needs the case split on
+`ratGerm_eventual_sign`, and that antecedent is universally quantified over `N`, `P`, `Q`. The ledger
+row stays open, the obligations gate says so, and **5 distinct open obligations is unchanged.** The
+module docstring leads with this for the same reason.
+
+#### `private` bit me with my own helper
+
+`EMLQueryGermUniform` wanted `le_addr`/`le_addl` — which I had written `private` in
+`EMLNegTranslation` earlier the same session, one file after complaining that `a < a + 1` exists as
+four private copies. No import path reached them anyway, so the two lines are inlined.
+
+They are now public regardless, with the docstring saying plainly that **the immediate cause
+evaporated** and the change is a unilateral improvement rather than a response to a live need — a
+justification that quietly outlives its reason is the kind of prose this session has spent all day
+correcting.
+
 ## [Unreleased] — 2026-08-28 (ek)
 
 ### `absence_audit.py` — the class of claim nothing checked, and three false ones in `CLAUDE.md`
