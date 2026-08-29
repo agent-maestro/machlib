@@ -248,6 +248,41 @@ takes the `Fbasis` route through `toEML`; `u < 0` lets totalisation kill the log
 tree. Rays are combined as `X + X'` rather than a maximum — both are `≥ 1`, so the sum dominates each,
 and the corpus has no `Real.max` lemmas to hand.
 
+## [Unreleased] — 2026-08-29 (et)
+
+### Which hypothesis the witness breaks — and it is not the one `(es)` named
+
+`(es)` closed by describing the corrected route as *"a div-clamp … then apply
+`oneQueryDichotomy_divConditioned` to the clamped context, which then satisfies `DivDenomsOK`"*.
+
+**`DivDenomsOK` was never the problem.** `divDegenerateCtx_divDenomsOK` proves it holds for the
+witness outright.
+
+The two remaining hypotheses are about **different polynomials**:
+
+| hypothesis | what it constrains | in `hole + (1/0)` |
+|---|---|---|
+| `DivDenomsOK C x y` | at each `div` node, the **divisor's** `ctxFrac` *denominator* | `ctxFrac (const 0) = ([[0]], [[1]])`, denominator `1` — **holds** |
+| `bipev (ctxFrac C).2 ≠ 0` | the **whole context's** denominator, a product over the entire tree | zeroed by the divisor's *numerator* — **fails** |
+
+Conflating them is what made `(es)`'s one-line route description wrong: I reached for the hypothesis
+with "denom" in its name rather than the one the counterexample actually violated, having just
+proved the counterexample.
+
+#### The route still stands, for the other hypothesis
+
+Clamping a `div` node whose divisor is eventually zero to `const 0` changes the factor that node
+contributes to the whole-context denominator from the divisor's **numerator** (zero) to `const 0`'s
+**denominator** `[[1]]` (one). That removes the zero factor while `a / 0 = 0` preserves the value.
+
+And the remaining factors then compose: by `bipolyNoOscillation_holds`, a bipev germ that is not
+eventually zero is eventually **non**-zero, so a product of finitely many such is eventually non-zero.
+That is the step that makes the clamped context's denominator non-vanishing on a ray, and it is
+exactly what `(er)`'s theorem was for.
+
+So: same construction, different hypothesis discharged, and one more reason to state which polynomial
+a side condition is about rather than which word appears in its name.
+
 ## [Unreleased] — 2026-08-29 (es)
 
 ### The degenerate-denominator route is FALSE — refuted with a witness, not a corrected sentence

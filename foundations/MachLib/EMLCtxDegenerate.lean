@@ -99,4 +99,29 @@ theorem denom_evZero_does_not_imply_eval_evZero :
   rw [divDegenerateCtx_eval, hu, Fbasis_zero] at h0
   exact absurd h0.symm (ne_of_lt zero_lt_one_ax)
 
+/-! ## Which hypothesis actually fails — and it is not the one I named
+
+`(es)` said the corrected route is a div-clamp giving `DivDenomsOK`. **`DivDenomsOK` was never the
+problem here.** It asks, at each `div` node, that the *divisor's* `ctxFrac` **denominator** be
+non-zero. In `hole + (1 / 0)` the divisor is `const 0`, whose `ctxFrac` is `([[0]], [[1]])` — its
+denominator is `[[1]]`, which is `1`. So `DivDenomsOK` holds outright.
+
+What fails is the **other** hypothesis: the *whole context's* denominator
+`bipev (ctxFrac C).2`, which is the product over the entire tree and is zeroed by the divisor's
+**numerator**. The two hypotheses are about different polynomials and fail for different reasons, and
+conflating them is what made `(es)`'s one-line route description wrong. -/
+
+/-- **`DivDenomsOK` holds for the witness.** So the failing hypothesis is the whole-context
+denominator, not this one. -/
+theorem divDegenerateCtx_divDenomsOK (x y : Real) : DivDenomsOK divDegenerateCtx x y := by
+  refine ⟨True.intro, True.intro, True.intro, ?_⟩
+  show bipev [[(1 : Real)]] x y ≠ 0
+  show (pev [(1 : Real)] x + y * bipev [] x y) ≠ 0
+  show ((1 : Real) + x * pev [] x + y * 0) ≠ 0
+  show ((1 : Real) + x * 0 + y * 0) ≠ 0
+  intro h
+  have e : (1 : Real) + x * 0 + y * 0 = 1 := by mach_ring
+  rw [e] at h
+  exact absurd h.symm (ne_of_lt zero_lt_one_ax)
+
 end MachLib
