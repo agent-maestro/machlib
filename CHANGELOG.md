@@ -287,6 +287,71 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-29 (ey)
+
+### Gluing over an UNSORTED cut list — the interval-independence step, and what it costs
+
+`ZeroCountOn.glueOverCuts` (`ZeroCountGlue`) and `uniformZeroBound_of_cutFreeBounds`
+(`EMLZeroListFromBound`). A bound on every **cut-free** sub-interval gives a bound on *every*
+interval, with a constant that mentions neither endpoint.
+
+#### Why unsorted matters
+
+`pev_zero_or_finite_roots` hands over a `List` of roots with **no order structure**. Sorting it is
+real work this corpus does not have lying around. `glueOverCuts` needs none: at each cut it asks only
+*is this cut strictly inside the current interval*, splits if so, and recurses on the whole remaining
+list in both halves. A leaf interval is cut-free because every cut was either split at — making it an
+endpoint, not interior — or skipped for an interval containing the leaf.
+
+The hypothesis is **interval-relative** (`a ≤ u → v ≤ b → …`), and that is load-bearing rather than
+decorative: the left-half recursion needs to know `v ≤ m` in order to discharge `m` itself from the
+cut-free obligation. A globally-quantified hypothesis does not carry that and the induction does not
+close.
+
+#### The cost, stated rather than buried
+
+```
+cutBound 0       K = K
+cutBound (n + 1) K = cutBound n K + cutBound n K + 1
+```
+
+**Exponential in the number of cuts.** Recursing into both halves with the whole remaining list is
+what buys freedom from sortedness, and doubling is what it costs. That is acceptable here because
+`UniformZeroBound` asks only for *some* interval-independent constant and `n` depends on `P`, `Q`
+alone — but it is not free, and `ZeroCountOn.glueList` gives the sharp `(n+1)·K + n` for anyone who
+does have a sorted list.
+
+`cutFreeBounds_specimen` makes the price concrete instead of leaving it as a remark: `x - 1` has one
+zero, `uniformZeroBound_specimen` proves the sharp bound `1`, and routing it through a single cut
+yields `cutBound 1 1 = 3` — proved as `rfl`, not asserted. Three where one is true, for one cut.
+
+#### Footprints
+
+| theorem | axioms | |
+|---|---|---|
+| `ZeroCountOn.glueOverCuts` | **10** | order only — `leR`, `ltR`, `lt_total`, `lt_trans_ax`, `lt_irrefl_ax`, `le_iff_lt_or_eq` |
+| `uniformZeroBound_of_cutFreeBounds` | 11 | the same, plus `zeroR` to say `f z = 0` |
+| `cutFreeBounds_specimen` | 20 | arithmetic, only to *name* `x - 1` |
+
+Still no arithmetic in the reduction itself.
+
+#### What remains, named precisely
+
+The route to `OneQueryLevelSet` is now: cuts = roots of `pev P` and `pev Q` (from
+`pev_zero_or_finite_roots`); on a cut-free interval `S = P/Q` has constant sign, which
+`hasDerivAt_pev` + `hasDerivAt_continuousAt` + `intermediate_value` deliver, so exactly one branch
+tree applies throughout; `encBound_bounds` then bounds that interval — **given a point in it where
+the germ is non-zero.**
+
+That last clause is the whole remaining gap, and it is the residue `(ew)` identified, now in its
+final position: `¬ EvZeroF` supplies a non-zero point only on a *tail*, and a bounded cut-free
+interval between two poles is where no tail reaches.
+
+**No obligation is registered for it.** The demand "the germ is non-zero somewhere in every bounded
+cut-free interval" might be vacuous or might be false, and `EMLDeclampUniform` already documents what
+promoting an unvalidated per-piece demand cost this arc once. This module ships the reduction and
+stops, exactly as that one did.
+
 ## [Unreleased] — 2026-08-29 (ex)
 
 ### Zero counting, glued — one lemma for three predicates, at six axioms

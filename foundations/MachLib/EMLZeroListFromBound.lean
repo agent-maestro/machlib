@@ -249,4 +249,30 @@ theorem uniformZeroBoundFrom_iff_zeroCountOn (f : Real → Real) (R : Real) (N :
       ∀ a b : Real, R ≤ a → a < b → ZeroCountOn (fun z => f z = 0) a b N :=
   Iff.rfl
 
+/-! ## Interval-independence from cut-free bounds -/
+
+/-- **The interval-independent form.** A bound on every cut-free interval gives `UniformZeroBound`,
+because `cutBound cuts.length K` mentions neither endpoint. -/
+theorem uniformZeroBound_of_cutFreeBounds {f : Real → Real} {K : Nat} (cuts : List Real)
+    (h : ∀ u v : Real, (∀ c ∈ cuts, ¬ (u < c ∧ c < v)) →
+          ZeroCountOn (fun z => f z = 0) u v K) :
+    UniformZeroBound f (cutBound cuts.length K) :=
+  fun a b _ => ZeroCountOn.glueOverCuts cuts a b (fun u v _ _ hcf => h u v hcf)
+
+/-- **End-to-end specimen: the machinery fires, and it costs.**
+
+`x - 1` has one zero, and `uniformZeroBound_specimen` proves the sharp bound `1`. Routed through a
+single cut it comes out as `cutBound 1 1 = 3`.
+
+The specimen is here to show two things at once: the reduction composes on a real function, and the
+constant it produces is **not** sharp. `3` where `1` is true, for one cut. Anyone reaching for
+`glueOverCuts` should know that before they reach. -/
+theorem cutFreeBounds_specimen : UniformZeroBound (fun x => x - 1) (cutBound 1 1) :=
+  uniformZeroBound_of_cutFreeBounds [0] (fun u v _ =>
+    Classical.byCases (fun h : u < v => uniformZeroBound_specimen u v h)
+                      (fun h => ZeroCountOn.of_not_lt h 1))
+
+/-- And the inflation is a concrete number, not a shrug. -/
+theorem cutBound_one_one : cutBound 1 1 = 3 := rfl
+
 end MachLib

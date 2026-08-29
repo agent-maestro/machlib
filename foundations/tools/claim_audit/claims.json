@@ -9728,6 +9728,45 @@
       ]
     },
     {
+      "id": "glue-over-cuts-order-only-changelog",
+      "_comment": "Same discipline as the six-axiom glue: the claim is 'order only', so arithmetic is the forbid list. glueOverCuts legitimately uses leR/le_iff_lt_or_eq beyond the glue's six, which is why it gets its own entry rather than sharing.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Still no arithmetic in the reduction itself",
+        "order only — `leR`, `ltR`, `lt_total`"
+      ],
+      "module": "MachLib.ZeroCountGlue",
+      "theorem": "MachLib.ZeroCountOn.glueOverCuts",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle",
+        "HasDerivAt",
+        "MachLib.Real.addR",
+        "MachLib.Real.mulR",
+        "MachLib.Real.divR"
+      ]
+    },
+    {
+      "id": "cut-free-specimen-price-changelog",
+      "_comment": "The honest-cost specimen. Registered because the CHANGELOG states a NUMBER (3 where 1 is true) proved by rfl; if cutBound is ever redefined the prose must break.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "yields `cutBound 1 1 = 3` — proved as `rfl`",
+        "Three where one is true, for one cut"
+      ],
+      "module": "MachLib.EMLZeroListFromBound",
+      "theorem": "MachLib.cutFreeBounds_specimen",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle",
+        "HasDerivAt"
+      ]
+    },
+    {
       "id": "zero-count-glue-six-axioms-changelog",
       "_comment": "The headline is a COUNT (six) and a composition claim (order only, no arithmetic). The forbid list is therefore the arithmetic and analysis this lemma claims not to touch: if the glue ever picks up addR/mulR or an analytic axiom, the sentence 'the order on Real and no arithmetic whatsoever' is false and the gate must say so. Real.ltR and lt_total are ALLOWED -- they are the six.",
       "source_file": "CHANGELOG.md",

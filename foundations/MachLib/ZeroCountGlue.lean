@@ -213,4 +213,82 @@ theorem piecesBounded_is_weaker_than_the_conclusion :
     have := hbad [(1 : Real), 1 + 1] hnd hmem
     simp at this
 
+/-! ## Gluing over a cut list -/
+
+/-- The bound `glueOverCuts` produces: each cut can, in the worst case, split an interval in two and
+cost one extra point. `cutBound 0 K = K`. -/
+def cutBound : Nat → Nat → Nat
+  | 0,     K => K
+  | n + 1, K => cutBound n K + cutBound n K + 1
+
+theorem cutBound_mono_len {K : Nat} : ∀ n : Nat, cutBound n K ≤ cutBound (n + 1) K := by
+  intro n
+  show cutBound n K ≤ cutBound n K + cutBound n K + 1
+  omega
+
+/-- **Gluing over an UNSORTED cut list.**
+
+The hypothesis is a bound on every *cut-free* sub-interval of `(a,b)` — intervals in which no cut
+lies strictly inside. The conclusion is a bound on `(a,b)` itself.
+
+No sortedness is required, and that is the point: `pev_zero_or_finite_roots` hands over a `List` of
+roots with no order structure, and sorting it would need machinery this does not.
+
+The price is that the constant doubles per cut rather than adding: at each cut inside the interval
+the proof recurses on *both* halves with the whole remaining list. `cutBound n K` is therefore
+exponential in `n`. That is fine for `UniformZeroBound`, which asks only for *some* constant
+independent of the interval — and `n` depends on `P` and `Q` alone. A sharp `(n+1)·K + n` is
+available from `ZeroCountOn.glueList` once a sorted list exists; this is the version that needs
+nothing. -/
+theorem ZeroCountOn.glueOverCuts {p : Real → Prop} {K : Nat} :
+    ∀ (cuts : List Real) (a b : Real),
+      (∀ u v : Real, a ≤ u → v ≤ b → (∀ c ∈ cuts, ¬ (u < c ∧ c < v)) → ZeroCountOn p u v K) →
+      ZeroCountOn p a b (cutBound cuts.length K)
+  | [], a, b, h => by
+      have e : cutBound ([] : List Real).length K = K := rfl
+      rw [e]
+      exact h a b (le_refl a) (le_refl b) (fun c hc => absurd hc (List.not_mem_nil))
+  | m :: rest, a, b, h => by
+      by_cases hin : a < m ∧ m < b
+      · -- `m` is strictly inside: split there and recurse on both halves
+        have hleft : ZeroCountOn p a m (cutBound rest.length K) :=
+          ZeroCountOn.glueOverCuts rest a m (fun u v hau hvm hrest =>
+            h u v hau (le_trans hvm (le_of_lt hin.2)) (fun c hc => by
+              rcases List.mem_cons.mp hc with rfl | hc'
+              · exact fun hcc => lt_irrefl_ax c (lt_of_lt_of_le hcc.2 hvm)
+              · exact hrest c hc'))
+        have hright : ZeroCountOn p m b (cutBound rest.length K) :=
+          ZeroCountOn.glueOverCuts rest m b (fun u v hmu hvb hrest =>
+            h u v (le_trans (le_of_lt hin.1) hmu) hvb (fun c hc => by
+              rcases List.mem_cons.mp hc with rfl | hc'
+              · exact fun hcc => lt_irrefl_ax c (lt_of_le_of_lt hmu hcc.1)
+              · exact hrest c hc'))
+        have hg := ZeroCountOn.glue hleft hright
+        have e : cutBound rest.length K + cutBound rest.length K + 1
+               = cutBound (m :: rest).length K := by
+          rw [List.length_cons]
+          rfl
+        rw [← e]; exact hg
+      · -- `m` is not strictly inside `(a,b)`, so it can never be strictly inside a sub-interval
+        have hsub : ZeroCountOn p a b (cutBound rest.length K) :=
+          ZeroCountOn.glueOverCuts rest a b (fun u v hau hvb hrest =>
+            h u v hau hvb (fun c hc => by
+              rcases List.mem_cons.mp hc with rfl | hc'
+              · exact fun hcc => hin ⟨lt_of_le_of_lt hau hcc.1, lt_of_lt_of_le hcc.2 hvb⟩
+              · exact hrest c hc'))
+        have hmono : cutBound rest.length K ≤ cutBound (m :: rest).length K := by
+          rw [List.length_cons]; exact cutBound_mono_len rest.length
+        exact fun zeros hnd hz => Nat.le_trans (hsub zeros hnd hz) hmono
+
+/-- An interval with `v ≤ u` holds no points at all, so any bound serves. This is what lets the
+cut-free hypothesis drop the `u < v` premise that `UniformZeroBound` carries. -/
+theorem ZeroCountOn.of_not_lt {p : Real → Prop} {u v : Real} (h : ¬ u < v) (K : Nat) :
+    ZeroCountOn p u v K := by
+  intro zeros _ hz
+  cases zeros with
+  | nil => exact Nat.zero_le K
+  | cons z _ =>
+      exact absurd (lt_trans_ax (hz z List.mem_cons_self).1 (hz z List.mem_cons_self).2.1) h
+
+
 end MachLib
