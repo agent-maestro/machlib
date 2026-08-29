@@ -9728,6 +9728,40 @@
       ]
     },
     {
+      "id": "sign-constant-cutfree-no-analytic-changelog",
+      "_comment": "The claim is a COMPOSITION claim: sign constancy is bought with completeness (sup_exists, via the IVT) and NOT with the analytic/zero-counting lane. The forbid list is therefore that lane. analytic_ is forbidden as a family and legitimately so -- this theorem has none, which is the whole point of the sentence.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Sign constancy is bought with\n*completeness*, not with the zero-counting lane",
+        "no `analytic_*`, no `rolle`, no `zero_count_bound_classical`"
+      ],
+      "module": "MachLib.PevSignOnCutFree",
+      "theorem": "MachLib.pev_sign_constant_on_cutFree",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle"
+      ]
+    },
+    {
+      "id": "ratgerm-branch-selection-changelog",
+      "_comment": "The corollary the glue consumes: one sign of P/Q per cut-free interval, hence one branch tree. Registered because the prose asserts 'there is no third case inside', which is a statement about what this theorem concludes.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "one sign of\n`P/Q` throughout",
+        "There is no third case inside"
+      ],
+      "module": "MachLib.PevSignOnCutFree",
+      "theorem": "MachLib.ratGerm_sign_constant_on_cutFree",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle"
+      ]
+    },
+    {
       "id": "glue-over-cuts-order-only-changelog",
       "_comment": "Same discipline as the six-axiom glue: the claim is 'order only', so arithmetic is the forbid list. glueOverCuts legitimately uses leR/le_iff_lt_or_eq beyond the glue's six, which is why it gets its own entry rather than sharing.",
       "source_file": "CHANGELOG.md",

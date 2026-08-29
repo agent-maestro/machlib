@@ -287,6 +287,97 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-29 (fa)
+
+### One sign per cut-free interval — and the residue is a NEW KIND of input, not more assembly
+
+New module `MachLib/PevSignOnCutFree.lean`. `pev_sign_constant_on_cutFree`,
+`ratGerm_sign_constant_on_cutFree`, `pev_ne_zero_on_cutFree`, plus the two lemmas they needed:
+`pev_continuousAt` and `pev_root_between_of_opposite_signs`. All four confirmed absent beforehand by
+exhaustive grep.
+
+#### What it gives
+
+With the roots of `pev P` and `pev Q` as the cut list, a cut-free interval has **one sign of
+`P/Q` throughout**, so exactly one branch tree describes the whole of it — `toEML (queryTerm …)`
+where `S > 0`, `negGermTree` where `S < 0`. There is no third case inside, because `S = 0` needs a
+root of `pev P`, which is a cut. All four quotient-sign combinations already existed; the corollary
+is a case split.
+
+`intermediate_value` fires in **one direction only** (left-negative, right-positive, `a < b`). Both
+orders are needed, so the reversed case goes through `0 - pev L`, whose roots are exactly `pev L`'s.
+`pev_root_between_of_opposite_signs` packages both once.
+
+**Footprint: 40 axioms — derivative rules, `hasDerivAt_continuousAt`, `sup_exists`, and no
+`analytic_*`, no `rolle`, no `zero_count_bound_classical`.** Sign constancy is bought with
+*completeness*, not with the zero-counting lane. A later step needing `encBound_bounds` pays that
+lane separately; this module does not pre-pay it.
+
+#### Caveat the callers must carry
+
+The hypothesis is a **finite** list containing every root. If `pev P ≡ 0` no such list exists, the
+hypothesis is unsatisfiable, and these theorems say nothing about that case — it is
+`pev_zero_or_finite_roots`'s *other* branch, which the query modules already split on
+(`queryGerm_zero_branch_bound`). Not a defect; a division of labour that must not be forgotten at the
+call site.
+
+#### The residue, scoped properly — and a conclusion I had to walk back
+
+The route to `OneQueryLevelSet` is assembled except for one clause: `encBound_bounds` needs a point
+*inside* each interval where the germ is non-zero, and on a **bounded** cut-free component nothing
+supplies it yet.
+
+Looking for what could, I first searched the transcendence lane and found a clean story. Every
+`: False` in `EMLFTranscendence` — **8 of 8, counted by script, not by eye** —
+
+```
+not_algebraic_of_dominates_exp   Fbasis_not_algebraic        not_algebraic_of_dominated_by_exp
+FS_not_algebraic_of_ge_id        FS_not_algebraic_of_le_negId
+FS_not_algebraic_of_ge_linear    FS_not_algebraic_of_le_linear   exp_not_algebraic
+```
+
+— has a **tail** hypothesis `∃ X, 1 ≤ X ∧ ∀ x ≥ X`, and not by oversight: all eight run through
+`not_polyEnvelope_of_ge_exp_scaled` and `EvDom`, which are **growth envelopes**. Growth is the
+mechanism, and a bounded interval is where growth says nothing. `DiffAlgebraic` and
+`BoundedGermEnvelope` contain no `: False` at all.
+
+I was about to conclude *"the gap needs a new kind of input the corpus does not have."* Then I ran
+the census **corpus-wide** instead of over the lane I had picked, and it refuted that:
+
+```
+281 theorems/axioms conclude False;  20 have a tail hypothesis;  8 have an INTERVAL hypothesis
+```
+
+Re-derivable — split every `.lean` outside `Discovered/` on declaration boundaries, keep the
+declarations whose *head* (before `:=`) matches `:\s*False\b`, and classify by whether that head
+contains a tail bound (`1 ≤ X` / `X ≤ x`) or a two-sided strict interval (`_ < x … x < _`, `Ioo`,
+`Icc`). Classify by the **head**, not the body: a growth proof mentions intervals all over its
+internals while its hypothesis is a tail.
+
+Those eight exist, and two are directly relevant:
+
+* **`CompactIntervalNonApproximation`** — an interval-local barrier for EML trees, built from
+  `enc_combinedBound` plus IVT-induced zeros. Interval-local non-representability is *already done*
+  here, once.
+* **`ContinuityDivergenceBarrier.no_continuousAt_eq_unboundedBelowNearRight`** — a function
+  continuous at `x₀` cannot equal, on a one-sided neighbourhood, a target unbounded approaching
+  `x₀`. Explicitly advertised as tree- and target-agnostic.
+
+The second bites here. A bounded cut-free component's endpoints are **poles of `S`**. Where
+`S → +∞`, `exp(S) → ∞` and the germ diverges — while a germ identically zero is bounded. That is the
+barrier's exact shape, with machinery that already exists.
+
+**So the honest residue is narrower than "a new kind of input".** It is the sub-case where `S → −∞`
+at *both* ends of a bounded component: there `exp(S) → 0`, the germ tends to its constant-in-`y`
+coefficient `pev N₀`, and no divergence is available to contradict. That sub-case is open. The
+`+∞` endpoints look reachable with what is on the shelf.
+
+The lesson is the one this repo keeps re-learning: **I searched the lane I expected the answer to be
+in, and the lane's uniformity read as the corpus's.** The count that mattered — 8 interval-shaped
+results — only appeared when the search covered everything. Filed against
+`absence_from_a_truncated_search_is_not_absence`, whose point is not that greps get truncated but
+that the *scope* does.
+
 ## [Unreleased] — 2026-08-29 (ey)
 
 ### Gluing over an UNSORTED cut list — the interval-independence step, and what it costs
