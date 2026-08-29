@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 067 `.lean` files** (751 top-level + 316 in subdirectories) /
-**237 428 lines** / **7 423 theorems**, re-exported through the aggregator
+**237 600 lines** / **7 425 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 423
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 172
+  | paste -sd+ | bc                                    # 7 425
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 174
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -197,6 +197,15 @@ behind it is missing — registration is still a human act.
   `natCast N` (`NatCastArith`), **never** as `1+1+…`: `mach_mpoly`'s AC matching diverges on unary
   numerals — a degree-2 identity with constants near `1.4·10⁴` exhausted 4 000 000 heartbeats (20×
   the default) without progress. This is the operational form of "keep coefficients symbolic".
+- **`forbid_axioms` in `claims.json` is a SUBSTRING match, not a name match.** It is what lets one
+  entry forbid a family (`"analytic_"`), but it also means `analytic_finite_zeros` forbids
+  **`analytic_finite_zeros_compact`** — and the compact one is the only one that exists as a
+  declaration. Copying the usual `sorryAx / zero_count_bound_classical / analytic_finite_zeros` trio
+  onto a claim whose theorem legitimately rests on the compact axiom makes the gate **fail a true
+  claim** (cost me a full audit cycle on 2026-08-29). For the reverse containment — a sound axiom
+  whose name contains an unsound one, `rolle_ct` ⊃ `rolle` — use `forbid_axioms_exact`, which matches
+  whole tokens. Audit a new entry alone first: `claim_audit.py --registry <two-entry file>` takes
+  seconds where the full registry takes many minutes, and it lets you run the convict copy too.
 - **A theorem whose conclusion is a ledger obligation needs a BINDER, not an arrow.**
   `tools/obligation_ledger_check.py` reads a conclusion as the tail after the last top-level `:`,
   having first stripped binders of the obligation's own type. So `foo : A → B` has tail `A → B` and
@@ -255,10 +264,12 @@ its footprint tally for exactly this reason.
 
 ## Status
 
-Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green (764 build jobs) at **true exit
-codes** — note `gate | tail` reads `tail`'s status, not the gate's. `sorryAx`: 1, allowlisted.
+Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green at **true exit codes** — note
+`gate | tail` reads `tail`'s status, not the gate's. The aggregator prints its own coverage on every
+run (**761 of 1 067 modules reachable, 12 documented unreachable** as of 2026-08-29); quote it from
+the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
-the entire depth/decay programme below. Obligations ledger: **22 rows, 8 open rows, 5 distinct open
+the entire depth/decay programme below. Obligations ledger: **22 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The `S > 0` branch was VACUOUS and is now repaired** (`a10b3b5b`, 2026-08-24). Two pole hypotheses
@@ -283,14 +294,17 @@ asymmetric — only one factor per product is ever dirty), so no denominator *bo
 `EvNonvanish` (non-zero on a tail) is required over "not eventually zero", because germs have zero
 divisors and the weak form silently breaks properness.
 
-**Still open.** `SignHardCase` is **discharged** (`signHardCase_holds`, `d7b8d28c`) — this line said
-otherwise for weeks; read the ledger, not this paragraph, and if they disagree the ledger is right
-because a gate checks it. **`NegativeTranslationGrowingLeft` is now discharged too**
-(`negativeTranslationGrowingLeft_holds`, 2026-08-28, `EMLNegTranslation`) — the first obligation to
-close in the 2026-08 arc, taking the count from six to five. The five distinct open obligations are: the
-`DecayFloor` ⇄ `EmlGermApproach` ⇄ `GrowthEnvelope` cycle (**one** obligation, three rows),
-`TowerLowerBound` ⇄ `TowerReducesToSign` (one obligation, two rows, equivalent since `SignHardCase`
-fell), `OneQueryDichotomy`, `BoundedGermTranscendence`, `OneQueryLevelSet`.
+**Still open.** Read the ledger, not this paragraph — a gate checks the ledger and nothing checks
+prose, so if they disagree the ledger is right. Three obligations closed in the 2026-08 arc, taking
+the count six → four: `SignHardCase` (`signHardCase_holds`, `d7b8d28c`),
+`NegativeTranslationGrowingLeft` (`negativeTranslationGrowingLeft_holds`, 2026-08-28,
+`EMLNegTranslation`), and `OneQueryDichotomy` (`oneQueryDichotomy_holds`, 2026-08-29,
+`EMLCtxDivClamp` — via `divClamp`, supplying the two `div` side conditions the obligation omits).
+The **four** distinct open obligations are: the `DecayFloor` ⇄ `EmlGermApproach` ⇄ `GrowthEnvelope`
+cycle (**one** obligation, three rows), `TowerLowerBound` ⇄ `TowerReducesToSign` (one obligation, two
+rows, equivalent since `SignHardCase` fell), `BoundedGermTranscendence`, and `OneQueryLevelSet` —
+which does **not** follow from `OneQueryDichotomy`; it reduces to `q_F(sign) ≥ 2`, and
+`EMLOneQueryGlobal` exists to keep the two apart.
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then
 `s(1/x) ∈ {7,9,11}` proved, `d(1/x)` frozen at `{3,4}`, and a depth- and size-indexed **growth

@@ -9728,6 +9728,36 @@
       ]
     },
     {
+      "id": "one-query-dichotomy-discharged-changelog",
+      "_comment": "NOTE the forbid list is TWO entries, not the usual three: `forbid_axioms` is a SUBSTRING match, so `analytic_finite_zeros` would match `analytic_finite_zeros_compact`, which this footprint legitimately contains (the whole lane rests on it). Adding it would fail a true claim. The second obligation closed in the 2026-08 arc. `(er)` argued this statement was UNPROVABLE because `divR _ 0` looked unconstrained; the grep run to support that argument surfaced `div_zero`, which is now load-bearing in the proof. Registered so the prose cannot outlive the footprint: `div_zero` is ALLOWED here and deliberately not forbidden.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "oneQueryDichotomy_holds` (`EMLCtxDivClamp`)",
+        "No `sorryAx`, no `zero_count_bound_classical`"
+      ],
+      "module": "MachLib.EMLCtxDivClamp",
+      "theorem": "MachLib.oneQueryDichotomy_holds",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical"
+      ]
+    },
+    {
+      "id": "bipoly-no-oscillation-holds-changelog",
+      "_comment": "The composition step the div-clamp rests on. Registered separately from the capstone because the changelog cites it on its own in `(eu)`: a product of finitely many not-eventually-zero bipev germs is eventually non-zero.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "by `bipolyNoOscillation_holds`, a bipev germ that is not",
+        "eventually zero is eventually **non**-zero"
+      ],
+      "module": "MachLib.EMLQueryGermAntecedent",
+      "theorem": "MachLib.bipolyNoOscillation_holds",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical"
+      ]
+    },
+    {
       "id": "negative-translation-growing-left-discharged-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [

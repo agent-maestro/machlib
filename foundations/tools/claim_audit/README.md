@@ -23,6 +23,21 @@ For each entry in `claims.json`:
    entry's `forbid_axioms` may appear in the transitive closure. `#print axioms` is
    the ground truth — the same trail used to verify every close in this repo.
 
+   **`forbid_axioms` is a SUBSTRING match over the printed footprint, not a name match.**
+   That is deliberate — it is what lets one entry forbid a whole family (`"analytic_"`) —
+   but it means a forbid entry silently covers every axiom whose name it is a prefix of.
+   Two live consequences:
+
+   * `analytic_finite_zeros` also forbids **`analytic_finite_zeros_compact`**, which is the
+     only one of the two that exists as a declaration. Copying the usual
+     `sorryAx / zero_count_bound_classical / analytic_finite_zeros` trio onto a claim whose
+     theorem legitimately rests on the compact axiom makes the gate fail a **true** claim.
+     (Hit while registering `one-query-dichotomy-discharged-changelog`, 2026-08-29.)
+   * Where the containment runs the *other* way — a sound axiom whose name contains an
+     unsound one, `MachLib.Real.rolle_ct` vs `MachLib.Real.rolle` — use
+     **`forbid_axioms_exact`**, which matches whole tokens. It is not in the skeleton below
+     because it is the exception, but it is the only correct tool for that shape.
+
 ## Run
 
 ```bash

@@ -11362,7 +11362,7 @@ this sentence.) Their status, as of the last edit:
 | `NegativeTranslationGrowingLeft` | `EMLDepthTameness` | **discharged** | `negativeTranslationGrowingLeft_holds` (`EMLNegTranslation`), through `PinnedRightChild`; non-vacuity shipped as `growingLeft_growth_hypothesis_satisfiable` |
 | `PinnedRightChild` | `EMLNegTranslation` | **discharged** | `pinnedRightChild_holds` — the band pins `A₁` to `u ± 1` and the five depth-≤1 forms are exhausted; the two that reach `exp x` die on the `−x` term |
 | `FQueryLowerBound` | `EMLBasisOverhead` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
-| `OneQueryDichotomy` | `EMLOneQueryForm` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
+| `OneQueryDichotomy` | `EMLOneQueryForm` | **discharged** | `oneQueryDichotomy_holds` (`EMLCtxDivClamp`) — via `divClamp`, which supplies the two div side conditions the obligation omits; rests on `bipolyNoOscillation_holds` and the totalised `a / 0 = 0` |
 | `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `LogQueryLowerBound` | `EMLRationalGerm` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |

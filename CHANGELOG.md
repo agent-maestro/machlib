@@ -287,6 +287,74 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-29 (ev)
+
+### `OneQueryDichotomy` DISCHARGED — four distinct open obligations
+
+`oneQueryDichotomy_holds` (`EMLCtxDivClamp`). The ledger reads **22 rows, 7 open rows, 4 distinct open
+obligations** — down from six when the day began. No `sorryAx`, no `zero_count_bound_classical`;
+footprint is the lane's analytic base (`rolle_ct`, `analytic_finite_zeros_compact`,
+`analytic_ne_zero_nbhd`, `eml_tree_analytic_on_interval`) plus `div_zero`.
+
+#### What closed it
+
+The obligation omits two side conditions that `oneQueryDichotomy_divConditioned` carries.
+`divClamp` supplies exactly those, and both halves are now proved:
+
+* **value preserved** (`divClamp_eval`) — `a / 0 = 0` makes clamping a degenerate `div` to `const 0`
+  an *equality*;
+* **denominator non-vanishing** (`divClamp_denom_and_divDenomsOK`) — clamping swaps the divisor's
+  *numerator* (zero) for `const 0`'s *denominator* `[[1]]`, and the surviving factors compose via
+  `bipolyNoOscillation_holds`.
+
+The second is proved as a **conjunction with `DivDenomsOK`**, because `ctxFrac_eval` — needed in the
+`div` case to rule out a degenerate numerator — takes both as hypotheses; proving either alone would
+be circular.
+
+#### Measured: the clamp costs nothing
+
+`#print axioms` on both capstones, diffed set-against-set:
+
+```
+oneQueryDichotomy_holds     71 axioms
+bipolyNoOscillation_holds   71 axioms
+capstone \ bipoly           EMPTY
+bipoly \ capstone           EMPTY
+```
+
+**Identical footprints.** Every axiom the clamp needs — `div_zero` included — was already spent by
+the composition lemma it rests on. The construction is free at the trust boundary, which is the
+argument for preferring it to any route that would have introduced a new positivity or
+non-vanishing axiom to dodge the degenerate `div`.
+
+#### The refutation attempt is what supplied the mechanism
+
+`(er)` tried to prove this obligation **unprovable**: `FCtx.eval` hits `divR _ 0`, `div_def` covers
+only non-zero denominators, so `divR · 0` looked unconstrained and the statement independent of the
+axioms. The grep run to *support* that argument turned up
+
+```
+MachLib/Basic.lean:149:   axiom div_zero (a : Real) : a / 0 = 0
+```
+
+and that axiom is now **load-bearing in the proof**. The adversarial hour did not merely fail; it
+handed over the mechanism it was trying to exploit.
+
+#### Totalisation, four times
+
+`Fbasis 0 = 1` (zero branch), `Fbasis u = exp u` (negative branch), `a / 0 = 0` in the clamp, and
+`a / 0 = 0` again in the value transfer. **Every time, the degenerate case turned out to be the easy
+branch rather than an obstacle** — consistently the opposite of what I predicted going in. A totalised
+operator does not merely avoid undefinedness; it collapses the hard case into a constant, and this
+vein is now four independent data points for that.
+
+#### Scope
+
+`OneQueryLevelSet` is **not** discharged and does not follow: the ledger notes it reduces to
+`q_F(sign) ≥ 2` *and not to* `OneQueryDichotomy`, and `EMLOneQueryGlobal` exists to keep the two
+apart. Remaining: the `DecayFloor` cycle (frozen research programme), `TowerLowerBound` ⇄
+`TowerReducesToSign`, `BoundedGermTranscendence`, `OneQueryLevelSet`.
+
 ## [Unreleased] — 2026-08-29 (et)
 
 ### Which hypothesis the witness breaks — and it is not the one `(es)` named
@@ -10603,7 +10671,7 @@ in commit archaeology:
 | `NegativeTranslationGrowingLeft` | **discharged** | `negativeTranslationGrowingLeft_holds` (`EMLNegTranslation`), through `PinnedRightChild`; non-vacuity shipped as `growingLeft_growth_hypothesis_satisfiable` |
 | `PinnedRightChild` | **discharged** | `pinnedRightChild_holds` — the band pins `A₁` to `u ± 1` and the five depth-≤1 forms are exhausted; the two that reach `exp x` die on the `−x` term |
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
-| `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
+| `OneQueryDichotomy` | **discharged** | `oneQueryDichotomy_holds` (`EMLCtxDivClamp`) — via `divClamp`, which supplies the two div side conditions the obligation omits; rests on `bipolyNoOscillation_holds` and the totalised `a / 0 = 0` |
 | `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `LogQueryLowerBound` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
