@@ -287,6 +287,58 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fm)
+
+### The absent transcendence input: why the `S = id` proof does NOT generalise, and what does
+
+Route A's one absent ingredient is `¬ RatGerm (log ∘ S)` for non-constant rational `S`. The corpus
+proves the `S = id` case (`log_not_ratGerm`, `EMLLogNotRational`). Read its proof before assuming it
+generalises — **it does not**, and the reason is structural.
+
+#### The `S = id` proof is a substitution trick
+
+Assume `log = P/Q` on a tail. Substitute **`x = exp t`**: because `log (exp t) = t`, the germ identity
+becomes `t · Q(exp t) = P(exp t)` — a polynomial relation in `exp t` with coefficients polynomial in
+`t`, which `exp_not_algebraic_of_not_all_evZero` refuses.
+
+The move works because `log`'s inverse is `exp`, so the substitution is *available in the language*.
+For `log ∘ S` the same step needs `x = S⁻¹(exp t)`, and the inverse of a rational function is not
+rational. **The trick is specific to `S = id`.**
+
+#### What does generalise
+
+`log (S x) = N(x)/D(x)` on a tail. Differentiate:
+
+```
+S′/S  =  (N/D)′
+```
+
+so `S′/S` — the **logarithmic derivative** of a rational function — has a *rational primitive*. That
+is precisely what `no_rational_logarithm` refuses: its `hident` hypothesis
+
+```
+(N′D − N D′)·P·Q  =  k · (P′Q − P Q′) · D²
+```
+
+*is* the cleared form of `(N/D)′ = k·(P/Q)′/(P/Q)`. The mathematical content is the classical one —
+a rational function's derivative has no simple poles, while a logarithmic derivative has simple poles
+with integer residues, so a rational primitive forces every residue to zero and `S` to be constant.
+
+#### The bridge that has to be built
+
+From the **germ** identity `log ∘ S = N/D` on a tail to the **polynomial** identity `hident`:
+
+1. differentiate the germ identity (`GermDeriv`-style, or `hasDerivAt` of a quotient);
+2. clear denominators to a germ identity between polynomial evaluations;
+3. promote *eventual equality of `pev`s* to `PEq` — available, since a non-zero polynomial is not
+   eventually zero.
+
+Each step looks present; the composition does not exist. **And per this week's record, "looks
+present" has been wrong often enough that this is a route sketch, not an estimate.** What is
+established is narrower and worth stating exactly: the existing `S = id` theorem is *not* a stepping
+stone, and the general terminus is `no_rational_logarithm` rather than a generalisation of
+`log_not_ratGerm`.
+
 ## [Unreleased] — 2026-08-30 (fl)
 
 ### Route A's next step, by instantiation — and the duplication audit verified rather than asserted
