@@ -9728,6 +9728,23 @@
       ]
     },
     {
+      "id": "fbasis-relation-differentiates-changelog",
+      "_comment": "The differentiation brick for BoundedGermTranscendence. The claim is that it costs nothing from the analytic or zero-counting lane -- the route is differential, not growth-based -- so that lane is the forbid list. HasDerivAt is NOT forbidden: this theorem is entirely about derivatives and forbidding it would fail a true claim.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**38 axioms, none from the analytic\nor zero-counting lane.**",
+        "the missing step is\ndifferentiation-preserves-algebraicity"
+      ],
+      "module": "MachLib.GermDerivFbasis",
+      "theorem": "MachLib.fbasis_relation_differentiates",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle"
+      ]
+    },
+    {
       "id": "sign-constant-cutfree-no-analytic-changelog",
       "_comment": "The claim is a COMPOSITION claim: sign constancy is bought with completeness (sup_exists, via the IVT) and NOT with the analytic/zero-counting lane. The forbid list is therefore that lane. analytic_ is forbidden as a family and legitimately so -- this theorem has none, which is the whole point of the sentence.",
       "source_file": "CHANGELOG.md",

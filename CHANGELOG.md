@@ -287,6 +287,75 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-29 (fb)
+
+### `BoundedGermTranscendence`: the differentiation brick, and why growth is provably unavailable
+
+New module `MachLib/GermDerivFbasis.lean` — `fbasisComp_hasDerivAt`,
+`deriv_eq_zero_of_zero_on_ray`, `fbasis_relation_differentiates`. **38 axioms, none from the analytic
+or zero-counting lane.**
+
+#### The route is the corpus's own
+
+`EMLFTranscendence`'s docstring says it outright: *"the missing step is
+differentiation-preserves-algebraicity, not anything about `exp`."* This is the mechanical half of
+that step, and all three tools already existed — `gbipev_hasDerivAt` (`GermDeriv`) differentiates a
+germ-coefficient relation, `Fbasis_hasDeriv` (`EMLGermSign`) gives `F′ = exp + 1/·` on the positive
+side, `HasDerivAt_comp` chains them.
+
+From `Σⱼ cⱼ(x)·F(S x)ʲ = 0` on a ray:
+
+```
+Σⱼ cⱼ′(x)·F(S x)ʲ  +  (exp (S x) + 1/S x)·S′(x) · ∂/∂y[Σⱼ cⱼ(x)·yʲ](F (S x))  =  0
+```
+
+#### Why the usual instruments are not merely unhelpful but *provably* silent
+
+`BoundedGermEnvelope.polyEnvelope_of_Fbasis_floor` is a **theorem**: on the bounded branch `F ∘ S` is
+polynomially enveloped. Every exclusion instrument here — `not_polyEnvelope_of_ge_exp`,
+`not_polyEnvelope_of_ge_exp_scaled`, and through them `FS_not_algebraic_of_ge_linear` / `_of_le_linear`
+/ `Fbasis_not_algebraic` — needs the generator to **outgrow every polynomial**. On this branch that
+hypothesis is false, as a theorem. The instruments are not silent by accident of formulation.
+
+#### The open ray is forced
+
+The conclusion holds on `X < x`, not `X ≤ x`. A derivative is local, the relation is known only on
+`[X, ∞)`, and `HasDerivAt_congr` wants `|y - x| < δ` — at the endpoint no such δ exists inside the
+ray. `deriv_eq_zero_of_zero_on_ray` takes `δ = x - X` and is stated separately because it is about
+any function, not about germs.
+
+#### `Fbasis_hasDeriv` was `private`
+
+Made public. Third time this session a needed lemma was `private` one module away
+(`le_addr`/`le_addl` were the first two). Worth noticing as a pattern rather than as three incidents:
+`private` is being used for *"local to this proof"* and then the lemma turns out to be the interface.
+
+#### What is NOT done, and no obligation for it
+
+This produces a relation, not a contradiction. Eliminating `F (S x)` between the two relations is
+where the Euclidean layer (`euclid_lemma`, `Pdvd`) would come in — and then the **real** base case is
+needed: `exp ∘ S` transcendental over the rational functions for non-constant rational `S`.
+
+That is **not** `exp_not_algebraic`. That one is about `exp x` and is proved by growth, which this
+branch has ruled out. Writing "the base case exists" would have been the natural sentence and it
+would have been wrong — the base case that exists is for the wrong function, by the wrong method.
+
+`constant_germ_is_algebraic` shows the non-constancy hypothesis cannot be dropped: `S ≡ 0`,
+`Fbasis 0 = 1`, and a non-trivial bipoly vanishes identically.
+
+#### Also noticed — and the first count of it was wrong
+
+Six declarations state `abs (x - y) = abs (y - x)`. **Five are `private`** — `ExpLipschitz`,
+`InverseTrigBounded`, `NewtonReciprocalDivision`, `TransNodes`, `TanLipschitz` — and the sixth,
+`TrigLipschitz.abs_sub_comm`, is **public**. So this is not five copies of a missing lemma; it is
+five private re-proofs of a lemma that was already exported. Six private copies of `a < a + 1` sit
+alongside them, one of which this session added.
+
+I first wrote "five private copies" from a grep for `private theorem abs_sub_comm`, which by
+construction could not see the public one — and the public one is the whole point. A pattern narrower
+than the claim it supports, for the third time today. Recorded, not fixed: it is a cleanup, not a
+correctness issue, and it wants one commit of its own rather than a rider on this one.
+
 ## [Unreleased] — 2026-08-29 (fa)
 
 ### One sign per cut-free interval — and the residue is a NEW KIND of input, not more assembly

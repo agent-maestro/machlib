@@ -503,7 +503,10 @@ theorem Fbasis_strictMono {a b : Real} (ha : 0 < a) (hab : a < b) : Fbasis a < F
     rw [el, er] at v; exact v
   exact lt_trans_ax h1 (add_lt_add_left (log_lt_log ha hab) (exp b))
 
-private theorem Fbasis_hasDeriv {y : Real} (hy : 0 < y) :
+/-- **`F` is differentiable on the positive side**, with `F′ = exp + 1/·`. Made public 2026-08-29:
+the differential route to `BoundedGermTranscendence` (`GermDerivFbasis`) needs it one module away, and
+a `private` lemma is unreachable there. -/
+theorem Fbasis_hasDeriv {y : Real} (hy : 0 < y) :
     HasDerivAt Fbasis (exp y + 1 / y) y := by
   have h := HasDerivAt_add exp log (exp y) (1 / y) y (HasDerivAt_exp y) (HasDerivAt_log_pos y hy)
   exact h
