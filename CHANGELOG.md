@@ -349,6 +349,25 @@ This is now the sharpest form of the recurring lesson in this repository, and it
 absence claims made **in passing, to justify deferring work** — and every one of them was wrong in
 the direction that created work rather than avoided it.
 
+#### §4 — `|pev L|` bounded on a compact interval
+
+`pev_abs_bounded_on_Icc`. `continuousAt_bddAbove_Icc` bounds a continuous function **above**, and
+`abs` needs both directions, so it is applied twice — to `pev L` and to `0 - pev L`, whose continuity
+comes from the same `HasDerivAt_sub` construction `PevSignOnCutFree` already uses for the mirrored
+intermediate value. Reusable well beyond this arc.
+
+#### §5 stopped deliberately, and the file says so
+
+`bipev (L :: Ls) x y = pev L x + y * bipev Ls x y` is **definitional**, so
+`pev N₀ x = −exp (S x)·bipev N' x (exp (S x))` needs no lemma; `H` is bounded because
+`0 < exp (S x) ≤ 1` on the negative branch (totalisation again — `Fbasis` *is* `exp` there, so the
+`log` half never appears); and the pole bound feeds `poly_zero_of_exp_decay` at `a = 0`.
+
+A first attempt at it reached for four non-existent lemma names **and left a `sorry` in the file**.
+Both were removed rather than committed. Having hit the same reach-for-the-name-you-would-choose
+failure twice inside one file, the honest response is to stop and return with a fresh look rather
+than push through on placeholders — so §§1–4 are what this module ships, and its header records why.
+
 #### §3, same commit — the endpoint lemma is CLOSED
 
 `poly_zero_of_exp_decay` (47 axioms, still nothing from the analytic or zero-counting lane):

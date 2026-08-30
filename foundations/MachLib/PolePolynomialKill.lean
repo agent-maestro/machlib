@@ -302,4 +302,66 @@ theorem poly_zero_of_exp_decay : ∀ (n : Nat) (p : List Real) (r a c C : Real),
           rw [hdefl x, hzero]
           mach_ring
 
+/-! ## §4 — a polynomial is bounded in absolute value on a compact interval
+
+The germ side of the wiring needs `|H|` bounded near the endpoint, where `H` is a sum of `pev`s
+against powers of `exp (S x)` — and on the negative branch `0 < exp (S x) ≤ 1`, so the whole of `H`
+is controlled once each coefficient polynomial is.
+
+`continuousAt_bddAbove_Icc` bounds a continuous function **above**. `abs` needs both directions, so
+it is applied twice — once to `pev L` and once to `0 - pev L`, whose continuity comes from the same
+`HasDerivAt_sub` construction `PevSignOnCutFree` already uses for the mirrored intermediate value. -/
+
+/-- **`|pev L|` is bounded on `[a, b]`.** -/
+theorem pev_abs_bounded_on_Icc (L : List Real) (a b : Real) (hab : a ≤ b) :
+    ∃ M : Real, ∀ x : Real, a ≤ x → x ≤ b → abs (pev L x) ≤ M := by
+  obtain ⟨M₁, hM₁⟩ :=
+    continuousAt_bddAbove_Icc (fun y => pev L y) a b hab (fun z _ _ => pev_continuousAt L z)
+  have hcontneg : ∀ z : Real, ContinuousAt (fun w => 0 - pev L w) z := by
+    intro z
+    exact hasDerivAt_continuousAt
+      (HasDerivAt_sub (fun _ => 0) (fun w => pev L w) 0 (pev (pderiv L) z) z
+        (HasDerivAt_const 0 z) (hasDerivAt_pev L z))
+  obtain ⟨M₂, hM₂⟩ :=
+    continuousAt_bddAbove_Icc (fun y => 0 - pev L y) a b hab (fun z _ _ => hcontneg z)
+  refine ⟨max M₁ M₂, fun x hax hxb => ?_⟩
+  rcases lt_total (pev L x) 0 with hneg | hzero | hpos
+  · -- `abs = -pev`, bounded by `M₂`
+    have hb2 := hM₂ x hax hxb
+    have e : (0 : Real) - pev L x = -pev L x := by mach_ring
+    rw [e] at hb2
+    rw [iv_aon hneg]
+    exact le_trans hb2 (le_max_right M₁ M₂)
+  · rw [hzero, abs_of_nonneg (le_refl (0 : Real))]
+    have h1 := hM₁ x hax hxb
+    rw [hzero] at h1
+    exact le_trans h1 (le_max_left M₁ M₂)
+  · rw [abs_of_nonneg (le_of_lt hpos)]
+    exact le_trans (hM₁ x hax hxb) (le_max_left M₁ M₂)
+
+/-! ## §5 — the germ side: what is left, and what it needs
+
+`bipev (L :: Ls) x y = pev L x + y * bipev Ls x y` is **definitional**, so from a germ vanishing on a
+right-neighbourhood of the pole,
+
+```
+pev N₀ x  =  − exp (S x) · bipev N' x (exp (S x))
+```
+
+needs no lemma at all. Two pieces then remain, and both are now supplied:
+
+* `H = bipev N' · (exp (S ·))` is **bounded** near the endpoint — on the negative branch
+  `0 < exp (S x) ≤ 1` (`exp_le_one`), so there is no growth in `y` to fight and §4 bounds each
+  coefficient polynomial. That is totalisation again: `Fbasis` *is* `exp` where the argument is
+  non-positive, so the `log` half never appears.
+* the pole bound `S (r + exp (−T)) ≤ −(c · exp T)` feeds `poly_zero_of_exp_decay` at `a = 0` — the
+  deflation peels supply their own `a`.
+
+**Deliberately not written here yet.** A first attempt reached for four lemma names that do not
+exist and left a `sorry` in the file; both were removed rather than committed. The pattern is the one
+this module's §2 note already records — reaching for the name one would have chosen — and the honest
+response to hitting it twice in a file is to stop and come back, not to push through with placeholder
+identifiers. §§1–4 stand on their own and are what this module ships.
+-/
+
 end MachLib
