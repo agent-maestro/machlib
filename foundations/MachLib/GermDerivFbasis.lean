@@ -486,4 +486,32 @@ theorem fbasis_minimal_descent {S s : Real → Real} {X : Real} (hX1 : 1 ≤ X)
   simp only [List.length_append, List.length_cons, List.length_nil]
   omega
 
+/-! ## The `log`-carrying summand vanishes at the top degree
+
+Route A's whole argument turns on one structural fact. Of the three summands making up the
+differentiated list, exactly one carries `log ∘ S` — `gscale (fbasisSubMul S s) (gyd cs)`, since
+`fbasisSubMul S s = s · (1/S − log S)`. If that summand contributes to the **top** coefficient, the
+top coefficient carries `log S` and the proportionality equations cannot be separated into a rational
+part and a `log S` part.
+
+It does not contribute, and the reason is already proved: `gyd` ends in an identically-zero
+coefficient (`gyd_eq_append_zero`), and `gscale` preserves that. So the top coefficient of the
+differentiated relation is **free of `log S`**, which is what lets each proportionality equation be
+read as `A(x) + B(x)·log (S x) ≡ 0` with `A`, `B` free of `log`.
+
+This is stated separately from the descent because it is the hinge of the argument rather than a step
+in it — and because it was a *paper* claim until it was proved here. -/
+
+/-- **The only `log`-carrying summand contributes nothing at the top degree.** -/
+theorem subMul_summand_top_vanishes (S s : Real → Real)
+    (c : Real → Real) (cs : List (Real → Real)) :
+    ∃ (ys : List (Real → Real)) (z : Real → Real),
+      gscale (fbasisSubMul S s) (gyd (c :: cs)) = ys ++ [z] ∧ (∀ x : Real, z x = 0)
+        ∧ ys.length = cs.length := by
+  obtain ⟨gs, z, heq, hz, hlen⟩ := gyd_eq_append_zero c cs
+  refine ⟨gscale (fbasisSubMul S s) gs, (fun x => fbasisSubMul S s x * z x), ?_, ?_, ?_⟩
+  · rw [heq]; exact gscale_append (fbasisSubMul S s) gs z
+  · intro x; show fbasisSubMul S s x * z x = 0; rw [hz x]; mach_ring
+  · rw [gscale_length]; exact hlen
+
 end MachLib

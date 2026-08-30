@@ -287,6 +287,44 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fj)
+
+### Route A's hinge is now a theorem, not a paper claim
+
+`subMul_summand_top_vanishes` (`GermDerivFbasis`) — **18 axioms, pure list and field, nothing
+analytic**.
+
+`(fi)` recorded route A as a paper argument and flagged that this week's paper routes have
+overshot three times. The argument's hinge turned out to be checkable directly, so it was checked.
+
+#### The hinge
+
+Of the three summands making up the differentiated list, **exactly one carries `log ∘ S`** —
+`gscale (fbasisSubMul S s) (gyd cs)`, since `fbasisSubMul S s = s · (1/S − log S)`. If that summand
+reached the **top** coefficient, the top coefficient would carry `log S` and the proportionality
+equations could not be split into a rational part and a `log S` part. Route A would not start.
+
+It does not reach it, and the reason was already proved: `gyd` ends in an identically-zero
+coefficient (`gyd_eq_append_zero`, §4 of the descent), and `gscale` preserves that. So the top
+coefficient of the differentiated relation is **free of `log S`**, and each proportionality equation
+really does read
+
+```
+A(x) + B(x)·log (S x) ≡ 0        with A, B free of log
+```
+
+#### What is and is not now verified
+
+* **Verified**: the `log`-carrying summand contributes nothing at the top degree. The step that
+  route A's separation rests on.
+* **Still paper**: that `B ≢ 0` forces `log ∘ S` to be a rational germ, and that the resulting
+  cancellation drives `cₙ ≡ 0` against properness. Those are the remaining steps, and the transcendence
+  input they need (`¬ RatGerm (log ∘ S)` for non-constant rational `S`) is still absent.
+
+The distinction is worth keeping sharp: a route whose hinge is a theorem and whose remainder is
+bookkeeping-plus-one-absent-lemma is in a different state from one that is paper throughout — but it
+is not finished, and `(fi)`'s caution stands for the part that is still argument.
+
 ## [Unreleased] — 2026-08-30 (fi)
 
 ### Route A's terminus is `no_rational_logarithm`, and the audit transfers to it by luck
