@@ -287,6 +287,61 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fh)
+
+### TWO ROUTES WERE BEING DESCRIBED AS ONE — and the built theorem is on the other one
+
+`(fc)` described the destination as: *"substituting `E = y − log S` … descending `n` times eliminates
+`y` and leaves a polynomial relation for `log S` over `ℝ(x)` — which is the shape
+`no_proper_cleared_relation` already refutes."* Brief #4 and the interface audit `(fg)` both build on
+that sentence.
+
+**`fbasis_minimal_descent` does not do that.** Re-reading its own conclusion:
+
+```
+∃ L₀ d, L₀.length = ms₀.length ∧ ∀ c ∈ gscaleSub m d ms₀ L₀, EvZeroF c
+```
+
+i.e. `m · (L₀)ᵢ − d · (ms₀)ᵢ ≡ 0` for every `i` — the differentiated relation is a **germ multiple**
+of the original. That is *proportionality*, reached in **one** step by minimality. It is not a
+relation in `log S`, and no number of `log S` powers appears in it.
+
+#### The two routes, separated
+
+| | route A — proportionality | route B — iterated elimination |
+| --- | --- | --- |
+| step count | **one** descent, minimality closes it | `n` descents, one per degree |
+| needs | comparing top coefficients ⟹ a differential equation for the leading coefficient ⟹ `S′` is a logarithmic derivative ⟹ contradiction with `S` rational non-constant | a freshly differentiated relation **at each degree**, then the `log S` relation |
+| terminus | **may need no junction theorem at all** | `no_proper_cleared_relation` |
+| built? | **yes** — `fbasis_minimal_descent` is its first and possibly only step | no |
+
+Route A is also the shape the outside reader's own Q2 sketch describes — differentiate the minimal
+polynomial, use separability in characteristic zero, conclude `y′ ∈ K(y)`. The corpus is on route A
+and the prose has been describing route B.
+
+#### What this does to the answers already given
+
+* **Q1 ("is the log junction the right terminus?")** — the answer *"yes, the algebra forces `log S`
+  out"* describes **route B**. On route A the terminus is a logarithmic-derivative contradiction and
+  the junction may be unnecessary. The Q1 answer is not withdrawn; it is **re-scoped to the route it
+  was about**, and which route to take is now an open choice rather than a settled one.
+* **The interface audit `(fg)`** stands exactly as measured — those hypotheses are what
+  `no_proper_cleared_relation` demands, and they transport as described. What changes is how much it
+  matters, since route A may not invoke that theorem.
+* **Q2 ("build the minimum differential-algebra lemma")** — on route A the abstract closure lemma
+  (*algebraic ⟹ derivative algebraic*) looks like **zero** work rather than minimum work, because the
+  descent operates on coefficient lists directly. Same shape as minimality sidestepping properness.
+  Not yet verified; flagged, not claimed.
+
+#### Why it went unnoticed
+
+The sentence in `(fc)` was written while planning the route, and the theorem was built the next day
+to the same *name*. Both are about "the descent", both are correct in isolation, and nothing checks
+prose against a theorem's **conclusion** — the claim auditor checks a theorem's *footprint*, and the
+obligations gate checks a *ledger row*. A route description is neither. **The gates cannot catch a
+narrative that has drifted from its artifact**; only re-reading the statement can, which is what
+happened here.
+
 ## [Unreleased] — 2026-08-30 (fg)
 
 ### INTERFACE AUDIT: do `no_proper_cleared_relation`'s hypotheses survive the descent?
