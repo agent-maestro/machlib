@@ -287,6 +287,55 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fi)
+
+### Route A's terminus is `no_rational_logarithm`, and the audit transfers to it by luck
+
+Following `(fh)`'s separation of the two routes, route A was worked through on paper to find where it
+actually lands.
+
+#### The shape of route A
+
+The proportionality equations carry `log S` **only** through `fbasisSubMul = s·(1/S − log S)`, and the
+top coefficient `d = cₙ′ + s·n·cₙ` is **free** of it — because `gyd` ends in a zero, which
+`gyd_eq_append_zero` already proves. So each equation reads
+
+```
+A(x) + B(x)·log (S x) ≡ 0        with A, B rational
+```
+
+If `B ≢ 0` then `log ∘ S` **is** a rational germ. Everything after that — log terms cancel, hence the
+formal `y`-derivative vanishes, hence `cₙ ≡ 0` against properness — is bookkeeping.
+
+**So route A needs exactly one transcendence input:** *`log ∘ S` is not a rational germ, for `S` a
+non-constant rational germ.*
+
+#### What the corpus has
+
+| | |
+| --- | --- |
+| `log_not_ratGerm : ¬ RatGerm log` | the `S = id` case, **proved** (`EMLLogNotRational`) |
+| `no_rational_logarithm_scaled` | the general case at the **polynomial-identity** level (`PolyLogDeriv`) |
+| `¬ RatGerm (log ∘ S)` for non-constant rational `S` | **absent** — checked by statement |
+
+#### The audit transfers, and that was luck
+
+`no_rational_logarithm_scaled` carries `hq`, `hchar`, `hPd`, `hkd` — **the same four hypotheses**
+audited in `(fg)` against `no_proper_cleared_relation`. So the audit's findings (one free, one reduced
+to `q′ ≠ 0`, both degree facts rather than restrictions) apply to *both* termini.
+
+That is worth naming as luck rather than design: `(fg)` audited the theorem believed to be the
+destination, and `(fh)` then showed the destination was a different theorem. The audit survived only
+because the two share their arithmetic hypotheses. A less fortunate pairing would have made `(fg)` a
+day spent auditing an interface nothing reaches.
+
+#### Status of this route
+
+**Paper argument, not verified.** The log-separation step is reasoning about what the coefficients
+must satisfy, and this week has repeatedly shown paper routes overshooting what the corpus supports —
+the `exp ∘ S` base case, the properness question, the "small" `pderiv` lemma. It is a hypothesis about
+the route, recorded so the next session can attack or refute it, not a result.
+
 ## [Unreleased] — 2026-08-30 (fh)
 
 ### TWO ROUTES WERE BEING DESCRIBED AS ONE — and the built theorem is on the other one
