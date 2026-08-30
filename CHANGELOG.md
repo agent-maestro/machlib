@@ -287,6 +287,54 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fk)
+
+### DUPLICATION AUDIT: most of `GermDerivFbasis` re-derives generic machinery that already existed
+
+Scoping route A's next step turned up `MachLib/GermDerivEntry.lean` and the tail of
+`MachLib/GermDeriv.lean`. Both were already there, both are **generic in `u` and `v`**, and between
+them they contain most of what `GermDerivFbasis` was built to do.
+
+| what I built | what already existed | verdict |
+| --- | --- | --- |
+| `fbasis_relation_differentiates` (bricks 1–2) | **`gEvRel_gdrel`** — *"the differentiated relation is a relation"*, generic, with `gdrel v cs es = gadd es (gscale v (gyd cs))` **by definition** | duplicate |
+| `fbasis_relation_differentiates_packaged` | `gdrel` **is** that packaging, definitionally | duplicate |
+| `gyd_eq_append_zero` (brick 4) | **`gyd_getElem_top`** (`GermDerivEntry:151`) | duplicate |
+| `fbasis_minimal_descent` (brick 5) | **`minimal_grel_identity`** (`GermDerivEntry:233`) — generic, and *stronger*: it yields the explicit top-two-coefficient identity, not merely proportionality | duplicate, and weaker |
+| `fbasis_relation_substituted` (brick 3) | — | **genuinely new**; `Fbasis`-specific |
+| `subMul_summand_top_vanishes` (§6 hinge) | corollary of `gyd`'s trailing zero | new *statement*, existing content |
+
+#### How
+
+`gEvRel_gdrel` is at **line 225 of a 247-line file**. I read that file and quoted from it four times
+— `gbipev_hasDerivAt` (72), `gbipev_gadd` (135), `gbipev_gscale` (150), `gbipev_gyd` (161),
+`gyd_length` (197) — and stopped **28 lines short** of the theorem that does the whole job.
+
+The search that found those was for the *primitive* I had decided I needed (differentiate a germ
+evaluation), not for the *statement* I actually wanted (a differentiated relation is a relation).
+Having found a usable primitive, I built upward from it and never asked whether the summit was
+already occupied. This is the week's recurring failure with the roles reversed: not *"does X exist?"*
+answered wrongly, but *"is there something above X?"* never asked at all.
+
+#### The consequence is good news for route A
+
+`minimal_grel_identity` **is** route A's step after the hinge, already proved, generically:
+
+```
+EvZeroF (fun x => cd x * (ed1 x + v x * ((m+1) · cd x)) − ed x * cd1 x)
+```
+
+Instantiated at `u = Fbasis ∘ S`, `v = (exp S + 1/S)·S′`, that is the top-two-coefficient identity
+route A needs — and it arrives without the descent bricks at all. The `S > 0` branch had already
+walked this path for `exp`; the path was generic and I re-walked it for `Fbasis` without noticing.
+
+#### What should happen to `GermDerivFbasis`
+
+Re-derive it **on top of** `gdrel` / `minimal_grel_identity` rather than in parallel. Brick 3's
+substitution and the §6 hinge survive as the genuinely `Fbasis`-specific content; the rest becomes
+instantiation. Not done here — recording the audit before acting on it, because a rewrite driven by
+an unverified duplication claim would be worse than the duplication.
+
 ## [Unreleased] — 2026-08-30 (fj)
 
 ### Route A's hinge is now a theorem, not a paper claim
