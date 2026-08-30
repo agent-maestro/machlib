@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 072 `.lean` files** (756 top-level + 316 in subdirectories) /
-**239 253 lines** / **7 475 theorems**, re-exported through the aggregator
+**239 301 lines** / **7 476 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 475
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 224
+  | paste -sd+ | bc                                    # 7 476
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 225
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -264,8 +264,11 @@ its footprint tally for exactly this reason.
 
 ## Status
 
-Lean `v4.32.2`, branch `poly-euclid-spine`. All seven gates green at **true exit codes** — note
-`gate | tail` reads `tail`'s status, not the gate's. The aggregator prints its own coverage on every
+Lean `v4.32.2`, branch `poly-euclid-spine`. Run everything with **`foundations/tools/check_all.sh`**
+(11 gates + harnesses, `rc = 0` iff all green; `--selftest` proves it conducts a failure to its own
+exit code). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
+*last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
+disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
 run (**766 of 1 072 modules reachable, 12 documented unreachable** as of 2026-08-29); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and

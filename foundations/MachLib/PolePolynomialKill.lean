@@ -42,10 +42,15 @@ opposite end: decay at a finite pole rather than growth along a tail.
 
 ## Status
 
-§§1–5 are complete: the endpoint kill (`poly_zero_of_exp_decay`), the coefficient bounds, and the
-germ-side wiring (`bipev_zero_near_pole_kills_head`). What remains outside this module is supplying
-the pole lower bound `S (r + exp (−T)) ≤ −(c · exp T)` from the rational structure of `S`, which is
-`PevRoots`/`deflate` work at the *other* end of the germ.
+§§1–6 are complete: the endpoint kill (`poly_zero_of_exp_decay`), the coefficient bounds, the
+germ-side wiring (`bipev_zero_near_pole_kills_head`), and the quantitative sign-stable neighbourhood
+(`neg_floor_nbhd_of_continuousAt`).
+
+What remains is **assembly**, not new ingredients: the pole lower bound
+`S (r + exp (−T)) ≤ −(c · exp T)` follows from `pev_deflate` at a root of `pev Q` — which turns
+`pev Q (r + exp (−T))` into `exp (−T) · pev (deflate r Q) (r + exp (−T))` — together with
+`div_mul_div_eq` (`EMLRationalGerm`, reachable) to move the `exp T` out, and §6 to hold the quotient
+below a negative floor near `r`. Every one of those is present.
 
 ## The evaluation point
 
@@ -470,5 +475,48 @@ theorem bipev_zero_near_pole_kills_head (N₀ : List Real) (N' : List (List Real
   have l : exp (-(c * exp T)) * M + 0 = exp (-(c * exp T)) * M := by mach_ring
   rw [l] at v
   exact v
+
+/-! ## §6 — a *quantitative* sign-stable neighbourhood
+
+`neg_nbhd_of_continuousAt` (`IntermediateValue`) gives `f y < 0` near a point where `f r < 0`. The
+pole bound needs more: a **floor**, `f y ≤ −p` with `p > 0`, because a bound that only says
+"negative" cannot be multiplied up by `exp T` to give anything.
+
+Checked absent by statement, not by name — the existing lemma's conclusion is `0 < f y` / `f y < 0`,
+with no witness for how far from zero. This is the same `ε := |f r| / 2` argument as §1, which is why
+it is three lines of set-up and one triangle step. -/
+
+/-- **Continuity gives a neighbourhood on which `f` is bounded away from zero, below.** -/
+theorem neg_floor_nbhd_of_continuousAt {f : Real → Real} {r : Real}
+    (hc : ContinuousAt f r) (hneg : f r < 0) :
+    ∃ δ p : Real, 0 < δ ∧ 0 < p ∧ ∀ y : Real, abs (y - r) < δ → f y ≤ -p := by
+  have hposr : (0 : Real) < -f r := by
+    have v := add_lt_add_left hneg (-f r)
+    have l : -f r + f r = (0 : Real) := by mach_ring
+    have rr : -f r + 0 = -f r := by mach_ring
+    rw [l, rr] at v; exact v
+  have hε : (0 : Real) < (-f r) / (1 + 1) := div_pos_of_pos_pos hposr two_pos
+  obtain ⟨δ, hδ, hy⟩ := hc _ hε
+  refine ⟨δ, (-f r) / (1 + 1), hδ, hε, fun y hyr => ?_⟩
+  have hd := hy y hyr
+  -- `f y − f r ≤ |f y − f r| < ε`
+  have hlt : f y - f r < (-f r) / (1 + 1) := lt_of_le_of_lt (le_abs_self _) hd
+  -- `f r + ε = −ε`, because `(1+1)·ε = −f r`
+  have hp2 : (1 + 1) * ((-f r) / (1 + 1)) = -f r := mul_div_cancel_left (ne_of_gt two_pos)
+  have hsum : (-f r) / (1 + 1) + (-f r) / (1 + 1) = -f r := by
+    rw [show (-f r) / (1 + 1) + (-f r) / (1 + 1) = (1 + 1) * ((-f r) / (1 + 1)) from by mach_ring]
+    exact hp2
+  -- with the half abstracted, the identity is a ring fact about one atom
+  have key : ∀ q : Real, q + q = -f r → f r + q = -q := by
+    intro q hq
+    have e : f r = -(q + q) := by rw [hq]; mach_mpoly [f r]
+    rw [e]
+    mach_mpoly [q]
+  -- assemble: `f y < f r + ε = −ε`
+  have hstep := add_lt_add_left hlt (f r)
+  have l : f r + (f y - f r) = f y := by mach_mpoly [f r, f y]
+  rw [l] at hstep
+  rw [key _ hsum] at hstep
+  exact le_of_lt hstep
 
 end MachLib

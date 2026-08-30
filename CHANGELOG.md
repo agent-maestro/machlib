@@ -287,6 +287,47 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (ff)
+
+### `tools/check_all.sh` — the first all-gates runner, and the composite-exit-code defect it fixes
+
+There was no single runner. Every session assembled one inline as `{ gate1; gate2; … }`, and such a
+block exits with the status of its **last** command. So a run in which the claim audit *failed*
+reported `exit 0`; the failure was visible only because the audit's verdict line happened to be
+printed and read by a human eye.
+
+That is the `gate | tail` disease with a wider blast radius: **a composite's exit code is not its
+gates'.** It had been latent in every gate invocation of this arc.
+
+#### What the runner does, each rule a defect already paid for
+
+* every gate's `rc` is captured **immediately**, before any pipe or `echo` can overwrite `$?`;
+* nothing is piped in a way that discards a status — output goes to a file, then is read;
+* **`UNAVAILABLE` (rc 2) is distinguished from `FAIL`**, with its own exit code — "could not run" is
+  not "passed";
+* the summary names every non-passing gate with its last twelve lines, so a scrolled-off failure
+  cannot hide.
+
+Current state: **11 gates, all green, `rc = 0`** — build, aggregator, consistency, axiom-ledger,
+obligations, discovered, claims, witness, hypothesis, absence, sorry.
+
+#### The self-test tests the mechanism that was broken, not the one that worked
+
+A first `--selftest` injected a failing gate, confirmed it **registered in the accumulator**, and
+exited `0`. That tests *detection*, which was never broken. The bug was the failure **reaching the
+exit code**. The self-test now falls through to the real summary and exit path and returns `1` — the
+same code path a real failure takes. A canary that does not traverse the mechanism under suspicion is
+theatre.
+
+#### And it shipped with its own comment already overstating it
+
+The verdict-surfacing line was `tail -n 3 | grep`, which silently dropped the obligations verdict
+because that gate prints two count lines *after* its `OK`. Cosmetic — `SUMMARY` decides from the
+captured `rc`, never from the text — but the comment said "surface the gate's own verdict line" and
+it did not always. Fixed before committing. **A comment that overstates what a gate does is how a
+gate's scope drifts from its description**, which is the same disease as the substring deny-list and
+the too-narrow absence grep, in shell.
+
 ## [Unreleased] — 2026-08-30 (fe)
 
 ### §5 lands on the second attempt — the germ-side wiring, and what made the difference
@@ -330,11 +371,28 @@ no growth in `y` to fight at all. `Fbasis` **is** `exp` where its argument is no
 `log` half never appears. Fifth independent occasion in this arc where the totalised operator turned
 the expected pathological case into the trivial one.
 
-#### What is left on this arc
+#### §6 — the one ingredient that really was absent
 
-Supplying `S (r + exp (−T)) ≤ −(c · exp T)` from the rational structure of `S` — `pev_deflate` and
-`deflate_length` again, at the *other* end of the germ. Everything downstream of that bound is now a
-theorem.
+`neg_floor_nbhd_of_continuousAt` (32 axioms). `neg_nbhd_of_continuousAt` (`IntermediateValue`) gives
+`f y < 0` near a point where `f r < 0`; the pole bound needs a **floor**, `f y ≤ −p` with `p > 0`,
+because a bound that only says *negative* cannot be multiplied up by `exp T` to give anything.
+
+**Checked absent by statement, not by name** — the existing lemma's conclusion is `0 < f y` / `f y < 0`
+with no witness for the distance from zero. After four false absences the previous day, that check was
+run before writing rather than after failing.
+
+A rewrite-loop detail worth keeping: `f r + (−f r)/(1+1) = −((−f r)/(1+1))` cannot be closed by
+rewriting `f r`, because `f r` occurs **inside** the half being rewritten. `conv_lhs` does not exist
+here. Abstracting the half — `∀ q, q + q = −f r → f r + q = −q` — makes it a ring fact about one
+atom, and the instantiation happens outside the rewrite.
+
+#### What is left on this arc: assembly, not ingredients
+
+The pole lower bound `S (r + exp (−T)) ≤ −(c · exp T)` now follows from pieces that all exist:
+`pev_deflate` at a root of `pev Q` turns `pev Q (r + exp (−T))` into
+`exp (−T) · pev (deflate r Q) (r + exp (−T))`; `div_mul_div_eq` (`EMLRationalGerm`, reachable) moves
+the `exp T` out; §6 holds the quotient below a negative floor near `r`. Everything downstream of that
+bound is now a theorem.
 
 ## [Unreleased] — 2026-08-29 (fd)
 
