@@ -287,6 +287,136 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-29 (fc)
+
+### Brick 2: the differentiated relation, packaged for the descent
+
+`fbasisChainMul`, `fbasis_relation_differentiates_packaged`, `gEvRel_fbasis_deriv`,
+`gadd_gscale_gyd_length` — all in `GermDerivFbasis`, all assembly from lemmas that already existed.
+
+#### Why packaging is a step at all
+
+`gcancel_top` (`GermRelation`) descends **two relations in one `u`**. `(fb)` left the differentiated
+form as a *sum of two shapes* — `gbipev es …` plus a multiplier times `gydiff cs …` — which
+`gcancel_top` cannot take. `gbipev_gyd`, `gbipev_gscale` and `gbipev_gadd` fold it into the single
+list `gadd es (gscale (fbasisChainMul S s) (gyd cs))`, and the proof needs no new arithmetic at all:
+three rewrites and the `(fb)` theorem.
+
+`gEvRel_fbasis_deriv` then puts it in `GEvRel` form. The threshold moves from `X` to **`X + 1`**,
+because `GEvRel` wants a *closed* ray and the derivative only exists on the open one; `X + 1` sits in
+the interior of `[X, ∞)` and inherits `1 ≤ ·`. `gadd_gscale_gyd_length` supplies `gcancel_top`'s
+standing length side condition from `gyd_length`, `gscale_length` and `gadd_length_of_le`.
+
+#### No specimen here, and the reason is not laziness
+
+`gEvRel_fbasis_deriv`'s hypothesis `hrel` is satisfiable **only degenerately**: any true relation of
+that form is the zero polynomial, which is exactly what the arc is trying to establish. This is a step
+*inside a refutation* — its premise is the thing being refuted — so a specimen would validate the
+mechanism while looking like evidence for the premise.
+
+That distinction is now written into the module, next to the two theorems that *do* carry firing
+specimens (`zeroList_specimen`, `cutFreeBounds_specimen`) precisely because their premises are
+genuinely satisfiable. "Every theorem needs a specimen" is the wrong rule; "every theorem whose
+premise could be vacuous needs one" is the right one.
+
+#### The destination changed, and for the better
+
+Working the algebra through: substituting `E = y − log S` into the differentiated relation gives
+coefficients in `ℝ(x)[log S]` with top-degree coefficient `cₙ′ + n·S′·cₙ`. Descending `n` times
+eliminates `y` and leaves a polynomial relation for **`log S`** over `ℝ(x)` — which is the shape
+`no_proper_cleared_relation` (`GermClearedDescent`) already refutes.
+
+So the arc plausibly lands on the `S > 0` branch's existing investment rather than needing a new
+`exp ∘ S` transcendence result, which is what `(fb)` predicted it would need. Better destination,
+and it reuses work already paid for.
+
+#### Brick 3, same commit: the substitution — and the coefficient ring finally matches
+
+The packaging above still leaves the chain-rule multiplier containing `exp ∘ S`, so the
+differentiated relation's coefficients are **not** in the same ring as the original's. Descending two
+relations over different rings means nothing, so this had to be fixed before anything else.
+
+`Fbasis` is *definitionally* `exp + log`, so `exp (S x) = u x - log (S x)` needs no lemma, and
+
+```
+(exp (S x) + 1/S x)·s x  =  s x · u x  +  s x · (1/S x - log (S x))
+```
+
+splits the multiplier into a part **linear in `u`** — which raises the `y`-degree by one, and is
+exactly the `0 ::` prepend, via `gbipev_zeroCons` — and a part **free of `u`**.
+
+`fbasis_relation_substituted` (38 axioms, still nothing from the analytic or zero-counting lane) is
+the result: **every coefficient of the differentiated relation is free of `u`.** Both relations now
+live over `ℝ(x)` extended by `log ∘ S`, which is the ring `no_proper_cleared_relation` speaks in.
+
+#### A correction to this entry's own algebra
+
+The top coefficient `cₙ′ + n·S′·cₙ` quoted above is a fact about the **substituted** form, not about
+brick 2's packaging. In brick 2's form the multiplier is an opaque coefficient function, the `gyd`
+part has `y`-degree `n − 1`, and the top coefficient is just `cₙ′`. Both presentations are correct;
+they are not the same list, and only the substituted one supports the descent. Worth stating because
+the two differ by exactly the term that makes the argument work.
+
+#### Brick 4, same commit: the descent is now SET UP
+
+`gcancel_top` wants two relations in one `u`, **of equal length**. The substituted list is one longer
+than the original — that is the `0 ::` raising the `y`-degree — but its top slot is identically zero,
+so the extra degree is spurious.
+
+```
+gadd_append_right    gadd a (b ++ [t]) = gadd a b ++ [t]        for a.length ≤ b.length
+gscale_append        gscale a (l ++ [t]) = gscale a l ++ [a·t]
+gyd_eq_append_zero   gyd (c :: cs) = ys ++ [z]  with  z ≡ 0     — 5 axioms, pure list induction
+fbasisDeriv_descends → a SECOND relation, same length, same coefficient ring
+```
+
+`gyd cs` ending in a zero is the formal statement that the `y`-derivative's degree genuinely drops.
+It is stated with `∀ x, z x = 0` rather than syntactic equality, because `gadd` builds
+`fun x => c x + d x` — the last entry has the *shape* `0 + 0`, not the literal zero function.
+
+**Why not pad the original instead.** Appending a zero coefficient to `cs` would equalise the lengths
+just as well, and it is the obvious move. It is also useless: `gcancel_top` against a *zero* top
+coefficient reproduces the original relation scaled, so nothing descends. The trailing zero has to
+come off the differentiated side, which is the harder direction and the reason for the list surgery.
+
+**Ordering is load-bearing, again.** `gadd_append_right` appends on its *second* argument, so
+`fbasisDerivList` puts the one-longer summand there and peels the zero in one application. `(fc)`'s
+ordering is value-equal but would need a mirrored lemma plus associativity, so `fbasisDerivList`
+re-derives from `fbasis_relation_differentiates` rather than from `fbasis_relation_substituted`.
+
+#### Brick 5, same commit: the descent EXECUTED — and the question above did not need answering
+
+I wrote that properness of the descended relation was "the first step in this arc that is not
+mechanical". **Wrong, and the corpus already had the answer.** Routing through *minimality* sidesteps
+properness entirely: `all_gcoeffs_evZero_of_shorter'` (`GermRelation`) turns "shorter than the minimal
+proper relation" into "every coefficient is eventually zero" while asking nothing whatsoever about top
+coefficients.
+
+`fbasis_minimal_descent` therefore yields, from a minimal proper relation for `u = F ∘ S`, the system
+
+```
+∀ i,   m · (L₀)ᵢ  −  d · (ms₀)ᵢ  ≡  0    eventually
+```
+
+with `m` the minimal relation's top coefficient and `d` the differentiated one's — concrete equations
+over `ℝ(x)` extended by `log ∘ S`. Two small lemmas were missing and are proved here:
+`gscaleSub_length_le`, and a non-empty-list form of brick 4's descent.
+
+**The general lesson, since this is twice in one arc.** Both times I named the next obstacle by asking
+*"what would I have to prove?"* rather than *"what does this corpus already prove?"* — first the
+`exp ∘ S` base case that turned out to be the wrong target, now properness that turned out not to be
+needed. Predicting the obstacle from the shape of the argument reliably overshoots what the existing
+machinery demands.
+
+**Next:** extracting a contradiction from that system, which is where the arc meets
+`no_proper_cleared_relation`'s territory.
+
+#### A seventh copy
+
+Brick 5 needed `a < a + 1` again while compiling in isolation — the **seventh** private copy, two of
+them added by this session. The cleanup this entry keeps deferring is now bigger than when it was
+first noticed, which is the usual way.
+
 ## [Unreleased] — 2026-08-29 (fb)
 
 ### `BoundedGermTranscendence`: the differentiation brick, and why growth is provably unavailable

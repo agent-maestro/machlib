@@ -9728,6 +9728,26 @@
       ]
     },
     {
+      "id": "gyd-append-zero-five-axioms-changelog",
+      "_comment": "The list-induction core of the descent setup. The claim is that it is PURE list induction -- 5 axioms -- so the forbid list is everything analytic plus the derivative machinery: if this ever picks up HasDerivAt it is no longer the combinatorial lemma the prose says it is.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "5 axioms, pure list induction",
+        "the `y`-derivative's degree genuinely drops"
+      ],
+      "module": "MachLib.GermDerivFbasis",
+      "theorem": "MachLib.gyd_eq_append_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle",
+        "HasDerivAt",
+        "MachLib.Real.exp",
+        "MachLib.Real.log"
+      ]
+    },
+    {
       "id": "fbasis-relation-differentiates-changelog",
       "_comment": "The differentiation brick for BoundedGermTranscendence. The claim is that it costs nothing from the analytic or zero-counting lane -- the route is differential, not growth-based -- so that lane is the forbid list. HasDerivAt is NOT forbidden: this theorem is entirely about derivatives and forbidding it would fail a true claim.",
       "source_file": "CHANGELOG.md",
