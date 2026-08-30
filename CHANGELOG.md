@@ -287,6 +287,61 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fg)
+
+### INTERFACE AUDIT: do `no_proper_cleared_relation`'s hypotheses survive the descent?
+
+An outside reader's call on the log junction was *"mathematically motivated, not
+repository-motivated — but make the next task an interface audit, not another large proof,"* with the
+specific worry: **do the irreducibility / coprimality / pole hypotheses transport from the
+bounded-germ setup, or is the theorem too specialised to invoke?**
+
+Audited, hypothesis by hypothesis. **The worry is largely unfounded**, and the reason it looked
+worse than it is matters.
+
+| hypothesis | transport status |
+| --- | --- |
+| `hkd : ∀ r, ¬ Pdvd q (pnsum (r+1) [1])` | **FREE.** `not_Pdvd_pnsum_one'` (`BipevComposition`) proves it from `PIrred q` **alone** — fully general, no side conditions. |
+| `hchar : ∀ r, DerivCoprime q (r+1)` | **Reduces to one small lemma.** `derivCoprime_of_ne_zero` (`PolyDerivShort`) is general and cuts it to `pnorm (pnsum (k+1) (pderiv q)) ≠ []`, i.e. *`q′ ≠ 0`*. |
+| `hpos` (positivity on a tail) | **Already a hypothesis of the descent** — `Fbasis_hasDeriv` needs `0 < S x`, so `GermDerivFbasis` carries it and the junction wants the same thing. |
+| `hPn`, `hQn`, `hQne`, `hQz` | routine normalisation plus "`Q` not eventually zero". |
+| `hq`, `hPd`, `hQd` | need `P/Q` in **lowest terms** and an irreducible factor of `Q`. Real, but a representation question, not a specialisation of the theorem. |
+| `hcl : ClearsToExp` | **the genuine open one.** See below. |
+
+#### Why `pnsum` made these look frightening
+
+`pnsum r Z` is `Z` added to itself `r` times, i.e. **`r · Z`**. So `DerivCoprime q (r+1)` reads
+*"`q` does not divide `(r+1)·q′`"* and `hkd` reads *"`q` does not divide the constant `r+1`"*. Both
+are **degree** statements, and both are consequences of `PIrred q` rather than restrictions on it —
+which is invisible until `pnsum` is unfolded, because the names suggest a coprimality condition on a
+derivative tower.
+
+That also explains why they *appeared* specimen-specific. `GermClearedSpecimen` discharges the whole
+conjunction at `q = x` because **the conjunction** needed a witness after the vacuity repair — not
+because each conjunct is hard. Reading "only discharged at `q = x`" as "each hypothesis is
+restrictive" was my error in Brief #4's §4, and it inflated the estimate.
+
+#### The one absent lemma
+
+`pnorm (pderiv q) ≠ []` for `PIrred q` — the derivative of a non-constant polynomial is non-zero, a
+characteristic-zero fact. **Checked absent by statement**, not by name: no theorem in `MachLib/` has
+`pnorm (pderiv _)` in its conclusion, and `PolyDerivShort` proves only the *length* bound
+(`pnorm_pderiv_length_lt`), never non-vanishing. Small, general, and it belongs in `PolyDerivShort`
+beside the reduction that consumes it.
+
+#### The genuine residues, in the reviewer's own three-part frame
+
+* **Representation** — `P/Q` in lowest terms with an irreducible factor of `Q` in hand. Not hard, not
+  present.
+* **Nontriviality** — the descent must not have produced the zero relation. Untouched.
+* **Hypothesis transport** — **largely solved**: one hypothesis free, one reduced to the absent lemma
+  above, one already carried by the descent. What remains is `ClearsToExp` membership: the descended
+  coefficients are rational in `x`, and clearing by their common denominator should land them in the
+  `expCoeffs` image with trivial `exp`-degree. *Plausible and unverified* — it is now the top item.
+
+**Net:** the junction is closer than Brief #4 estimated, and the estimate was inflated by reading a
+witness-for-a-conjunction as evidence that each conjunct was restrictive.
+
 ## [Unreleased] — 2026-08-30 (ff)
 
 ### `tools/check_all.sh` — the first all-gates runner, and the composite-exit-code defect it fixes
