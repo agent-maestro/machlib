@@ -25,6 +25,15 @@ cd "$HERE" || exit 2
 OUT="$(mktemp -d)"
 trap 'rm -rf "$OUT"' EXIT
 
+# TREE FREEZE. Several gates bind their verdict to the tree they read; editing while they run
+# makes the verdict describe a tree that no longer exists. That happened three times on
+# 2026-08-30 and each time the discipline was re-stated rather than enforced, so it is enforced
+# here: the fingerprint is taken before and after, and a change is reported as loudly as a
+# failure. This does not stop the edit — nothing can — but it stops the RUN being mistaken for a
+# verdict on the tree you now have.
+tree_fingerprint() { git status --porcelain 2>/dev/null | sha1sum | cut -c1-12; }
+FP_START="$(tree_fingerprint)"
+
 FAILED=()
 UNAVAIL=()
 PASSED=()
@@ -77,8 +86,16 @@ else
   run "sorry"        lake env lean tools/sorry_audit.lean
 fi
 
+FP_END="$(tree_fingerprint)"
+
 echo
 echo "=== SUMMARY ==="
+if [ "$FP_START" != "$FP_END" ]; then
+  echo "TREE CHANGED DURING THE RUN  ($FP_START -> $FP_END)"
+  echo "   Every verdict below describes the tree as it was at the START. Re-run on a quiescent"
+  echo "   tree before treating any of it as a result."
+  FAILED+=("tree-freeze (worktree edited mid-run)")
+fi
 echo "passed:      ${#PASSED[@]}  (${PASSED[*]:-none})"
 if [ ${#UNAVAIL[@]} -gt 0 ]; then
   echo "UNAVAILABLE: ${#UNAVAIL[@]}"

@@ -287,6 +287,53 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fn)
+
+### `OneQueryLevelSet`'s remainder is NOT assembly — the P-root endpoints stall the induction
+
+The status report said the bounded-component obstruction was closed and *"the remainder is assembly
+from pieces that all exist."* Working it, that is **wrong**, and the obstruction that remains is
+sharper than "assembly".
+
+#### Q-roots and P-roots behave completely differently
+
+A cut-free interval's endpoints are roots of `pev P` or of `pev Q`, and the endpoint argument
+depends on *which*:
+
+| endpoint | behaviour of `y = Fbasis (S x)` | induction |
+| --- | --- | --- |
+| **Q-root** (pole, `S → ±∞`) | negative branch: `exp (S) → 0`; positive branch: `Fbasis (S) ~ exp (S) → ∞`. **Super-polynomial** either way | **runs** — this is `poly_zero_of_exp_decay` |
+| **P-root** (`S → 0⁺`) | `exp (S) → 1`, `log (S) → −∞` **logarithmically**, since `S ~ k·(x − r)` | **stalls after one peel** |
+
+At a P-root the bound is `|N_top| ≤ C/|log (x − r)| → 0`, which gives `N_top (r) = 0` — one root.
+Deflating once turns the bound into `C / (|x − r| · |log (x − r)|) → ∞`, and the induction dies.
+**Logarithmic divergence kills a simple root; it cannot kill a polynomial.**
+
+Confirmed independently: routing the same configuration through
+`ContinuityDivergenceBarrier` with `log_unboundedBelowNearRight` yields the same single root, so the
+stall is a property of the configuration and not of the argument I happened to choose.
+
+#### The residue, exactly
+
+A component with **at least one Q-root endpoint** is fine — the super-polynomial argument runs there
+and kills every coefficient. So what remains is:
+
+> **bounded components of `{S > 0}` both of whose endpoints are zeros of `S`.**
+
+These exist: `S = (x − r₁)(r₂ − x)/Q` with `Q > 0` on the interval. Not a corner case to be argued
+away.
+
+#### On the retracted claim
+
+"The remainder is assembly from pieces that all exist" was stated in a status report and repeated to
+an outside reader. It was produced the same way as this week's other overshoots — from the shape of
+the argument (*"cut, pick a branch, bound each piece"*) rather than from asking what each endpoint
+actually supplies. The endpoint lemma covers poles. Zeros of `S` are also cuts, and nothing covered
+them.
+
+The correction is a strict improvement in the record: the obstruction moves from an unexamined
+"assembly" to a named geometric configuration, which is the form a next attempt can actually attack.
+
 ## [Unreleased] — 2026-08-30 (fm)
 
 ### The absent transcendence input: why the `S = id` proof does NOT generalise, and what does
