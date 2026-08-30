@@ -326,8 +326,24 @@ restrictive" was my error in Brief #4's §4, and it inflated the estimate.
 `pnorm (pderiv q) ≠ []` for `PIrred q` — the derivative of a non-constant polynomial is non-zero, a
 characteristic-zero fact. **Checked absent by statement**, not by name: no theorem in `MachLib/` has
 `pnorm (pderiv _)` in its conclusion, and `PolyDerivShort` proves only the *length* bound
-(`pnorm_pderiv_length_lt`), never non-vanishing. Small, general, and it belongs in `PolyDerivShort`
-beside the reduction that consumes it.
+(`pnorm_pderiv_length_lt`), never non-vanishing.
+
+**CORRECTION, same day: this is not "small", and calling it that was the week's overshoot pattern
+again.** `PolyDerivShort`'s own header says it deliberately avoided needing `pderiv`'s **leading
+coefficient** — and non-vanishing is exactly what needs it. The available route is a three-module
+composition:
+
+```
+pnorm (pderiv q) = []  →  q′ ≡ 0 as a function        (pev_pnorm)
+                       →  q constant                   (mean_value_theorem_ct / mvt_bound)
+                       →  q bounded, contradicting     (PevLeading: c·xᵈ ≤ |pev q x| on a tail, d ≥ 1)
+```
+
+Each step exists; the composition does not, and it crosses `PolyEvZero`, `Rolle`/`Weierstrass` and
+`PevLeading`. So `hchar` is *reduced to a named, general fact* — which is real progress and is what
+the audit claims — but it is **not** one small lemma away, and the estimate above said otherwise
+before the routes were checked. The pattern is the one this changelog keeps recording: naming the
+next obstacle from the shape of the argument rather than from what the corpus actually provides.
 
 #### The genuine residues, in the reviewer's own three-part frame
 
