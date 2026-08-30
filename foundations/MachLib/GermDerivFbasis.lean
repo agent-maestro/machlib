@@ -1,4 +1,5 @@
 import MachLib.GermDeriv
+import MachLib.GermDerivEntry
 import MachLib.EMLGermSign
 
 /-!
@@ -513,5 +514,41 @@ theorem subMul_summand_top_vanishes (S s : Real → Real)
   · rw [heq]; exact gscale_append (fbasisSubMul S s) gs z
   · intro x; show fbasisSubMul S s x * z x = 0; rw [hz x]; mach_ring
   · rw [gscale_length]; exact hlen
+
+/-! ## Route A's step after the hinge — by instantiation, not by re-derivation
+
+`minimal_grel_identity` (`GermDerivEntry`) is **generic in `u` and `v`**, and gives the identity a
+minimal germ relation forces on its top two coefficients. The `S > 0` branch built it for `exp`; it
+was never specific to `exp`.
+
+So the bounded-germ arc does not need its own descent to reach that identity — it needs the chain
+rule for `F ∘ S` (`fbasisComp_hasDerivAt`, above) and one instantiation. That is the whole content of
+this section, and it is recorded here rather than in the descent because **the descent turned out not
+to be on the path**: see the duplication audit in `CHANGELOG (fk)`.
+
+Combined with `subMul_summand_top_vanishes`, the identity's `log S` content sits entirely in `ed1`
+and `cd1`, and the top coefficient `cd` is free of it — which is the separation route A runs on.
+-/
+
+theorem fbasis_top_two_identity {S s : Real → Real} {cs es cs₀ es₀ : List (Real → Real)}
+    {cd ed cd1 ed1 : Real → Real} {m : Nat}
+    (hS : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → HasDerivAt S (s x) x)
+    (hpos : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → 0 < S x)
+    (hdd : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → GDerivAt x cs es)
+    (hmin : ∀ ns : List (Real → Real),
+        GProperRel (fun t => Fbasis (S t)) ns → cs.length ≤ ns.length)
+    (hrel : GEvRel (fun t => Fbasis (S t)) cs)
+    (hcs : cs = cs₀ ++ [cd]) (hes : es = es₀ ++ [ed])
+    (hlen0 : cs₀.length = m + 1) (hlenes : es₀.length = m + 1)
+    (hcd1 : cs₀[m]? = some cd1) (hed1 : es₀[m]? = some ed1) :
+    EvZeroF (fun x => cd x *
+        (ed1 x + ((exp (S x) + 1 / S x) * s x) * (natMul (m + 1) 1 * cd x))
+      - ed x * cd1 x) := by
+  obtain ⟨X1, h11, hS'⟩ := hS
+  obtain ⟨X2, h21, hp⟩ := hpos
+  obtain ⟨X, hX, hle1, hle2⟩ := two_bounds' h11 h21
+  exact minimal_grel_identity
+    ⟨X, hX, fun x hx => fbasisComp_hasDerivAt (hS' x (le_trans hle1 hx)) (hp x (le_trans hle2 hx))⟩
+    hdd hmin hrel hcs hes hlen0 hlenes hcd1 hed1
 
 end MachLib

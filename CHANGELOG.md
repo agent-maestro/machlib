@@ -287,6 +287,47 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fl)
+
+### Route A's next step, by instantiation — and the duplication audit verified rather than asserted
+
+`fbasis_top_two_identity` (`GermDerivFbasis`) — **39 axioms, nothing from the analytic or
+zero-counting lane**. Route A's step after the hinge, obtained by instantiating
+`minimal_grel_identity` at `u = Fbasis ∘ S`, `v = (exp ∘ S + 1/S)·S′`:
+
+```
+EvZeroF (fun x => cd x * (ed1 x + ((exp (S x) + 1/S x) · s x) * ((m+1)·cd x)) − ed x * cd1 x)
+```
+
+It needs **none of the descent bricks** — only the chain rule `fbasisComp_hasDerivAt` and
+`two_bounds'`.
+
+#### The duplication audit is now measured
+
+`(fk)` recorded the audit and said explicitly that it was not verified and that acting on an
+unverified duplication claim would be worse than the duplication. Both halves were then checked, in
+scratch, before anything was written to the corpus:
+
+* **brick 1's content is an instance of `gEvRel_gdrel`** — six lines, using only
+  `fbasisComp_hasDerivAt` and `two_bounds'`. So the chain rule for `F ∘ S` is the *only* genuinely
+  new input in bricks 1–2.
+* **`minimal_grel_identity` instantiates at `u = Fbasis ∘ S`** — the theorem now committed.
+
+So the audit's claim is no longer a reading of two files; it is two typechecked instantiations.
+
+#### Where route A stands
+
+| step | state |
+| --- | --- |
+| the `log`-carrying summand vanishes at the top degree | **theorem** (`subMul_summand_top_vanishes`) |
+| the top-two-coefficient identity | **theorem** (`fbasis_top_two_identity`), by instantiation |
+| separate `A + B·log(S x) ≡ 0`, conclude `cd ≡ 0` against properness | argument |
+| `¬ RatGerm (log ∘ S)` for non-constant rational `S` | **absent** |
+
+Two of four are theorems, and the two that are not are precisely identified. The descent bricks are
+**not** on this path; `(fk)` records what should happen to them, and that rewrite is still not done —
+deliberately, since it is cleanup and the path forward is not blocked on it.
+
 ## [Unreleased] — 2026-08-30 (fk)
 
 ### DUPLICATION AUDIT: most of `GermDerivFbasis` re-derives generic machinery that already existed
