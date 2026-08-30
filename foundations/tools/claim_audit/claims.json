@@ -9728,6 +9728,23 @@
       ]
     },
     {
+      "id": "bipev-kills-head-changelog",
+      "_comment": "The germ-side wiring. Claim is that it closes the germ side WITHOUT the analytic/zero-counting lane; that lane is the forbid list. HasDerivAt stays allowed -- pev continuity and the boundedness argument both go through it.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a one-query germ vanishing along a pole approach kills its head coefficient",
+        "Everything downstream of that bound is now a theorem"
+      ],
+      "module": "MachLib.PolePolynomialKill",
+      "theorem": "MachLib.bipev_zero_near_pole_kills_head",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle"
+      ]
+    },
+    {
       "id": "poly-zero-of-exp-decay-changelog",
       "_comment": "The endpoint lemma. The claim is that it closes the bounded-component hole WITHOUT the analytic/zero-counting lane -- decay at a pole, not zero counting -- so that lane is the forbid list. HasDerivAt is NOT forbidden: continuity of pev comes through it.",
       "source_file": "CHANGELOG.md",

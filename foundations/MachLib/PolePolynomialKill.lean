@@ -1,6 +1,7 @@
 import MachLib.PevRoots
 import MachLib.PevSignOnCutFree
 import MachLib.EMLDepth2InvX
+import MachLib.EMLFTranscendence
 
 /-!
 # A polynomial cannot survive exponential decay at a pole
@@ -38,6 +39,13 @@ The `−∞` end, which looks worse, hands over super-polynomial decay for free.
 Note also that growth machinery is **unavailable** for `BoundedGermTranscendence` — `F ∘ S` is
 polynomially enveloped there, as a theorem — and is exactly the right tool *here*. Same machinery,
 opposite end: decay at a finite pole rather than growth along a tail.
+
+## Status
+
+§§1–5 are complete: the endpoint kill (`poly_zero_of_exp_decay`), the coefficient bounds, and the
+germ-side wiring (`bipev_zero_near_pole_kills_head`). What remains outside this module is supplying
+the pole lower bound `S (r + exp (−T)) ≤ −(c · exp T)` from the rational structure of `S`, which is
+`PevRoots`/`deflate` work at the *other* end of the germ.
 
 ## The evaluation point
 
@@ -339,29 +347,128 @@ theorem pev_abs_bounded_on_Icc (L : List Real) (a b : Real) (hab : a ≤ b) :
   · rw [abs_of_nonneg (le_of_lt hpos)]
     exact le_trans (hM₁ x hax hxb) (le_max_left M₁ M₂)
 
-/-! ## §5 — the germ side: what is left, and what it needs
+/-! ## §5 — the germ side, and the wiring
 
-`bipev (L :: Ls) x y = pev L x + y * bipev Ls x y` is **definitional**, so from a germ vanishing on a
-right-neighbourhood of the pole,
+On the negative branch `0 < exp (S x) ≤ 1`, so a bipolynomial evaluated along it is controlled by its
+coefficients alone — there is no growth in `y` to fight. That is totalisation once more: `Fbasis`
+*is* `exp` where the argument is non-positive, so the `log` half never appears and the whole germ is
+bounded by §4 applied coefficient-wise.
 
-```
-pev N₀ x  =  − exp (S x) · bipev N' x (exp (S x))
-```
+`bipev (L :: Ls) x y = pev L x + y * bipev Ls x y` is **definitional**, so splitting the head
+coefficient off needs no lemma at all. -/
 
-needs no lemma at all. Two pieces then remain, and both are now supplied:
+/-- **`|bipev N x y|` is bounded on `[a,b] × [−1,1]`.** -/
+theorem bipev_abs_bounded_on_Icc : ∀ (N : List (List Real)) (a b : Real), a ≤ b →
+    ∃ M : Real, 0 ≤ M ∧ ∀ x y : Real, a ≤ x → x ≤ b → abs y ≤ 1 → abs (bipev N x y) ≤ M := by
+  intro N
+  induction N with
+  | nil =>
+      intro a b _
+      refine ⟨0, le_refl 0, fun x y _ _ _ => ?_⟩
+      show abs (0 : Real) ≤ 0
+      rw [abs_of_nonneg (le_refl (0 : Real))]
+      exact le_refl 0
+  | cons L Ls ih =>
+      intro a b hab
+      obtain ⟨ML, hML⟩ := pev_abs_bounded_on_Icc L a b hab
+      obtain ⟨MR, hMR0, hMR⟩ := ih a b hab
+      refine ⟨max ML 0 + MR, ?_, fun x y hax hxb hy => ?_⟩
+      · have v := add_le_add_wit (le_max_right ML 0) (le_refl MR)
+        have e : (0 : Real) + MR = MR := by mach_ring
+        rw [e] at v
+        exact le_trans hMR0 v
+      · show abs (pev L x + y * bipev Ls x y) ≤ max ML 0 + MR
+        refine le_trans (abs_add _ _) ?_
+        have h1 : abs (pev L x) ≤ max ML 0 :=
+          le_trans (hML x hax hxb) (le_max_left ML 0)
+        have h2 : abs (y * bipev Ls x y) ≤ MR := by
+          rw [abs_mul]
+          have hstep : abs y * abs (bipev Ls x y) ≤ 1 * abs (bipev Ls x y) :=
+            mul_le_mul_of_nonneg_right hy (abs_nonneg _)
+          rw [one_mul_thm] at hstep
+          exact le_trans hstep (hMR x y hax hxb hy)
+        exact add_le_add_wit h1 h2
 
-* `H = bipev N' · (exp (S ·))` is **bounded** near the endpoint — on the negative branch
-  `0 < exp (S x) ≤ 1` (`exp_le_one`), so there is no growth in `y` to fight and §4 bounds each
-  coefficient polynomial. That is totalisation again: `Fbasis` *is* `exp` where the argument is
-  non-positive, so the `log` half never appears.
-* the pole bound `S (r + exp (−T)) ≤ −(c · exp T)` feeds `poly_zero_of_exp_decay` at `a = 0` — the
-  deflation peels supply their own `a`.
+/-- **The wiring: a one-query germ vanishing along a pole approach kills its head coefficient.**
 
-**Deliberately not written here yet.** A first attempt reached for four lemma names that do not
-exist and left a `sorry` in the file; both were removed rather than committed. The pattern is the one
-this module's §2 note already records — reaching for the name one would have chosen — and the honest
-response to hitting it twice in a file is to stop and come back, not to push through with placeholder
-identifiers. §§1–4 stand on their own and are what this module ships.
--/
+Everything upstream is now discharged, so this is composition: the split is definitional, `H` is
+bounded by the theorem above, the pole bound turns that into super-polynomial decay, and
+`poly_zero_of_exp_decay` finishes at `a = 0` — the deflation peels supply their own. -/
+theorem bipev_zero_near_pole_kills_head (N₀ : List Real) (N' : List (List Real))
+    (S : Real → Real) (r c : Real) (hc : 0 < c)
+    (hneg : ∀ T : Real, 1 ≤ T → S (r + exp (-T)) ≤ 0)
+    (hpole : ∀ T : Real, 1 ≤ T → S (r + exp (-T)) ≤ -(c * exp T))
+    (hzero : ∀ T : Real, 1 ≤ T →
+      bipev (N₀ :: N') (r + exp (-T)) (exp (S (r + exp (-T)))) = 0) :
+    ∀ x : Real, pev N₀ x = 0 := by
+  have hr1 : r ≤ r + 1 := by
+    have v := add_le_add_wit (le_refl r) (le_of_lt zero_lt_one_ax)
+    have e : r + 0 = r := by mach_ring
+    rw [e] at v; exact v
+  obtain ⟨M, hM0, hM⟩ := bipev_abs_bounded_on_Icc N' r (r + 1) hr1
+  have hCpos : (0 : Real) < M + 1 := by
+    have v := add_le_add_wit hM0 (le_refl (1 : Real))
+    have e : (0 : Real) + 1 = 1 := by mach_ring
+    rw [e] at v
+    exact lt_of_lt_of_le zero_lt_one_ax v
+  refine poly_zero_of_exp_decay N₀.length N₀ r 0 c (M + 1) (Nat.le_refl _) (le_refl 0) hc hCpos ?_
+  intro T hT
+  have hexpn : (0 : Real) < exp (-T) := exp_pos (-T)
+  have hyl : r ≤ r + exp (-T) := by
+    have v := add_le_add_wit (le_refl r) (le_of_lt hexpn)
+    have e : r + 0 = r := by mach_ring
+    rw [e] at v; exact v
+  have hnegT : -T ≤ 0 := by
+    have v := add_le_add_wit (le_refl (-T)) (le_trans (le_of_lt zero_lt_one_ax) hT)
+    have l : -T + 0 = -T := by mach_ring
+    have rr : -T + T = (0 : Real) := by mach_ring
+    rw [l, rr] at v; exact v
+  have hyr : r + exp (-T) ≤ r + 1 := by
+    refine add_le_add_left ?_ r
+    have h := exp_monotone hnegT
+    rw [exp_zero] at h
+    exact h
+  -- the head coefficient, definitionally
+  have hsplit : pev N₀ (r + exp (-T))
+      + exp (S (r + exp (-T))) * bipev N' (r + exp (-T)) (exp (S (r + exp (-T)))) = 0 :=
+    hzero T hT
+  have hval : pev N₀ (r + exp (-T))
+      = -(exp (S (r + exp (-T))) * bipev N' (r + exp (-T)) (exp (S (r + exp (-T))))) := by
+    have v : pev N₀ (r + exp (-T))
+        = (pev N₀ (r + exp (-T))
+            + exp (S (r + exp (-T))) * bipev N' (r + exp (-T)) (exp (S (r + exp (-T)))))
+          + -(exp (S (r + exp (-T))) * bipev N' (r + exp (-T)) (exp (S (r + exp (-T))))) := by
+      mach_mpoly [pev N₀ (r + exp (-T)),
+        exp (S (r + exp (-T))) * bipev N' (r + exp (-T)) (exp (S (r + exp (-T))))]
+    rw [hsplit] at v
+    have e : (0 : Real)
+        + -(exp (S (r + exp (-T))) * bipev N' (r + exp (-T)) (exp (S (r + exp (-T)))))
+        = -(exp (S (r + exp (-T))) * bipev N' (r + exp (-T)) (exp (S (r + exp (-T))))) := by
+      mach_ring
+    rw [e] at v; exact v
+  -- `|head| = exp (S ·) · |H|`
+  have habs : abs (pev N₀ (r + exp (-T)))
+      = exp (S (r + exp (-T))) * abs (bipev N' (r + exp (-T)) (exp (S (r + exp (-T))))) := by
+    rw [hval, abs_neg, abs_mul, abs_of_nonneg (le_of_lt (exp_pos (S (r + exp (-T)))))]
+  -- `|H| ≤ M`, since `exp (S ·) ≤ 1` on the negative branch
+  have hy1 : abs (exp (S (r + exp (-T)))) ≤ 1 := by
+    rw [abs_of_nonneg (le_of_lt (exp_pos (S (r + exp (-T)))))]
+    exact exp_le_one (hneg T hT)
+  have hHbound := hM (r + exp (-T)) (exp (S (r + exp (-T)))) hyl hyr hy1
+  -- assemble
+  rw [habs]
+  refine le_trans (mul_le_mul_of_nonneg_left hHbound
+      (le_of_lt (exp_pos (S (r + exp (-T)))))) ?_
+  refine le_trans (mul_le_mul_of_nonneg_right (exp_monotone (hpole T hT)) hM0) ?_
+  have e : (M + 1) * exp (0 * T - c * exp T) = exp (-(c * exp T)) * M
+      + exp (-(c * exp T)) := by
+    rw [show (0 : Real) * T - c * exp T = -(c * exp T) from by mach_ring]
+    mach_mpoly [M, exp (-(c * exp T))]
+  rw [e]
+  have v := add_le_add_wit (le_refl (exp (-(c * exp T)) * M))
+    (le_of_lt (exp_pos (-(c * exp T))))
+  have l : exp (-(c * exp T)) * M + 0 = exp (-(c * exp T)) * M := by mach_ring
+  rw [l] at v
+  exact v
 
 end MachLib

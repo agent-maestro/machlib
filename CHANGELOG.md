@@ -287,6 +287,55 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fe)
+
+### §5 lands on the second attempt — the germ-side wiring, and what made the difference
+
+`bipev_abs_bounded_on_Icc` (41 axioms) and `bipev_zero_near_pole_kills_head` (49), neither touching
+the analytic or zero-counting lane. `PolePolynomialKill` is now complete through §5, and
+`(fd)`'s note that §5 was "deliberately not here" is superseded — the module's own status section
+says so rather than leaving the two in contradiction.
+
+```
+bipev_zero_near_pole_kills_head :
+  a one-query germ vanishing along a pole approach kills its head coefficient
+```
+
+#### What actually changed between the attempts
+
+Nothing mathematical. The first attempt reached for four lemma names that did not exist and left a
+`sorry`; the second checked **every** name by *statement* before writing a line:
+
+| needed | found as |
+| --- | --- |
+| `0 ≤ a → b ≤ a + b` | `add_le_add_wit` + `le_max_right`, no new lemma |
+| `a ≤ b → c ≤ d → a + c ≤ b + d` | `add_le_add_wit` (`EMLDepth2InvX`, already imported) |
+| `a ≤ b → exp a ≤ exp b` | `exp_monotone` (`Exp`) |
+| `a ≤ b → 0 ≤ c → c * a ≤ c * b` | `mul_le_mul_of_nonneg_left` (`Forge`) |
+| `M < M + 1` | **not needed** — `add_le_add_wit hM0 (le_refl 1)` gives `0 + 1 ≤ M + 1` directly |
+
+That last row is the interesting one: the "missing" lemma was an artifact of how I had phrased the
+step, not of the corpus. Checking by statement dissolved it instead of adding an eighth private copy
+of `a < a + 1`.
+
+The one genuine miss was an **import**, not a lemma: `bipev` lives in `EMLFTranscendence`, which the
+module had no reason to import until §5. `unknown identifier` for a definition is a different
+diagnosis from `unknown identifier` for a lemma, and conflating the two is what produced the first
+attempt's guesswork.
+
+#### Totalisation, a fifth time
+
+`H = bipev N' · (exp (S ·))` is bounded because `0 < exp (S x) ≤ 1` on the negative branch — there is
+no growth in `y` to fight at all. `Fbasis` **is** `exp` where its argument is non-positive, so the
+`log` half never appears. Fifth independent occasion in this arc where the totalised operator turned
+the expected pathological case into the trivial one.
+
+#### What is left on this arc
+
+Supplying `S (r + exp (−T)) ≤ −(c · exp T)` from the rational structure of `S` — `pev_deflate` and
+`deflate_length` again, at the *other* end of the germ. Everything downstream of that bound is now a
+theorem.
+
 ## [Unreleased] — 2026-08-29 (fd)
 
 ### The endpoint lemma for `OneQueryLevelSet` — and four "missing" lemmas that all existed
