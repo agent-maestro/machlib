@@ -287,6 +287,87 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-29 (fd)
+
+### The endpoint lemma for `OneQueryLevelSet` — and four "missing" lemmas that all existed
+
+New module `MachLib/PolePolynomialKill.lean`. `eq_zero_of_small_nearby` (32 axioms) and
+`small_nearby_of_exp_decay` (41), neither touching the analytic or zero-counting lane.
+
+Written after an outside reader reprioritised: attack the bounded-component hole in
+`OneQueryLevelSet` *before* sinking months into differential algebra, on the grounds that it has the
+smallest clearly-isolated missing clause. That read was right, and for a sharper reason than
+expected — see below.
+
+#### The argument
+
+On a bounded pole-free component the rational argument `S` has constant sign; where it is negative
+the germ is `bipev N x (exp (S x))` by totalisation. If the germ vanishes identically there then
+`N₀(x) = −exp (S x)·H(x)` with `H` bounded near the endpoint — and the endpoints of a *bounded*
+component are **poles of `S`**. Where `S → −∞`, the right side decays faster than any power of
+`x − r`, while a non-zero polynomial vanishes to *finite* order. So `N₀ ≡ 0`, `exp (S x) ≠ 0` divides
+out, and the same runs on the next coefficient.
+
+The conclusion is stronger than "this component is fine": every coefficient dies, so the germ
+vanishes **everywhere** and the level set is co-finite. The bad case does not exist rather than being
+excluded.
+
+#### Growth: unavailable there, exactly right here
+
+`BoundedGermTranscendence` cannot use growth — `polyEnvelope_of_Fbasis_floor` proves `F ∘ S` is
+polynomially enveloped on that branch. **The same machinery is precisely what this needs.** Decay at
+a finite pole rather than growth along a tail: same tool, opposite end.
+
+And the two ends trade difficulty in the opposite direction from how they read. Where `S → +∞` the
+germ diverges and the continuity-versus-divergence barrier applies *in principle* — but that barrier
+has **no user outside its own module** and driving it needs *local* dominance, while every dominance
+tool here is tail-shaped. The `−∞` end, which looked like the ugly residue, hands over
+super-polynomial decay for free.
+
+#### FOUR FALSE ABSENCES IN ONE AFTERNOON
+
+An earlier revision of the new module's header listed four field lemmas as **missing** and deferred
+§2 on that basis. That claim shipped into a docstring. **All four existed:**
+
+| searched for | actually called |
+| --- | --- |
+| `div_self` | `self_div` (`FieldLemmas`) |
+| `mul_one_div_cancel` | `mul_inv` — a `Basic` **axiom**, named in `FieldLemmas`' own header |
+| `one_div_one_div` | `one_div_one_div_pos` (`EMLDepthTameness`) |
+| `mul_lt_mul_of_pos_left` | `mul_lt_mul_pos_left_wit` (`EMLDepth2InvX`), already imported |
+
+Searching by **name** is searching for the name *you* would have chosen; this corpus chose others.
+Searching by **statement** found all four in one pass.
+
+A fifth instance the same afternoon, smaller radius, same disease: a grep pattern requiring a
+trailing space reported `div_pos_of_pos_pos` absent **while the file was compiling with it**. And a
+sixth: "five private copies of `abs_sub_comm`" came from `grep private theorem abs_sub_comm`, which
+by construction could not see the *public* one — and the public one was the whole point.
+
+This is now the sharpest form of the recurring lesson in this repository, and it is not the one the
+`absence_audit` registry was built for. That gate checks *registered* absence claims. These were
+absence claims made **in passing, to justify deferring work** — and every one of them was wrong in
+the direction that created work rather than avoided it.
+
+#### §3, same commit — the endpoint lemma is CLOSED
+
+`poly_zero_of_exp_decay` (47 axioms, still nothing from the analytic or zero-counting lane):
+
+> **A polynomial with super-polynomial decay at a pole is identically zero.**
+
+Not "zero at `r`", not "zero on the component" — *identically* zero. So the germ it came from
+vanishes everywhere and the level set is co-finite: the first disjunct of `OneQueryLevelSet` holds,
+and the bad case is shown not to exist rather than being excluded.
+
+`pev_deflate` peels `(x − r)`, `deflate_length` drops the degree, and each peel divides the value by
+`exp (−T)` at the evaluation point — i.e. **multiplies the bound by `exp T`**, which the
+`a·T − c·exp T` form absorbs by bumping `a`. The hypothesis is therefore stable under deflation and
+the induction is on length alone.
+
+**That stability is why the bound carries a free `a`.** A shape with a fixed power would need
+re-deriving at every peel; the linear coefficient is not decoration, it is what makes one induction
+suffice.
+
 ## [Unreleased] — 2026-08-29 (fc)
 
 ### Brick 2: the differentiated relation, packaged for the descent

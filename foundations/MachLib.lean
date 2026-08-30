@@ -33,6 +33,7 @@ import MachLib.MultiVarBucket
 import MachLib.ZeroCountGlue
 import MachLib.PevSignOnCutFree
 import MachLib.GermDerivFbasis
+import MachLib.PolePolynomialKill
 import MachLib.MultiVarBezoutGeneral
 import MachLib.MultiVarEvalAt
 import MachLib.MultiVarReduceAtVanish

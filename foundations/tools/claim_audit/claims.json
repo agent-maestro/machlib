@@ -9728,6 +9728,23 @@
       ]
     },
     {
+      "id": "poly-zero-of-exp-decay-changelog",
+      "_comment": "The endpoint lemma. The claim is that it closes the bounded-component hole WITHOUT the analytic/zero-counting lane -- decay at a pole, not zero counting -- so that lane is the forbid list. HasDerivAt is NOT forbidden: continuity of pev comes through it.",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "A polynomial with super-polynomial decay at a pole is identically zero",
+        "the bad case is shown not to exist rather than being excluded"
+      ],
+      "module": "MachLib.PolePolynomialKill",
+      "theorem": "MachLib.poly_zero_of_exp_decay",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "rolle"
+      ]
+    },
+    {
       "id": "gyd-append-zero-five-axioms-changelog",
       "_comment": "The list-induction core of the descent setup. The claim is that it is PURE list induction -- 5 axioms -- so the forbid list is everything analytic plus the derivative machinery: if this ever picks up HasDerivAt it is no longer the combinatorial lemma the prose says it is.",
       "source_file": "CHANGELOG.md",
