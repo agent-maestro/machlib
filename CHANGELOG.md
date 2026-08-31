@@ -287,6 +287,33 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fr)
+
+### Two derivative rules the corpus was missing — `log ∘ S` and a quotient
+
+New module `MachLib/DerivQuotientLog.lean`. Both checked absent **by statement**: nothing in
+`MachLib/` concludes `HasDerivAt (fun t => log (S t)) _ _` or `HasDerivAt (fun t => N t / D t) _ _`.
+
+* **`logComp_hasDerivAt`** — the logarithmic derivative, `(log ∘ S)′ = S′/S` for `S > 0`. This is the
+  object the entire `¬ RatGerm (log ∘ S)` route turns on: a rational function's logarithmic
+  derivative possessing a *rational primitive* is exactly what `no_rational_logarithm` refuses.
+* **`div_hasDerivAt`** — the quotient rule. `Differentiation` ships `HasDerivAt_inv` (the reciprocal)
+  and `HasDerivAt_mul`, but never composes them, so every quotient derivative in this corpus has been
+  open-coded from the two.
+
+The reciprocal-to-quotient step needs one field identity, `D·(1/(D·D)) = 1/D`, and it is proved by
+**cancelling a factor** (`mul_left_cancel`) rather than by unfolding `1/·` twice. That is what
+reduces the remainder to `mach_mpoly` over a single atom `1/(D·D)`; the unfolding route leaves two
+reciprocals the normaliser cannot relate.
+
+#### Leg 1 is now assembled
+
+`(fq)` left leg 1 as *"the ray step is a theorem; the chain and quotient rules compose"*. They now
+exist as named theorems rather than as a claim that they compose. Leg 1's three inputs —
+`deriv_eq_of_eq_on_ray`, `logComp_hasDerivAt`, `div_hasDerivAt` — are all in place.
+
+Leg 2 (clear denominators to `hident`) remains the open one, with its target known exactly.
+
 ## [Unreleased] — 2026-08-30 (fq)
 
 ### `deriv_eq_of_eq_on_ray` — generalised beside, then the special case derived
