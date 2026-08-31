@@ -287,6 +287,47 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fu)
+
+### The representation half, scoped: two pieces present, one absent, and no real pole is needed
+
+`(ft)` left `¬ RatGerm (log ∘ S)` with its analytic half done and the *representation* half untouched.
+Scoped now.
+
+`no_rational_logarithm` wants `PIrred q`, `Pdvd q Q`, `¬ Pdvd q P`, and the `q`-adic factorisation of
+`Q`. Checking each **by statement**:
+
+| piece | status |
+| --- | --- |
+| an irreducible factor of `Q` exists | **present** — `exists_irred_divisor'` (`PolyFactor`) |
+| the `q`-adic factorisation `Q ≈ qʳ⁺¹·Qt`, `q ∤ Qt` | **present** — `exists_ord_factor` |
+| an irreducible factor of `Q` that does **not** divide `P` | **absent** — nothing concludes `¬ Pdvd q P` |
+
+The third needs `P/Q` in **lowest terms**, and reaching it is a cancellation-with-termination
+argument: while some irreducible `q` divides both, cancel it; the degree of `Q` strictly drops, so it
+terminates. `euclid_lemma` is present and is the step that makes each cancellation legitimate.
+
+#### A worry that dissolved on inspection
+
+`Pdvd q Q ∧ ¬ Pdvd q P` reads as *"`S` has a pole at `q`"*, and a **bounded** non-constant rational
+germ — which is exactly `BoundedGermTranscendence`'s setting — need not have a real pole at all.
+`S = x/(1 + x²)` is bounded, non-constant, and pole-free on `ℝ`.
+
+It does not matter. `PIrred` over `ℝ` admits irreducible **quadratics**, and `q = 1 + x²` divides
+`Q = 1 + x²` while not dividing `P = x`. The hypothesis is algebraic divisibility, not a real
+singularity. And `Q` must be non-constant in this setting anyway: a bounded polynomial is constant, so
+`S` non-constant forces `deg Q ≥ 1`.
+
+Worth recording because the reading *"this needs `S` to have a pole"* would have looked like a
+counterexample to the whole route on the bounded branch — the branch the obligation is about — and it
+is not one.
+
+#### Remaining
+
+One construction: **reduce a rational germ to lowest terms**, or more precisely produce a single
+irreducible factor of the denominator that does not divide the numerator. Ingredients named and
+present; the induction is not written.
+
 ## [Unreleased] — 2026-08-30 (ft)
 
 ### Leg 2b closes — all four legs of the route are theorems, the lemma they serve is not
