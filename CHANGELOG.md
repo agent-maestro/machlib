@@ -287,6 +287,85 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (ft)
+
+### Leg 2b closes — all four legs of the route are theorems, the lemma they serve is not
+
+`cross_of_div_eq_div` and `logRat_cross_identity` (`LogRatDeriv`), both **pure field, no analysis**.
+
+The corpus had `div_eq_div_of_cross` — *building* an equality of quotients from a cross product — but
+never the direction that **reads one off**. Added, and used immediately.
+
+#### Order of clearing, again
+
+Multiplying through by `Q·Q` closes it in **one** step: that cancels the left quotient outright *and*
+turns `Q·Q·(P/Q)` into `Q·P`, with nothing left over. Clearing the outer division first — the obvious
+order — leaves a stray `Q` needing its own cancellation.
+
+Second time today the same lesson: `D·(1/(D·D)) = 1/D` in `(fr)` was proved by cancelling a factor
+rather than unfolding `1/·` twice, for the same reason. **In this corpus the order denominators are
+cleared in decides whether the remainder is one `mach_mpoly` call or a chain of them**, because the
+normaliser cannot relate distinct reciprocals.
+
+#### The route ledger, complete
+
+| leg | state |
+| --- | --- |
+| 1 — differentiate the germ identity | **theorem** |
+| 2a — derivatives agree, written out | **theorem** |
+| 2b — clear denominators to `hident` | **theorem** |
+| 3 — promote `pev` equality to `PEq` | **theorem** |
+
+#### And what that does *not* establish
+
+**The legs are theorems; the lemma they are legs of is not.** Assembling them into
+`¬ RatGerm (log ∘ S)` means feeding `hident` to `no_rational_logarithm`, whose *other* hypotheses are
+the ones `(fg)` audited: `PIrred q`, `¬ Pdvd q P`, and the pole structure
+`PEq Q (pmul (ppow q (r+1)) Qt)`. Those need `P/Q` **in lowest terms with an irreducible factor of
+`Q` in hand** — which `(fg)` listed under *representation* and marked untouched, and which is still
+untouched.
+
+So the **analytic half** of the absent lemma is done and the **algebraic-representation half** is the
+remainder. Stated this way because "all the legs are green" is exactly the sentence that would let a
+reader conclude the lemma is close, and the same shape of inference has been wrong three times this
+week.
+
+## [Unreleased] — 2026-08-30 (fs)
+
+### Leg 2 splits: its derivative half is a theorem, its algebra half is named
+
+New module `MachLib/LogRatDeriv.lean`. `logRat_deriv_eq`: from `log (P/Q) = N/D` on a ray, both sides
+differentiate and the derivatives agree at every **interior** point.
+
+```
+((P′Q − PQ′)/(Q·Q)) / (P/Q)  =  (N′D − ND′)/(D·D)
+```
+
+**No new mathematics** — it is legs 1 and 3's lemmas composing. It is worth having as a *checked
+theorem* rather than as a claim that they compose, and that distinction has cost this arc twice
+already: `(fq)` asserted the chain and quotient rules "compose" before either existed, and `(fk)`
+found four bricks re-deriving generic machinery because nobody checked whether the summit was
+occupied. Composition claims in this corpus have a poor record; this one is now typechecked.
+
+#### The remainder, named rather than estimated
+
+Cross-multiplying the display into `(P′Q − PQ′)·(D·D) = (N′D − ND′)·(Q·P)` — which *is* `hident` at
+`k = 1` — then `peq_of_ev_eq` to promote it from a ray identity to `PEq`.
+
+Three nested divisions cleared against each other. Standard, and **long in this corpus's idiom**:
+`mach_mpoly` cannot relate distinct reciprocals, so each clearing step needs its own
+`div_of_eq_mul` or `mul_left_cancel`. Recorded as open rather than estimated — the word "assembly"
+has been wrong twice in two days, on `OneQueryLevelSet`'s remainder and on leg 1's composition.
+
+#### Route ledger
+
+| leg | state |
+| --- | --- |
+| 1 — differentiate the germ identity | **theorem** |
+| 2a — derivatives agree, written out | **theorem** (this entry) |
+| 2b — clear denominators to `hident` | open, target exact |
+| 3 — promote `pev` equality to `PEq` | **theorem** |
+
 ## [Unreleased] — 2026-08-30 (fr)
 
 ### Two derivative rules the corpus was missing — `log ∘ S` and a quotient

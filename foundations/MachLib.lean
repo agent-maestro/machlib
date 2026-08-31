@@ -36,6 +36,7 @@ import MachLib.GermDerivFbasis
 import MachLib.PolePolynomialKill
 import MachLib.PevEvEq
 import MachLib.DerivQuotientLog
+import MachLib.LogRatDeriv
 import MachLib.MultiVarBezoutGeneral
 import MachLib.MultiVarEvalAt
 import MachLib.MultiVarReduceAtVanish
