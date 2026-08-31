@@ -57,18 +57,24 @@ theorem fbasisComp_hasDerivAt {S : Real → Real} {s x : Real}
     HasDerivAt (fun t => Fbasis (S t)) ((exp (S x) + 1 / S x) * s) x :=
   HasDerivAt_comp Fbasis S s (exp (S x) + 1 / S x) x hS (Fbasis_hasDeriv hpos)
 
-/-- **A function that vanishes on a ray has vanishing derivative in that ray's interior.**
+/-- **Two functions agreeing on a ray have equal derivatives in that ray's interior.**
 
-The neighbourhood is `x - X`, which is why the statement is about `X < x`: at the endpoint there is
-no two-sided neighbourhood inside the ray. -/
-theorem deriv_eq_zero_of_zero_on_ray {f : Real → Real} {X x d : Real}
-    (hx : X < x) (hzero : ∀ y : Real, X ≤ y → f y = 0) (hd : HasDerivAt f d x) : d = 0 := by
+The general form, added 2026-08-30. `deriv_eq_zero_of_zero_on_ray` is its `g = 0` instance and is
+now *derived* from it rather than re-proved: the neighbourhood construction was identical, and the
+general shape is what `(fm)`'s route needs to turn a **germ** identity into a **derivative**
+identity.
+
+The interior is forced for the usual reason — a derivative is local, the agreement is known only on
+`[X, ∞)`, and `HasDerivAt_congr` wants a two-sided `|y − x| < δ`. -/
+theorem deriv_eq_of_eq_on_ray {f g : Real → Real} {X x a b : Real}
+    (hx : X < x) (heq : ∀ y : Real, X ≤ y → f y = g y)
+    (hf : HasDerivAt f a x) (hg : HasDerivAt g b x) : a = b := by
   have hδ : (0 : Real) < x - X := by
     have h := add_lt_add_left hx (0 - X)
     have l : (0 : Real) - X + X = 0 := by mach_ring
     have r : (0 : Real) - X + x = x - X := by mach_ring
     rw [l, r] at h; exact h
-  have hagree : ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → f y = (fun _ : Real => (0 : Real)) y := by
+  have hagree : ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → f y = g y := by
     refine ⟨x - X, hδ, fun y hy => ?_⟩
     have h1 : -(y - x) ≤ x - X := neg_le_of_abs_le (le_of_lt hy)
     have h2 : x - y ≤ x - X := by
@@ -78,10 +84,14 @@ theorem deriv_eq_zero_of_zero_on_ray {f : Real → Real} {X x d : Real}
     have l : y + X - x + (x - y) = X := by mach_mpoly [X, x, y]
     have r : y + X - x + (x - X) = y := by mach_mpoly [X, x, y]
     rw [l, r] at h3
-    exact hzero y h3
-  have hd0 : HasDerivAt (fun _ : Real => (0 : Real)) d x :=
-    HasDerivAt_congr f (fun _ => 0) d x hagree hd
-  exact HasDerivAt_unique (fun _ : Real => (0 : Real)) d 0 x hd0 (HasDerivAt_const 0 x)
+    exact heq y h3
+  exact HasDerivAt_unique g a b x (HasDerivAt_congr f g a x hagree hf) hg
+
+/-- **A function that vanishes on a ray has vanishing derivative in that ray's interior** — the
+`g = 0` instance of the above. -/
+theorem deriv_eq_zero_of_zero_on_ray {f : Real → Real} {X x d : Real}
+    (hx : X < x) (hzero : ∀ y : Real, X ≤ y → f y = 0) (hd : HasDerivAt f d x) : d = 0 :=
+  deriv_eq_of_eq_on_ray hx hzero hd (HasDerivAt_const 0 x)
 
 /-- **The brick: an `F ∘ S` relation differentiates.** -/
 theorem fbasis_relation_differentiates {S s : Real → Real} {X : Real}

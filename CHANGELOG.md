@@ -287,6 +287,37 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fq)
+
+### `deriv_eq_of_eq_on_ray` — generalised beside, then the special case derived
+
+`deriv_eq_zero_of_zero_on_ray` (brick 1, `(fb)`) turned out to be the `g = 0` instance of something
+`(fm)`'s route needs in general: **two functions agreeing on a ray have equal derivatives in that
+ray's interior**. That is the step which turns a *germ* identity into a *derivative* identity, and
+it is leg 1 of the three the route needs.
+
+The neighbourhood construction was identical, so the general form was added **beside** the special
+one and the special one is now three lines citing it — `29` and `30` axioms respectively. No
+duplicate proof left behind.
+
+That ordering is deliberate: the corpus's own record shows what happens otherwise. `abs_sub_comm`
+has five private re-proofs of a lemma that was already exported publicly, and `a < a + 1` has seven —
+**two of them added by this session**. The cheap moment to generalise is when the second instance
+appears, not when the fifth does.
+
+#### Route status after this
+
+`(fm)`'s three legs to `¬ RatGerm (log ∘ S)`:
+
+| leg | state |
+| --- | --- |
+| 1 — differentiate the germ identity | **the ray step is a theorem**; the chain rule for `log ∘ S` and the quotient rule for `N/D` compose from `HasDerivAt_log_pos`, `HasDerivAt_mul` and `HasDerivAt_inv` |
+| 2 — clear denominators | untouched. Worth recording: the target *is* `no_rational_logarithm`'s `hident` at `k = 1` — `(P′Q − PQ′)·D² = P·Q·(N′D − ND′)` is exactly what cross-multiplying `S′/S = (N/D)′` gives |
+| 3 — promote `pev` equality to `PEq` | **theorem** (`peq_of_ev_eq`, `(fp)`) |
+
+Two of three legs now stand. Leg 2 is algebra with a known target, which is a different kind of open
+than it was this morning — but it is still open, and the route is still a route.
+
 ## [Unreleased] — 2026-08-30 (fp)
 
 ### `peq_of_ev_eq` — the germ-to-polynomial step, discharged

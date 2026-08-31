@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 073 `.lean` files** (757 top-level + 316 in subdirectories) /
-**239 405 lines** / **7 479 theorems**, re-exported through the aggregator
+**239 415 lines** / **7 480 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 479
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 228
+  | paste -sd+ | bc                                    # 7 480
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 229
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
