@@ -287,6 +287,87 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-31 (fz)
+
+### `OneQueryLevelSet`: the two stalls have one cause, and it names the instrument to build
+
+**No new theorems.** This is a reading of existing modules, recorded because it changes what a next
+attempt should build. Every sub-claim below is read off source and cited; the synthesis is mine and
+is not mechanically checked.
+
+`(fn)` recorded the obstruction analytically: at a P-root the argument diverges only logarithmically,
+the bound `|N_top| ≤ C/|log (x−r)|` gives one root, deflating turns it into
+`C/(|x−r|·|log (x−r)|) → ∞`, and the induction dies. *Logarithmic divergence kills a simple root; it
+cannot kill a polynomial.* Two independent routes stall at the same single root.
+
+**But the thing being proved there is algebraic, not analytic.** The relation is
+`Σ N_k(x)·y^k = 0` on an interval with `y = Fbasis (S x)`, and `Fbasis x = exp x + log x`
+(`EMLUnaryBasis:58`). Rates are irrelevant to that shape: if `exp(S) + log(S)` admits no polynomial
+relation over `ℝ[x]` on the component, every `N_k` vanishes at once and no endpoint analysis happens
+at all.
+
+**The algebraic lane is not empty — but every instrument in it is tail-shaped.**
+`Fbasis_not_algebraic` (`EMLFTranscendence:255`), `FS_not_algebraic_of_ge_linear` (`:467`) and
+`_of_le_linear` (`:494`) all take `∃ X, 1 ≤ X ∧ ∀ x ≥ X, …`, the last two behind a growth premise `c·x ≤ S x`. A
+bounded component supplies neither the tail nor the growth.
+
+**The interval→tail bridge exists, and is blocked at the same feature.** `EMLAnalyticDischarge` §4
+propagates interval-vanishing outward by widening and re-running the identity theorem — but
+`eml_tree_analytic_on_interval` (`:160`, the 243rd axiom) requires `LogArgPos t a b`, and
+`LogArgPos (.eml t1 t2) a b` unfolds (`EMLEncoder:344`) to include `∀ x ∈ (a,b), 0 < t2.eval x` — the
+**Fbasis argument** positive. On the positive branch that argument *is* `S`, so widening past a zero
+of `S` loses the hypothesis.
+
+This does **not** contradict the standing note that `negGermTree_logArgPos` takes only `hQ`, i.e.
+that analyticity on the negative branch is indifferent to the sign of `S`. There the log argument is
+not `S`. Different branch, different `t2` — and the contrast is the point: analyticity crosses
+P-roots on the negative branch precisely because `S` is not what has to stay positive there.
+
+**And that block is not a missing lemma.** As `S → 0⁺`, `log (S) → −∞`, so the germ genuinely blows
+up at the endpoint. It is not analytic there and nothing continues through it. A stronger analyticity
+axiom is not available to be wished for — the mathematics closes that route, not the corpus.
+
+So the two stalls are **one** stall. A zero of `S` is where the log branch changes, which makes it
+simultaneously the place where divergence is weakest and the place where analyticity is unavailable.
+
+#### What this says to build
+
+An **interval-local** transcendence instrument: no tail, no growth hypothesis. That is a sharper
+target than "logarithmic divergence is too weak", because it says what to construct rather than what
+failed.
+
+#### The obvious first attempt, and why it fails
+
+Recorded because it is what a reader of the paragraph above will try first.
+
+On the component `S` takes each value `s ∈ (0, M)` **twice**, at `x₁` and `x₂`, and both points
+satisfy the relation with the *same* `y = Fbasis s`. Subtracting:
+
+```
+Σ (N_k (x₁) − N_k (x₂)) · (Fbasis s)^k = 0
+```
+
+which looks like a constant-coefficient polynomial vanishing at infinitely many distinct values of
+`Fbasis s` — and `PolynomialCanonical`'s Phase E identity theorem would finish it, interval-locally
+and with no rate at all.
+
+**It fails.** `x₁` and `x₂` are *functions of* `s`, so `N_k (x₁ (s)) − N_k (x₂ (s))` is not a
+constant — the polynomial identity theorem does not apply. Repairing it means allowing coefficients
+algebraic in `s`, i.e. proving `exp s + log s` transcendental over the algebraic functions of `s`
+near `0`. That is the same statement relocated from `x` to `s`, not a weaker one.
+
+What the attempt does establish is that the missing instrument is not merely "interval-local" — it
+must tolerate **algebraic-function coefficients**, which no instrument in `EMLFTranscendence` does.
+
+#### One thing NOT claimed
+
+It is tempting to call `OneQueryLevelSet` and `BoundedGermTranscendence` non-independent, the way
+`(fo)` showed `TowerLowerBound` and `DecayFloor` are. **They are not the same statement**: one needs
+interval-local algebraic independence of `exp(S) + log(S)`, the other a tail-shaped `¬ RatGerm`. I
+have not checked that either implies the other, and the ledger keeps them as two rows.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms pinned.
+
 ## [Unreleased] — 2026-08-31 (fy)
 
 ### The reduction closed, and `hchar` with it
