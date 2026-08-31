@@ -111,7 +111,7 @@ here"*, *"the existing machinery cannot answer this"* — was checked by nothing
 silently**: someone adds the thing, and the sentence saying it is missing keeps reading as true.
 
 It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
-6 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
+8 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
 
 * **search** — a regex, for *"no such declaration"*;
 * **probe** — a Lean snippet that must FAIL to compile, for *"no such tactic"*. A grep for
@@ -152,10 +152,22 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**761 of 1067 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**772 of 1078 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
+- **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
+  (`Real.mul_left_cancel`, `Pdvd_of_peq`, …). It is gated by its own compile probe,
+  `by-contra-absent` in `tools/absence_claims.json`, and it has still cost a compile three times.
+  The failure is **not** a missing check, it is not consulting one that already exists: read the
+  absence registry before reaching for a tactic.
+  (Kept as a separate bullet on purpose — the line above is the literal anchor of
+  `claudemd-tactics-absent`, and rewording it edits the guard rather than the claim.)
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
+- **Write files with a QUOTED heredoc (`<<'EOF'`).** Unquoted, bash executes every backticked token
+  in the body, so a Lean docstring lands with **every backticked name deleted** — and `lake build`
+  passes anyway, because Lean does not read docstring content. Pass paths via `export VAR` +
+  `os.environ`, never by interpolating into the body. After a heredoc write, read back the
+  *docstring*, not just the part the compiler checks.
 - **Deep `rfl` needs `set_option maxRecDepth`** (29 M-node terms check fine at 40 000 000).
 - **Axiom-absence claims must be read off `#print axioms`, never a name-grep** — `exp_gt_one_plus_self`
   and `exp_tangent_line_strict` are the same content under two names.
