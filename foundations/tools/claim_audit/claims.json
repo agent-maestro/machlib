@@ -10018,6 +10018,74 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "coprime-reduction-pure-algebra",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`exists_coprime_representative`** (**19 axioms**)"
+      ],
+      "module": "MachLib.PolyLowestTerms",
+      "theorem": "MachLib.exists_coprime_representative",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.rolle_ct",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ]
+    },
+    {
+      "id": "hchar-discharged-from-irreducibility",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "| `hchar` | `derivCoprime_of_irred` — **new** |"
+      ],
+      "module": "MachLib.PolyDerivNonzero",
+      "theorem": "MachLib.derivCoprime_of_irred",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "cross-identity-transport-nd",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`cross_identity_descends` (**21**) — the `N/D` side."
+      ],
+      "module": "MachLib.CrossIdentityDescent",
+      "theorem": "MachLib.cross_identity_descends",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.rolle_ct",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ]
+    },
+    {
+      "id": "cross-identity-transport-pq",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`cross_identity_descends_right` (**21**) — the `P/Q` side"
+      ],
+      "module": "MachLib.CrossIdentityDescent",
+      "theorem": "MachLib.cross_identity_descends_right",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.rolle_ct",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ]
     }
   ]
 }
