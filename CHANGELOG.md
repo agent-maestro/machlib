@@ -287,6 +287,87 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-31 (fx)
+
+### The lowest-terms cancellation's two substantive steps, built
+
+New module `MachLib/PolyLowestTerms.lean`. `cross_lift_of_common_factor` (**15 axioms**) and
+`cofactor_length_lt` (**18**), both pure polynomial.
+
+* **Lifting** — if `P ≈ q·P₁` and `Q ≈ q·Q₁`, a cross-multiplied identity for the reduced pair lifts
+  to the original. Seven `PEq.trans` steps, **every one an existing congruence** from `PolyPEq`:
+  `peq_pmul`, `peq_pmul_assoc`, `peq_pmul_comm`, `PEq.refl/symm/trans`. Nothing new was required.
+* **Termination** — `Q ≈ q·Q₁` with `q` irreducible gives `Q₁.length < Q.length`, because `PIrred`
+  carries `2 ≤ q.length` and `pmul_length` is exact on non-empty normal lists. `pnorm_eq_self` and
+  `pmul_normal` turn the `PEq` into a genuine equality first.
+
+#### The estimate held, and why that is the point
+
+`(fv)` called these *"bookkeeping with named ingredients, not research"*, declined to build them at
+the end of a long session, and they took about twenty minutes the next morning.
+
+That estimate was right **because it was made from what the corpus contains** — the ingredients were
+named, and the naming was checked. The seven false absences of `(fw)` and before came from the
+opposite: estimates made from the *shape of the argument*, with the corpus consulted afterwards or
+through a search that never ran.
+
+Same discipline, two directions. The failures were not carelessness about *whether* to check but
+about whether the check **executed and was read** — which is why the searches behind this entry
+printed their exit codes.
+
+#### What remains of the reduction
+
+The induction's plumbing: `obtain` the `Pdvd` witnesses, discharge the non-vanishing side conditions
+on the cofactors, apply the IH, assemble. Every component is now a theorem; none of it is research.
+
+## [Unreleased] — 2026-08-31 (fw)
+
+### An errored search looks exactly like an empty one — the seventh false absence, and the worst
+
+`(fv)` recorded two gaps in the lowest-terms reduction and said of the first: *"no theorem in
+`MachLib/` states `PEq X X`, searched by name **and** by statement."*
+
+**`MachLib/PolyPEq.lean` — a module entirely about `PEq` — contains:**
+
+```
+PEq.refl   PEq.symm   PEq.trans   peq_padd   peq_pscale   peq_pmul   peq_psub   …
+```
+
+`PEq.refl` is `rfl`, because `PolyPEq` defines `PEq X Y` as `pnorm X = pnorm Y`. And `peq_pmul` is
+the congruence gap 2's cancel branch was going to need.
+
+#### The cause is new, and worse than the previous six
+
+The by-statement search was
+
+```
+grep -rnE "PEq ([A-Za-z_']+) \1\b" MachLib/*.lean
+```
+
+ugrep rejects the backreference: `error at position 23 … invalid escape`. **The error line was in the
+output.** I read past it to the empty result below and recorded an absence.
+
+The previous six false absences came from searching for the wrong *thing* — a name I would have
+chosen, a pattern narrower than the claim, a lane instead of the corpus. This one came from a search
+that **never ran at all**, reported as a search that found nothing.
+
+That is precisely the distinction `check_all.sh` enforces for gates — **`UNAVAILABLE` is not `PASS`** —
+and I built that rule yesterday, then failed to apply it to my own greps within a day. A tool that
+errors and a tool that returns empty are the same two lines of terminal output unless you look.
+
+#### Standing rule, since seven instances is a pattern and not a run of luck
+
+Before recording an absence: **confirm the search executed.** A non-zero exit, a `warning:`, an
+`error:` line — any of them means the result is `UNKNOWN`, not `absent`. Where the claim will justify
+*building* something, run a second search of a different shape; where it will justify *deferring*
+something, do that twice over.
+
+#### Consequence for the construction
+
+Both of `(fv)`'s gaps are smaller than recorded. Gap 1 does not exist. Gap 2's lifting step has its
+congruence (`peq_pmul`) and its transitivity (`PEq.trans`) already available; what remains is the
+`Pdvd`-witness extraction and the `pmul_length` termination argument.
+
 ## [Unreleased] — 2026-08-30 (fv)
 
 ### The lowest-terms reduction: statement fixed, skeleton typechecked, two gaps named
@@ -320,8 +401,10 @@ success case and closes immediately.
 
 #### The two gaps
 
-1. **`PEq` reflexivity** — no theorem in `MachLib/` states `PEq X X`, searched by name *and* by
-   statement. One induction over the definition in `PolyRing`.
+1. ~~**`PEq` reflexivity** — no theorem in `MachLib/` states `PEq X X`, searched by name *and* by
+   statement.~~ **FALSE — see `(fw)`.** `PEq.refl` exists in `MachLib/PolyPEq.lean`, along with
+   `PEq.symm`, `PEq.trans` and `peq_pmul`. The "search by statement" that reported it absent
+   **errored out** and printed nothing.
 2. **The cancel branch** — where `q` divides both. Extract the witnesses from `Pdvd`, recurse on
    `(P₁, Q₁)`, and lift the result back: from `PEq (pmul P₁ Q') (pmul P' Q₁)` to
    `PEq (pmul P Q') (pmul P' Q)`, using `P ≈ q·P₁` and `Q ≈ q·Q₁` and a `pmul` congruence.

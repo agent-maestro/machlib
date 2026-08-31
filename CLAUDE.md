@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 075 `.lean` files** (759 top-level + 316 in subdirectories) /
-**239 609 lines** / **7 485 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 076 `.lean` files** (760 top-level + 316 in subdirectories) /
+**239 670 lines** / **7 487 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 485
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 234
+  | paste -sd+ | bc                                    # 7 487
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 236
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -269,7 +269,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine`. Run everything with **`foundations/t
 exit code). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**769 of 1 075 modules reachable, 12 documented unreachable** as of 2026-08-30); quote it from
+run (**770 of 1 076 modules reachable, 12 documented unreachable** as of 2026-08-31); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **22 rows, 7 open rows, 4 distinct open
