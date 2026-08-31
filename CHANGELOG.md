@@ -287,6 +287,104 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-31 (fy)
+
+### The reduction closed, and `hchar` with it
+
+`(fx)` predicted the remaining induction was plumbing. It was — but the plumbing came out **stronger
+than the statement it was written for**, and that made a second hypothesis fall.
+
+* **`exists_coprime_representative`** (**19 axioms**) — strip common irreducible factors from `P/Q`
+  until none remain. Termination is `cofactor_length_lt`, each cancellation is transported by
+  `cross_lift_of_common_factor`, and the branch condition is `∃ q, PIrred q ∧ Pdvd q Q ∧ Pdvd q P`.
+* **`exists_irred_not_dividing`** (**20**) — was to be the induction; it is now six lines on top of
+  the above, splitting on `2 ≤ Q'.length` and calling `exists_irred_divisor'`.
+* **`lowest_terms_with_ord`** (**20**) — the same fact in the shape `no_rational_logarithm` takes:
+  the exact multiplicity `PEq Q' (pmul (ppow q (r+1)) Qt)` with `¬ Pdvd q Qt`, via `exists_ord_factor`
+  plus `exists_pos_ord_factor` (**19**), the one step that spends `Pdvd q Q'` to make the power positive.
+
+**Why stripping to exhaustion instead of to a witness.** `hlow` fixes its irreducible from the *other*
+fraction, so no witness-producing statement can supply it — it needs a universally quantified one.
+The exhaustive induction costs no more than the one-witness induction: same recursion, same two
+lemmas, different branch condition. So the one-witness version was **deleted, not kept beside** the
+strong one; it is a corollary now, and there is only one induction in the file.
+
+### `hchar`, discharged — new module `MachLib/PolyDerivNonzero.lean`
+
+`pnorm_pderiv_ne_nil` (**37 axioms**), `pnorm_pnsum_succ_ne_nil` (**29**), `derivCoprime_of_irred`
+(**37**): from `PIrred q` alone, `∀ r, DerivCoprime q (r + 1)`.
+
+The obvious argument is *"the leading coefficient of `q'` is `(n−1)·aₙ ≠ 0"*, and it is not
+available: **`pderiv` does not trim.** `pderiv [a, b] = [b, 0]`, so reading a leading coefficient off
+it needs exactly the index development `PolyDerivShort` was written to avoid. The route taken is
+analytic instead — if `q' ≡ 0` then `pev q` has zero derivative everywhere, `mean_value_theorem_ct`
+makes it constant, and `peq_of_ev_eq` turns constancy back into `PEq q [c]`, contradicting
+`2 ≤ q.length`. **`peq_of_ev_eq` — built in `(fs)` with no consumer — is what closes it.**
+
+### The interface, hypothesis by hypothesis
+
+`no_rational_logarithm` takes ten. Where each now comes from:
+
+| | source |
+|---|---|
+| `hq`, `hPd`, `hQ`, `hQtd` | `lowest_terms_with_ord` |
+| `hchar` | `derivCoprime_of_irred` — **new** |
+| `hident` | `logRat_cross_identity` (`(fu)`) |
+| `hPn`, `hNn`, `hDne` | the germ's own data — normalisation and a non-zero denominator |
+| `hlow` | `exists_coprime_representative` applied to `N/D`, transported by `cross_identity_descends` |
+
+### `hlow` is traded, not free — and the price was already paid
+
+Coprimality holds for a *reduced* pair, and `hident` names the originals, so it must be transported.
+
+This entry first recorded that transport as a **new obligation**, asserting the Wronskian-shaped
+numerator "should scale by `g²`" from the shape of the expression, *not proved*. **That was wrong,
+and one grep found it.** `peq_cross_common_factor` in `CrossIdentities` — which predates this whole
+arc — is exactly `W(cA, cB) ≈ c²·W(A,B)`, and its docstring already explains why no divisibility
+hypothesis is needed: the two `c·c′·A·B` terms cancel identically, so no derivative of `c` survives.
+
+New module `MachLib/CrossIdentityDescent.lean` assembles it from three theorems that all predate it
+— `peq_cross_common_factor`, `peq_cancel_left` (`RelCoeffsEqCase`), `pmul_nil_cancel'`
+(`RelCoeffsLand`):
+
+* `pnorm_pmul_self_ne` (**19 axioms**) — a square of a non-zero polynomial is non-zero.
+* `cross_identity_descends` (**21**) — the `N/D` side.
+* `cross_identity_descends_right` (**21**) — the `P/Q` side, which `lowest_terms_with_ord` also
+  reduces. There the factor arrives twice by different routes — `P·Q` picks up `h²` by regrouping,
+  `W(P,Q)` by homogeneity — and it is the same `h²`, so one cancellation clears both.
+
+Both compiled on the first attempt. **The interface is ten of ten**: every hypothesis of
+`no_rational_logarithm` is now a theorem here or the germ's own data.
+
+### What is still open
+
+The **unit branch** (`Q'.length ≤ 1`) is untouched, and it is where a *bounded* germ is finally
+spent: a fraction whose reduced denominator is a unit is a polynomial, and a bounded polynomial is
+constant. Route A steps 3–4 are likewise untouched. Ten of ten hypotheses is not a proof — the
+end-to-end application has not been written.
+
+### The witness gate fired, correctly
+
+`check_all.sh` came back **10 passed, 1 FAILED (witness, rc 1)**, and the failure was the ratchet
+doing its job: `derivCoprime_of_ne_zero` sat on `tools/witness_baseline.json` as a capstone whose
+hypothesis nobody could supply, and `derivCoprime_of_irred` now supplies it. Baseline ratcheted
+36 → 35 unwitnessed. This is the one gate whose *failure* is the good outcome, and it is the direct
+descendant of the vacuous-theorem episode: a hypothesis that cannot be instantiated is tracked until
+something instantiates it.
+
+### Traps
+
+* `pderiv` does not trim — now in a module docstring, since it is the reason for the analytic route.
+* **`by_contra` does not exist in MachLib.** The memory saying so was on file and the tactic was
+  reached for anyway. Third time. The lesson is not "remember harder" — a *tactic* name deserves the
+  same grep-before-use as a *lemma* name, and it gets skipped because tactics feel like syntax.
+* **An unquoted heredoc executed the backticks in a docstring.** Writing
+  `MachLib/CrossIdentityDescent.lean` through `python3 - <<PYEOF` instead of `<<'PYEOF'` let bash
+  treat every `` `identifier` `` as command substitution; sixteen `command not found` lines scrolled
+  past and the file landed with **every backticked name deleted from its documentation**. `lake build`
+  passed — Lean does not read docstring content. A new instance of an old shape: *a green build says
+  TRUE, not "the one you need"*. Caught by reading the file rather than trusting the build.
+
 ## [Unreleased] — 2026-08-31 (fx)
 
 ### The lowest-terms cancellation's two substantive steps, built
