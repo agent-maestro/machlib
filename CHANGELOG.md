@@ -287,6 +287,30 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fp)
+
+### `peq_of_ev_eq` — the germ-to-polynomial step, discharged
+
+New module `MachLib/PevEvEq.lean`. **Eventual equality of polynomial evaluations is polynomial
+equality.**
+
+`(fm)` sketched the route to `¬ RatGerm (log ∘ S)` in three steps and labelled the third — *promote
+eventual equality of `pev`s to `PEq`* — as the one carrying the sketch's risk, with the note that
+"each step looks present" has been wrong often enough this week to have no credit left.
+
+Checked, and it composes from two existing theorems:
+
+* `pnorm_eq_nil_of_evZero` — a polynomial whose evaluation is eventually zero normalises to `[]`.
+  This is where *"a non-zero polynomial is not eventually zero"* actually lives.
+* `peq_of_psub_nil` — a vanishing difference is an equality.
+
+So the lemma is six lines, and every germ-to-polynomial argument in the corpus has been open-coding
+this step. It now has a name.
+
+**What this does and does not settle.** It discharges the *third* step of `(fm)`'s sketch. Steps 1
+(differentiate the germ identity) and 2 (clear denominators) are untouched, and the sketch remains a
+sketch — one of its three legs is now a theorem, which is progress and not completion.
+
 ## [Unreleased] — 2026-08-30 (fo)
 
 ### Scoping `TowerLowerBound` — it has no uniform argument at all, and the reviewer's Q4 is exactly it

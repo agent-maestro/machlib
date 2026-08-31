@@ -34,6 +34,7 @@ import MachLib.ZeroCountGlue
 import MachLib.PevSignOnCutFree
 import MachLib.GermDerivFbasis
 import MachLib.PolePolynomialKill
+import MachLib.PevEvEq
 import MachLib.MultiVarBezoutGeneral
 import MachLib.MultiVarEvalAt
 import MachLib.MultiVarReduceAtVanish
