@@ -287,6 +287,57 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fo)
+
+### Scoping `TowerLowerBound` — it has no uniform argument at all, and the reviewer's Q4 is exactly it
+
+The third open obligation was listed as *unscoped*. Scoped now.
+
+```
+TowerLowerBound : ∀ n u, u.depth < n → Meets (towerSpec n) u → False
+```
+
+i.e. **no tree shallower than `n` computes the `n`-fold tower**. The upper half is done for every `n`
+(`towerTree_accepted`, `towerTree_depth = n` on the nose), so this is the whole of what is missing
+for an infinite certified depth-optimal family.
+
+#### It is proved level by level, and that is all
+
+`tower_lower_bound_upto_four` is **four ad-hoc theorems**, one per level:
+`exp_not_depth_zero`, `expExp_not_depth_le_one`, `tower3_not_depth_le_two`,
+`tower4_not_depth_le_three`. There is **no uniform argument** — the `4` is where the case analysis
+stopped.
+
+A tempting inference, checked and **rejected**: the corrected `LogSafe` note says the quantitative
+half is closed for *depth ≤ 3*, and the tower bound is proved to *N = 4*. Those numbers line up, and
+they are unrelated — the four cases do not go through the envelope at all. Read as a structural link
+it would have been this week's fifth overshoot, from a numerical coincidence.
+
+#### Where the real link is
+
+The uniform argument would be the **growth envelope used as a lower-bound oracle** — precisely what
+an outside reader proposed as Q4's consumer for that machinery:
+
+```
+growth_envelope (t) (k) (hk : t.depth ≤ k) (hs : LogSafe 1 t) :
+    ∃ M, ∀ x ∈ (0,1], t.eval x ≤ envelope k M x
+```
+
+If every depth-`≤k` tree sits under `envelope k M` and `towerFn n` escapes it for `k < n`, the
+obligation follows for all `n` at once. **And the reviewer's suggestion to invent a benchmark family
+is unnecessary: the family is already in the ledger as this open row.**
+
+The blocker is the side condition. `growth_envelope` demands `LogSafe 1 t` of the **candidate** `t` —
+an *arbitrary* tree of depth `< n`, which need not be `LogSafe` at all. Removing that is exactly the
+`DecayFloor` programme's quantitative decay-by-depth bound.
+
+#### Consequence for the ledger's shape
+
+Two of the four open obligations are therefore **not independent**: a uniform `TowerLowerBound` runs
+through the envelope, and the envelope's side condition is what the frozen `DecayFloor` cycle exists
+to remove. The ledger counts them as distinct debts, correctly — they are distinct *statements* — but
+a plan that treats them as separately attackable is wrong about the second one.
+
 ## [Unreleased] — 2026-08-30 (fn)
 
 ### `OneQueryLevelSet`'s remainder is NOT assembly — the P-root endpoints stall the induction
