@@ -287,6 +287,56 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-30 (fv)
+
+### The lowest-terms reduction: statement fixed, skeleton typechecked, two gaps named
+
+The single remaining piece of `¬ RatGerm (log ∘ S)`'s representation half. Not built — **scoped to
+the point where the next attempt starts from a compiling skeleton rather than a plan.**
+
+#### The statement, and why it is cross-multiplied
+
+```lean
+theorem exists_irred_not_dividing : ∀ (n : Nat) (P Q : List Real), Q.length ≤ n →
+    PNormal P → PNormal Q → pnorm P ≠ [] → pnorm Q ≠ [] →
+    ∃ P' Q' : List Real, PNormal P' ∧ PNormal Q' ∧ pnorm P' ≠ [] ∧ pnorm Q' ≠ [] ∧
+      PEq (pmul P Q') (pmul P' Q) ∧
+      (Q'.length ≤ 1 ∨ ∃ q, PIrred q ∧ Pdvd q Q' ∧ ¬ Pdvd q P')
+```
+
+`PEq (pmul P Q') (pmul P' Q)` is `P/Q = P'/Q'` **cross-multiplied**, so the induction stays purely
+algebraic and the `pev` bookkeeping happens once, at the call site. Stating it as a germ identity
+would drag division through every recursive step.
+
+The `Q'.length ≤ 1` disjunct is the fraction collapsing to a polynomial — which the *bounded* setting
+excludes downstream, since a bounded polynomial is constant, but which the reduction itself cannot
+rule out and should not pretend to.
+
+#### What typechecks
+
+Everything except two holes: the `zero` case, the `¬ 2 ≤ Q.length` case, and the branch where the
+irreducible factor found by `exists_irred_divisor'` already fails to divide `P` — which is the
+success case and closes immediately.
+
+#### The two gaps
+
+1. **`PEq` reflexivity** — no theorem in `MachLib/` states `PEq X X`, searched by name *and* by
+   statement. One induction over the definition in `PolyRing`.
+2. **The cancel branch** — where `q` divides both. Extract the witnesses from `Pdvd`, recurse on
+   `(P₁, Q₁)`, and lift the result back: from `PEq (pmul P₁ Q') (pmul P' Q₁)` to
+   `PEq (pmul P Q') (pmul P' Q)`, using `P ≈ q·P₁` and `Q ≈ q·Q₁` and a `pmul` congruence.
+   Termination is `Q₁.length < Q.length`, from `pmul_length` and `2 ≤ q.length`.
+
+Neither is research; both are bookkeeping with named ingredients. Recorded rather than attempted at
+the end of a long session, because this arc's error rate on long constructions has been visibly worse
+late than early — three of today's retractions were claims made while building, not while scoping.
+
+#### Also noticed
+
+`MachLib/PolyGcd.lean` carries `eea_divides` — an extended Euclidean algorithm producing a common
+divisor of two polynomials. Not needed for the induction above, which only wants *one* irreducible
+factor, but it is the tool if a future step needs the actual gcd.
+
 ## [Unreleased] — 2026-08-30 (fu)
 
 ### The representation half, scoped: two pieces present, one absent, and no real pole is needed
