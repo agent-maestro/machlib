@@ -176,6 +176,11 @@ behind it is missing — registration is still a human act.
   Instruments that can only return one value: an errored grep, a `lake build` over a
   heredoc-gutted docstring, a launcher exiting 0 while `GATE_RC=127`, a seed grid reported as a
   census, a cut-off reported as a property of the object. Same defect, five costumes.
+- **Never chain a measurement to the commit that quotes it.** `measure && git commit -F-` puts the
+  number in the message from *expectation*, and verifies it afterwards or not at all. It was correct
+  three times running on 2026-09-01, which is what makes it a habit rather than an obvious error.
+  Measure, **read the output**, then commit as a separate command — the same rule as gate-then-act,
+  turned on the commit message.
 - **A green gate line is a claim about the gate's SCOPE, not about your theorem.** `witness_audit.py`
   excludes theorems concluding `False` **by design** — it now prints how many (60) it cannot examine,
   rather than leaving `OK` to read as coverage. Check your theorem is in the class a gate examines
