@@ -19,6 +19,7 @@ so this arc does not edit a 560-line module for two theorems. Move it if a secon
 import MachLib.GermDerivFbasis
 import MachLib.FPModel
 import MachLib.LogRatDeriv
+import MachLib.PolyIntervalIdentity
 
 namespace MachLib
 
@@ -91,5 +92,35 @@ theorem logRat_deriv_eq_on_interval {P Q N D : List Real} {a b : Real}
       ((pev (pderiv N) x * pev D x - pev N x * pev (pderiv D) x) / (pev D x * pev D x)) x :=
     div_hasDerivAt (hasDerivAt_pev N x) (hasDerivAt_pev D x) (hD x hax hxb)
   exact deriv_eq_of_eq_on_interval hax hxb hlog hL hR
+
+/-! ## The composition, written
+
+`(gb)` recorded that the four pieces "line up by shape" and stopped there, because a chain that type-
+checks in prose is not a theorem. Written out below, it is three lines: differentiate on the interval,
+clear denominators pointwise, lift.
+
+What it does **not** do is show the hypotheses are jointly satisfiable for an actual germ. A theorem
+whose hypotheses nothing can instantiate is vacuous and every gate still passes — this project has
+paid for that lesson once, and the witness audit exists because of it.
+-/
+
+/-- **`hident` from an interval-local hypothesis.** The composition `(gb)` said lined up by shape,
+written out: differentiate on the interval, clear denominators pointwise, lift to `PEq`.
+
+This is `no_rational_logarithm`'s tenth hypothesis produced from "`log (P/Q)` agrees with `N/D` on an
+open interval" — no tail, no growth premise, nothing eventual. -/
+theorem hident_of_log_rational_on_interval {P Q N D : List Real} {a b : Real} (hab : a < b)
+    (hQ : ∀ x : Real, a < x → x < b → pev Q x ≠ 0)
+    (hD : ∀ x : Real, a < x → x < b → pev D x ≠ 0)
+    (hP : ∀ x : Real, a < x → x < b → pev P x ≠ 0)
+    (hpos : ∀ x : Real, a < x → x < b → 0 < pev P x / pev Q x)
+    (hlog : ∀ x : Real, a < x → x < b → log (pev P x / pev Q x) = pev N x / pev D x) :
+    PEq (pmul (psub (pmul (pderiv P) Q) (pmul P (pderiv Q))) (pmul D D))
+        (pmul (psub (pmul (pderiv N) D) (pmul N (pderiv D))) (pmul Q P)) := by
+  refine peq_of_eq_on_interval (a := a) (b := b) hab ?_
+  intro x h1 h2
+  have hcross := logRat_cross_identity (hQ x h1 h2) (hD x h1 h2) (hP x h1 h2)
+    (logRat_deriv_eq_on_interval hQ hD hpos hlog x h1 h2)
+  simpa [pev_pmul, pev_psub] using hcross
 
 end MachLib

@@ -287,6 +287,59 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-31 (gc)
+
+### `hident` from an interval — the composition, written rather than described
+
+`hident_of_log_rational_on_interval` (**45 axioms**, `sorryAx`-free), appended to
+`MachLib/LogRatDerivInterval.lean`.
+
+`(gb)` said the four pieces "line up by shape" and stopped, on the grounds that a chain which
+typechecks in prose is not a theorem. Written out it is three lines — differentiate on the interval,
+clear denominators pointwise, lift — and it compiled on the first attempt, which is the expected
+outcome when every ingredient has already been measured and the only question was orientation.
+
+It produces `no_rational_logarithm`'s tenth hypothesis from
+
+> `log (P/Q)` agrees with `N/D` on an open interval
+
+with **no tail, no growth premise, and nothing eventual anywhere in the statement**.
+
+### The k = 1 instrument, honestly scoped
+
+| hypothesis | source |
+|---|---|
+| `hident` | **`hident_of_log_rational_on_interval` — new, interval-local** |
+| `hq`, `hPd`, `hQ`, `hQtd` | `lowest_terms_with_ord` `(fy)` |
+| `hchar` | `derivCoprime_of_irred` `(fy)` |
+| `hlow` | `exists_coprime_representative` + the two transports `(fy)` |
+| `hPn`, `hNn`, `hDne` | the germ's own data |
+
+So the `k = 1` case is now instantiation, not construction.
+
+### What is NOT shown — stated correctly on the second attempt
+
+The first draft of this section said *"nothing here demonstrates the ten hypotheses are jointly
+satisfiable."* **That is the wrong test for this theorem.** `no_rational_logarithm` concludes
+`False`, so joint satisfiability is exactly what it denies; `witness_audit.py` says so in its own
+header — *"a theorem concluding `False` is MEANT to have an unsatisfiable hypothesis set, that is
+what it proves"* — and therefore **excludes this whole class from vacuity checking by design.**
+
+The correct test for a refutation theorem is that its **structural** hypotheses, minus the one being
+refuted, are satisfiable — otherwise it refutes nothing. On that test:
+
+* `no_rational_logarithm_scaled`, the parent, **is** applied with concrete arguments
+  (`RelCoeffsEqCase:219`), so the family is instantiated.
+* `no_rational_logarithm` itself, the `k = 1` corollary, has **no consumer** — only docstring
+  mentions. It is "the statement the analytic argument quotes", and nothing yet quotes it.
+
+So the honest position is narrower and more useful than the first draft: the risk is not that the
+hypotheses are unsatisfiable, it is that **the `k = 1` corollary is currently unconsumed and the
+audit that would notice cannot see this theorem class.** `hident_of_log_rational_on_interval` is a
+step toward a consumer, not a consumer.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-08-31 (gb)
 
 ### The differentiation step goes interval-local too — same pattern, one step upstream

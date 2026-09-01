@@ -10086,6 +10086,20 @@
         "MachLib.Real.ltR",
         "MachLib.Real.leR"
       ]
+    },
+    {
+      "id": "hident-interval-local",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`hident_of_log_rational_on_interval` (**45 axioms**"
+      ],
+      "module": "MachLib.LogRatDerivInterval",
+      "theorem": "MachLib.hident_of_log_rational_on_interval",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }
