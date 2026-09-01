@@ -287,6 +287,84 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gf)
+
+### Applicability, and the rule that was still an argument
+
+Two structural fixes from review, plus a live defect in `(ge)`'s own replacement claim.
+
+#### `WITNESS-AUDIT OK` now states what it cannot examine
+
+`witness_audit.py` excludes theorems concluding `False` **by design** — an unsatisfiable hypothesis
+set is their content. Correct, and invisible: the line `OK — 35 uninstantiated capstones, exactly
+the pinned set` printed beside the whole log-junction arc for a day while structurally unable to
+comment on it.
+
+It now reports the exclusion, ported from Forge's obligation axis, which reports
+`preserved / not-applicable / unknown` with a reason on every not-applicable row rather than folding
+them into the pass count:
+
+> `WITNESS-AUDIT OK — 35 uninstantiated capstones, exactly the pinned set; 60 refutation theorem(s)
+> NOT APPLICABLE.`
+
+**Sixty**, each named with its reason. A gate reporting `PASS` where the honest value is
+`NOT_APPLICABLE` had no way to say so; now it does, and the blind spot is a row you read rather than
+a discovery made by mis-stating a vacuity test first.
+
+#### Five failures were one rule, stated as two
+
+`(fy)`'s gotcha split the session's failures into *non-execution* and *instrument-measured-itself*,
+and claimed only the first was mechanically fixable. That split is wrong at the level that matters.
+Both halves are the same requirement:
+
+> **Every instrument must be shown capable of both verdicts before either verdict is read.**
+> *Positive control:* run the pattern against a line you know matches, before believing zero matches.
+> *Negative control:* feed the checker known-bad input; if it passes, the run is worthless.
+
+An errored grep, a `lake build` over a gutted docstring, a launcher exiting `0` while
+`GATE_RC=127`, a seed grid reported as a census, a cut-off reported as a property of the object —
+five costumes, one defect: **an instrument that could only return one value.**
+
+#### `(ge)`'s replacement claim had the same defect on the other axis
+
+Recorded in the research repo as Finding 9b, and repeated here because the pattern is the point.
+*"Every located zero of every rung has `|z| ≤ 2.71828`"* — `located` is the **search's** property. The
+inner cutoff was named and audited twice; the outer one was never stated, and the boundedness claim
+rested on it. The outer *filter* read `|z| < 22`, but the **seeds** reach only `|z| ≈ 9.2`, so the
+effective bound was the seeds, not the filter.
+
+The claim survives by a different instrument, with the bound in the sentence: converged windings give
+`N(R) = 3` at `R = 9.4, 15.7, 22.0, 34.6` on both rungs, and three zeros are located in each — so
+**no zeros with `2.72 < |z| < 34.6`**, beyond which: unknown. `instrument.py` now refuses to emit a
+count without **both** bounds, and refuses a *search* without its seed reach.
+
+#### The rule, installed as a field on both sides
+
+Stating it in a gotcha is what `(fy)` did, and `(ge)` violated it hours later. So it is now a
+**required field** in two places:
+
+* `instrument.py` (research repo) refuses a count without **both** region bounds, and refuses a
+  *search* without its **seed reach** — the outer filter is not the outer bound.
+* `tools/absence_claims.json` now carries a **`positive_control`** on every search claim: a line the
+  pattern must match. `absence_audit.py` refuses the claim otherwise.
+
+The second closes a real asymmetry rather than adding ceremony. The **probe** branch has always
+demanded a probe fail for the *right reason* — *"a broken probe is not evidence of absence"* — while
+searches had no equivalent, and a pattern that cannot match returns exactly what a true absence
+returns. The registry already encoded half the rule; the missing half is the half that failed.
+
+Convict-tested, both polarities, and reported as `UNAVAILABLE` rather than `FAIL` because "could not
+be checked" is not "checked and passed":
+
+```
+UNAVAILABLE  no-complex-in-machlib: search has no positive_control — an instrument that has
+             not been shown capable of a hit cannot evidence a miss
+UNAVAILABLE  no-measure-theory: pattern does not match its own positive control
+             'axiom Measurr : Type' — a broken search is not evidence of absence
+```
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-08-31 (ge)
 
 ### A specimen for the interval theorem — and a FALSE ABSENCE, caught by the build

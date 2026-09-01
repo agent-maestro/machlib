@@ -65,6 +65,27 @@ def unwitnessed(src: str, claims: list) -> list:
     return out
 
 
+def not_applicable(src: str, claims: list) -> list:
+    """Registered theorems this audit is STRUCTURALLY unable to examine, with the reason.
+
+    A theorem concluding `False` is MEANT to have an unsatisfiable hypothesis set, so it is excluded
+    by design (see this file's header). That exclusion was correct and invisible: `WITNESS-AUDIT OK`
+    printed beside the whole log-junction arc for a day while unable to comment on it. A gate that
+    reports PASS where the honest value is NOT_APPLICABLE has no way to say so unless it counts.
+
+    Ported from Forge's obligation axis, which reports `preserved / not-applicable / unknown` with a
+    reason on every not-applicable row rather than folding them into the pass count.
+    """
+    out = []
+    for t in sorted({c["theorem"] for c in claims}):
+        short = t.split(".")[-1]
+        m = re.search(r"^\s*(?:private\s+)?theorem\s+" + re.escape(short) + r"\b(.*?):=",
+                      src, re.M | re.S)
+        if m and re.search(r":\s*False\s*$", m.group(1).rstrip()):
+            out.append((t, "concludes False — unsatisfiable hypotheses are its content"))
+    return out
+
+
 def self_test(src: str, claims: list) -> int:
     """A convict specimen: a synthetic capstone nobody references must be reported."""
     fake = [{"theorem": "MachLib.CanaryNeverInstantiated", "hypotheses_count": 3}]
@@ -104,7 +125,14 @@ def main() -> int:
         print(f"{YELLOW}WITNESS-AUDIT: baseline is stale — {len(fixed)} entr(ies) now witnessed. "
               f"Ratchet it down.{RST}")
         return 1
-    print(f"{GREEN}WITNESS-AUDIT OK — {len(now)} uninstantiated capstones, exactly the pinned set.{RST}")
+    na = not_applicable(src, claims)
+    if na:
+        print(f"{DIM}    NOT APPLICABLE ({len(na)}): this audit cannot examine these — "
+              f"{na[0][1]}{RST}")
+        for t, _ in na:
+            print(f"{DIM}      · {t}{RST}")
+    print(f"{GREEN}WITNESS-AUDIT OK — {len(now)} uninstantiated capstones, exactly the pinned set; "
+          f"{len(na)} refutation theorem(s) NOT APPLICABLE.{RST}")
     return 0
 
 

@@ -129,6 +129,20 @@ def check(entry: dict) -> list:
             problems.append(("TEXT-GONE",
                              f"claim text no longer in {entry['source_file']}: {frag[:60]!r}"))
     if "search" in entry:
+        # POSITIVE CONTROL, required. The probe branch below has always demanded that a probe fail
+        # for the RIGHT reason -- "a broken probe is not evidence of absence". Searches had no such
+        # requirement, and a pattern that cannot match returns exactly what a true absence returns.
+        # Paid for 2026-08-31: `PIrred \[` was run against source reading `PIrred ([0, 1] : ...)`,
+        # a bracket where the code has a paren, and the resulting false absence reached a changelog.
+        pc = entry["search"].get("positive_control")
+        if pc is None:
+            problems.append(("UNAVAILABLE",
+                             "search has no positive_control — an instrument that has not been "
+                             "shown capable of a hit cannot evidence a miss"))
+        elif not re.search(entry["search"]["pattern"], pc, re.M):
+            problems.append(("UNAVAILABLE",
+                             f"pattern does not match its own positive control {pc[:48]!r} — "
+                             f"a broken search is not evidence of absence"))
         hits = run_search(entry["search"]["pattern"], entry["search"]["paths"])
         if hits is None:
             return problems + [("UNAVAILABLE", "search could not be run")]

@@ -163,14 +163,23 @@ behind it is missing — registration is still a human act.
   (Kept as a separate bullet on purpose — the line above is the literal anchor of
   `claudemd-tactics-absent`, and rewording it edits the guard rather than the claim.)
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
-- **Two failure classes, and only one is mechanically fixable.** *Non-execution* — an errored grep
-  printing what an empty grep prints, a `lake build` passing over a heredoc-gutted docstring, a gate
-  whose launcher exits 0 while `GATE_RC=127` — is fixed by making successful execution emit a token
-  and by keeping a known-bad input whose passage invalidates the run. *Instrument-measured-itself* —
-  a seed grid reported as a census, a cut-off reported as a structural property — emits no token and
-  no return code dissents. Its only handle is **calibrating the instrument against a case certified
-  by a different instrument** before its output may support a claim. Collapsing both into "confirm
-  the check ran" reads as one rule and is two.
+- **EVERY INSTRUMENT MUST BE SHOWN CAPABLE OF BOTH VERDICTS BEFORE EITHER IS READ.** One rule, two
+  halves, and it covers every failure this corpus has paid for:
+  * **positive control** — run the pattern against a line you *know* matches before believing
+    "zero matches". A pattern that cannot match returns exactly what a true absence returns:
+    `PIrred \[` can never match `PIrred ([0, 1] : List Real)`, and a `ugrep`-rejected backreference
+    prints nothing at all.
+  * **negative control** — feed the checker a known-bad input; if it passes, the run is worthless.
+    This is what `sorry_audit.lean`'s allowlisted RED skeleton *is*, and what
+    `check_aggregator.sh --selftest`'s canaries are.
+
+  Instruments that can only return one value: an errored grep, a `lake build` over a
+  heredoc-gutted docstring, a launcher exiting 0 while `GATE_RC=127`, a seed grid reported as a
+  census, a cut-off reported as a property of the object. Same defect, five costumes.
+- **A green gate line is a claim about the gate's SCOPE, not about your theorem.** `witness_audit.py`
+  excludes theorems concluding `False` **by design** — it now prints how many (60) it cannot examine,
+  rather than leaving `OK` to read as coverage. Check your theorem is in the class a gate examines
+  before citing it.
 - **`cmd | head; echo $?` reports `head`'s status.** Live instance 2026-08-31: a grep that matched
   nothing reported `rc=0` inside the very check meant to settle whether it matched. Use
   `${PIPESTATUS[0]}`, or redirect to a file and test that.
