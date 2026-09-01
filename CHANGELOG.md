@@ -287,6 +287,41 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-31 (gd)
+
+### `log` of a rational function is not rational on any interval — and the corollary is consumed
+
+`log_not_rational_on_interval` (**48 axioms**, `sorryAx`-free), new module
+`MachLib/LogNotRationalInterval.lean`.
+
+`(gc)` named a specific risk: the `k = 1` corollary `no_rational_logarithm` was quoted by docstrings
+and **applied by nothing**, while the witness audit that exists to catch exactly that cannot see it,
+because theorems concluding `False` are excluded from that audit **by design**. This discharges the
+risk by construction rather than by argument — the corollary now has a caller.
+
+`hchar` is not a hypothesis of the consumer: `derivCoprime_of_irred` `(fy)` supplies it inline from
+`PIrred q`. What a caller provides is structural — `q` irreducible, numerator coprime to it, the
+denominator's exact multiplicity `ppow q (r+1)` with `¬ Pdvd q Qt` — or non-vanishing on the
+interval. **No tail. No growth premise. Nothing eventual.**
+
+### The arc, from `(fy)` to here
+
+| step | supplied by |
+|---|---|
+| nine structural hypotheses | `lowest_terms_with_ord`, `derivCoprime_of_irred`, `exists_coprime_representative` + transports `(fy)` |
+| the tenth, `hident`, from an interval | `hident_of_log_rational_on_interval` `(gc)` |
+| the lift that made any of it local | `peq_of_eq_on_interval` `(ga)` |
+| the differentiation step, on an interval | `logRat_deriv_eq_on_interval` `(gb)` |
+| **the application** | **`log_not_rational_on_interval` — here** |
+
+### Still not claimed
+
+This says nothing about `BoundedGermTranscendence`, and it is not the general instrument `(fz)`
+called for: that allows arbitrary degree in `F(S x)` and **algebraic-function** coefficients, where
+this is `k = 1` with polynomial coefficients. The residue of `OneQueryLevelSet` is untouched.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-08-31 (gc)
 
 ### `hident` from an interval — the composition, written rather than described

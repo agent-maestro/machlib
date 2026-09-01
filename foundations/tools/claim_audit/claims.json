@@ -10100,6 +10100,20 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "log-not-rational-on-interval",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`log_not_rational_on_interval` (**48 axioms**"
+      ],
+      "module": "MachLib.LogNotRationalInterval",
+      "theorem": "MachLib.log_not_rational_on_interval",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }
