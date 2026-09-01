@@ -287,6 +287,48 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-31 (ga)
+
+### The log junction is interval-local, and the bridge is three theorems
+
+New module `MachLib/PolyIntervalIdentity.lean`. `exists_in_interval_notMem` (**29 axioms**),
+`pnorm_nil_of_zero_on_interval` (**32**), `peq_of_eq_on_interval` (**32**). All `sorryAx`-free.
+
+An outside reader asked whether `(fy)`'s six banked results reach further than the junction they were
+cut to fit. **They do, and by more than expected.**
+
+`no_rational_logarithm` takes ten hypotheses and **not one is eventual** — every one is a polynomial
+identity (`PEq`, `Pdvd`, `PNormal`) — and `logRat_cross_identity` is pointwise field algebra with no
+quantifier at all. The whole apparatus was already interval-local. The single place a tail ever
+entered was the final lift from "the relation holds" to `PEq`, because the corpus's only lift,
+`pnorm_eq_nil_of_evZero`, is stated for a tail.
+
+### The pigeonhole that was not needed
+
+The obvious route to the interval lift is: a finite root list cannot cover an infinite interval, so
+bound a nodup list of roots by that list's length. That wants `DecidableEq Real` for `List.erase`
+plus a counting argument the corpus does not carry, and `exact?` finds nothing in Lean core either —
+asked, not assumed.
+
+**None of it is necessary.** `exists_ge_notMem` escapes a finite list by stepping *above* its upper
+bound; a bounded interval forbids that, so escape **inward**. If `r` lies inside `(a,b)` the induction
+runs on the strictly smaller `(r,b)`, and every point there exceeds `r`, so `y ≠ r` falls out of the
+order with no counting anywhere. `pnorm_nil_of_zero_on_interval` is then a four-line twin of
+`pnorm_eq_nil_of_evZero` — same `rcases pev_zero_or_finite_roots`, same shape, one lemma swapped.
+
+The asymmetry is worth recording because it runs the *other* way from intuition: the bounded case is
+harder than the unbounded one at exactly this point, since the tail's escape hatch is unavailable.
+
+### What this unlocks, and what it does not
+
+It makes the junction usable from a **local** hypothesis. That is the `k = 1` half of the
+interval-local instrument `(fz)` named as the `OneQueryLevelSet` residue's real requirement: a
+relation `a₀(x) + a₁(x)·F(S x) = 0` on an open interval no longer needs a tail to become a `PEq`.
+
+It does **not** supply the general instrument. `(fz)`'s target allows arbitrary degree in
+`F(S x)` and algebraic-function coefficients; this handles polynomial coefficients and the lift only.
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-08-31 (fz)
 
 ### `OneQueryLevelSet`: the two stalls have one cause, and it names the instrument to build

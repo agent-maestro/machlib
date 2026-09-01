@@ -36,6 +36,16 @@ open Lean
 /-- Intentional, documented sorry-bearing declarations. Anything else is a regression. -/
 def allowedSorry : List Name := [
   -- ForgeTest.lean: RED skeleton paired with the GREEN `halve_in_unit` right below it
+  --
+  -- DISCHARGE CONDITION (added 2026-08-31, asked for by an outside reader who read "1 allowlisted"
+  -- as a proof debt one step from becoming two). It is not a debt and it must NOT be discharged by
+  -- proving it. This entry is the gate's FIRING SPECIMEN: the known-bad input whose passage would
+  -- mean the gate had stopped working. It retires only when the teaching pair is deleted, or when a
+  -- different firing specimen replaces it -- and removing it without a replacement REDUCES safety,
+  -- because a gate with no specimen is unvalidated (see `feedback_gate_specimen_discipline`).
+  -- The second entry this reader feared cannot arrive silently: allowlist ROT fails the gate in
+  -- both directions, so a licence cannot outlive its sorry, and adding one requires editing this
+  -- file.
   `MachLib.Real.halve_in_unit_sorry
   -- HighDimensional.lean module disclaimer: "intentionally carry `sorry`; formalization targets,
   -- not completed proof claims." Not in the public front door (what_is_proven.md); orphan.

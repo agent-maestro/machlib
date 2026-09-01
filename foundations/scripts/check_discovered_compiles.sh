@@ -117,12 +117,33 @@ if [ "$new_broken" -ne 0 ]; then
   exit 1
 fi
 
-# Shrink the allowlist when the generator is fixed.
+# NO FIRING SPECIMEN YET, and that is stated rather than left to be inferred. By this project's own
+# rule (feedback_gate_specimen_discipline) a gate with no specimen is UNVALIDATED, and this one has
+# none: both its branches -- newly-broken, and allowlist rot -- run only after a full compile pass
+# over 294 files, so a canary costs two extra passes per invocation. scripts/check_aggregator.sh got
+# a three-canary --selftest the same day because its check is a static import scan and costs
+# milliseconds. The asymmetry is cost, not principle. Deferred, not decided against.
+#
+# ALLOWLIST ROT IS A FAILURE, NOT A NOTE (2026-08-31). Same change, same day, same reason as
+# scripts/check_aggregator.sh: this printed a note and exited 0, so a KNOWN_BROKEN entry whose file
+# was fixed (or deleted) stayed as a standing licence. `sorry_audit.lean` has hard-failed on exactly
+# this since 2026-07-29 -- "a stale entry is a licence for the sorry to come back unnoticed" -- and
+# the discipline had never been generalised to the other two allowlists in the suite.
+stale_known=""
 for k in $KNOWN_BROKEN; do
-  if ! grep -qxF "$k" "$TMP/failures" 2>/dev/null; then
-    echo "[check-discovered] NOTE: $k now compiles — remove it from KNOWN_BROKEN." >&2
+  if [ ! -f "$k" ]; then
+    echo "[check-discovered] STALE ALLOWLIST: $k — no longer exists; remove it from KNOWN_BROKEN." >&2
+    stale_known="$stale_known $k"
+  elif ! grep -qxF "$k" "$TMP/failures" 2>/dev/null; then
+    echo "[check-discovered] STALE ALLOWLIST: $k — now compiles; remove it from KNOWN_BROKEN." >&2
+    stale_known="$stale_known $k"
   fi
 done
+if [ -n "$stale_known" ]; then
+  echo "[check-discovered] FAIL: allowlist entr(ies) no longer needed:$stale_known" >&2
+  echo "[check-discovered]   An unneeded licence is a licence for the next broken file." >&2
+  exit 1
+fi
 
 nk="$(printf '%s' "$KNOWN_BROKEN" | wc -w | tr -d ' ')"
 echo "[check-discovered] PASS: $((total - nk)) of $total files under $DISC compile; \

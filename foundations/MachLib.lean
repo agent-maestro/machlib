@@ -38,6 +38,7 @@ import MachLib.PevEvEq
 import MachLib.PolyLowestTerms
 import MachLib.PolyDerivNonzero
 import MachLib.CrossIdentityDescent
+import MachLib.PolyIntervalIdentity
 import MachLib.DerivQuotientLog
 import MachLib.LogRatDeriv
 import MachLib.MultiVarBezoutGeneral

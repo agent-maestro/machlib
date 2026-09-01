@@ -49,7 +49,7 @@
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
 
-exec python3 - "$@" <<'PYEOF'
+exec python3 - "--gate-path=${BASH_SOURCE[0]}" "$@" <<'PYEOF'
 import os, re, sys, glob
 
 # ── MachLib/Discovered/ is DELIBERATELY outside the aggregator: each file
@@ -90,6 +90,11 @@ KNOWN_UNREACHABLE = {
     "MachLib.LambertWAsymptotics",
 }
 
+# TEST SEAM, env-gated and used only by --selftest: lets the rot canary add an entry that is
+# already reachable, so the stale-allowlist branch can be made to FIRE without editing this file.
+# Nothing sets this in normal operation; it is named in the selftest output so it cannot hide.
+KNOWN_UNREACHABLE |= {m for m in os.environ.get("AGG_SELFTEST_EXTRA", "").split() if m}
+
 IMPORT_RE = re.compile(r"^import\s+([A-Za-z0-9_.]+)")
 
 def mod_of(path):
@@ -106,6 +111,60 @@ def imports_of(path):
     except OSError:
         pass
     return out
+
+# ── SELF-TEST ──────────────────────────────────────────────────────────────────────────────
+# This gate produced "772 of 1078 reachable", a number copied into CLAUDE.md, with NO proof it
+# could ever fail. Two canaries and a control, each re-invoking the REAL gate as a subprocess --
+# testing a reimplementation of the decision would test the copy, not the gate.
+if "--selftest" in sys.argv[1:]:
+    import subprocess, tempfile
+    gate = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--gate-path=")), None)
+    if not gate:
+        print("[selftest] FAIL: gate path not passed through", file=sys.stderr)
+        sys.exit(1)
+
+    def run(env_extra=None):
+        env = dict(os.environ)
+        if env_extra:
+            env["AGG_SELFTEST_EXTRA"] = env_extra
+        r = subprocess.run(["bash", gate], capture_output=True, text=True, env=env)
+        return r.returncode, (r.stdout + r.stderr)
+
+    orphan = "MachLib/_SelfTestOrphan.lean"
+    failures = []
+    try:
+        with open(orphan, "w", encoding="utf-8") as fh:
+            fh.write("-- transient, written and removed by check_aggregator.sh --selftest\n"
+                     "namespace MachLib\nend MachLib\n")
+        rc, out = run()
+        fired = rc != 0 and "_SelfTestOrphan" in out
+        print("   canary 1 (an unreachable, unallowlisted module is named)  %s"
+              % ("FIRES" if fired else "SILENT — GATE IS BLIND"))
+        if not fired:
+            failures.append("unreachable module not detected")
+    finally:
+        if os.path.exists(orphan):
+            os.remove(orphan)
+
+    rc, out = run()
+    quiet = rc == 0
+    print("   canary 2 (control: clean tree passes)                      %s"
+          % ("SILENT" if quiet else "FIRES — FALSE POSITIVE"))
+    if not quiet:
+        failures.append("clean tree rejected")
+
+    rc, out = run(env_extra="MachLib.PolyLowestTerms")
+    rot = rc != 0 and "STALE ALLOWLIST" in out
+    print("   canary 3 (a stale allowlist entry is a FAILURE, not a note) %s"
+          % ("FIRES" if rot else "SILENT — ROT IS UNGUARDED"))
+    if not rot:
+        failures.append("allowlist rot not detected")
+
+    if failures:
+        print("[check-aggregator] SELFTEST FAIL: " + "; ".join(failures), file=sys.stderr)
+        sys.exit(1)
+    print("[check-aggregator] SELFTEST PASS — all three specimens discriminate.")
+    sys.exit(0)
 
 files = {mod_of(f): f for f in glob.glob("MachLib/**/*.lean", recursive=True)}
 if not files:
@@ -142,10 +201,20 @@ if new:
           file=sys.stderr)
     sys.exit(1)
 
+# ALLOWLIST ROT IS A FAILURE, NOT A NOTE (2026-08-31). It printed a note and then exited 0, so a
+# stale entry could sit here forever. That is the same "standing licence" hazard `sorry_audit.lean`
+# hard-fails on in BOTH directions -- and it rots in the direction that feels safe: someone wires a
+# module in, nobody prunes the allowlist, and the entry silently re-licenses the next orphan with
+# that name. Same suite, same hazard, opposite discipline until now.
 stale = sorted(m for m in KNOWN_UNREACHABLE if m in seen or m not in files)
 if stale:
-    print("[check-aggregator] NOTE: allowlist entries now reachable or deleted — "
-          "remove them: " + ", ".join(stale), file=sys.stderr)
+    for m in stale:
+        why = "now reachable" if m in seen else "no longer exists"
+        print(f"[check-aggregator] STALE ALLOWLIST: {m} — {why}; remove it from "
+              f"KNOWN_UNREACHABLE.", file=sys.stderr)
+    print(f"[check-aggregator] FAIL: {len(stale)} allowlist entr(ies) no longer needed. "
+          f"An unneeded licence is a licence for the next orphan.", file=sys.stderr)
+    sys.exit(1)
 
 print(f"[check-aggregator] PASS: {len(seen)} of {len(files)} modules reachable from "
       f"MachLib.lean by transitive closure; {len(KNOWN_UNREACHABLE)} documented "

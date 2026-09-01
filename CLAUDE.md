@@ -163,6 +163,17 @@ behind it is missing — registration is still a human act.
   (Kept as a separate bullet on purpose — the line above is the literal anchor of
   `claudemd-tactics-absent`, and rewording it edits the guard rather than the claim.)
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
+- **Two failure classes, and only one is mechanically fixable.** *Non-execution* — an errored grep
+  printing what an empty grep prints, a `lake build` passing over a heredoc-gutted docstring, a gate
+  whose launcher exits 0 while `GATE_RC=127` — is fixed by making successful execution emit a token
+  and by keeping a known-bad input whose passage invalidates the run. *Instrument-measured-itself* —
+  a seed grid reported as a census, a cut-off reported as a structural property — emits no token and
+  no return code dissents. Its only handle is **calibrating the instrument against a case certified
+  by a different instrument** before its output may support a claim. Collapsing both into "confirm
+  the check ran" reads as one rule and is two.
+- **`cmd | head; echo $?` reports `head`'s status.** Live instance 2026-08-31: a grep that matched
+  nothing reported `rc=0` inside the very check meant to settle whether it matched. Use
+  `${PIPESTATUS[0]}`, or redirect to a file and test that.
 - **Write files with a QUOTED heredoc (`<<'EOF'`).** Unquoted, bash executes every backticked token
   in the body, so a Lean docstring lands with **every backticked name deleted** — and `lake build`
   passes anyway, because Lean does not read docstring content. Pass paths via `export VAR` +
