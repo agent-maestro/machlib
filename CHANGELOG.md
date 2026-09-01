@@ -287,6 +287,42 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-31 (gb)
+
+### The differentiation step goes interval-local too — same pattern, one step upstream
+
+New module `MachLib/LogRatDerivInterval.lean`. `deriv_eq_of_eq_on_interval` (**29 axioms**),
+`logRat_deriv_eq_on_interval` (**42**), both `sorryAx`-free.
+
+`(ga)` found the junction was interval-local except for the lift. One step upstream was still
+ray-shaped: `logRat_deriv_eq` consumes `deriv_eq_of_eq_on_ray`, so the identity it produces was only
+available on `[X, ∞)`. Both now have twins.
+
+**The ray was never in the mathematics.** `div_hasDerivAt`, `logComp_hasDerivAt` and `hasDerivAt_pev`
+are pointwise; the ray entered only through a *lemma about locality* that had been stated for a ray.
+The ray version takes `δ = x − X`, the distance to its one boundary; an interval has two, so `δ` must
+sit below both. `exists_pos_le_both` supplies one **by trichotomy** rather than by a `min` GLB lemma
+this corpus does not carry — the same move as `(ga)`'s pigeonhole avoidance, and for the same reason:
+the missing general tool was never needed, only a witness.
+
+### The `k = 1` chain, and what is left of it
+
+    interval relation
+      -> logRat_deriv_eq_on_interval        (gb, new)
+      -> logRat_cross_identity              pointwise already
+      -> peq_of_eq_on_interval              (ga, new)
+      -> no_rational_logarithm              no eventual hypothesis at all
+
+Every arrow now exists. **What is NOT claimed: that this composition has been written.** The four
+pieces line up by shape and the end-to-end application is unwritten, which is exactly the distinction
+`(fy)` drew between an interface and a proof. Ledger unmoved: 22 rows, 4 open, 243 axioms.
+
+### A placement note, stated rather than left to be noticed
+
+`deriv_eq_of_eq_on_interval` belongs beside `deriv_eq_of_eq_on_ray` in `GermDerivFbasis`. It is in
+the new module instead so this arc does not edit a 560-line file for two theorems. That is a
+deliberate deferral with a trigger — move it when a second consumer appears — not an oversight.
+
 ## [Unreleased] — 2026-08-31 (ga)
 
 ### The log junction is interval-local, and the bridge is three theorems

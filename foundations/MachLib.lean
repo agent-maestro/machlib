@@ -39,6 +39,7 @@ import MachLib.PolyLowestTerms
 import MachLib.PolyDerivNonzero
 import MachLib.CrossIdentityDescent
 import MachLib.PolyIntervalIdentity
+import MachLib.LogRatDerivInterval
 import MachLib.DerivQuotientLog
 import MachLib.LogRatDeriv
 import MachLib.MultiVarBezoutGeneral
