@@ -287,6 +287,45 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gg)
+
+### The descent's entry point goes interval-local; its *output type* does not, and that is the finding
+
+New module `MachLib/GermDerivInterval.lean`. `deriv_eq_zero_of_zero_on_interval` (**30 axioms**),
+`fbasis_relation_differentiates_on_interval` (**38**), both `sorryAx`-free.
+
+`(fz)` named `OneQueryLevelSet`'s residue as a relation `Σ N_k(x)·y^k = 0` with `y = Fbasis (S x)` on
+a **bounded component**, where no tail reaches. The machinery that eliminates `y` is the
+germ-derivative descent, and it was ray-shaped throughout — so it could never touch the residue.
+
+The descent's brick uses the ray in exactly one place, its final line; everything upstream
+(`fbasisComp_hasDerivAt`, `gbipev_hasDerivAt`) is pointwise. The twin is the same proof with
+`deriv_eq_zero_of_zero_on_ray` swapped out. Compiled first attempt.
+
+### Where it stops, and why it is not another swap
+
+`fbasisDeriv_descends` concludes `GEvRel (fun x => Fbasis (S x)) L`, and
+
+```
+GEvRel u cs  :=  ∃ X, 1 ≤ X ∧ ∀ x ≥ X, gbipev cs x (u x) = 0
+```
+
+is **eventual by definition** (`GermRelation:49`). The 42 remaining ray-shaped sites in
+`GermDerivFbasis` are therefore **not** a lemma swap. Carrying the descent to an interval needs an
+interval analogue of the *relation type* — a `GIntervalRel` — and the chain re-proved against it.
+A parallel development.
+
+**That contrast is the useful part.** `(ga)`–`(gc)` interval-ised the log junction by swapping two
+lemmas, because its hypotheses and its conclusion were both polynomial identities and neither
+mentioned a tail. This arc's conclusion is an eventual *predicate*. No amount of lemma-swapping
+changes a definition, and predicting otherwise from the first arc's success is exactly the
+extrapolation `(fy)` was caught making from two equal data points.
+
+Recorded rather than attempted, so the next session starts from the shape of the job instead of
+rediscovering it after 42 substitutions.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-09-01 (gf)
 
 ### Applicability, and the rule that was still an argument
