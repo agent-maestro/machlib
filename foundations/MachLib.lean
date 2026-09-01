@@ -41,6 +41,7 @@ import MachLib.CrossIdentityDescent
 import MachLib.PolyIntervalIdentity
 import MachLib.LogRatDerivInterval
 import MachLib.LogNotRationalInterval
+import MachLib.LogNotRationalSpecimen
 import MachLib.DerivQuotientLog
 import MachLib.LogRatDeriv
 import MachLib.MultiVarBezoutGeneral

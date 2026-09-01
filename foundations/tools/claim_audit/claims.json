@@ -10114,6 +10114,20 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "log-recip-specimen",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "(**48 axioms**, `sorryAx`-free)"
+      ],
+      "module": "MachLib.LogNotRationalSpecimen",
+      "theorem": "MachLib.log_recip_not_rational_on_unit_interval",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     }
   ]
 }

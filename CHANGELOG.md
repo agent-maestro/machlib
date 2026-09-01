@@ -287,6 +287,51 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-08-31 (ge)
+
+### A specimen for the interval theorem — and a FALSE ABSENCE, caught by the build
+
+New module `MachLib/LogNotRationalSpecimen.lean`. `log_recip_not_rational_on_unit_interval`
+(**48 axioms**, `sorryAx`-free).
+
+### The retraction first
+
+The first draft of this entry claimed **"`PIrred` appears at 55 sites, 40 of them as a hypothesis,
+and nothing had ever been shown to satisfy it"** and presented a `pIrred_X` as the corpus's first
+witness.
+
+**That was false.** `MachLib/GermClearedSpecimen.lean` has proved `pIrred_X` since the
+cleared-relation arc, uses it at six sites, and its header states the identical discipline in nearly
+the same words — *"conditional on a pole hypothesis set that, until now, nobody had ever
+instantiated"* — having found **two hypotheses there that were genuinely unsatisfiable** and fixed
+them. That module is a better instance of the practice than the one I was proposing to introduce.
+
+**`lake build` caught it, not me**, via a name collision:
+`environment already contains 'MachLib.pIrred_X._proof_1_1' from MachLib.LogNotRationalSpecimen`.
+
+The search behind the false claim was broken **twice over**, and both failures are already in this
+repo's gotchas:
+
+* the pattern `PIrred \[` cannot match the actual text `PIrred ([0, 1] : List Real)` — a bracket
+  where the source has a paren;
+* the exit code was read off `head` through a pipe, so a grep that matched nothing reported `rc=0`.
+  `CLAUDE.md` gained a gotcha about exactly this **earlier the same day**, after the same defect.
+
+Duplicate deleted; the module now imports the existing witness.
+
+### What is genuinely new, and it is narrow
+
+A specimen for the **interval** theorem, which did not exist before `(gd)`. `GermClearedSpecimen`
+instantiates the germ/cleared-relation arc; nothing instantiated `log_not_rational_on_interval`. With
+`P = 1`, `Q = q = x`, `r = 0`, `Qt = 1` on `(1,2)`:
+
+> **`log (1/x)` is not a rational function on `(1,2)`.**
+
+So `(gd)` has content rather than quantifying over an empty configuration space — the check no gate
+here can perform, for a theorem class the vacuity gate excludes by design.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-08-31 (gd)
 
 ### `log` of a rational function is not rational on any interval — and the corollary is consumed
