@@ -287,6 +287,71 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gi)
+
+### Minimality and vanishing, on an interval — and a predictor that is not the shape
+
+New module `MachLib/GermIntervalMinimal.lean`. `GIntervalZero`, `GIntervalProperRel` (defs),
+`exists_minimal_gIntervalRel` (**8 axioms**), `all_gcoeffs_intervalZero_of_shorter` and its
+budget-free form (**18**). All `sorryAx`-free.
+
+`(gh)` stopped at the descent and said the minimality route above it needed its own twins "before the
+descent can be run to a contradiction." Those twins are here. With them, the chain
+
+> minimal proper relation on `(a,b)` → a shorter relation from the descent → **every coefficient of
+> the shorter one vanishes on `(a,b)`**
+
+runs entirely on a bounded component, which is where `OneQueryLevelSet`'s residue lives and where
+`GEvRel` could never reach.
+
+### Three estimates in a row, all wrong the same way
+
+* `(gg)` — "a definition change, so a parallel development, so more work than a lemma swap."
+  Per rung it is **less**.
+* `(gh)` — minimality "needs its own twins". `exists_minimal_length'` is generic over any
+  `Pr : List α → Prop`, so it was a **statement swap with no new argument**.
+* `(gh)` — `all_gcoeffs_evZero_of_shorter'` "delegates to an inductive core that will need porting —
+  real work". It ported **verbatim**, first compile.
+
+> **The predictor is not the shape of the object; it is whether the proof USES the quantifier or
+> merely carries it.**
+
+`gevRel_dropLast` *uses* eventual-ness — it merges the relation's tail with the coefficient's through
+`two_bounds'` — and its interval twin is *shorter*, because two hypotheses on one interval need no
+merging. The induction merely *carries* it, so the port is mechanical. Estimating from "a definition
+change" or "an induction" measures the wrong property, which is why all three estimates missed in the
+same direction.
+
+This is the same failure as the seven false absences and the `N = 2d−3` rule: **an estimate made
+from the shape of the argument rather than from what the argument does.** The three misses here cost
+nothing because they under-promised; that is luck, not method.
+
+### The hypothesis gate caught what this entry's prose glossed
+
+`check_all.sh` came back **10 passed, 1 FAILED**:
+
+```
+NEW  GIntervalProperRel: consumed by exists_minimal_gIntervalRel, concluded by nothing
+```
+
+The draft above said "it closes nothing." The truer statement is sharper and the gate supplied it:
+**nothing can yet produce a `GIntervalProperRel` at all**, so `exists_minimal_gIntervalRel` is
+currently uninstantiable — the same shape as the vacuity risk `(gc)` recorded for a `→ False`
+theorem, arriving from the other side and caught mechanically rather than noticed.
+
+Pinned in `hypothesis_baseline.json` (33 → 34) because a mid-flight parallel development legitimately
+has consumers before producers. It comes off the baseline when a germ is exhibited with a proper
+interval relation — which is exactly the specimen this arc will need anyway, and the ratchet will
+fail if it is added and not pruned.
+
+### What remains
+
+`minimal_grel_identity` (`GermDerivEntry:233`), a producer for `GIntervalProperRel`, and the final
+assembly. This module makes the descent-to-vanishing chain available on a component; **it closes
+nothing**, and `OneQueryLevelSet` stays open.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-09-01 (gh)
 
 ### `GIntervalRel`: the germ descent runs on a bounded component
