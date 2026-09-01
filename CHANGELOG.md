@@ -287,6 +287,45 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gh)
+
+### `GIntervalRel`: the germ descent runs on a bounded component
+
+New module `MachLib/GermIntervalRel.lean`. `GIntervalRel` (def),
+`fbasisDerivList_rel_on_interval` (**38 axioms**), `gIntervalRel_dropLast` (**17**),
+`fbasisDeriv_descends_on_interval` (**38**). All `sorryAx`-free.
+
+`(gg)` scoped this and declined to start it: `GEvRel` is eventual **by definition**, so carrying the
+descent to a bounded component needs an interval analogue of the *relation type*, not a lemma swap.
+Four rungs of that development now exist, and the descent — the machinery that eliminates
+`y = Fbasis (S x)` — can be pointed at a bounded component for the first time.
+
+That matters because `OneQueryLevelSet`'s residue **is** a relation on a bounded component of
+`{S > 0}`, where no tail reaches. `GEvRel` could only ever speak about a tail.
+
+### The prediction in `(gg)` was wrong, in the good direction
+
+`(gg)` expected a parallel development to cost *more* than the log junction's two lemma swaps. Per
+rung it is costing **less**. `gevRel_dropLast` spends most of its proof on `two_bounds'`, merging the
+relation's tail with the coefficient's; its interval twin is a single `gbipev_drop_top` rewrite,
+because both hypotheses live on the same `(a,b)` and there is nothing to intersect.
+
+> **"Eventually" is a quantifier that has to be merged; an interval is not.** The eventual
+> bookkeeping was a tax the interval version does not pay.
+
+Recorded because `(gg)`'s estimate was made from the *shape* of the job — "a definition change, so a
+parallel development, so more work" — which is the estimate style this corpus has been wrong with
+repeatedly. It was wrong again, and this time in the direction that costs nothing.
+
+### What this does NOT close
+
+The minimality route above the descent — `all_gcoeffs_evZero_of_shorter'`, `exists_minimal_grel`,
+`minimal_grel_identity` — is stated over `GProperRel` and `EvZeroF` and needs its own twins before
+the descent can be run to a contradiction. This module makes the descent *available* on a component.
+It closes nothing, and `OneQueryLevelSet` remains open.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-09-01 (gg)
 
 ### The descent's entry point goes interval-local; its *output type* does not, and that is the finding
