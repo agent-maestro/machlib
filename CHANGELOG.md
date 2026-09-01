@@ -287,6 +287,44 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gj)
+
+### The pin comes off in the session it went on, and the descent gets its base case
+
+New module `MachLib/GermIntervalWitness.lean`. `gIntervalProperRel_inhabited` (**30 axioms**),
+`no_length_one_gIntervalProperRel` (**13**), both `sorryAx`-free. Hypothesis baseline ratcheted
+**34 → 33**.
+
+`(gi)` pinned `GIntervalProperRel` as *consumed by `exists_minimal_gIntervalRel`, concluded by
+nothing*, with a stated exit condition rather than an open-ended licence. The condition is met here.
+
+### The witness is inhabitance, not applicability
+
+`gbipev [c₀, c₁] x y = c₀ x + y·c₁ x`, so `u ≡ 0` with `c₀ ≡ 0` satisfies the relation and `c₁ ≡ 1`
+is not identically zero on a non-empty interval. That witnesses the **predicate**.
+
+**It says nothing about whether `Fbasis ∘ S` carries a proper interval relation** — which is exactly
+what this arc exists to refute. Same standing as `pIrred_X` in `(ge)`: a predicate with no witness
+makes every theorem over it vacuously safe, and one witness fixes that and nothing else. Presenting
+a trivial witness as more would be gaming the gate rather than answering it.
+
+### The base case is a real fact, not plumbing
+
+`no_length_one_gIntervalProperRel`: `gbipev [c] x y = c x` **does not mention `y` at all**, so the
+relation forces `c` to vanish on the interval and contradicts properness outright.
+
+That is where the descent terminates. With `(gh)`'s descent and `(gi)`'s vanishing lemma, the shape
+of the intended contradiction is now fully assembled on a bounded component:
+
+> a minimal proper relation of length ≥ 2, descended, is shorter than minimal — so every coefficient
+> vanishes — and length 1 is impossible outright.
+
+**What is still missing is the germ.** Nothing here exhibits a `Fbasis ∘ S` that satisfies the
+descent's hypotheses on a component, and `minimal_grel_identity` has no interval twin. The machinery
+is assembled and unaimed. `OneQueryLevelSet` stays open.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-09-01 (gi)
 
 ### Minimality and vanishing, on an interval — and a predictor that is not the shape

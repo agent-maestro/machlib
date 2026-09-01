@@ -20,7 +20,6 @@
     "EventuallyAtMost",
     "EventuallyMinusLog",
     "ExactComps",
-    "GIntervalProperRel",
     "GlobLip",
     "GuardedBoundaryMode",
     "IsChainFnVal",
