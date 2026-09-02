@@ -287,6 +287,43 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gl)
+
+### The last rung: the minimal-relation identity, on a bounded interval
+
+New module `MachLib/GermIntervalIdentity.lean`. `minimal_gIntervalRel_identity` (**32 axioms**),
+`sorryAx`-free, first compile.
+
+`(gk)` said "unblocked is not done." Done. The whole descent / minimality / identity chain now runs
+on a bounded component — where `OneQueryLevelSet`'s residue lives, and where `GEvRel` structurally
+could not reach.
+
+The port needed nothing new. Every dependency was twinned in `(gi)`–`(gk)`, and the index
+bookkeeping — `split_last`, `gdrel_getElem`, `gscaleSub_getElem`, `List.getElem?_append_*` — never
+mentions a tail, so it carried across untouched.
+
+### What the chain provides on `(a,b)`
+
+| | |
+|---|---|
+| a minimal proper relation | forces an identity on its **top two coefficients** |
+| any relation shorter than minimal | has **every** coefficient vanishing |
+| length 1 | is **impossible** |
+
+That is the full shape of the intended contradiction, on a bounded component, in nine modules.
+
+### What it does not provide, stated plainly against eight consecutive successes
+
+**A germ.** Nothing exhibits an `Fbasis ∘ S` satisfying `GDerivAt` and a proper interval relation on a
+component of `{S > 0}` — which is what the residue is about and what the chain is waiting for.
+
+Eight ports in a row landed first-compile. That is *not* evidence of approaching a theorem: they were
+mechanical precisely because the eventual quantifier was carried rather than used, and mechanical
+work does not approach a proof asymptotically. The hard part was never the porting; it is the germ,
+and it is untouched.
+
+`OneQueryLevelSet` stays open. Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-09-01 (gk)
 
 ### `minimal_grel_identity`'s dependencies, all four twinned
