@@ -287,6 +287,42 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gk)
+
+### `minimal_grel_identity`'s dependencies, all four twinned
+
+New module `MachLib/GermIntervalDeriv.lean`. `hasDerivAt_of_agrees_on_interval` (**28 axioms**),
+`gIntervalRel_gdrel` (**32**), `gIntervalRel_gscaleSub` (**20**), `gIntervalRel_cancel_top` (**20**).
+All `sorryAx`-free.
+
+`(gj)` left `minimal_grel_identity` untwinned. Its three dependencies now have interval versions —
+`gIntervalRel_gdrel` and `gIntervalRel_cancel_top` here, `all_gcoeffs_intervalZero_of_shorter'` in
+`(gi)` — so it is unblocked.
+
+### Four for four: the twins are shorter, and it is the same fact every time
+
+Every eventual lemma in this chain **opens by merging tails**: `three_tails` in `gEvRel_gdrel`,
+`two_bounds'` in `gEvRel_gscaleSub` and in `gevRel_dropLast`. On an interval every hypothesis already
+lives on the same `(a,b)`, so the merge is not simplified — it is **absent**.
+
+> *"Eventually" is an existential over thresholds that has to be intersected; an interval is a fixed
+> pair of endpoints.* The eventual form pays for a generality this arc never wanted.
+
+That is the mechanism behind `(gi)`'s predictor, now with four instances: the question was never
+whether the object's *shape* changes, it is whether the proof **uses** the quantifier or merely
+carries it. Every proof that used it got shorter; every proof that carried it ported verbatim.
+
+The one genuinely new piece is `hasDerivAt_of_agrees_on_interval`. The tail version escapes with a
+one-sided `δ = x − X`; a bounded interval needs a positive number below **both** distances, supplied
+by trichotomy rather than by a `min` GLB lemma this corpus does not carry — the same move as `(gb)`.
+
+### Still not closed
+
+`minimal_grel_identity` itself, a germ satisfying the descent's hypotheses on a component, and the
+final assembly. Unblocked is not done, and `OneQueryLevelSet` stays open.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-09-01 (gj)
 
 ### The pin comes off in the session it went on, and the descent gets its base case
