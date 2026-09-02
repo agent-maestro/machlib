@@ -17,8 +17,8 @@ The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 22 | about IEEE floats, **not modelable in `ℝ`** — validated by measurement |
-| GAP | 1 | witnessable, not yet witnessed — reason given per row |
-| **UNACCOUNTED** | 1 | must be 0; gate 13 fails otherwise |
+| GAP | 2 | witnessable, not yet witnessed — reason given per row |
+| **UNACCOUNTED** | 0 | must be 0; gate 13 fails otherwise |
 
 **The float-bridge rows are a different kind of trust and are deliberately not averaged in.**
 No Mathlib witness can discharge "the machine `atan` rounds to within ε of `Real.arctan`" —
@@ -172,7 +172,7 @@ block first.
 | `MachLib.analytic_id` | witnessed | `(S : RealSet) : IsAnalyticOnReals (fun x => x) S` | fun S => analyticOnNhd_id |
 | `MachLib.analytic_log_pos` | witnessed | `: IsAnalyticOnReals Real.log (Ioi 0)` | MonogateEML.RealModel.analyticOnNhd_real_log_Ioi |
 | `MachLib.analytic_mul` | witnessed | `(f g : Real → Real) (S : RealSet) : IsAnalyticOnReals f S → IsAnalyticOnReals g S → IsAnalyticOnReals (fun x => f x * g x) S` | fun f g S hf hg => hf.mul hg |
-| `MachLib.analytic_ne_zero_nbhd` | **UNACCOUNTED** | `(G : Real → Real) (a b x : Real) : IsAnalyticOnReals G (Icc a b) → a < x → x < b → G x ≠ 0 → ∃ a' b' : Real, a ≤ a' ∧ b' ≤ b ∧ a' < x ∧ x < b' ∧ ∀ y, ` | no witness, no classification — gate 13 fails on this |
+| `MachLib.analytic_ne_zero_nbhd` | GAP | `(G : Real → Real) (a b x : Real) : IsAnalyticOnReals G (Icc a b) → a < x → x < b → G x ≠ 0 → ∃ a' b' : Real, a ≤ a' ∧ b' ≤ b ∧ a' < x ∧ x < b' ∧ ∀ y, ` | Looks like the isolated-zeros twin of the above, but is NOT: read the statement and it never uses analyticity. `G x != 0` plus CONTINUITY already gives a punctured interval where `G != 0`, so the witness is openness of `{y | G y != 0}`, not `locally_ne_zero`. Blocked only on interpreting MachLib's `Icc`/`Ioo`. Cheaper than it looks -- do this one first. |
 | `MachLib.analytic_one_div_pos` | witnessed | `: IsAnalyticOnReals (fun x => 1 / x) (Ioi 0)` | by simp only [one_div]; exact analyticOnNhd_inv.mono (fun x hx => ne_of_gt hx) |
 | `MachLib.analytic_sub` | witnessed | `(f g : Real → Real) (S : RealSet) : IsAnalyticOnReals f S → IsAnalyticOnReals g S → IsAnalyticOnReals (fun x => f x - g x) S` | fun f g S hf hg => hf.sub hg |
 | `Quot.sound` | standard | `` | Lean kernel axiom — sound by construction |

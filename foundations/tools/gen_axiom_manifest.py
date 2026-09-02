@@ -11,16 +11,30 @@ HERE = pathlib.Path(__file__).resolve().parent.parent
 BRIDGE = HERE.parent.parent / "monogate-lean" / "MonogateEML" / "AxiomWitnessBridge.lean"
 
 def strip_comments(s):
-    out,i,d=[],0,0
-    while i<len(s):
-        if s.startswith('/-',i): d+=1;i+=2;continue
-        if s.startswith('-/',i) and d: d-=1;i+=2;continue
-        if d: i+=1;continue
-        if s.startswith('--',i):
-            j=s.find('\n',i); i=len(s) if j<0 else j; continue
-        out.append(s[i]);i+=1
-    return ''.join(out)
+    """Strip Lean comments, but NOT inside string literals.
 
+    A naive version treats `--` as a line comment even inside a `"..."` reason string, which
+    truncates the entry at that point and silently loses everything after it. That is exactly
+    how a gap entry reading "cheaper than it looks -- do this one first" came back UNACCOUNTED
+    while gate 13 (which only needs the NAME, before the dashes) reported it fine.
+    """
+    out, i, depth, instr = [], 0, 0, False
+    while i < len(s):
+        c = s[i]
+        if instr:
+            out.append(c)
+            if c == '\\' and i + 1 < len(s): out.append(s[i+1]); i += 2; continue
+            if c == '"': instr = False
+            i += 1; continue
+        if not depth and c == '"':
+            instr = True; out.append(c); i += 1; continue
+        if s.startswith('/-', i): depth += 1; i += 2; continue
+        if s.startswith('-/', i) and depth: depth -= 1; i += 2; continue
+        if depth: i += 1; continue
+        if s.startswith('--', i):
+            j = s.find('\n', i); i = len(s) if j < 0 else j; continue
+        out.append(c); i += 1
+    return ''.join(out)
 def span(s,pat):
     m=re.search(pat,s)
     if not m: return ""
