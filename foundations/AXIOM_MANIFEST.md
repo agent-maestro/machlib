@@ -13,12 +13,12 @@ The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 103 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 110 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 22 | about IEEE floats, **not modelable in `ℝ`** — validated by measurement |
-| GAP | 9 | witnessable, not yet witnessed — reason given per row |
-| **UNACCOUNTED** | 0 | must be 0; gate 13 fails otherwise |
+| GAP | 1 | witnessable, not yet witnessed — reason given per row |
+| **UNACCOUNTED** | 1 | must be 0; gate 13 fails otherwise |
 
 **The float-bridge rows are a different kind of trust and are deliberately not averaged in.**
 No Mathlib witness can discharge "the machine `atan` rounds to within ε of `Real.arctan`" —
@@ -55,11 +55,11 @@ block first.
 | `MachLib.Real` | mapped | `: Type` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.HasDerivAt` | mapped | `(f : Real → Real) (f' : Real) (x : Real) : Prop` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.HasDerivAt_add` | witnessed | `(f g : Real → Real) (a b : Real) (x : Real) : HasDerivAt f a x → HasDerivAt g b x → HasDerivAt (fun y => f y + g y) (a + b) x` | fun {f g f' g' x} hf hg => HasDerivAt.add hf hg |
-| `MachLib.Real.HasDerivAt_arccos` | GAP | `(x : Real) (hx : abs x < 1) : HasDerivAt arccos (-(1 / sqrt (1 - x * x))) x` | As `HasDerivAt_arcsin`. |
-| `MachLib.Real.HasDerivAt_arcsin` | GAP | `(x : Real) (hx : abs x < 1) : HasDerivAt arcsin (1 / sqrt (1 - x * x)) x` | Mathlib's `Real.hasDerivAt_arcsin` takes `x != -1` and `x != 1`; MachLib states `|x| < 1`. The implication is routine but needs MachLib's `abs` interpreted first. |
+| `MachLib.Real.HasDerivAt_arccos` | witnessed | `(x : Real) (hx : abs x < 1) : HasDerivAt arccos (-(1 / sqrt (1 - x * x))) x` | fun x hx => by obtain ⟨h1, h2⟩ := abs_lt.mp hx simpa [sq] using Real.hasDerivAt_arccos (ne_of_gt h1) (ne_of_lt h2) |
+| `MachLib.Real.HasDerivAt_arcsin` | witnessed | `(x : Real) (hx : abs x < 1) : HasDerivAt arcsin (1 / sqrt (1 - x * x)) x` | fun x hx => by obtain ⟨h1, h2⟩ := abs_lt.mp hx simpa [sq] using Real.hasDerivAt_arcsin (ne_of_gt h1) (ne_of_lt h2) |
 | `MachLib.Real.HasDerivAt_atan` | witnessed | `(x : Real) : HasDerivAt atan (1 / (1 + x * x)) x` | fun x => by simpa [sq] using Real.hasDerivAt_arctan x |
 | `MachLib.Real.HasDerivAt_comp` | witnessed | `(f g : Real → Real) (a b : Real) (x : Real) : HasDerivAt g a x → HasDerivAt f b (g x) → HasDerivAt (fun y => f (g y)) (b * a) x` | fun f g a b x hg hf => HasDerivAt.comp x hf hg |
-| `MachLib.Real.HasDerivAt_congr` | GAP | `(f g : Real → Real) (a x : Real) (h : ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → f y = g y) : HasDerivAt f a x → HasDerivAt g a x` | Local-equality congruence. Mathlib has `Filter.EventuallyEq.hasDerivAt_iff`, but the hypothesis is stated epsilon-delta, so it needs the same `abs`/neighbourhood bridge. |
+| `MachLib.Real.HasDerivAt_congr` | witnessed | `(f g : Real → Real) (a x : Real) (h : ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → f y = g y) : HasDerivAt f a x → HasDerivAt g a x` | fun f g a x h hf => by obtain ⟨δ, hδ, H⟩ := h have heq : f =ᶠ[nhds x] g := by have : ∀ᶠ y in nhds x, f y = g y := by rw [Metric.eventually_nhds_iff] exact ⟨δ, hδ, fun {y} hy => H y (by simpa [Real.dist_eq] using hy)⟩ exact this exact heq.hasDerivAt_iff.mp hf |
 | `MachLib.Real.HasDerivAt_const` | witnessed | `(c : Real) (x : Real) : HasDerivAt (fun _ => c) 0 x` | fun (c x : ℝ) => hasDerivAt_const x c |
 | `MachLib.Real.HasDerivAt_cos` | witnessed | `(x : Real) : HasDerivAt Real.cos (-Real.sin x) x` | Real.hasDerivAt_cos |
 | `MachLib.Real.HasDerivAt_exp` | witnessed | `(x : Real) : HasDerivAt Real.exp (Real.exp x) x` | fun x => Real.hasDerivAt_exp x |
@@ -68,7 +68,7 @@ block first.
 | `MachLib.Real.HasDerivAt_log_pos` | witnessed | `(x : Real) : 0 < x → HasDerivAt Real.log (1 / x) x` | fun x hx => by simpa [one_div] using Real.hasDerivAt_log (ne_of_gt hx) |
 | `MachLib.Real.HasDerivAt_mul` | witnessed | `(f g : Real → Real) (a b : Real) (x : Real) : HasDerivAt f a x → HasDerivAt g b x → HasDerivAt (fun y => f y * g y) (a * g x + f x * b) x` | fun {f g f' g' x} hf hg => HasDerivAt.mul hf hg |
 | `MachLib.Real.HasDerivAt_neg` | witnessed | `(f : Real → Real) (a : Real) (x : Real) : HasDerivAt f a x → HasDerivAt (fun y => -f y) (-a) x` | fun f a x hf => hf.neg |
-| `MachLib.Real.HasDerivAt_of_eps_delta` | GAP | `{f : Real → Real} {f' x : Real} (h : ∀ ε : Real, 0 < ε → ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → abs (f y - f x - f' * (y - x)) ≤ ε * abs (y` | Same reason, other direction: the epsilon-delta CHARACTERISATION of the derivative. Needs MachLib's `abs` interpreted and Mathlib's `hasDerivAt_iff_tendsto` unfolded. Witnessable. |
+| `MachLib.Real.HasDerivAt_of_eps_delta` | witnessed | `{f : Real → Real} {f' x : Real} (h : ∀ ε : Real, 0 < ε → ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → abs (f y - f x - f' * (y - x)) ≤ ε * abs (y` | fun {f f' x} h => by refine hasDerivAt_iff_isLittleO.mpr (Asymptotics.isLittleO_iff.mpr ?_) intro c hc obtain ⟨δ, hδ, H⟩ := h c hc rw [Metric.eventually_nhds_iff] refine ⟨δ, hδ, fun {y} hy => ?_⟩ have hy' : |y - x| < δ := by simpa [Real.dist_eq] using hy simpa [Real.norm_eq_abs, mul_comm f' (y - x)] using H y hy' |
 | `MachLib.Real.HasDerivAt_of_eq` | witnessed | `(f g : Real → Real) (a : Real) (x : Real) : (∀ y, f y = g y) → HasDerivAt f a x → HasDerivAt g a x` | fun f g a x heq hf => by rw [show f = g from funext heq] at hf; exact hf |
 | `MachLib.Real.HasDerivAt_sin` | witnessed | `(x : Real) : HasDerivAt Real.sin (Real.cos x) x` | Real.hasDerivAt_sin |
 | `MachLib.Real.HasDerivAt_sub` | witnessed | `(f g : Real → Real) (a b : Real) (x : Real) : HasDerivAt f a x → HasDerivAt g b x → HasDerivAt (fun y => f y - g y) (a - b) x` | fun {f g f' g' x} hf hg => HasDerivAt.sub hf hg |
@@ -104,12 +104,12 @@ block first.
 | `MachLib.Real.exp_pos` | witnessed | `(x : Real) : 0 < exp x` | Real.exp_pos |
 | `MachLib.Real.exp_surj` | witnessed | `: ∀ y : Real, 0 < y → ∃ x : Real, exp x = y` | fun y hy => ⟨Real.log y, Real.exp_log hy⟩ |
 | `MachLib.Real.exp_zero` | witnessed | `: exp 0 = 1` | Real.exp_zero |
-| `MachLib.Real.hasDerivAt_continuousAt` | GAP | `{f : Real → Real} {f' x : Real} : HasDerivAt f f' x → ContinuousAt f x` | MachLib's `ContinuousAt` is its own transparent epsilon-delta def (IntermediateValue.lean:21) over MachLib's `abs`, not Mathlib's filter-based `ContinuousAt`. Witnessing it needs both interpreted and the epsilon-delta form derived from `HasDerivAt.continuousAt` not a one-line term. Witnessable; not yet witnessed. |
+| `MachLib.Real.hasDerivAt_continuousAt` | witnessed | `{f : Real → Real} {f' x : Real} : HasDerivAt f f' x → ContinuousAt f x` | fun {f f' x} h ε hε => by obtain ⟨δ, hδ, H⟩ := Metric.continuousAt_iff.mp h.continuousAt ε hε exact ⟨δ, hδ, fun y hy => by simpa [Real.dist_eq] using H (by simpa [Real.dist_eq] using hy)⟩ |
 | `MachLib.Real.leR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a ≤ b) |
 | `MachLib.Real.le_iff_lt_or_eq` | witnessed | `(a b : Real) : a ≤ b ↔ a < b ∨ a = b` | fun {a b} => le_iff_lt_or_eq |
 | `MachLib.Real.le_sqrt_of_sq_le` | witnessed | `{z y : Real} (hz : 0 ≤ z) (h : z * z ≤ y) : z ≤ sqrt y` | fun {z y} hz h => by rw [show z = Real.sqrt (z * z) from (Real.sqrt_mul_self hz).symm]; exact Real.sqrt_le_sqrt h |
 | `MachLib.Real.log10` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
-| `MachLib.Real.log10_def` | GAP | `(x : Real) : 0 < x → exp (log10 x * log (natCast 10)) = x` | `log10` is interpreted as `Real.logb 10`; the axiom asserts `exp (logb 10 x * log 10) = x` for `x > 0`, which is `Real.exp_log` after `Real.logb` unfolding. Routine; not yet done. |
+| `MachLib.Real.log10_def` | witnessed | `(x : Real) : 0 < x → exp (log10 x * log (natCast 10)) = x` | fun x hx => by rw [show ((10:ℕ):ℝ) = (10:ℝ) by norm_num, Real.logb, div_mul_cancel₀ _ (by norm_num : Real.log (10:ℝ) ≠ 0)] exact Real.exp_log hx |
 | `MachLib.Real.ltR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a < b) |
 | `MachLib.Real.lt_irrefl_ax` | witnessed | `(a : Real) : ¬ a < a` | lt_irrefl |
 | `MachLib.Real.lt_total` | witnessed | `(a b : Real) : a < b ∨ a = b ∨ b < a` | lt_trichotomy |
@@ -153,7 +153,7 @@ block first.
 | `MachLib.Real.sqrt_sq_nonneg` | witnessed | `(x : Real) : 0 ≤ x → sqrt x * sqrt x = x` | fun x hx => Real.mul_self_sqrt hx |
 | `MachLib.Real.subR` | witnessed | `: Real → Real → Real` | (fun a b : ℝ => a - b) |
 | `MachLib.Real.sub_def` | witnessed | `(a b : Real) : a - b = a + (-b)` | sub_eq_add_neg |
-| `MachLib.Real.sup_exists` | GAP | `(p : Real → Prop) (h_nonempty : ∃ x, p x) (h_bound : BoundedAbove p) : ∃ s : Real, (∀ x, p x → x ≤ s) ∧ (∀ s', (∀ x, p x → x ≤ s') → s ≤ s')` | Least-upper-bound property. Mathlib has `Real.exists_isLUB`; the statement quantifies over MachLib's `BoundedAbove` def, which must be interpreted before the witness typechecks. |
+| `MachLib.Real.sup_exists` | witnessed | `(p : Real → Prop) (h_nonempty : ∃ x, p x) (h_bound : BoundedAbove p) : ∃ s : Real, (∀ x, p x → x ≤ s) ∧ (∀ s', (∀ x, p x → x ≤ s') → s ≤ s')` | fun p hne hbd => by obtain ⟨M, hM⟩ := hbd obtain ⟨w, hw⟩ := hne obtain ⟨t, ht⟩ := Real.exists_isLUB (s := {x | p x}) ⟨w, hw⟩ ⟨M, fun y hy => hM y hy⟩ exact ⟨t, fun x hx => ht.1 hx, fun s' hs' => ht.2 hs'⟩ |
 | `MachLib.Real.tan` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.tan_def` | witnessed | `(x : Real) : cos x ≠ 0 → tan x = sin x / cos x` | fun x _ => Real.tan_eq_sin_div_cos x |
 | `MachLib.Real.tanh` | witnessed | `: Real → Real` | Real.tanh |
@@ -168,11 +168,11 @@ block first.
 | `MachLib.analytic_comp` | witnessed | `(f g : Real → Real) (S T : RealSet) : IsAnalyticOnReals g S → (∀ x, S x → T (g x)) → IsAnalyticOnReals f T → IsAnalyticOnReals (fun x => f (g x)) S` | fun f g S T hg hmaps hf => hf.comp hg hmaps |
 | `MachLib.analytic_const` | witnessed | `(c : Real) (S : RealSet) : IsAnalyticOnReals (fun _ => c) S` | fun c S => analyticOnNhd_const |
 | `MachLib.analytic_exp` | witnessed | `(S : RealSet) : IsAnalyticOnReals Real.exp S` | fun S => analyticOnNhd_rexp.mono (Set.subset_univ S) |
-| `MachLib.analytic_finite_zeros_compact` | GAP | `(f : Real → Real) (a b : Real) : a < b → IsAnalyticOnReals f (Icc a b) → (∃ x : Real, Ioo a b x ∧ f x ≠ 0) → RealSetFinite (fun x => Icc a b x ∧ f x =` | An analytic function not identically zero has finitely many zeros on a compact. Mathlib has this via `AnalyticOnNhd` + `Set.Finite`; the statement quantifies over MachLib's own `IsAnalyticOnReals`, which is a MAPPED carrier, so the witness needs that unfolded. Witnessable. |
+| `MachLib.analytic_finite_zeros_compact` | GAP | `(f : Real → Real) (a b : Real) : a < b → IsAnalyticOnReals f (Icc a b) → (∃ x : Real, Ioo a b x ∧ f x ≠ 0) → RealSetFinite (fun x => Icc a b x ∧ f x =` | An analytic function not identically zero has finitely many zeros on a compact. Mathlib has the ingredients (`AnalyticAt.locally_ne_zero`, IsolatedZeros.lean:108) but NOT the packaged statement: the derivation is isolated-zeros + a finite subcover of `Icc a b`, plus interpreting MachLib's `Icc`/`Ioo`/`RealSetFinite`. Witnessable, and the only genuinely non-trivial one left. |
 | `MachLib.analytic_id` | witnessed | `(S : RealSet) : IsAnalyticOnReals (fun x => x) S` | fun S => analyticOnNhd_id |
 | `MachLib.analytic_log_pos` | witnessed | `: IsAnalyticOnReals Real.log (Ioi 0)` | MonogateEML.RealModel.analyticOnNhd_real_log_Ioi |
 | `MachLib.analytic_mul` | witnessed | `(f g : Real → Real) (S : RealSet) : IsAnalyticOnReals f S → IsAnalyticOnReals g S → IsAnalyticOnReals (fun x => f x * g x) S` | fun f g S hf hg => hf.mul hg |
-| `MachLib.analytic_ne_zero_nbhd` | GAP | `(G : Real → Real) (a b x : Real) : IsAnalyticOnReals G (Icc a b) → a < x → x < b → G x ≠ 0 → ∃ a' b' : Real, a ≤ a' ∧ b' ≤ b ∧ a' < x ∧ x < b' ∧ ∀ y, ` | As `analytic_finite_zeros_compact` (isolated-zeros side). |
+| `MachLib.analytic_ne_zero_nbhd` | **UNACCOUNTED** | `(G : Real → Real) (a b x : Real) : IsAnalyticOnReals G (Icc a b) → a < x → x < b → G x ≠ 0 → ∃ a' b' : Real, a ≤ a' ∧ b' ≤ b ∧ a' < x ∧ x < b' ∧ ∀ y, ` | no witness, no classification — gate 13 fails on this |
 | `MachLib.analytic_one_div_pos` | witnessed | `: IsAnalyticOnReals (fun x => 1 / x) (Ioi 0)` | by simp only [one_div]; exact analyticOnNhd_inv.mono (fun x hx => ne_of_gt hx) |
 | `MachLib.analytic_sub` | witnessed | `(f g : Real → Real) (S : RealSet) : IsAnalyticOnReals f S → IsAnalyticOnReals g S → IsAnalyticOnReals (fun x => f x - g x) S` | fun f g S hf hg => hf.sub hg |
 | `Quot.sound` | standard | `` | Lean kernel axiom — sound by construction |
