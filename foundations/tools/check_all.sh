@@ -58,7 +58,7 @@ run() {
   # `tail -n 3` window silently dropped them. Cosmetic — SUMMARY decides pass/fail from the captured
   # rc, never from this text — but a comment that overstates what it does is how a gate's scope
   # drifts from its description.
-  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|check-[a-z]+\]|AxiomLedger" \
+  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|check-[a-z]+\]|AxiomLedger" \
     "$OUT/$name.log" | tail -n 2 || true
 }
 
@@ -80,6 +80,7 @@ else
   run "obligations"  bash tools/check_obligations.sh
   run "discovered"   bash scripts/check_discovered_compiles.sh 4
   run "forge-cert"   bash scripts/check_forge_certificates.sh
+  run "soundness"    python3 tools/soundness_witness_audit.py
   run "claims"       python3 tools/claim_audit/claim_audit.py
   run "witness"      python3 tools/witness_audit.py
   run "hypothesis"   python3 tools/hypothesis_audit.py

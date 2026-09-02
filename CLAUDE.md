@@ -62,6 +62,47 @@ gap was docstring prose plus axioms in unreachable modules; those two sub-counts
 re-derived here and should not be quoted as current. Use the environment (`getEnv`, `.axiomInfo`), never grep —
 this is the same rule as *"axiom-absence claims must be read off `#print axioms`."*
 
+## How many of them are MODELED (the number a reviewer actually wants)
+
+The count above says how many axioms there are. It says nothing about whether they are
+*satisfiable* — and a disclosed-but-misstated axiom is worse than an undisclosed one, because the
+disclosure buys confidence the statement has not earned. The honest headline is **"zero unmodeled
+axioms"**, never "zero axioms".
+
+The check cannot live here: MachLib is Mathlib-free, so nothing inside it can exhibit a model.
+It lives in the sibling project **`monogate-lean`**, which imports *both* Mathlib and MachLib and,
+for each trusted axiom, verifies a Mathlib term inhabits the axiom's **interpreted type**
+(`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). That is a certificate *about* MachLib, never a
+dependency *of* it — the Mathlib-free property is untouched.
+
+Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, one row per axiom:
+
+| class | n | |
+|---|---|---|
+| witnessed | 103 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| mapped | 12 | carrier/function symbols — interpreted, not propositions |
+| standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
+| **float-bridge** | **22** | about IEEE floats — **no Mathlib witness can ever discharge these** |
+| tracked gap | 9 | witnessable, not yet witnessed; each row carries its reason |
+| unmodeled | **0** | gate 13 fails if this is ever nonzero |
+
+**The 22 float-bridge axioms are a different kind of trust and must not be averaged in.** They
+assert a concrete float `exp`/`atan`/`sqrt` rounds to within `ε` of the real function. Mathlib has
+no IEEE-754 semantics, so they are validated by *measurement*, not by a model. **This is what a
+hardware certificate actually rests on** — anyone shown an atan/tan bench certificate should be
+pointed at that block first.
+
+> **It went dark once, for 33 days, and nothing said so.** MachLib moved to Lean v4.32.2 on
+> 2026-07-31; `monogate-lean` stayed on v4.14.0. Because it requires MachLib *by path*, it was
+> compiling MachLib's current source under the old toolchain and could not build — while the
+> ledger went on reporting "trusted", because "trusted" meant *listed* and the thing that turns
+> listing into evidence was not running. Its `trustedFootprint` was also a hand-pinned snapshot
+> (78 names against a live 149) whose own cross-check passed **against the copy**. When it was
+> finally rebuilt it rejected two witnesses immediately — Mathlib v4.32 had *flipped*
+> `add_lt_add_left` to add on the right. **Gate 13 (`tools/soundness_witness_audit.py`) now fails
+> on toolchain skew between the two repos**, on any trusted axiom with no witness and no
+> classification, and on a stale excuse entry. Never re-pin that footprint by hand.
+
 ## Where the content comes from
 
 Self-contained. EML semantics live in `MachLib/SinNotInEML.lean` (the `EMLTree` type and `eval`);
