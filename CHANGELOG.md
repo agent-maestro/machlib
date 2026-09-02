@@ -287,6 +287,41 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gm)
+
+### Parity: the `Fbasis ∘ S` layer on a bounded interval
+
+New module `MachLib/FbasisIntervalIdentity.lean`. `fbasis_top_two_identity_on_interval`
+(**38 axioms**), `sorryAx`-free.
+
+Everything the tail arc can say about `Fbasis ∘ S`'s minimal relation, the interval arc now says on a
+bounded component. That is the top of the chain begun in `(gg)`, ten modules ago.
+
+### The footprint measures the pattern
+
+The eventual `fbasis_top_two_identity` opens with `two_bounds'`, merging the derivative hypothesis
+with the positivity hypothesis. On an interval both already hold on `(a,b)`, so the twin is the chain
+rule handed straight to `minimal_gIntervalRel_identity` — one line.
+
+> **38 axioms against the original's 39.** The tail-merge lemma is not in the interval version's
+> dependency closure.
+
+Five twins, five times shorter, and here the difference is visible in `#print axioms` rather than in
+line count — which makes it a measurement rather than an impression.
+
+### Where this leaves the residue
+
+`(fz)` named `OneQueryLevelSet`'s requirement: an interval-local instrument tolerating
+algebraic-function coefficients. The germ-relation half of that now exists at full strength on a
+bounded component. What is still absent is unchanged and worth repeating against ten modules of
+green: **nothing exhibits a germ**, and nothing turns the top-two identity into a contradiction for
+`Fbasis ∘ S` specifically — the eventual arc has not done that either, which is why
+`BoundedGermTranscendence` is open in both settings.
+
+Parity with an arc that is itself unfinished is parity, not progress past it.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-09-01 (gl)
 
 ### The last rung: the minimal-relation identity, on a bounded interval

@@ -48,6 +48,7 @@ import MachLib.GermIntervalMinimal
 import MachLib.GermIntervalWitness
 import MachLib.GermIntervalDeriv
 import MachLib.GermIntervalIdentity
+import MachLib.FbasisIntervalIdentity
 import MachLib.DerivQuotientLog
 import MachLib.LogRatDeriv
 import MachLib.MultiVarBezoutGeneral
