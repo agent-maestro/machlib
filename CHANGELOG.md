@@ -287,6 +287,53 @@ not eventually zero is eventually non-zero and a finite product of such is non-v
   `EMLNegTranslation` where they were made public. The complaint in `EMLRayIdentity` about `a < a + 1`
   now applies to three separate helpers.
 
+## [Unreleased] — 2026-09-01 (gn)
+
+### The Forge seam, sealed: a twelfth gate for proof-carrying certificates
+
+New gate `scripts/check_forge_certificates.sh`, wired into `check_all.sh`. **12 gates**, all green.
+The three certificates in `foundations/ForgeCheck/` are now **tracked**, so the gate's verdict is
+tree-bound.
+
+Forge's numerical-stability pass emits Lean files headed **PROOF-CARRYING**, each asserting an
+accuracy bound with its assumptions pinned and its hardware artifact hashed. They arrived in this
+tree untracked and **referenced by no gate**. Nothing checked the proof they carry — and one of the
+three did not typecheck.
+
+Its failure mode is one **Forge had already fixed**: `relBound <= (inf : Real)`, Python's
+`float('inf')` formatted into a Lean numeral, where `_required_literal` now returns a finite
+stand-in. So the artifact was older than its generator, and being ungated it never said so. Forge's
+own source comments the identical discovery twice, in the same words both times:
+
+> *"Nothing noticed for as long as no checker could read the artifact."*
+
+### What the gate does and does not assert
+
+It asserts **only** that each emitted file is one Lean can check. It does not verify the assumptions,
+re-derive the bounds, or claim the accuracy figures are true. Scope deliberately unexpanded: *a
+proof-carrying artifact nobody checks is a claim, not a proof*, and that is the entire content.
+
+* the stale certificate is allowlisted with a **remedy, not a licence** — *regenerate from the
+  current generator; do not hand-edit a generated file*;
+* **rot fails in both directions**, so the entry cannot outlive the regeneration
+  (`sorry_audit.lean`'s discipline, now in four gates);
+* `--selftest` carries three specimens, each re-invoking the **real** gate as a subprocess:
+
+```
+canary 1 (a certificate that does not check is NAMED)      FIRES
+canary 2 (control: the real tree passes)                   SILENT
+canary 3 (a stale allowlist entry FAILS, not notes)        FIRES
+```
+
+### The judgement call, stated rather than buried
+
+A tree-bound gate needs tracked files, so sealing this seam required committing **another project's
+generated output** into MachLib. Defensible — the certificate *is* the interface artifact — but it
+means MachLib now carries Forge emissions, and that should be a decision on the record rather than
+something discovered later.
+
+Ledger unmoved: 22 rows, 4 distinct open obligations, 243 axioms.
+
 ## [Unreleased] — 2026-09-01 (gm)
 
 ### Parity: the `Fbasis ∘ S` layer on a bounded interval

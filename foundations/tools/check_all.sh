@@ -79,6 +79,7 @@ else
   run "axiom-ledger" lake env lean AxiomLedger.lean
   run "obligations"  bash tools/check_obligations.sh
   run "discovered"   bash scripts/check_discovered_compiles.sh 4
+  run "forge-cert"   bash scripts/check_forge_certificates.sh
   run "claims"       python3 tools/claim_audit/claim_audit.py
   run "witness"      python3 tools/witness_audit.py
   run "hypothesis"   python3 tools/hypothesis_audit.py
