@@ -323,6 +323,33 @@ theorem lowerEnvBound_three : LowerEnvBound 3 3 := by
       rw [e3] at u
       exact u
 
+/-! ### Route map: the two depth-4 conditions are NOT equidistant
+
+`decayFloorUpTo_four_of_nodeDecay` (here) and `decayFloorUpTo_four_of_valueGap`
+(`EMLValueGap:297`) both deliver `DecayFloorUpTo 4`, and reading them side by side suggests a
+choice between two comparable routes. Measured against what is actually proved, they are not
+comparable at all:
+
+| condition | proved at | needed for depth 4 | rungs away |
+|---|---|---|---|
+| `NodeDecayBound` | `2 1` (`nodeDecayBound_two`, below) | `3 3` | **one** |
+| `ValueGapBound`  | `0 0` (`valueGapBound_zero`) | `3 7` | **three** |
+
+They are the same cancellation question in different coordinates —
+`exp (A x) − log (B x) > 0` iff `B x < exp (exp (A x))` — so neither is intrinsically the easier
+statement. What differs is only how far each has been carried, and nothing in either file says so.
+Anyone picking up depth 4 should attack `NodeDecayBound 3 3`.
+
+**And the next rung has one named missing artifact.** `nodeDecayBound_two` is not a general
+argument: it *is* `depth3DecayExp_holds`, which runs off `depth_le_two_normal_form`
+(`EMLDepthTameness:5896`) — the classification of depth-≤2 values. The method at each rung is
+"classify the values at that depth", and **there is no `depth_le_three_normal_form` in the
+corpus**. That, not the ladder step, is what depth 4 is waiting on: `decayFloorUpTo_succ` is
+already general, and `lowerEnvBound_three` is already proved.
+
+(Prose, not a theorem. "One rung away" is a statement about this corpus's current contents, not
+about mathematics, and it stops being true the moment someone proves either condition.) -/
+
 /-- **Depth 4 rests on one proposition.** Supply `NodeDecayBound 3 m` for any `m ≥ 3` and the rung
 follows; the lower envelope is no longer part of the debt. -/
 theorem decayFloorUpTo_four_of_nodeDecay (h : NodeDecayBound 3 3) : DecayFloorUpTo 4 :=
