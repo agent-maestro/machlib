@@ -347,37 +347,41 @@ argument: it *is* `depth3DecayExp_holds`, which runs off `depth_le_two_normal_fo
 corpus**. That, not the ladder step, is what depth 4 is waiting on: `decayFloorUpTo_succ` is
 already general, and `lowerEnvBound_three` is already proved.
 
-**Sharper still: it is TWO named lemmas, not a classification.** The depth-3 rung's proof
-(`EMLDepthTameness:11283`) does not consume the five closed forms of `Depth1Form` directly — it
-consumes *asymptotic dichotomies* about depth-1 functions. So what the next rung needs is their
-depth-2 analogues, and only two of the four are missing:
+**CORRECTION 2026-09-03 — the two "missing" lemmas were not missing.** An earlier version of this
+note claimed the rung needed `depth_le_two_log_lower_at_infinity` and `depth_le_two_log_le_linear`,
+neither of which existed. That was wrong, and wrong because absence was checked by **name pattern**
+extrapolated from depth 1. This corpus names lemmas after the *shape of the bound*, so at depth 2
+they are called differently:
 
-| dichotomy | depth 1 | depth 2 |
-|---|---|---|
-| `depth_le_*_exp_bounded_or_grows` | ✓ | **✓** |
-| `depth_le_*_lower_on_ray` | ✓ | **✓** |
-| `depth_le_*_log_lower_at_infinity` | ✓ | **missing** |
-| `depth_le_*_log_le_linear` | ✓ | **missing** |
+| what depth 1 calls it | what depth 2 actually has |
+|---|---|
+| `depth_le_one_log_le_linear` | **`depth_le_two_log_le_exp`** (`EMLDepthTameness:3222`) — exists, identical statement |
+| `depth_le_one_log_lower_at_infinity` | **`depth_le_two_decay_on_ray`** (`:2214`) — exists, and SHARPER (`C + log x`), but assumes `0 < t.eval x` |
 
-Both missing ones are about `log`, which is the half that needs its argument bounded away from `0` —
-the circular part of the ladder. Their shape is one level weaker than depth 1's: an **exponential**
-floor `−(C + exp x) ≤ log (B.eval x)` rather than depth 1's constant `Cl`. (Not *linear*, which an
-earlier draft of this note guessed from the `−C − log x → −C − x` degradation of `lower_on_ray`.
-The bound comes from `NodeDecayBound _ 1`, whose height is `towerFn 1 = exp`, so the ladder's
-`log`-side degradation is a full tower level rather than one algebraic step.)
+So one was a verbatim duplicate and the other existed in stronger conditional form. The only genuine
+gap was the *positivity hypothesis*, and `EMLDepth2LogLower` now removes it in a dozen lines at the
+sharper logarithmic height, rather than reproving the bound from scratch at an exponential one.
 
-**And the obvious derivation does not close.** `decayFloorUpTo_two` is proved and looks like it
-should supply the floor, but its hypothesis is *eventual positivity* (`∀ x ≥ X₀, 0 < t.eval x`)
-while `depth_le_one_log_lower_at_infinity` is **unconditional** — it covers a `B` that oscillates in
-sign, using the totalisation (`log b = 0` for `b ≤ 0`) on the non-positive stretches and the explicit
-forms on the positive ones. A depth-2 version therefore needs a *pointwise* floor on the positive
-set, which is strictly stronger than what `DecayFloorUpTo 2` gives. That gap, not the ladder step
-and not a classification, is the live content.
+**What the rung actually waits on**, measured by reading signatures rather than guessing names:
+`depth3DecayExp_holds` is 52 lines but rests on **809 lines of depth-3-specific machinery**, ~436 of
+it needed. All four helpers hardcode `Q.depth ≤ 2` and conclude at `towerFn 1`; none is
+depth-parameterised. The dependency chain terminates:
 
-(Prose, not a theorem. "One rung away" is a statement about this corpus's current contents, not
-about mathematics, and it stops being true the moment someone proves either condition. The two
-missing lemma names above are predictions of what the rung needs, read off the depth-1 proof's
-actual consumption; they are not claims that those statements are true.) -/
+```
+NodeDecayBound 3 3
+├── growing_left  — inputs exist (depth_le_two_approach_constant), liftable now
+├── const_left → depth_le_three_gap_below (~145)
+│                ├── depth_le_two_form              ← MISSING, but ~free:
+│                │                                    depth_le_two_normal_form already proves it
+│                └── depth_le_two_exp_gap_below (~104) → depth_le_two_classification, same base
+├── var_left    └── bounded_left
+```
+
+So the base of the whole stack is packaging the depth-2 classification as a predicate.
+
+(Prose, not a theorem. "One rung away" counts rungs of the ladder, not effort — see the measured
+cost above, which an earlier draft of this note did not have and which made the rung read as cheaper
+than it is.) -/
 
 /-- **Depth 4 rests on one proposition.** Supply `NodeDecayBound 3 m` for any `m ≥ 3` and the rung
 follows; the lower envelope is no longer part of the debt. -/
