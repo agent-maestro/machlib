@@ -7,3 +7,6 @@ artifacts/machsig_raw.tsv
 artifacts/machsig_raw.err
 artifacts/machsig_census.jsonl
 artifacts/machsig_census.csv
+artifacts/machsig_terms_raw.tsv
+artifacts/machsig_terms.err
+artifacts/machsig_terms.jsonl

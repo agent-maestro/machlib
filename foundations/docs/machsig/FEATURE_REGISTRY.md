@@ -35,6 +35,33 @@ Four independent axes per the Phase 1 amendment. They are **not** interchangeabl
 **`type_direct_const_count` is not a dependency count.** It is the declaration's own surface, not a
 transitive closure. The two are kept apart deliberately; only `axiom_dependency_count` is transitive.
 
+## Term-layer features — `MachSig-terms/v0.1`
+
+Scope note: the term layer covers `MachLib.*` **and `Certcom.*`**. Phase 1's declaration census was
+`MachLib`-only, which excluded the Forge-facing `EML` grammar entirely.
+
+| feature_id | representation_scope | semantic_kind | value_type | epistemic_type |
+|---|---|---|---|---|
+| `structural_features.syntactic_node_count` | EMLTree \| CertcomEML | syntactic constructor-node count | integer | `computed` |
+| `structural_features.emltree_depth` | EMLTree | EMLTree nesting depth | integer | `computed` |
+| `structural_features.certcom_eml_depth` | CertcomEML | Certcom EML nesting depth | integer | `computed` |
+| `structural_features.eml_node_count` | EMLTree | `eml` constructor count | integer | `computed` |
+| `structural_features.const_node_count` | EMLTree | `const` constructor count | integer | `computed` |
+| `structural_features.var_node_count` | EMLTree | `var` constructor count | integer | `computed` |
+| `structural_features.trans1_head_total` | CertcomEML | `tr1` constructor count | integer | `computed` |
+| `structural_features.elet_count` | CertcomEML | let-binding constructor count | integer | `computed` |
+| `structural_features.cond_node_count` | CertcomEML | **syntactic** conditional count | integer | `computed` |
+| `completeness.opaque_leaf_count` | any term | free variables standing for subterms | integer | `computed` |
+| `completeness.node_count_is_lower_bound` | any term | whether the count under-reports | boolean | `derived` |
+
+**`node_count_is_lower_bound` is the most important column in the term layer.** 54% of records
+carry opaque leaves, because MachLib quantifies over trees rather than exhibiting them. For those,
+`syntactic_node_count` is a bound on the denoted tree, not a measurement of it — and the schema
+records that per record rather than in a footnote.
+
+`cond_node_count` is deliberately **not** `branch_count`: it counts a syntactic conditional, which
+is not an analytic branch, a connected component, or an interval piece.
+
 ## Feature relations
 
 Relations are not features. They record *why* a column is absent, so redundancy can be removed

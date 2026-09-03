@@ -58,3 +58,43 @@ most operationally useful phase, and it follows directly from Phase 0 Finding 3.
 ## OPEN — `ElementaryEMLErf` remains unassessed
 
 Carried forward from Phase 0.5 unchanged, deliberately.
+
+
+---
+
+# Phase 1b additions
+
+## RESOLVED — the term layer is viable but nearly degenerate
+
+1,084 authored term records over 786 declarations. Verified reproducible (byte-identical repeat
+run). But the features barely vary: `syntactic_node_count` has median **1**, `emltree_depth` puts
+1,051 of 1,084 records into three values, and `elet`/`cond` total **5 occurrences each across the
+whole corpus**. Full evidence in `TERM_CENSUS_REPORT.md`.
+
+## OPEN — Phase 1's declaration census silently excluded `Certcom.*`
+
+`extract.lean` filters `isMachLib`. The Forge-facing `EML` grammar lives under `Certcom`, so the
+declaration census has no rows for it. This is the same scope boundary as the 220/243 axiom
+discrepancy, reappearing in a different tool. The term extractor covers both namespaces; the
+declaration extractor should be brought into line, and the population figure of 13,486 restated as
+`MachLib`-only.
+
+## OPEN — `FTerm` and `ElementaryEMLErf` have no walker
+
+Both occur (85 and 25 raw constructor occurrences). Neither is extracted. `fOcc` was therefore not
+available as a cross-validation partner, which is a real loss given how well the sorry-count
+agreement worked in Phase 1.
+
+## CLOSED-NEGATIVE — canonical views cannot be populated honestly
+
+See `CANONICALIZER_BRIDGE.md`. Four clean data-level canonicalizers exist; none applies to the
+dominant term population (`EMLTree`, 92% of records), and the representations that do have
+canonicalizers appear in the corpus as bound variables rather than literals. Phase 6 is blocked on a
+measured finding, not on an unbuilt feature.
+
+## NOTE — `Name.isInternal` does not exclude compiler companions
+
+The first term run yielded 2,685 records, of which **1,601 (60%)** came from `.match_`, `.eq_def`
+and similar auto-generated declarations. `isInternal` returns false for these. Any future MachSig
+extractor over declarations must filter them explicitly or its counts are inflated by more than
+half.
