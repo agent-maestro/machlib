@@ -347,8 +347,37 @@ argument: it *is* `depth3DecayExp_holds`, which runs off `depth_le_two_normal_fo
 corpus**. That, not the ladder step, is what depth 4 is waiting on: `decayFloorUpTo_succ` is
 already general, and `lowerEnvBound_three` is already proved.
 
+**Sharper still: it is TWO named lemmas, not a classification.** The depth-3 rung's proof
+(`EMLDepthTameness:11283`) does not consume the five closed forms of `Depth1Form` directly — it
+consumes *asymptotic dichotomies* about depth-1 functions. So what the next rung needs is their
+depth-2 analogues, and only two of the four are missing:
+
+| dichotomy | depth 1 | depth 2 |
+|---|---|---|
+| `depth_le_*_exp_bounded_or_grows` | ✓ | **✓** |
+| `depth_le_*_lower_on_ray` | ✓ | **✓** |
+| `depth_le_*_log_lower_at_infinity` | ✓ | **missing** |
+| `depth_le_*_log_le_linear` | ✓ | **missing** |
+
+Both missing ones are about `log`, which is the half that needs its argument bounded away from `0` —
+the circular part of the ladder. Their shape is one level weaker than depth 1's: an **exponential**
+floor `−(C + exp x) ≤ log (B.eval x)` rather than depth 1's constant `Cl`. (Not *linear*, which an
+earlier draft of this note guessed from the `−C − log x → −C − x` degradation of `lower_on_ray`.
+The bound comes from `NodeDecayBound _ 1`, whose height is `towerFn 1 = exp`, so the ladder's
+`log`-side degradation is a full tower level rather than one algebraic step.)
+
+**And the obvious derivation does not close.** `decayFloorUpTo_two` is proved and looks like it
+should supply the floor, but its hypothesis is *eventual positivity* (`∀ x ≥ X₀, 0 < t.eval x`)
+while `depth_le_one_log_lower_at_infinity` is **unconditional** — it covers a `B` that oscillates in
+sign, using the totalisation (`log b = 0` for `b ≤ 0`) on the non-positive stretches and the explicit
+forms on the positive ones. A depth-2 version therefore needs a *pointwise* floor on the positive
+set, which is strictly stronger than what `DecayFloorUpTo 2` gives. That gap, not the ladder step
+and not a classification, is the live content.
+
 (Prose, not a theorem. "One rung away" is a statement about this corpus's current contents, not
-about mathematics, and it stops being true the moment someone proves either condition.) -/
+about mathematics, and it stops being true the moment someone proves either condition. The two
+missing lemma names above are predictions of what the rung needs, read off the depth-1 proof's
+actual consumption; they are not claims that those statements are true.) -/
 
 /-- **Depth 4 rests on one proposition.** Supply `NodeDecayBound 3 m` for any `m ≥ 3` and the rung
 follows; the lower envelope is no longer part of the debt. -/
