@@ -375,6 +375,7 @@ import MachLib.EMLOneQueryForm
 import MachLib.EMLGermSign
 import MachLib.FbasisRootUnique
 import MachLib.EMLDepth2LogLower
+import MachLib.EMLDepth2LogCeiling
 import MachLib.EMLFTranscendence
 import MachLib.EMLBipevTrim
 import MachLib.EMLLogNotRational
