@@ -50,10 +50,17 @@ run_cmd Command.liftTermElabM do
       let ax ← Lean.collectAxioms nm
       let hasSorry := ax.any (· == ``sorryAx)
       let tdeps := (constsIn ci.type {}).size
-      let vdeps := match ci.value? with
+      -- `ConstantInfo.value?` is NONE for theorems here; destructure explicitly or the proof
+      -- layer is silently empty for every theorem in the corpus (found in Phase 2A).
+      let valE : Option Expr := match ci with
+        | .thmInfo v => some v.value
+        | .defnInfo v => some v.value
+        | .opaqueInfo v => some v.value
+        | _ => none
+      let vdeps := match valE with
         | some v => (constsIn v {}).size
         | none => 0
-      let hasVal := (ci.value?).isSome
+      let hasVal := valE.isSome
       let mod := match env.getModuleIdxFor? nm with
         | some i => (env.header.moduleNames[i.toNat]!).toString
         | none => "<current>"

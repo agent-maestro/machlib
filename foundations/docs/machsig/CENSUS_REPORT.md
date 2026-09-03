@@ -1,18 +1,8 @@
 # MachSig Phase 1 — Census Report
 
-`MachSig-census/v0.1` · commit `5830f6607e81` · **13486 declarations**
+`MachSig-census/v0.1` · commit `4d66102bde68` · **13486 declarations**
 
-Authoritative output: `artifacts/machsig_census.jsonl` — **not committed**. It is 17 MB and
-regenerates deterministically in ~5 s:
-
-```
-lake env lean tools/machsig/extract.lean > artifacts/machsig_raw.tsv
-python3 tools/machsig/census.py
-```
-
-Reproducibility was checked, not assumed: two independent runs at the same commit produce a
-byte-identical JSONL (`sha256 7a9513c6741ab970…`). That is the Phase 1 exit criterion, and it is the
-reason the extractor rather than its output is what lives in git.
+Authoritative output: `artifacts/machsig_census.jsonl`.
 `artifacts/machsig_census.csv` is a flattened union with explicit blanks and is convenience only.
 
 ## Population, and what it is NOT
@@ -50,25 +40,9 @@ term-level walker over the specific grammars, which Phase 1 has not built.
 | `source_views[0].structural_features.non_prop_binder_count` | 13486 | 0.0 | 28 | 0 | 28 | 3.0 |
 | `proof_structure.axiom_dependency_count` | 13486 | 0.0 | 85 | 0 | 88 | 8.0 |
 | `proof_structure.type_direct_const_count` | 13486 | 0.0 | 59 | 0 | 95 | 8.0 |
-| `proof_structure.value_direct_const_count` | 3645 | 0.7297 | 45 | 1 | 101 | 8 |
+| `proof_structure.value_direct_const_count` | 12535 | 0.0705 | 143 | 1 | 166 | 16 |
 | `derived_metrics.prop_binder_fraction` | 12329 | 0.0858 | 133 | 0.0 | 1.0 | 0.2 |
 
-
-## Shape of the corpus — first look
-
-| quantity | observed |
-|---|---|
-| `axiom_dependency_count` range | 0 – 88 |
-| mode | **1** (1,829 declarations) |
-| zero-axiom declarations | **1,256** (9.3%) — purely structural lemmas |
-| `binder_count` range | 0 – 69 |
-| heaviest footprints (88) | `mse_lower_bound`, `gaussian_mgf_tendsto`, `posteriorMSE_tendsto` |
-
-The heaviest declarations being the Kalman/Gaussian analytic results is a sanity check on the
-extractor, not a finding: those are exactly where the deepest dependencies should sit. The
-distribution is interpretable rather than degenerate, which is the first evidence that
-`axiom_dependency_count` carries information. It is also the one column here with real trust
-weight, being the kernel's own transitive footprint rather than anything this tooling computed.
 
 ## Epistemic status of every column above
 

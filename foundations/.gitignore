@@ -10,3 +10,6 @@ artifacts/machsig_census.csv
 artifacts/machsig_terms_raw.tsv
 artifacts/machsig_terms.err
 artifacts/machsig_terms.jsonl
+artifacts/machsig_stmt_raw.tsv
+artifacts/machsig_stmt.err
+artifacts/machsig_stability_cases.jsonl
