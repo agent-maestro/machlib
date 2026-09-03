@@ -131,4 +131,44 @@ theorem Fbasis_level_at_most_two {c a b d : Real}
       · exact Or.inr (Or.inl (Fbasis_inj_pos ha0 hd0 (by rw [ha, hd])))
     · exact Or.inl (Fbasis_inj_pos ha0 hb0 (by rw [ha, hb]))
 
+/-! ## The bridge: a transcendental level condition becomes an ALGEBRAIC one -/
+
+/-- **Every level set of `Fbasis ∘ u` is carried by at most two level sets of `u`.**
+
+This is the step that matters for `OneQueryLevelSet`, and it holds for an ARBITRARY inner function
+`u` — no rationality, no continuity, no bound. `Fbasis` takes each value at most twice
+(`Fbasis_level_at_most_two`), so `Fbasis (u x) = c` forces `u x` into a two-element set fixed
+independently of `x`.
+
+Composed with `pev_zero_or_finite_roots` (`PevRoots`) at `u = pev P / pev Q`, the level set of the
+one-query GENERATOR lands inside the roots of `(P − u₁·Q)·(P − u₂·Q)`: identically zero, or finitely
+many. That is `OneQueryLevelSet`'s finite-or-cofinite dichotomy for the generator, and a polynomial
+is indifferent to whether the region is a ray or bounded — which is exactly the reach
+`queryGerm_finite_zeros_on_ray` did not have
+(`EMLZeroListFromBound`: "the other half is the bounded region below `R`").
+
+**What this does NOT do.** The general one-query germ is `bipev N x (Fbasis (u x))`, a polynomial
+IN `Fbasis` rather than `Fbasis` itself, and this says nothing about it. That lift needs linear
+independence of the powers of `Fbasis ∘ u` over rational germs — which is
+`BoundedGermTranscendence`, itself an OPEN obligation. `OneQueryLevelSet` stays open. -/
+theorem fbasis_comp_level_subset (u : Real → Real) (c : Real) :
+    ∃ u₁ u₂ : Real, ∀ x : Real, Fbasis (u x) = c → u x = u₁ ∨ u x = u₂ := by
+  classical
+  by_cases hattained : ∃ x : Real, Fbasis (u x) = c
+  · obtain ⟨x₀, hx₀⟩ := hattained
+    by_cases hsecond : ∃ y : Real, Fbasis (u y) = c ∧ u y ≠ u x₀
+    · obtain ⟨y₀, hy₀, hne⟩ := hsecond
+      refine ⟨u x₀, u y₀, fun x hx => ?_⟩
+      -- three preimages of `c`: `u x`, `u x₀`, `u y₀`. At most two are distinct.
+      rcases Fbasis_level_at_most_two hx hx₀ hy₀ with h | h | h
+      · exact Or.inl h
+      · exact Or.inr h
+      · exact absurd h.symm hne
+    · -- no `push_neg` in MachLib (Mathlib tactic); discharge the negation by hand.
+      refine ⟨u x₀, u x₀, fun x hx => ?_⟩
+      by_cases heq : u x = u x₀
+      · exact Or.inl heq
+      · exact absurd ⟨x, hx, heq⟩ hsecond
+  · exact ⟨0, 0, fun x hx => absurd ⟨x, hx⟩ hattained⟩
+
 end MachLib
