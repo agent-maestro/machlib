@@ -13,11 +13,11 @@ The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 110 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 111 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 22 | about IEEE floats, **not modelable in `ℝ`** — validated by measurement |
-| GAP | 2 | witnessable, not yet witnessed — reason given per row |
+| GAP | 1 | witnessable, not yet witnessed — reason given per row |
 | **UNACCOUNTED** | 0 | must be 0; gate 13 fails otherwise |
 
 **The float-bridge rows are a different kind of trust and are deliberately not averaged in.**
@@ -168,11 +168,11 @@ block first.
 | `MachLib.analytic_comp` | witnessed | `(f g : Real → Real) (S T : RealSet) : IsAnalyticOnReals g S → (∀ x, S x → T (g x)) → IsAnalyticOnReals f T → IsAnalyticOnReals (fun x => f (g x)) S` | fun f g S T hg hmaps hf => hf.comp hg hmaps |
 | `MachLib.analytic_const` | witnessed | `(c : Real) (S : RealSet) : IsAnalyticOnReals (fun _ => c) S` | fun c S => analyticOnNhd_const |
 | `MachLib.analytic_exp` | witnessed | `(S : RealSet) : IsAnalyticOnReals Real.exp S` | fun S => analyticOnNhd_rexp.mono (Set.subset_univ S) |
-| `MachLib.analytic_finite_zeros_compact` | GAP | `(f : Real → Real) (a b : Real) : a < b → IsAnalyticOnReals f (Icc a b) → (∃ x : Real, Ioo a b x ∧ f x ≠ 0) → RealSetFinite (fun x => Icc a b x ∧ f x =` | An analytic function not identically zero has finitely many zeros on a compact. Mathlib has the ingredients (`AnalyticAt.locally_ne_zero`, IsolatedZeros.lean:108) but NOT the packaged statement: the derivation is isolated-zeros + a finite subcover of `Icc a b`, plus interpreting MachLib's `Icc`/`Ioo`/`RealSetFinite`. Witnessable, and the only genuinely non-trivial one left. |
+| `MachLib.analytic_finite_zeros_compact` | GAP | `(f : Real → Real) (a b : Real) : a < b → IsAnalyticOnReals f (Icc a b) → (∃ x : Real, Ioo a b x ∧ f x ≠ 0) → RealSetFinite (fun x => Icc a b x ∧ f x =` | The last one, and genuinely non-trivial for TWO reasons, only one of which is the analysis. (1) Mathlib has the isolated-zeros ingredients (AnalyticAt.locally_ne_zero, IsolatedZeros.lean:108) but not a packaged finite-zeros-on-a-compact statement for a real interval; it needs isolated zeros plus a finite subcover of Icc a b. (2) MachLib RealSetFinite is NOT Set.Finite -- it is exists n, every Nodup list drawn from the set has length <= n (AnalyticFiniteZeros.lean:70). So even with the analysis in hand there is a second bridging step from Set.Finite to that list-length bound. Nobody had recorded (2); it is why this gap outlived the other eight. |
 | `MachLib.analytic_id` | witnessed | `(S : RealSet) : IsAnalyticOnReals (fun x => x) S` | fun S => analyticOnNhd_id |
 | `MachLib.analytic_log_pos` | witnessed | `: IsAnalyticOnReals Real.log (Ioi 0)` | MonogateEML.RealModel.analyticOnNhd_real_log_Ioi |
 | `MachLib.analytic_mul` | witnessed | `(f g : Real → Real) (S : RealSet) : IsAnalyticOnReals f S → IsAnalyticOnReals g S → IsAnalyticOnReals (fun x => f x * g x) S` | fun f g S hf hg => hf.mul hg |
-| `MachLib.analytic_ne_zero_nbhd` | GAP | `(G : Real → Real) (a b x : Real) : IsAnalyticOnReals G (Icc a b) → a < x → x < b → G x ≠ 0 → ∃ a' b' : Real, a ≤ a' ∧ b' ≤ b ∧ a' < x ∧ x < b' ∧ ∀ y, ` | Looks like the isolated-zeros twin of the above, but is NOT: read the statement and it never uses analyticity. `G x != 0` plus CONTINUITY already gives a punctured interval where `G != 0`, so the witness is openness of `{y | G y != 0}`, not `locally_ne_zero`. Blocked only on interpreting MachLib's `Icc`/`Ioo`. Cheaper than it looks -- do this one first. |
+| `MachLib.analytic_ne_zero_nbhd` | witnessed | `(G : Real → Real) (a b x : Real) : IsAnalyticOnReals G (Icc a b) → a < x → x < b → G x ≠ 0 → ∃ a' b' : Real, a ≤ a' ∧ b' ≤ b ∧ a' < x ∧ x < b' ∧ ∀ y, ` | fun G a b x hG hax hxb hGx => by have hxmem : x ∈ Set.Icc a b := ⟨le_of_lt hax, le_of_lt hxb⟩ have hcont : ContinuousAt G x := (hG x hxmem).continuousAt have hne : ∀ᶠ y in nhds x, G y ≠ 0 := hcont.eventually_ne hGx rw [Metric.eventually_nhds_iff] at hne obtain ⟨δ, hδ, H⟩ := hne refine ⟨max a (x - δ/2), min b (x + δ/2), le_max_left _ _, min_le_left _ _, max_lt hax (by linarith), lt_min hxb (by linarith), fun y h1 h2 => ?_⟩ have hl : x - δ/2 < y := lt_of_le_of_lt (le_max_right _ _) h1 have hr : y < x + δ/2 := lt_of_lt_of_le h2 (min_le_right _ _) exact H (by rw [Real.dist_eq, abs_lt]; constructor <;> linarith) |
 | `MachLib.analytic_one_div_pos` | witnessed | `: IsAnalyticOnReals (fun x => 1 / x) (Ioi 0)` | by simp only [one_div]; exact analyticOnNhd_inv.mono (fun x hx => ne_of_gt hx) |
 | `MachLib.analytic_sub` | witnessed | `(f g : Real → Real) (S : RealSet) : IsAnalyticOnReals f S → IsAnalyticOnReals g S → IsAnalyticOnReals (fun x => f x - g x) S` | fun f g S hf hg => hf.sub hg |
 | `Quot.sound` | standard | `` | Lean kernel axiom — sound by construction |
