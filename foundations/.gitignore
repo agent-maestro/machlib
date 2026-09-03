@@ -1,0 +1,9 @@
+
+# MachSig census artifacts: 17MB JSONL, regenerated deterministically in ~5s from
+# tools/machsig/extract.lean + census.py at any commit. Verified byte-identical across runs
+# (sha256 7a9513c6741ab970...). Storing it would add 17MB per regeneration to git history to
+# save five seconds; the extractor is the artifact, the census is its output.
+artifacts/machsig_raw.tsv
+artifacts/machsig_raw.err
+artifacts/machsig_census.jsonl
+artifacts/machsig_census.csv
