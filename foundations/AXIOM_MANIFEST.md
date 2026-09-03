@@ -13,11 +13,11 @@ The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 111 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 112 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 22 | about IEEE floats, **not modelable in `ℝ`** — validated by measurement |
-| GAP | 1 | witnessable, not yet witnessed — reason given per row |
+| GAP | 0 | witnessable, not yet witnessed — reason given per row |
 | **UNACCOUNTED** | 0 | must be 0; gate 13 fails otherwise |
 
 **The float-bridge rows are a different kind of trust and are deliberately not averaged in.**
@@ -168,7 +168,7 @@ block first.
 | `MachLib.analytic_comp` | witnessed | `(f g : Real → Real) (S T : RealSet) : IsAnalyticOnReals g S → (∀ x, S x → T (g x)) → IsAnalyticOnReals f T → IsAnalyticOnReals (fun x => f (g x)) S` | fun f g S T hg hmaps hf => hf.comp hg hmaps |
 | `MachLib.analytic_const` | witnessed | `(c : Real) (S : RealSet) : IsAnalyticOnReals (fun _ => c) S` | fun c S => analyticOnNhd_const |
 | `MachLib.analytic_exp` | witnessed | `(S : RealSet) : IsAnalyticOnReals Real.exp S` | fun S => analyticOnNhd_rexp.mono (Set.subset_univ S) |
-| `MachLib.analytic_finite_zeros_compact` | GAP | `(f : Real → Real) (a b : Real) : a < b → IsAnalyticOnReals f (Icc a b) → (∃ x : Real, Ioo a b x ∧ f x ≠ 0) → RealSetFinite (fun x => Icc a b x ∧ f x =` | The last gap, and it is ONE obligation now, not two. The conversion half is done and named: `realSetFinite_of_finite` (this file) turns a `Set.Finite` into MachLib's `RealSetFinite`, which is a Nodup-list-length bound rather than `Set.Finite` (AnalyticFiniteZeros.lean:70) -- a second obligation nobody had recorded. What remains is purely the analysis: zeros of an analytic function on `Icc a b` that is not identically zero are finite. Mathlib has codiscrete-zeros machinery (`AnalyticOnNhd.preimage_mem_codiscreteWithin`, IsolatedZeros.lean:346; `codiscrete_setOf_analyticOrderAt_eq_zero`, Order.lean:632) but applying it needs a CONNECTED OPEN superset of `Icc a b`, which must be built from the pointwise `AnalyticAt` neighbourhoods -- `AnalyticOnNhd f (Icc a b)` gives analyticity at each point, not on an open set. That construction is the real cost and is why this one outlived the other eight. |
+| `MachLib.analytic_finite_zeros_compact` | witnessed | `(f : Real → Real) (a b : Real) : a < b → IsAnalyticOnReals f (Icc a b) → (∃ x : Real, Ioo a b x ∧ f x ≠ 0) → RealSetFinite (fun x => Icc a b x ∧ f x =` | fun f a b hab hf hne => by obtain ⟨x₀, hx₀mem, hx₀ne⟩ := hne have hZfin : {x : ℝ | x ∈ Set.Icc a b ∧ f x = 0}.Finite := by by_contra hinf obtain ⟨z₀, hz₀K, hacc⟩ := Set.Infinite.exists_accPt_of_subset_isCompact hinf isCompact_Icc (fun x hx => hx.1) have hfreq : ∃ᶠ y in nhdsWithin z₀ {z₀}ᶜ, f y = 0 := by rw [accPt_iff_frequently_nhdsNE] at hacc exact hacc.mono (fun y hy => hy.2) exact hx₀ne ((hf.eqOn_zero_of_preconnected_of_frequently_eq_zero isPreconnected_Icc hz₀K hfreq) (Set.Ioo_subset_Icc_self hx₀mem)) exact realSetFinite_of_finite hZfin |
 | `MachLib.analytic_id` | witnessed | `(S : RealSet) : IsAnalyticOnReals (fun x => x) S` | fun S => analyticOnNhd_id |
 | `MachLib.analytic_log_pos` | witnessed | `: IsAnalyticOnReals Real.log (Ioi 0)` | MonogateEML.RealModel.analyticOnNhd_real_log_Ioi |
 | `MachLib.analytic_mul` | witnessed | `(f g : Real → Real) (S : RealSet) : IsAnalyticOnReals f S → IsAnalyticOnReals g S → IsAnalyticOnReals (fun x => f x * g x) S` | fun f g S hf hg => hf.mul hg |
