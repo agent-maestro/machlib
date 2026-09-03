@@ -373,6 +373,7 @@ import MachLib.EMLZeroQueryBarrier
 import MachLib.EMLRationalGerm
 import MachLib.EMLOneQueryForm
 import MachLib.EMLGermSign
+import MachLib.FbasisRootUnique
 import MachLib.EMLFTranscendence
 import MachLib.EMLBipevTrim
 import MachLib.EMLLogNotRational
