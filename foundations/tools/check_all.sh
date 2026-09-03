@@ -80,7 +80,10 @@ else
   run "obligations"  bash tools/check_obligations.sh
   run "discovered"   bash scripts/check_discovered_compiles.sh 4
   run "forge-cert"   bash scripts/check_forge_certificates.sh
-  run "soundness"    python3 tools/soundness_witness_audit.py
+  # --selftest here injects faults into IN-MEMORY copies of the ledger/bridge (no writes),
+  # so it is safe inside a gated run. Do NOT add --mutate: it writes a temp file into
+  # tools/, which mutates the worktree mid-run and voids this run's tree fingerprint.
+  run "soundness"    python3 tools/soundness_witness_audit.py --selftest
   run "machsig-trust" python3 tools/machsig/trust_gate.py
   run "claims"       python3 tools/claim_audit/claim_audit.py
   run "witness"      python3 tools/witness_audit.py
