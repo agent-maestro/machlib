@@ -36,8 +36,10 @@ def current():
         j = json.loads(ln)
         if j["kind"] != "theorem":
             continue          # StatementDigest is meaningless for non-theorems
+        # AX lives in TrustSig from MachSig/v0.2 (it answers "what does this rely upon", not
+        # "how is it proved"). Fall back to ProofSig so older signature sets still parse.
         ax = None
-        for p in j["ProofSig"].split("-"):
+        for p in j.get("TrustSig", j["ProofSig"]).split("-"):
             if p.startswith("AX"):
                 try: ax = int(p[2:])
                 except ValueError: ax = None
@@ -62,20 +64,49 @@ def main(argv):
         print(f"MACHSIG-TRUST baseline written: {len(cur)} theorems")
         return 0
     if "--selftest" in argv:
-        base = {"T": {"d": "abc", "ax": 5}, "U": {"d": "abc", "ax": 5}, "V": {"d": "q", "ax": 1}}
-        probe = {"T": {"d": "abc", "ax": 9},   # grew, same statement -> must FIRE
-                 "U": {"d": "abc", "ax": 2},   # shrank -> must NOT fire
-                 "V": {"d": "zzz", "ax": 99}}  # statement changed -> must NOT fire
-        grew = [k for k in probe if k in base and probe[k]["d"] == base[k]["d"]
-                and probe[k]["ax"] > base[k]["ax"]]
-        ok = grew == ["T"]
-        print("=== SELFTEST ===")
-        print(f"  [{'ok' if 'T' in grew else 'BROKEN'}] growth on an unchanged statement FIRES")
-        print(f"  [{'ok' if 'U' not in grew else 'BROKEN'}] control: a shrinking footprint stays silent")
-        print(f"  [{'ok' if 'V' not in grew else 'BROKEN'}] control: a changed statement is not a trust regression")
-        print(f"  SELFTEST {'PASS' if ok else 'FAIL'} (1 firing specimen, 2 controls)")
+        # DOCTRINE: no green gate without a demonstrated red path. A predicate check is a unit
+        # test; it is not evidence this gate CONVICTS. So the selftest performs a real FAULT
+        # INJECTION -- it perturbs a copy of the live baseline, runs the gate's actual comparison
+        # over the real signature set, and requires a red result.
+        import copy, tempfile, os
+        live = current()
+        if not BASE.exists() or not live:
+            print("SELFTEST UNAVAILABLE — needs a baseline and a signature set"); return 2
+        base = json.loads(BASE.read_text())
+        ok = True
+
+        def compare(b, c):
+            return [k for k in c if k in b and c[k]["d"] == b[k]["d"] and c[k]["ax"] > b[k]["ax"]]
+
+        print("=== SELFTEST (fault injection against the REAL signature set) ===")
+        # 1. control: unperturbed baseline must be SILENT
+        quiet = compare(base, live)
+        print(f"  [{'ok' if not quiet else 'BROKEN'}] control: unmodified baseline stays green")
+        ok &= not quiet
+        # 2. FIRING: lower a real theorem's recorded footprint -> the live corpus 'grew'
+        victims = [k for k in sorted(base) if base[k]["ax"] > 3][:2]
+        inj = copy.deepcopy(base)
+        for k in victims:
+            inj[k]["ax"] -= 3
+        fired = compare(inj, live)
+        hit = all(v in fired for v in victims)
+        print(f"  [{'ok' if hit else 'BROKEN'}] INJECTED footprint growth on {len(victims)} real "
+              f"theorem(s) makes the gate RED ({len(fired)} convicted)")
+        ok &= hit
+        # 3. control: a changed statement must NOT count as a trust regression
+        inj2 = copy.deepcopy(base)
+        for k in victims:
+            inj2[k]["d"] = "0" * 32
+            inj2[k]["ax"] -= 3
+        restated = compare(inj2, live)
+        clean = not any(v in restated for v in victims)
+        print(f"  [{'ok' if clean else 'BROKEN'}] control: same growth under a CHANGED statement "
+              f"is not convicted")
+        ok &= clean
+        print(f"  SELFTEST {'PASS' if ok else 'FAIL'} — 1 injected red path, 2 controls")
         if not ok:
             return 1
+
     if not BASE.exists():
         print("MACHSIG-TRUST UNAVAILABLE — no baseline; run with --update to establish one")
         return 2

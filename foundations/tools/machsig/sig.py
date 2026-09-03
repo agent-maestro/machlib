@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
-"""MachSig v0.1 — text signatures.
+"""MachSig v0.2 — text signatures.
+
+    MachSig tells you whether a formal result changed in WHAT IT CLAIMS, HOW IT IS PROVED,
+    or WHAT IT TRUSTS.
+
+THREE LAYERS, and the third is not cosmetic. `ProofSig` and `TrustSig` answer different questions:
+
+    ProofSig   did the proof REPRESENTATION change?
+    TrustSig   did what this theorem ultimately RELIES UPON change?
+
+Two proofs can be syntactically unalike while resting on an identical trusted base; conversely a
+statement and most of its proof can look unchanged while a new axiom quietly enters the dependency
+closure. Nesting trust under proof hides exactly that second case, which is the one worth catching.
 
     machsig inspect <object-name>
     machsig sigs                     # emit signatures for the whole corpus
@@ -16,7 +28,7 @@ DROPPED for being degenerate: disjunction_count (5 distinct values, median 0) an
 import json, hashlib, sys, pathlib, collections
 
 FOUND = pathlib.Path(__file__).resolve().parent.parent.parent
-VERSION = "MachSig/v0.1"
+VERSION = "MachSig/v0.2"
 
 # field abbreviation -> (source key, meaning). Documented in docs/machsig/SIGNATURE_SPEC.md.
 STMT_FIELDS = [("N", "nodes",           "statement_expr_node_count"),
@@ -25,9 +37,11 @@ STMT_FIELDS = [("N", "nodes",           "statement_expr_node_count"),
                ("I", "imps",            "implication_count"),
                ("E", "eqs",             "equality_head_count"),
                ("A", "ands",            "conjunction_count")]
-PROOF_FIELDS = [("AX", "axiom_dependency_count", "transitive kernel axiom footprint"),
-                ("PD", "proof_approx_depth",     "proof term approximate depth"),
-                ("V",  "value_direct_const_count", "direct constant refs in the proof term"),
+# HOW it is proved -- representation of the proof term.
+PROOF_FIELDS = [("PD", "proof_approx_depth",     "proof term approximate depth"),
+                ("R",  "value_direct_const_count", "DIRECT constant refs in the proof term")]
+# WHAT it trusts -- the dependency closure. Elevated to its own layer in v0.2.
+TRUST_FIELDS = [("AX", "axiom_dependency_count", "TRANSITIVE kernel axiom footprint"),
                 ("S",  "depends_on_sorry",       "transitive sorryAx reachability")]
 
 
@@ -61,20 +75,24 @@ def sig_for(name, stmt, dec):
         return None
     p = dec.get(name, {})
     st = "-".join(f"{ab}{s[k]}" for ab, k, _ in STMT_FIELDS)
-    pieces = []
-    for ab, k, _ in PROOF_FIELDS:
-        if k == "proof_approx_depth":
-            v = s.get(k)
-            pieces.append(f"{ab}{v}" if v not in (None, "-") else f"{ab}?")
-        elif k == "depends_on_sorry":
-            v = p.get(k)
-            pieces.append(f"{ab}{1 if v else 0}" if v is not None else f"{ab}?")
-        else:
-            v = p.get(k)
-            pieces.append(f"{ab}{v}" if v is not None else f"{ab}?")
+
+    def render(fields):
+        pieces = []
+        for ab, k, _ in fields:
+            if k == "proof_approx_depth":
+                v = s.get(k)
+                pieces.append(f"{ab}{v}" if v not in (None, "-") else f"{ab}?")
+            elif k == "depends_on_sorry":
+                v = p.get(k)
+                pieces.append(f"{ab}{1 if v else 0}" if v is not None else f"{ab}?")
+            else:
+                v = p.get(k)
+                pieces.append(f"{ab}{v}" if v is not None else f"{ab}?")
+        return "-".join(pieces)
     return {
         "version": VERSION, "object": name, "kind": s["kind"], "module": s["module"],
-        "StatementSig": st, "ProofSig": "-".join(pieces),
+        "StatementSig": st, "ProofSig": render(PROOF_FIELDS),
+        "TrustSig": render(TRUST_FIELDS),
         "StatementDigest": s["statement_digest"],
         "ProofFingerprint64": s["proof_expr_fp64"],
         "CanonicalSig": None,
@@ -94,8 +112,9 @@ def main(argv):
         for n in cands[:5]:
             r = sig_for(n, stmt, dec)
             print(f"\n{r['version']}\nObject: {r['object']}   [{r['kind']}]   {r['module']}\n")
-            print(f"  StatementSig       {r['StatementSig']}")
-            print(f"  ProofSig           {r['ProofSig']}")
+            print(f"  StatementSig       {r['StatementSig']}   (what it claims)")
+            print(f"  ProofSig           {r['ProofSig']}      (how it is proved)")
+            print(f"  TrustSig           {r['TrustSig']}      (what it relies upon)")
             print(f"  CanonicalSig       UNAVAILABLE")
             print(f"                     {r['canonical_status']}")
             print(f"  StatementDigest    {r['StatementDigest'][:32]}…")

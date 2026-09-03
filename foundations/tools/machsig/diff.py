@@ -32,7 +32,7 @@ def classify(a, b):
 
 
 def _ax(r):
-    for part in r["ProofSig"].split("-"):
+    for part in r.get("TrustSig", r["ProofSig"]).split("-"):
         if part.startswith("AX"):
             try:
                 return int(part[2:])
@@ -43,7 +43,7 @@ def _ax(r):
 
 def field_deltas(a, b):
     out = []
-    for lay in ("StatementSig", "ProofSig"):
+    for lay in ("StatementSig", "ProofSig", "TrustSig"):
         fa = dict((p[:1] if p[:2] not in ("AX", "PD") else p[:2],
                    p[1:] if p[:2] not in ("AX", "PD") else p[2:]) for p in a[lay].split("-"))
         fb = dict((p[:1] if p[:2] not in ("AX", "PD") else p[:2],
