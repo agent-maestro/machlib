@@ -13,3 +13,4 @@ artifacts/machsig_terms.jsonl
 artifacts/machsig_stmt_raw.tsv
 artifacts/machsig_stmt.err
 artifacts/machsig_stability_cases.jsonl
+artifacts/machsig_signatures.jsonl
