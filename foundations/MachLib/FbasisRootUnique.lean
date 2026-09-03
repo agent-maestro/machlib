@@ -77,4 +77,58 @@ theorem Fbasis_exists_unique_root :
   obtain ⟨r, hr1, hr2, hr3⟩ := Fbasis_root
   exact ⟨r, hr1, hr2, hr3, fun s hs => Fbasis_zero_unique hs hr3⟩
 
+/-! ## Every level, not just zero -/
+
+/-- `Fbasis` is injective on the NON-POSITIVE side, because it is `exp` there. -/
+theorem Fbasis_inj_nonpos {a b : Real} (ha : a ≤ 0) (hb : b ≤ 0)
+    (h : Fbasis a = Fbasis b) : a = b := by
+  rw [Fbasis_eq_exp_of_nonpos ha, Fbasis_eq_exp_of_nonpos hb] at h
+  exact exp_injective h
+
+/-- `Fbasis` is injective on the POSITIVE side, from strict monotonicity. -/
+theorem Fbasis_inj_pos {a b : Real} (ha : 0 < a) (hb : 0 < b)
+    (h : Fbasis a = Fbasis b) : a = b := by
+  rcases lt_total a b with hlt | heq | hgt
+  · have hm := Fbasis_strictMono ha hlt
+    rw [h] at hm
+    exact absurd hm (lt_irrefl_ax (Fbasis b))
+  · exact heq
+  · have hm := Fbasis_strictMono hb hgt
+    rw [h] at hm
+    exact absurd hm (lt_irrefl_ax (Fbasis b))
+
+/-- **Every level set of `Fbasis` has at most TWO points.** `Fbasis` is injective on each side of
+`0` — `exp` below, strictly monotone above — so three preimages of one value force two of them onto
+the same side, where injectivity collapses them.
+
+This is the shape `OneQueryLevelSet` needs one level up from `Fbasis_zero_unique`: it is about an
+arbitrary level `c`, not just `0`. `Fbasis (P x / Q x) = c` therefore pins `P x / Q x` to at most
+two real values `u₁, u₂`, so the level set is contained in the roots of
+`(P − u₁·Q)·(P − u₂·Q)` — a polynomial, hence identically zero or finitely many roots. That is
+exactly the finite-or-cofinite dichotomy, and unlike the ray argument it is indifferent to whether
+the region is bounded.
+
+The `c = 0` case is sharper (`Fbasis_zero_unique`, at most ONE point) because `exp > 0` rules the
+non-positive branch out entirely. -/
+theorem Fbasis_level_at_most_two {c a b d : Real}
+    (ha : Fbasis a = c) (hb : Fbasis b = c) (hd : Fbasis d = c) :
+    a = b ∨ a = d ∨ b = d := by
+  -- MachLib has no `le_or_lt`; the corpus idiom is `lt_total` (cf. Decompose.lean:33).
+  have side : ∀ z : Real, z ≤ 0 ∨ 0 < z := fun z => by
+    rcases lt_total 0 z with h | h | h
+    · exact Or.inr h
+    · exact Or.inl (le_of_eq h.symm)
+    · exact Or.inl (le_of_lt h)
+  rcases side a with ha0 | ha0
+  · rcases side b with hb0 | hb0
+    · exact Or.inl (Fbasis_inj_nonpos ha0 hb0 (by rw [ha, hb]))
+    · rcases side d with hd0 | hd0
+      · exact Or.inr (Or.inl (Fbasis_inj_nonpos ha0 hd0 (by rw [ha, hd])))
+      · exact Or.inr (Or.inr (Fbasis_inj_pos hb0 hd0 (by rw [hb, hd])))
+  · rcases side b with hb0 | hb0
+    · rcases side d with hd0 | hd0
+      · exact Or.inr (Or.inr (Fbasis_inj_nonpos hb0 hd0 (by rw [hb, hd])))
+      · exact Or.inr (Or.inl (Fbasis_inj_pos ha0 hd0 (by rw [ha, hd])))
+    · exact Or.inl (Fbasis_inj_pos ha0 hb0 (by rw [ha, hb]))
+
 end MachLib
