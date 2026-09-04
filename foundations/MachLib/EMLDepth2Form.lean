@@ -911,5 +911,43 @@ theorem depth3ApproachBelowEml_margin_case (A B : EMLTree) (hB : B.depth ≤ 2) 
   intro x hx hlt
   exact absurd (lt_of_lt_of_le hlt (hge x hx)) (lt_irrefl_ax _)
 
+/-- **The identity branch of the residue is vacuous whenever the right child has depth ≤ 1.**
+
+With `A = var` the node is `exp x − log (B x)`, and a depth-≤1 right child admits the **linear** bound
+`log (B x) ≤ x + D` (`depth_le_one_log_le_linear`) — the very bound that is *false* at depth 2
+(`depth_le_two_log_not_le_linear`). So the node is at least `exp x − (x + D)`, which outruns every
+`k`, the hypothesis never fires, and any floor serves.
+
+This is the same argument the depth-2 gap lemma spends in its growing cell, reused at the one place
+depth 3 still permits it. It cuts the live surface of `Depth3ApproachBelowEml` down to
+`A = var` **and** `B` of depth exactly 2 — everything else in the growing branch is now discharged:
+depth-≤1 right children here, and diverging-margin left children by
+`depth3ApproachBelowEml_margin_case`. -/
+theorem depth3ApproachBelowEml_identity_shallow_right (B : EMLTree) (hB : B.depth ≤ 1) (k : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧
+      ∀ x : Real, X₀ ≤ x → exp (EMLTree.var.eval x) - log (B.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (EMLTree.var.eval x) - log (B.eval x)) := by
+  obtain ⟨D, hD⟩ := depth_le_one_log_le_linear B hB
+  obtain ⟨T, hT⟩ := two_mul_add_le_exp (k + D)
+  refine ⟨0, 1 + exp T + exp T, d2_ray_ge_one T T, ?_⟩
+  intro x hx hlt
+  have hx1 : (1 : Real) ≤ x := le_trans (d2_ray_ge_one T T) hx
+  have hxT : T ≤ x := le_trans (d2_ray_ge_fst T T) hx
+  -- `exp x ≥ x + x + (k + D)` and `log (B x) ≤ x + D`, so the node is at least `k`
+  have hnode : k ≤ exp x - log (B.eval x) := by
+    have v := add_le_add_wit (hT x hxT) (neg_le_neg_wit (hD x hx1))
+    -- `2x + (k+D) − (x+D)` is `x + k`, not `k`; the spare `x` is then dropped by `x ≥ 1 > 0`
+    have e1 : x + x + (k + D) + -(x + D) = x + k := by mach_mpoly [x, k, D]
+    have e2 : exp x + -log (B.eval x) = exp x - log (B.eval x) := by mach_ring
+    rw [e1, e2] at v
+    have hxk : k ≤ x + k := by
+      have u := add_le_add_wit (le_trans (le_of_lt zero_lt_one_ax) hx1) (le_refl k)
+      have e : (0 : Real) + k = k := by mach_ring
+      rw [e] at u; exact u
+    exact le_trans hxk v
+  -- but the hypothesis says the node is below `k`
+  have hlt' : exp x - log (B.eval x) < k := hlt
+  exact absurd (lt_of_lt_of_le hlt' hnode) (lt_irrefl_ax _)
+
 
 end MachLib

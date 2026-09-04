@@ -91,6 +91,21 @@ def unproduced(decls):
     return found
 
 
+def ratchet(now, pinned, found, emit=print) -> int:
+    """The ratchet proper: how `now` differs from the pinned set. Factored out of `main` so the
+    selftest can exercise it -- see canary 5. Until 2026-09-04 the selftest covered `unproduced`
+    (the DETECTOR) and never this (the thing that turns detection into a gate); a mutation that
+    disabled the NEW branch left the selftest green."""
+    bad = 0
+    for p in sorted(now - pinned):
+        emit(f"  NEW    {p}: consumed by {', '.join(found.get(p, ['?']))}, concluded by nothing")
+        bad += 1
+    for p in sorted(pinned - now):
+        emit(f"  FIXED  {p}: now has a producer — remove it from the baseline")
+        bad += 1
+    return bad
+
+
 def self_test(decls) -> int:
     """Convict specimens. Synthetic declarations, so none can go stale as the corpus improves."""
     ok = True
@@ -122,6 +137,22 @@ def self_test(decls) -> int:
     fired = list(unproduced(d4)) == ["CanaryProp"]
     print(f"  canary 4 (an ↔ is not a producer)            {'FIRES' if fired else 'SILENT'}")
     ok &= fired
+
+    # 5-7. THE RATCHET ITSELF. Canaries 1-4 exercise `unproduced` (the DETECTOR). Until
+    #      2026-09-04 nothing exercised the comparison against the pinned set, so a mutation
+    #      disabling the NEW branch left this selftest green: detection was tested, the gate was
+    #      not. Found by mutation-testing the wired selftests rather than by reading them.
+    fired = ratchet({"A", "B"}, {"A"}, {"B": ["eats"]}, emit=lambda _m: None) == 1
+    print(f"  canary 5 (a NEW unproduced prop drifts)       {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    fired = ratchet({"A"}, {"A", "B"}, {}, emit=lambda _m: None) == 1
+    print(f"  canary 6 (a FIXED prop drifts too)            {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    quiet = ratchet({"A", "B"}, {"A", "B"}, {}, emit=lambda _m: None) == 0
+    print(f"  canary 7 (control: unchanged set is silent)   {'SILENT' if quiet else 'FIRES'}")
+    ok &= quiet
 
     print()
     if not ok:
@@ -162,13 +193,7 @@ def main() -> int:
     pinned = set(json.loads(BASELINE.read_text())["unproduced"])
     now = set(found)
 
-    bad = 0
-    for p in sorted(now - pinned):
-        print(f"  NEW    {p}: consumed by {', '.join(found[p])}, concluded by nothing")
-        bad += 1
-    for p in sorted(pinned - now):
-        print(f"  FIXED  {p}: now has a producer — remove it from the baseline")
-        bad += 1
+    bad = ratchet(now, pinned, found)
 
     print()
     if bad:
