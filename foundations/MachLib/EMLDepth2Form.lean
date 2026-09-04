@@ -278,5 +278,80 @@ theorem depth_three_node_ge_of_exp_margin (A B : EMLTree) (hB : B.depth ≤ 2) (
   rw [e1, e2] at v
   exact v
 
+/-- **The exponential margin grows at least as fast as the argument gap:
+`exp x + (v − x) ≤ exp v` for `0 ≤ x ≤ v`.**
+
+This is the tool that makes the margin hypothesis of `depth_three_node_ge_of_exp_margin` checkable.
+That theorem asks for `exp x + M ≤ exp (A x)` — a statement *after* the exponential, which is awkward
+to verify shape by shape. This lemma reduces it to `x + M ≤ A x`, a statement *before* it.
+
+The proof is the tangent-line bound `1 + t ≤ exp t` (`Exp.lean:111`) applied to the gap, multiplied
+back by `exp x ≥ 1`: `exp v = exp x · exp (v−x) ≥ exp x · (1 + (v−x)) = exp x + exp x · (v−x)`, and
+`exp x ≥ 1` turns the last product into at least `v − x`. Nothing here is depth-specific — it is a
+fact about `exp` that the depth-3 argument happens to need. -/
+theorem exp_margin_ge {x v : Real} (hx : 0 ≤ x) (hv : x ≤ v) : exp x + (v - x) ≤ exp v := by
+  have hd : (0 : Real) ≤ v - x := by
+    have u := add_le_add_wit hv (le_refl (-x))
+    have e1 : x + -x = (0 : Real) := by mach_ring
+    have e2 : v + -x = v - x := by mach_ring
+    rw [e1, e2] at u; exact u
+  have he1 : (1 : Real) ≤ exp x := by
+    have u : (1 : Real) ≤ 1 + x := by
+      have w := add_le_add_wit (le_refl (1 : Real)) hx
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at w; exact w
+    exact le_trans u (one_add_le_exp x)
+  -- `exp x * exp (v−x) = exp v`. Note the direction: rewriting `v` into `x + (v−x)` would also
+  -- rewrite the `v` inside `v − x`, so the equation is oriented to collapse the product instead.
+  have hexpv : exp x * exp (v - x) = exp v := by
+    rw [← exp_add]
+    -- `mach_ring` normalises this to `x + (v + -x) = v` and stops; `mach_mpoly` closes it once the
+    -- atoms are named. Same trap recorded for the numeral wall -- reach for the complete normaliser.
+    have e : x + (v - x) = v := by mach_mpoly [x, v]
+    rw [e]
+  have hstep := mul_le_mul_of_nonneg_left (one_add_le_exp (v - x)) (le_of_lt (exp_pos x))
+  have hgap : v - x ≤ exp x * (v - x) := by
+    have u := mul_le_mul_of_nonneg_left he1 hd
+    have e1 : (v - x) * 1 = v - x := by mach_ring
+    have e2 : (v - x) * exp x = exp x * (v - x) := by mach_ring
+    rw [e1, e2] at u; exact u
+  have hsum : exp x + (v - x) ≤ exp x * (1 + (v - x)) := by
+    have u := add_le_add_wit (le_refl (exp x)) hgap
+    have e : exp x + exp x * (v - x) = exp x * (1 + (v - x)) := by mach_ring
+    rw [e] at u; exact u
+  rw [← hexpv]
+  exact le_trans hsum hstep
+
+/-- **The margin hypothesis, in terms of the argument rather than its exponential.**
+
+Feeds `depth_three_node_ge_of_exp_margin` directly: if `A` outgrows the identity by every margin,
+then `exp ∘ A` outgrows `exp` by every margin. Checking the former is a statement about
+`Depth2Form`'s disjuncts; checking the latter was not.
+
+The `M = 0` instance is taken separately to get `x ≤ A x`: a margin at some *negative* `M` says
+nothing about `A` dominating the identity, so the ordering cannot be recovered from the `M` in hand. -/
+theorem exp_margin_of_arg_margin {A : EMLTree}
+    (h : ∀ M : Real, ∃ T : Real, 1 ≤ T ∧ ∀ x : Real, T ≤ x → x + M ≤ A.eval x) :
+    ∀ M : Real, ∃ T : Real, 1 ≤ T ∧ ∀ x : Real, T ≤ x → exp x + M ≤ exp (A.eval x) := by
+  intro M
+  obtain ⟨T, hT1, hT⟩ := h M
+  obtain ⟨T0, hT01, hT0⟩ := h 0
+  refine ⟨1 + exp T + exp T0, d2_ray_ge_one T T0, ?_⟩
+  intro x hx
+  have hxT : T ≤ x := le_trans (d2_ray_ge_fst T T0) hx
+  have hxT0 : T0 ≤ x := le_trans (d2_ray_ge_snd T T0) hx
+  have hx0 : (0 : Real) ≤ x :=
+    le_trans (le_of_lt zero_lt_one_ax) (le_trans (d2_ray_ge_one T T0) hx)
+  have hxA : x ≤ A.eval x := by
+    have u := hT0 x hxT0
+    have e : x + (0 : Real) = x := by mach_ring
+    rw [e] at u; exact u
+  have hgap : M ≤ A.eval x - x := by
+    have u := add_le_add_wit (hT x hxT) (le_refl (-x))
+    have e1 : x + M + -x = M := by mach_ring
+    have e2 : A.eval x + -x = A.eval x - x := by mach_ring
+    rw [e1, e2] at u; exact u
+  have u := add_le_add_wit (le_refl (exp x)) hgap
+  exact le_trans u (exp_margin_ge hx0 hxA)
 
 end MachLib
