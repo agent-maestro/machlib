@@ -193,5 +193,90 @@ theorem depth_le_two_log_not_le_linear :
   rw [e3, e4] at w
   exact absurd (lt_of_lt_of_le zero_lt_one_ax w) (lt_irrefl_ax 0)
 
+/-! ## Why the depth-3 gap cannot mirror the depth-2 one -/
+
+/-- **The "growing left child outruns `k`" cell does NOT lift to depth 3 — and fails as badly as
+possible.** For *every* real `d` there is a depth-3 node with a growing left child whose value is the
+constant `−d`.
+
+`depth_le_two_gap_below` (`EMLDepthTameness:6502`) closes its last cell by arguing that a growing
+left child makes the node outrun `k` whatever the right child does. That argument spends
+`depth_le_one_log_le_linear`: `exp x − (x + D) → ∞`. At depth 3 the right child has depth ≤ 2, where
+the only bound is `log (B x) ≤ exp x + K` (`depth_le_two_log_le_exp`, and the linear bound is
+*false* there — see `depth_le_two_log_not_le_linear` above). The left child, growing, supplies only
+`exp x ≤ exp (A x)`. The two exponentials then cancel exactly.
+
+The witness makes the cancellation exact rather than approximate: with `A = var` and
+`B = eml (eml var (const (exp (−d)))) (const 1)`, the right child evaluates to `exp (exp x + d)`, so
+`log (B x) = exp x + d` on the nose and the node is `exp x − (exp x + d) = −d` for every `x`.
+
+**This does not refute `depth_le_three_gap_below`** — a constant node has a constant gap, so the
+statement survives. It refutes the *route*: at depth 3 a growing left child no longer forces
+divergence, so the cell must be split on whether the cancellation is exact, and that is a question
+about the two children *together*. That is the same species of difficulty as `ExpExpGapBelow`, and
+it is why the ~145-line mirror estimate in `EMLDecayLadderStep` cannot be met. -/
+theorem depth_three_growing_left_can_be_constant (d : Real) :
+    ∃ A B : EMLTree, A.depth ≤ 2 ∧ B.depth ≤ 2
+      ∧ (∀ x : Real, exp x ≤ exp (A.eval x))
+      ∧ (∀ x : Real, exp (A.eval x) - log (B.eval x) = -d) := by
+  refine ⟨EMLTree.var,
+          EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const (exp (-d)))) (EMLTree.const 1),
+          by simp [EMLTree.depth], by simp [EMLTree.depth], fun x => le_refl _, ?_⟩
+  intro x
+  show exp x - log (exp (exp x - log (exp (-d))) - log (1 : Real)) = -d
+  rw [log_exp, log_one]
+  -- goal: `exp x - log (exp (exp x - -d) - 0) = -d`; normalise inside the `exp`, then strip the `- 0`
+  have e1 : exp x - -d = exp x + d := by mach_ring
+  rw [e1]
+  have e2 : exp (exp x + d) - 0 = exp (exp x + d) := by mach_ring
+  rw [e2, log_exp]
+  mach_ring
+
+/-- Two-threshold ray, the `private` `one_le_ray`/`fst_le_ray` re-proved for local use. -/
+private theorem d2_ray_ge_one (a b : Real) : (1 : Real) ≤ 1 + exp a + exp b := by
+  have u := add_le_add_wit (add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos a)))
+    (le_of_lt (exp_pos b))
+  have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d2_ray_ge_fst (a b : Real) : a ≤ 1 + exp a + exp b := by
+  have h1 : a ≤ exp a := le_of_lt (exp_grows_strictly_thm a)
+  have u := add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) h1) (le_of_lt (exp_pos b))
+  have e : (0 : Real) + a + 0 = a := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d2_ray_ge_snd (a b : Real) : b ≤ 1 + exp a + exp b := by
+  have h1 : b ≤ exp b := le_of_lt (exp_grows_strictly_thm b)
+  have u := add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos a))) h1
+  have e : (0 : Real) + 0 + b = b := by mach_ring
+  rw [e] at u; exact u
+
+/-- **The growing-left cell DOES close, under the hypothesis the witness above shows is necessary.**
+
+`depth_three_growing_left_can_be_constant` refutes the depth-2 route because `exp x ≤ exp (A x)` is
+too weak: it permits `exp (A x) − exp x = 0`, and then the right child's `exp x + K` cancels the node
+down to a constant. The repair is to ask for the *margin* to diverge rather than for the node to
+grow — and once asked for, the cell is easy.
+
+**Stating the margin as `exp x + M ≤ exp (A x)` rather than `x + δ ≤ A x` is what keeps this short.**
+A `δ`-margin on `A` multiplies through the exponential (`exp (x+δ) − exp x = exp x (exp δ − 1)`) and
+would need a product-divergence lemma this base does not have. Phrased additively *after* the
+exponential, the two `exp x` terms cancel outright and the whole proof is three inequalities. -/
+theorem depth_three_node_ge_of_exp_margin (A B : EMLTree) (hB : B.depth ≤ 2) (k : Real)
+    (hA : ∀ M : Real, ∃ T : Real, 1 ≤ T ∧ ∀ x : Real, T ≤ x → exp x + M ≤ exp (A.eval x)) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → k ≤ exp (A.eval x) - log (B.eval x) := by
+  obtain ⟨K, XB, hXB1, hK⟩ := depth_le_two_log_le_exp B hB
+  obtain ⟨T, hT1, hT⟩ := hA (k + K)
+  refine ⟨1 + exp T + exp XB, d2_ray_ge_one T XB, ?_⟩
+  intro x hx
+  have hxT : T ≤ x := le_trans (d2_ray_ge_fst T XB) hx
+  have hxB : XB ≤ x := le_trans (d2_ray_ge_snd T XB) hx
+  -- `exp x + (k + K) ≤ exp (A x)` and `log (B x) ≤ exp x + K`; the `exp x` terms cancel
+  have v := add_le_add_wit (hT x hxT) (neg_le_neg_wit (hK x hxB))
+  have e1 : exp x + (k + K) + -(exp x + K) = k := by mach_ring
+  have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+  rw [e1, e2] at v
+  exact v
+
 
 end MachLib
