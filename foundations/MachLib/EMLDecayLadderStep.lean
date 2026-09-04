@@ -362,6 +362,40 @@ So one was a verbatim duplicate and the other existed in stronger conditional fo
 gap was the *positivity hypothesis*, and `EMLDepth2LogLower` now removes it in a dozen lines at the
 sharper logarithmic height, rather than reproving the bound from scratch at an exponential one.
 
+**CORRECTION TO THE CORRECTION (2026-09-03, later).** The table above says
+`depth_le_two_log_le_exp` is the depth-2 analogue of `depth_le_one_log_le_linear`, "exists,
+identical statement". **The statements are not identical, and the difference is mathematical, not
+nominal:**
+
+| depth | bound on `log (B x)` |
+|---|---|
+| 1 | `x + C` — **linear** (`depth_le_one_log_le_linear`) |
+| 2 | `exp x + K` — **exponential** (`depth_le_two_log_le_exp`) |
+
+`depth_le_two_log_le_linear` is absent because it is **false**, not because the corpus names it
+something else. A depth-2 tree may be `exp (exp x − log x) − log c`, whose logarithm grows like
+`exp x`; no linear bound can hold. The earlier correction conflated *an analogue exists* with *the
+same bound exists*, and that is the more dangerous of the two mistakes, because a phantom name fails
+loudly at elaboration while a weaker-than-assumed bound compiles and silently breaks the argument
+that consumes it.
+
+**Consequence: `depth_le_three_gap_below (~145)` in the tree below is under-priced.** The estimate
+assumes it mirrors `depth_le_two_gap_below` (`:6502`, ~125 lines, six cells). It cannot. That proof's
+final cell — "growing left child: the node outruns `k`, whatever the right child is" — closes
+because `exp x − (x + D)` eventually exceeds `k`, and that is exactly where the **linear** log bound
+is spent. At depth 3 the same cell has `exp (A x) − (exp x + K)` with `A` growing only fast enough to
+give `exp x ≤ exp (A x)`, which nets a constant, not divergence. The cell does not lift.
+
+Worse, both sides can be doubly exponential at that level (`A` and `B` of depth ≤ 2 each reach
+`exp (exp x − log x)`), so the growing cell becomes a cancellation question between two doubly
+exponential terms — **the same species of difficulty as `ExpExpGapBelow`**, which took an arc. So
+`depth_le_three_gap_below` is not a 125-line mirror plus 20; it is the const-left branch's share of
+the analysis the revised price above already flagged.
+
+The inputs it needs *are* now in place — `depth_le_two_form` and `depth_le_two_exp_gap_below`
+(`EMLDepth2Form`) — so the enumeration half is unblocked. It is the growing cell that needs new
+mathematics, and that is where anyone picking this up should expect to spend the time.
+
 **What the rung actually waits on**, measured by reading signatures rather than guessing names:
 `depth3DecayExp_holds` is 52 lines but rests on **809 lines of depth-3-specific machinery**, ~436 of
 it needed. All four helpers hardcode `Q.depth ≤ 2` and conclude at `towerFn 1`; none is
