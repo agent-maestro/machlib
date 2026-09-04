@@ -447,6 +447,30 @@ A single decaying-floor formulation therefore has to be taken at the **weaker** 
 to cover both. That constraint is invisible from either cell alone, and it is the thing to fix before
 writing any depth-4 statement.
 
+**THE REPAIR IS NOT AN INVENTION — IT IS ALREADY IN THE CORPUS, ONE CELL DOWN (2026-09-04).**
+Reading all four depth-3 cells side by side settles what the depth-4 statements should say:
+
+| cell | gap input at depth 3 | shape |
+|---|---|---|
+| `const_left`   | `depth_le_two_gap_below` | constant `ε` |
+| `var_left`     | `ExpExpGapBelow` | constant `ε` |
+| `bounded_left` | `BoundedCellApproach` (`:6985`) | **decaying `exp (−C − exp x)`** |
+| `growing_left` | none — `depth_three_growing_left_node_ge_one` | n/a |
+
+`BoundedCellApproach` — the cell that took the longest arc — **already** carries the decaying floor.
+The constant gap was never universal; it was what the two easier cells could get away with at that
+depth. The refutations above (`depth_le_three_gap_below_refuted`,
+`expExpGapBelow_depth_three_refuted`) say those two cells stop getting away with it one level up.
+
+**So depth 4 should adopt `BoundedCellApproach`'s shape uniformly rather than invent a new one**, and
+that single floor is strong enough: `exp (−1 − exp x)` sits below *both* refuted cells' gaps
+(checked `x = 1..39`; at `x = 5` the floor is `1.3e−65` against gaps of `3.5e−65` and `0.43`). The
+weaker `var_left` rate is covered with enormous room, and the tight case is `const_left`, where
+`depth_three_witness_decaying_floor` proves the floor holds with `C = 1` exactly.
+
+That also fixes the constant: `C = 1` is forced by the algebra in the tight cell, so a uniform
+depth-4 statement can use it rather than carrying an existential over rates.
+
 **THE REPAIR: A DECAYING FLOOR, NOT A CONSTANT GAP.** The refutation kills the *shape* of the
 statement, not the branch. What `const_left` actually needs is
 `-log (exp c - log (Q x)) <= C + towerFn m x`, and an exponentially shrinking gap still delivers

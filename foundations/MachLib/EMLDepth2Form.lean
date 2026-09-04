@@ -790,5 +790,96 @@ theorem expExpGapBelow_depth_three_refuted :
   rw [e] at hforced
   exact absurd (lt_of_le_of_lt hforced hsmall) (lt_irrefl_ax ε)
 
+/-! ## The depth-3 statement in the shape that survives, and its residue -/
+
+/-- **Approach from below with a decaying floor, at depth ≤ 3.** The replacement for the refuted
+`depth_le_three_gap_below`. The floor is `exp (−C − exp (exp x))`, i.e. `towerFn 2` — written out so
+this module stays independent of `EMLCertifiedSynthesis`.
+
+`towerFn 2` rather than `towerFn 1`: the tight witness
+(`depth_three_witness_decaying_floor`) needs only `exp x`, but a general proof route through
+`depth_le_two_approach_constant` (floor `exp (−C − x)`) and the depth-2 growth envelope
+(`B x ≤ exp (exp x + K) + M`) costs an extra `x + exp x` in the exponent, and `x + exp x ≤ exp (exp x)`
+past `x = 1`. The consumer tolerates it: `NodeDecayBound 3 m` admits any `m ≥ 3`. -/
+def Depth3ApproachBelow : Prop :=
+  ∀ t : EMLTree, t.depth ≤ 3 → ∀ k : Real, ∃ C X₀ : Real, 1 ≤ X₀ ∧
+    ∀ x : Real, X₀ ≤ x → t.eval x < k → exp (-C - exp (exp x)) ≤ k - t.eval x
+
+/-- **The residue: the `eml` constructor.** Both children have depth ≤ 2 and the target
+`exp (A x) − k` *moves with `x`*, which is what makes this the hard case — the same moving-target
+difficulty that made `ExpExpGapBelow` an arc at depth 3, and the reason
+`depth_le_two_approach_constant` (a *constant* target) does not apply directly. -/
+def Depth3ApproachBelowEml : Prop :=
+  ∀ A B : EMLTree, A.depth ≤ 2 → B.depth ≤ 2 → ∀ k : Real, ∃ C X₀ : Real, 1 ≤ X₀ ∧
+    ∀ x : Real, X₀ ≤ x → exp (A.eval x) - log (B.eval x) < k →
+      exp (-C - exp (exp x)) ≤ k - (exp (A.eval x) - log (B.eval x))
+
+/-- **The reduction: the two leaf constructors are free, so `eml` carries the whole statement.**
+`const` is a fixed value — either it already sits below `k`, and a constant floor suffices because
+`exp (−exp (exp x)) ≤ 1`, or it does not and the hypothesis never fires. `var` is emptier still: past
+`x = k` the hypothesis `x < k` cannot hold, so the ray alone discharges it. -/
+theorem depth3ApproachBelow_of_eml (h : Depth3ApproachBelowEml) : Depth3ApproachBelow := by
+  intro t ht k
+  cases t with
+  | const c =>
+      rcases lt_total c k with hck | hck | hck
+      · -- `c < k`: the floor is below the constant gap because `exp (−exp (exp x)) ≤ 1`
+        have hkc : (0 : Real) < k - c := by
+          have u := add_lt_add_left hck (-c)
+          have e1 : -c + c = (0 : Real) := by mach_ring
+          have e2 : -c + k = k - c := by mach_mpoly [c, k]
+          rw [e1, e2] at u; exact u
+        refine ⟨-log (k - c), 1, le_refl 1, ?_⟩
+        intro x _ _
+        show exp (- -log (k - c) - exp (exp x)) ≤ k - c
+        have hle : - -log (k - c) - exp (exp x) ≤ log (k - c) := by
+          have u := add_le_add_wit (le_refl (log (k - c))) (neg_nonpos_of_nonneg
+            (le_of_lt (exp_pos (exp x))))
+          have e1 : log (k - c) + -exp (exp x) = - -log (k - c) - exp (exp x) := by
+            mach_mpoly [log (k - c), exp (exp x)]
+          have e2 : log (k - c) + 0 = log (k - c) := by mach_ring
+          rw [e1, e2] at u; exact u
+        have w := exp_monotone hle
+        rw [exp_log hkc] at w
+        exact w
+      · -- `c = k`: the hypothesis is `k < k`
+        refine ⟨0, 1, le_refl 1, ?_⟩
+        intro x _ hlt
+        exact absurd (by rw [hck] at hlt; exact hlt) (lt_irrefl_ax k)
+      · -- `k < c`: the hypothesis contradicts it
+        refine ⟨0, 1, le_refl 1, ?_⟩
+        intro x _ hlt
+        -- `hlt` is stated about `(const c).eval x`, which is `c` only up to unfolding
+        have hlt' : c < k := hlt
+        exact absurd (lt_trans_ax hlt' hck) (lt_irrefl_ax c)
+  | var =>
+      -- past `x = k` the hypothesis `x < k` cannot fire
+      refine ⟨0, 1 + exp k, d2_one_le_shift k, ?_⟩
+      intro x hx hlt
+      exact absurd (lt_of_lt_of_le hlt (le_trans (d2_le_shift k) hx)) (lt_irrefl_ax x)
+  | eml A B =>
+      have hA : A.depth ≤ 2 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth; omega
+      have hB : B.depth ≤ 2 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      exact h A B hA hB k
+
+/-- **The diverging-margin part of the residue is already discharged.** When the left child outgrows
+the identity by every margin, `depth_three_node_ge_of_exp_margin` puts the node above `k` on a ray,
+so the hypothesis never fires and any floor serves. With
+`depth_le_two_growing_identity_or_margin`, what is left of the growing branch is the single case
+`A = var`. -/
+theorem depth3ApproachBelowEml_margin_case (A B : EMLTree) (hB : B.depth ≤ 2) (k : Real)
+    (hA : ∀ M : Real, ∃ T : Real, 1 ≤ T ∧ ∀ x : Real, T ≤ x → exp x + M ≤ exp (A.eval x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧
+      ∀ x : Real, X₀ ≤ x → exp (A.eval x) - log (B.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (A.eval x) - log (B.eval x)) := by
+  obtain ⟨X₀, hX₀, hge⟩ := depth_three_node_ge_of_exp_margin A B hB k hA
+  refine ⟨0, X₀, hX₀, ?_⟩
+  intro x hx hlt
+  exact absurd (lt_of_lt_of_le hlt (hge x hx)) (lt_irrefl_ax _)
+
 
 end MachLib
