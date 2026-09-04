@@ -354,4 +354,215 @@ theorem exp_margin_of_arg_margin {A : EMLTree}
   have u := add_le_add_wit (le_refl (exp x)) hgap
   exact le_trans u (exp_margin_ge hx0 hxA)
 
+private theorem d2_ray_gt_fst (a b : Real) : a < 1 + exp a + exp b := by
+  have h1 : a < exp a := exp_grows_strictly_thm a
+  have h2 : exp a ≤ 1 + exp a + exp b := by
+    have u := add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp a)))
+      (le_of_lt (exp_pos b))
+    have e : (0 : Real) + exp a + 0 = exp a := by mach_ring
+    rw [e] at u; exact u
+  exact lt_of_lt_of_le h1 h2
+
+/-- **A growing depth-≤2 tree either IS the identity, or outgrows it by every margin.**
+
+This is the trichotomy the growing cell needs, and it closes the conjecture left open by
+`depth_three_growing_left_can_be_constant`: the witness there (`A = var`) is not one awkward case
+among many, it is **the only** obstruction at depth ≤ 2.
+
+Case on the tree rather than on `Depth2Form`. The predicate hands back *functions* `a b : Real → Real`
+with `Depth1Form`, and the depth-1 toolkit (`depth_le_one_exp_bounded_or_grows`,
+`depth_le_one_log_le_linear`, `depth_le_one_log_lower_at_infinity`) is stated about *trees* — so
+destructuring `eml a b` gives children of depth ≤ 1 that those lemmas apply to directly, where
+`Depth2Form` would have forced a five-way re-derivation of each. The predicate is the right tool for
+consumers that have lost the tree; here the tree is still in hand.
+
+* `const c` — cannot be growing: `x ≤ c` fails at `x = 1 + exp c`, since `c < exp c`.
+* `var` — the identity, and the right disjunct. This is the residue.
+* `eml a b` — split `a` on bounded-or-grows. Bounded is impossible: `exp (a x) ≤ K` and
+  `Cl ≤ log (b x)` cap the node at `K − Cl`, which growth outruns. Growing gives
+  `exp x ≤ exp (a x)` and `log (b x) ≤ x + D`, so the node is at least `exp x − (x + D)`, and
+  `exp x ≥ x + x + (M + D)` turns that into `x + M`.
+
+Combined with `exp_margin_of_arg_margin` and `depth_three_node_ge_of_exp_margin`, the depth-3 growing
+cell is now closed **except** when the left child is the identity. -/
+theorem depth_le_two_growing_identity_or_margin (A : EMLTree) (hA : A.depth ≤ 2)
+    (hgrow : ∀ x : Real, 1 ≤ x → x ≤ A.eval x) :
+    (∀ M : Real, ∃ T : Real, 1 ≤ T ∧ ∀ x : Real, T ≤ x → x + M ≤ A.eval x)
+    ∨ (∀ x : Real, A.eval x = x) := by
+  cases A with
+  | const c =>
+      exfalso
+      have h := hgrow (1 + exp c) (d2_one_le_shift c)
+      have hlt : c < 1 + exp c := by
+        have h1 : c < exp c := exp_grows_strictly_thm c
+        have h2 : exp c ≤ 1 + exp c := by
+          have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp c))
+          have e : (0 : Real) + exp c = exp c := by mach_ring
+          rw [e] at u; exact u
+        exact lt_of_lt_of_le h1 h2
+      exact absurd (lt_of_lt_of_le hlt h) (lt_irrefl_ax c)
+  | var => exact Or.inr (fun _ => rfl)
+  | eml a b =>
+      have ha : a.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hA
+        have := Nat.le_max_left a.depth b.depth; omega
+      have hb : b.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hA
+        have := Nat.le_max_right a.depth b.depth; omega
+      rcases depth_le_one_exp_bounded_or_grows a ha with ⟨K, hK⟩ | ⟨T, hT⟩
+      · -- bounded left child: the node is capped, so it cannot dominate the identity
+        exfalso
+        obtain ⟨Cl, X₀, hX₀1, hCl⟩ := depth_le_one_log_lower_at_infinity b hb
+        have hx1 : (1 : Real) ≤ 1 + exp (K - Cl) + exp X₀ := d2_ray_ge_one (K - Cl) X₀
+        have hxX : X₀ ≤ 1 + exp (K - Cl) + exp X₀ := d2_ray_ge_snd (K - Cl) X₀
+        have hnode := hgrow (1 + exp (K - Cl) + exp X₀) hx1
+        have hcap : (EMLTree.eml a b).eval (1 + exp (K - Cl) + exp X₀) ≤ K - Cl := by
+          show exp (a.eval (1 + exp (K - Cl) + exp X₀))
+              - log (b.eval (1 + exp (K - Cl) + exp X₀)) ≤ K - Cl
+          have u := add_le_add_wit (hK (1 + exp (K - Cl) + exp X₀) hx1)
+            (neg_le_neg_wit (hCl (1 + exp (K - Cl) + exp X₀) hxX))
+          have e1 : exp (a.eval (1 + exp (K - Cl) + exp X₀))
+              + -log (b.eval (1 + exp (K - Cl) + exp X₀))
+              = exp (a.eval (1 + exp (K - Cl) + exp X₀))
+                - log (b.eval (1 + exp (K - Cl) + exp X₀)) := by mach_ring
+          have e2 : K + -Cl = K - Cl := by mach_ring
+          rw [e1, e2] at u; exact u
+        exact absurd (lt_of_lt_of_le (d2_ray_gt_fst (K - Cl) X₀) (le_trans hnode hcap))
+          (lt_irrefl_ax (K - Cl))
+      · -- growing left child: the node beats every margin
+        left
+        intro M
+        obtain ⟨D, hD⟩ := depth_le_one_log_le_linear b hb
+        obtain ⟨T2, hT2⟩ := two_mul_add_le_exp (M + D)
+        refine ⟨1 + exp T + exp T2, d2_ray_ge_one T T2, ?_⟩
+        intro x hx
+        have hx1 : (1 : Real) ≤ x := le_trans (d2_ray_ge_one T T2) hx
+        have hxT : T ≤ x := le_trans (d2_ray_ge_fst T T2) hx
+        have hxT2 : T2 ≤ x := le_trans (d2_ray_ge_snd T T2) hx
+        show x + M ≤ exp (a.eval x) - log (b.eval x)
+        have v1 := add_le_add_wit (hT x hxT) (neg_le_neg_wit (hD x hx1))
+        have v2 := add_le_add_wit (hT2 x hxT2) (le_refl (-(x + D)))
+        have e1 : x + x + (M + D) + -(x + D) = x + M := by mach_mpoly [x, M, D]
+        have e2 : exp (a.eval x) + -log (b.eval x)
+            = exp (a.eval x) - log (b.eval x) := by mach_ring
+        rw [e1] at v2
+        rw [e2] at v1
+        exact le_trans v2 v1
+
+/-- A point past two thresholds whose exponential also clears a third. -/
+private theorem d3_big_point (X₀ L : Real) : ∃ x : Real, 1 ≤ x ∧ X₀ ≤ x ∧ L < exp x :=
+  ⟨1 + exp X₀ + exp L, d2_ray_ge_one X₀ L, d2_ray_ge_fst X₀ L,
+   lt_of_le_of_lt (d2_ray_ge_snd X₀ L) (exp_grows_strictly_thm _)⟩
+
+/-- The witness tree's right child evaluates to `exp (exp x) + 1`. -/
+private theorem d3_witness_right (y : Real) :
+    (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.const (exp (-1)))).eval y = exp (exp y) + 1 := by
+  show exp (exp y - log (1 : Real)) - log (exp (-1)) = exp (exp y) + 1
+  rw [log_one, log_exp]
+  have e : exp y - (0 : Real) = exp y := by mach_ring
+  rw [e]
+  mach_ring
+
+/-- **`depth_le_three_gap_below` is FALSE — there is no depth-3 analogue of
+`depth_le_two_gap_below`.** A depth-3 tree can approach a target from below with the gap shrinking
+to zero, so no uniform `ε` exists.
+
+Witness: `t = eml var (eml (eml var (const 1)) (const (exp (-1))))`, depth 3, with
+
+  `t x = exp x − log (exp (exp x) + 1) = −log (1 + exp (−exp x))`
+
+negative for every `x` and tending to `0`. At `k = 0` the hypothesis `t x < k` holds everywhere while
+`k − t x → 0`. Numerically `−1.9e−9` at `x = 3`, `−1.9e−24` at `x = 4`.
+
+**Not an artefact of `k = 0`.** Replacing `const 1` by `const (exp d)` gives `t x → d` from below, so
+the construction refutes the statement at *every* target — including `d = exp (exp c)`, which is
+exactly the instance `depth_three_decay_const_left` consumes (`EMLDepthTameness:6650`). The depth-4
+`const_left` cell therefore cannot be routed through a depth-3 gap lemma: there is no such lemma to
+prove, and the ~145-line estimate in `EMLDecayLadderStep` was pricing an impossibility.
+
+**Why depth 2 escapes.** Cancellation needs `log (B x)` to reach `exp (A x)`. At depth 2 the right
+child is at most singly exponential, so `log (B x)` is at most linear, while `exp (A x)` is constant,
+`exp x`, or doubly exponential — they can never meet. At depth 3 the right child reaches doubly
+exponential, so `log (B x)` reaches `exp x`, and `A = var` makes the two cancel exactly. That is the
+same boundary `depth_le_two_log_not_le_linear` marks from the other side. -/
+theorem depth_le_three_gap_below_refuted :
+    ¬ ∀ t : EMLTree, t.depth ≤ 3 → ∀ k : Real,
+        ∃ ε X₀ : Real, 0 < ε ∧ 1 ≤ X₀ ∧
+          ∀ x : Real, X₀ ≤ x → t.eval x < k → ε ≤ k - t.eval x := by
+  intro h
+  obtain ⟨ε, X₀, hε, hX₀, hgap⟩ :=
+    h (EMLTree.eml EMLTree.var (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+        (EMLTree.const (exp (-1))))) (by simp [EMLTree.depth]) 0
+  have hc : (0 : Real) < exp ε - 1 := by
+    have h1 : (1 : Real) < exp ε := by
+      have w := exp_lt hε
+      rw [exp_zero] at w; exact w
+    have u := add_lt_add_left h1 (-(1 : Real))
+    have e1 : -(1 : Real) + 1 = 0 := by mach_ring
+    have e2 : -(1 : Real) + exp ε = exp ε - 1 := by mach_ring
+    rw [e1, e2] at u; exact u
+  obtain ⟨x, hx1, hxX, hxL⟩ := d3_big_point X₀ (-log (exp ε - 1))
+  -- `1 < exp (exp x) * (exp ε − 1)`, established through logs to avoid any division
+  have hprodpos : (0 : Real) < exp (exp x) * (exp ε - 1) := mul_pos (exp_pos _) hc
+  have hlogprod : log (exp (exp x) * (exp ε - 1)) = exp x + log (exp ε - 1) := by
+    rw [log_mul (exp_pos _) hc, log_exp]
+  have hprodgt : (1 : Real) < exp (exp x) * (exp ε - 1) := by
+    have hpos : (0 : Real) < log (exp (exp x) * (exp ε - 1)) := by
+      rw [hlogprod]
+      have u := add_lt_add_left hxL (log (exp ε - 1))
+      have e1 : log (exp ε - 1) + -log (exp ε - 1) = (0 : Real) := by mach_ring
+      have e2 : log (exp ε - 1) + exp x = exp x + log (exp ε - 1) := by mach_ring
+      rw [e1, e2] at u; exact u
+    have w := exp_lt hpos
+    rw [exp_zero, exp_log hprodpos] at w
+    exact w
+  -- hence `exp (exp x) + 1 < exp (exp x) * exp ε`
+  have hstep : exp (exp x) + 1 < exp (exp x) * exp ε := by
+    have u := add_lt_add_left hprodgt (exp (exp x))
+    have e : exp (exp x) + exp (exp x) * (exp ε - 1) = exp (exp x) * exp ε := by
+      mach_mpoly [exp (exp x), exp ε]
+    rw [e] at u; exact u
+  -- so `log (exp (exp x) + 1) < exp x + ε`
+  have hone : (0 : Real) < exp (exp x) + 1 := by
+    have u := add_lt_add_left zero_lt_one_ax (exp (exp x))
+    have e : exp (exp x) + (0 : Real) = exp (exp x) := by mach_ring
+    rw [e] at u
+    exact lt_trans_ax (exp_pos _) u
+  have hlog : log (exp (exp x) + 1) < exp x + ε := by
+    have w := log_lt_log hone hstep
+    rw [log_mul (exp_pos _) (exp_pos _), log_exp, log_exp] at w
+    exact w
+  -- the node is negative, so the gap hypothesis fires
+  have hEltE1 : exp (exp x) < exp (exp x) + 1 := by
+    have u := add_lt_add_left zero_lt_one_ax (exp (exp x))
+    have e : exp (exp x) + (0 : Real) = exp (exp x) := by mach_ring
+    rw [e] at u; exact u
+  have hxlt : exp x < log (exp (exp x) + 1) := by
+    have w := log_lt_log (exp_pos _) hEltE1
+    rw [log_exp] at w; exact w
+  have hneg : (EMLTree.eml EMLTree.var (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.const (exp (-1))))).eval x < 0 := by
+    show exp x - log ((EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.const (exp (-1)))).eval x) < 0
+    rw [d3_witness_right]
+    have u := add_lt_add_left hxlt (-log (exp (exp x) + 1))
+    have e1 : -log (exp (exp x) + 1) + exp x = exp x - log (exp (exp x) + 1) := by mach_ring
+    have e2 : -log (exp (exp x) + 1) + log (exp (exp x) + 1) = (0 : Real) := by mach_ring
+    rw [e1, e2] at u; exact u
+  -- but the gap it forces contradicts `hlog`
+  have hforced := hgap x hxX hneg
+  rw [show (EMLTree.eml EMLTree.var (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.const (exp (-1))))).eval x = exp x - log (exp (exp x) + 1) from by
+        show exp x - log ((EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+          (EMLTree.const (exp (-1)))).eval x) = _
+        rw [d3_witness_right]] at hforced
+  have hsmall : (0 : Real) - (exp x - log (exp (exp x) + 1)) < ε := by
+    have u := add_lt_add_left hlog (-exp x)
+    have e1 : -exp x + log (exp (exp x) + 1) = 0 - (exp x - log (exp (exp x) + 1)) := by
+      mach_mpoly [exp x, log (exp (exp x) + 1)]
+    have e2 : -exp x + (exp x + ε) = ε := by mach_mpoly [exp x, ε]
+    rw [e1, e2] at u; exact u
+  exact absurd (lt_of_le_of_lt hforced hsmall) (lt_irrefl_ax ε)
+
 end MachLib

@@ -404,11 +404,35 @@ depth-parameterised. The dependency chain terminates:
 ```
 NodeDecayBound 3 3
 ├── growing_left  — inputs exist (depth_le_two_approach_constant), liftable now
-├── const_left → depth_le_three_gap_below (~145)
+├── const_left → depth_le_three_gap_below  ← ** REFUTED 2026-09-03, see below **
 │                ├── depth_le_two_form              ← BUILT 2026-09-03 (`EMLDepth2Form`)
 │                └── depth_le_two_exp_gap_below (~104) → depth_le_two_normal_form, same base
 ├── var_left    └── bounded_left
 ```
+
+**THE `const_left` BRANCH IS NOT EXPENSIVE — IT IS IMPOSSIBLE (2026-09-03).**
+`depth_le_three_gap_below` is **false**, proved as `depth_le_three_gap_below_refuted`
+(`MachLib/EMLDepth2Form.lean`). The witness is
+
+    t = eml var (eml (eml var (const 1)) (const (exp (-1))))          -- depth 3
+    t x = exp x − log (exp (exp x) + 1) = −log (1 + exp (−exp x))
+
+which is negative for every `x` and tends to `0`, so at `k = 0` the hypothesis `t x < k` holds
+everywhere while `k − t x → 0` and no uniform `ε` exists. Replacing `const 1` by `const (exp d)`
+moves the limit to any `d`, including `d = exp (exp c)` — precisely the instance
+`depth_three_decay_const_left` (`:6650`) consumes. So the `~145` above was not an under-estimate,
+it was a price on something unprovable, and the branch must be re-routed rather than resourced.
+
+The boundary is sharp and matches `depth_le_two_log_not_le_linear` from the other side: cancellation
+needs `log (B x)` to reach `exp (A x)`. At depth 2 the right child is at most singly exponential, so
+`log (B x)` stays linear and can never meet `exp (A x)`. At depth 3 the right child reaches doubly
+exponential, `log (B x)` reaches `exp x`, and `A = var` makes the two cancel exactly.
+
+**What survives, and it is most of the cell.** `depth_le_two_growing_identity_or_margin` proves that
+at depth ≤ 2 a growing tree is *either* the identity *or* outgrows it by every margin, and
+`depth_three_node_ge_of_exp_margin` (via `exp_margin_of_arg_margin`) closes the margin case. So the
+growing cell is fully closed **except** when the left child is `var` — and `var` is exactly the left
+child of the counterexample. The obstruction is one shape, identified and proved to be the only one.
 
 So the base of the whole stack is packaging the depth-2 classification as a predicate. **That base
 is now built**: `Depth2Form` + `depth_le_two_form` (`MachLib/EMLDepth2Form.lean`), 0 `sorryAx`. It
