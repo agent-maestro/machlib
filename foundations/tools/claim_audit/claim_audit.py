@@ -1212,6 +1212,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="MachLib prose-claim auditor.")
     ap.add_argument("--self-test", action="store_true",
                     help="also inject a canary and prove the gate goes red on a known violation")
+    ap.add_argument("--self-test-only", action="store_true",
+                    help="run ONLY the canaries and exit; for CI, where the full audit already "
+                         "runs as its own gate and repeating it would double the suite's cost")
     ap.add_argument("--registry", default=REGISTRY,
                     help="path to the claims registry (default: claims.json next to this script)")
     ap.add_argument("--bless-relations", action="store_true",
@@ -1220,6 +1223,13 @@ def main() -> int:
 
     if args.bless_relations:
         return bless_relations()
+
+    # `--self-test` runs the canaries AND the full 506-claim audit. In CI the audit is already its
+    # own gate (`run "claims" …`), so wiring `--self-test` there would run it twice: measured, the
+    # canaries take ~15s and the audit minutes, so the duplication -- not the canaries -- is what
+    # made this selftest look too expensive to wire. `--self-test-only` is the CI door.
+    if args.self_test_only:
+        return self_test()
 
     rc = 0
     # The authority-bearing table is checked on the SHIPPING PATH, not only under --self-test.

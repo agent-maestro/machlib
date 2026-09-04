@@ -85,9 +85,49 @@ if [ ! -d "$LIB" ]; then
   exit 1
 fi
 
+if [ "${SELFTEST:-}" = "1" ]; then
+  # Three specimens through the REAL code path, seeded via the seam above.
+  fail=0
+  canary="MachLib/Discovered/__selftest_never_exists.lean"
+
+  # 1. a failing file that is NOT allowlisted must FAIL (allowlist seeded too, so only this fires)
+  out="$(MACHLIB_DISCOVERED_SEED="$KNOWN_BROKEN $canary" SELFTEST= bash "${BASH_SOURCE[0]}" 2>&1)"; rc=$?
+  if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -q "newly-broken"; then
+    echo "[check-discovered] selftest canary 1 (newly-broken file) FIRES"
+  else
+    echo "[check-discovered] selftest canary 1 BROKEN — a newly-broken file did not fail (rc=$rc)" >&2; fail=1
+  fi
+
+  # 2. allowlist rot: nothing failed, so every KNOWN_BROKEN entry now compiles
+  out="$(MACHLIB_DISCOVERED_SEED="" SELFTEST= bash "${BASH_SOURCE[0]}" 2>&1)"; rc=$?
+  if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -q "STALE ALLOWLIST"; then
+    echo "[check-discovered] selftest canary 2 (allowlist rot) FIRES"
+  else
+    echo "[check-discovered] selftest canary 2 BROKEN — stale allowlist did not fail (rc=$rc)" >&2; fail=1
+  fi
+
+  # 3. CONTROL: exactly the allowlisted files failing is the healthy state and must be SILENT.
+  out="$(MACHLIB_DISCOVERED_SEED="$KNOWN_BROKEN" SELFTEST= bash "${BASH_SOURCE[0]}" 2>&1)"; rc=$?
+  if [ "$rc" -eq 0 ]; then
+    echo "[check-discovered] selftest canary 3 (control) stays SILENT"
+  else
+    echo "[check-discovered] selftest canary 3 BROKEN — the healthy state convicted (rc=$rc)" >&2; fail=1
+  fi
+
+  [ "$fail" -eq 0 ] && echo "[check-discovered] SELFTEST PASS — 2 specimens fire, 1 control silent"
+  exit "$fail"
+fi
+
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 export LEAN LIB TMP
 
+# TEST SEAM, env-gated, used only by --selftest. Both decision branches -- newly-broken and
+# allowlist rot -- read only "$TMP/failures", so seeding it exercises them WITHOUT the 294-file
+# compile pass. That cost is the reason this gate carried no specimen; the fix is to test the
+# DECISION on synthetic input rather than re-run the GATHERING. Nothing sets this in normal use.
+if [ -n "${MACHLIB_DISCOVERED_SEED+x}" ]; then
+  printf '%s\n' $MACHLIB_DISCOVERED_SEED | sed '/^$/d' > "$TMP/failures"
+else
 find "$DISC" -name '*.lean' -print0 \
   | xargs -0 -n1 -P "$JOBS" bash -c '
       f="$0"
@@ -96,6 +136,7 @@ find "$DISC" -name '*.lean' -print0 \
         echo "$f" >> "$TMP/failures"
       fi
     '
+fi
 
 total="$(find "$DISC" -name '*.lean' | wc -l | tr -d ' ')"
 
