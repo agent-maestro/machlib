@@ -792,6 +792,36 @@ theorem expExpGapBelow_depth_three_refuted :
 
 /-! ## The depth-3 statement in the shape that survives, and its residue -/
 
+/-! ### The replacement was attacked before it was adopted
+
+Two statements were refuted today by finding a tree whose gap vanishes, so the replacement was given
+the same treatment before any effort went into proving it.
+
+**The extremal approach-from-below at depth 3.** Take `t = eml var B` with
+`B = eml (eml var (const (exp k))) (const α)` and `α ∈ (0,1)`. Then `B x = exp (exp x − k) + c` with
+`c = −log α > 0`, and
+
+    t x = k − log (1 + c·e^k·e^(−exp x))   →   k  from below,
+
+so the gap is `≈ c·e^k·exp (−exp x)`. That is the *fastest* a depth-3 tree can approach from below,
+and `exp (−C − exp x)` already sits under it (checked `x = 1..24`; at `x = 4` the gap is `1.9e−24`
+against a `towerFn 1` floor of `7.1e−25`). `towerFn 2` has room to spare — at `x = 4` it is
+`3e−223593715528665832814074`.
+
+**Why it cannot be beaten, and it is the same fact as everywhere else today.** The gap is driven by
+how far `B x` sits above its target, and that offset is `−log (b₂ x)` for a child `b₂` of depth ≤ 1.
+For the offset to shrink to nothing, `b₂ x` would have to tend to `1` *from one side* — and no
+depth-≤1 shape does: they are constant, `x`, `c − log x`, `exp x − d`, `exp x − log x`, which tend to
+a constant, to `±∞`, or hit the value exactly (whereupon the hypothesis stops firing). So the offset
+is bounded below by a positive constant, and the gap is bounded below by `C·exp (−exp x)`.
+
+**That single fact cuts both ways**, which is what makes the pair of results coherent rather than
+lucky. *No depth-≤1 shape tends to `0` from above* is why the **constant**-gap statement is FALSE —
+the offset can shrink relative to a doubly exponential target — and simultaneously why the
+**decaying**-floor statement is TRUE — the offset cannot shrink below a constant in absolute terms.
+The same sentence refutes one shape and validates the other.
+-/
+
 /-- **Approach from below with a decaying floor, at depth ≤ 3.** The replacement for the refuted
 `depth_le_three_gap_below`. The floor is `exp (−C − exp (exp x))`, i.e. `towerFn 2` — written out so
 this module stays independent of `EMLCertifiedSynthesis`.
