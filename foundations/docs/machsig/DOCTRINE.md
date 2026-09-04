@@ -151,15 +151,40 @@ on `soundness`. Had the wiring been decorative, the suite would have stayed gree
 prevent, reintroduced by the act of hardening it. The tree was then restored from backup and
 `sha256sum -c` confirmed it byte-identical to the state the green run certified.
 
-**Audit note (updated 2026-09-04).** The suite is now **15 gates** and CI runs **7 selftests**, up
-from 2. `soundness`, `machsig-trust`, `hypothesis` and `absence` run their selftest *and* their gate;
+### 4d. Test the DECISION on synthetic input; do not re-run the GATHERING
+
+Three gates carried no runnable specimen because their checks sat behind something expensive:
+`discovered` needs a 294-file compile pass, `consistency` needs a Lean run, `hypothesis` compared
+against a baseline only reachable through a full corpus parse. In each case the expensive part is
+**gathering evidence**, and the part that can actually be wrong is **the decision taken on it**.
+
+Separating the two makes the specimen cheap and sharper at once:
+
+| gate | expensive gathering | cheap decision, now tested |
+|---|---|---|
+| `discovered` | compile 294 files | is a failing file allowlisted? is the allowlist stale? |
+| `consistency` | run Lean, print axioms | is the axiom set inside Lean's core? |
+| `hypothesis` | parse the corpus | how does `now` differ from the pinned set? |
+
+For the shell gates this is an **env-gated seam** (`MACHLIB_DISCOVERED_SEED`,
+`MACHLIB_CONSISTENCY_SEED_OUT`) that supplies the gathered evidence directly — the pattern
+`check_forge_certificates.sh` already used. For `hypothesis` it was extracting `ratchet()` as a
+function. Nothing sets the seams in normal operation, and both gates' normal paths were re-run
+unchanged afterwards.
+
+Cost is a reason a specimen is *hard to write*, not a reason a gate is *validated without one*.
+
+**Audit note (updated 2026-09-04, later).** The suite is now **18 gates** and CI runs **11
+selftests**, up from 2. `soundness`, `machsig-trust`, `hypothesis` and `absence` run their selftest *and* their gate;
 `aggregator-selftest` is a gate in its own right, because `--selftest` there **replaces** the
 aggregator rather than adding to it — putting the flag on the gate's line would have swapped a real
 check for a self-check and still printed green.
 
-Three remain unwired **with reasons, not silence**: `forge-cert` replaces its gate *and* writes a
-canary into the tree (mutating the worktree mid-run); `claims` does not finish its selftest in 240s;
-`discovered`, `consistency` and `witness` have no selftest at all.
+One remains unwired **with a reason, not silence**: `forge-cert` replaces its gate *and* writes a
+canary into the tree (mutating the worktree mid-run). Two earlier entries on this list were wrong:
+`claims` was never slow — `--self-test` merely re-ran the full audit that is already its own gate,
+and `--self-test-only` costs 8s — and `witness_audit` had a selftest all along, called
+**unconditionally** from `main`, which a flag-based survey cannot see and which is the better design.
 
 Wiring found a defect immediately: **`absence_audit`'s control canary had been failing silently** —
 `check` was tightened to demand a `positive_control` and the canary was never updated, so the control
