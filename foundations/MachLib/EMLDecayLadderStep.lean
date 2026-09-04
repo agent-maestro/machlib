@@ -407,7 +407,8 @@ NodeDecayBound 3 3
 ├── const_left → depth_le_three_gap_below  ← ** REFUTED 2026-09-03, see below **
 │                ├── depth_le_two_form              ← BUILT 2026-09-03 (`EMLDepth2Form`)
 │                └── depth_le_two_exp_gap_below (~104) → depth_le_two_normal_form, same base
-├── var_left    └── bounded_left
+├── var_left  → ExpExpGapBelow at depth 3  ← ** ALSO REFUTED 2026-09-04 **
+└── bounded_left
 ```
 
 **THE `const_left` BRANCH IS NOT EXPENSIVE — IT IS IMPOSSIBLE (2026-09-03).**
@@ -427,6 +428,24 @@ The boundary is sharp and matches `depth_le_two_log_not_le_linear` from the othe
 needs `log (B x)` to reach `exp (A x)`. At depth 2 the right child is at most singly exponential, so
 `log (B x)` stays linear and can never meet `exp (A x)`. At depth 3 the right child reaches doubly
 exponential, `log (B x)` reaches `exp x`, and `A = var` makes the two cancel exactly.
+
+**AND IT IS NOT ONE CELL — `var_left` FALLS THE SAME WAY (2026-09-04).** `ExpExpGapBelow`
+(`:6909`) is a theorem for depth ≤ 2 and took an arc to prove; its depth-≤3 analogue is false,
+`expExpGapBelow_depth_three_refuted`. Witness
+`Q = eml (eml var (const 1)) (eml (eml (const 0) var) (const (exp (-1))))`, giving
+`exp (exp y) − Q y = log (1 + e/y)` — positive everywhere, tending to `0`.
+
+So the constant-gap **shape** is what fails at depth 3, not any particular cell, and the two cells
+do not even fail at the same speed:
+
+| cell | gap vanishes | floor that suffices |
+|---|---|---|
+| `const_left` | doubly exponentially | `exp (−C − exp y)` |
+| `var_left`   | **polynomially**, `~1/y` | `exp (−C − log y)` |
+
+A single decaying-floor formulation therefore has to be taken at the **weaker** (`const_left`) rate
+to cover both. That constraint is invisible from either cell alone, and it is the thing to fix before
+writing any depth-4 statement.
 
 **THE REPAIR: A DECAYING FLOOR, NOT A CONSTANT GAP.** The refutation kills the *shape* of the
 statement, not the branch. What `const_left` actually needs is
