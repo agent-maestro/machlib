@@ -428,6 +428,33 @@ needs `log (B x)` to reach `exp (A x)`. At depth 2 the right child is at most si
 `log (B x)` stays linear and can never meet `exp (A x)`. At depth 3 the right child reaches doubly
 exponential, `log (B x)` reaches `exp x`, and `A = var` makes the two cancel exactly.
 
+**THE REPAIR: A DECAYING FLOOR, NOT A CONSTANT GAP.** The refutation kills the *shape* of the
+statement, not the branch. What `const_left` actually needs is
+`-log (exp c - log (Q x)) <= C + towerFn m x`, and an exponentially shrinking gap still delivers
+that — `-log` of something exponentially small is only *linearly* large in the tower's argument.
+So the right depth-3 statement mirrors `depth_le_two_approach_constant` (`EMLDepthTameness:5751`),
+which already carries a decaying floor `exp (-C - x)` for approach from *above*:
+
+```
+depth_le_three_approach_below :
+  ∀ t, t.depth ≤ 3 → ∀ k, ∃ C X₀, 1 ≤ X₀ ∧
+    ∀ x, X₀ ≤ x → t.eval x < k → exp (-C - exp x) ≤ k - t.eval x
+```
+
+Checked on the very witness that refutes the constant version: there `k - t x = log (1 + exp (-exp x))`
+and the floor with `C = log 2` sits at exactly half of it — ratio `2.0` to 8 figures across
+`x = 1..11`, where both sides are near `1e-26000`. `C = log 2` is essentially tight for that witness.
+
+Note the exponent: depth 2's floor is `exp (-C - x)`, depth 3's is `exp (-C - exp x)`. That is the
+same "one level of nesting buys exactly one exponential" the growth-envelope note states, showing up
+on the decay side — which is corroboration that the shape is right rather than merely convenient.
+
+**Numerical caution recorded with it.** The first check of this floor reported FAILURE for `x >= 6`.
+That was arithmetic, not mathematics: `exp (-exp x)` drops below `1e-80`, so `1 + y` rounds to
+exactly `1` and `log (1 + y)` returns `0`. Computed with `log1p` the floor holds everywhere. A
+numeric probe of a quantity that vanishes doubly exponentially must avoid `log (1 + y)` — and a
+"refutation" from such a probe would have discarded a true statement.
+
 **What survives, and it is most of the cell.** `depth_le_two_growing_identity_or_margin` proves that
 at depth ≤ 2 a growing tree is *either* the identity *or* outgrows it by every margin, and
 `depth_three_node_ge_of_exp_margin` (via `exp_margin_of_arg_margin`) closes the margin case. So the
