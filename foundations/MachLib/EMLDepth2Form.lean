@@ -637,5 +637,158 @@ theorem depth_three_witness_decaying_floor (x : Real) :
   rw [e1, e2] at u
   exact u
 
+private theorem d2_ray_ge_expsnd (a b : Real) : exp b ≤ 1 + exp a + exp b := by
+  have u := add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos a)))
+    (le_refl (exp b))
+  have e : (0 : Real) + 0 + exp b = exp b := by mach_ring
+  rw [e] at u; exact u
+
+/-- The second witness evaluates to `exp (exp y) − log (exp (1 − log y) + 1)`. -/
+private theorem d3_expexp_witness (y : Real) :
+    (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.eml (EMLTree.eml (EMLTree.const 0) EMLTree.var)
+        (EMLTree.const (exp (-1))))).eval y
+      = exp (exp y) - log (exp (1 - log y) + 1) := by
+  show exp (exp y - log (1 : Real))
+      - log (exp (exp (0 : Real) - log y) - log (exp (-1))) = _
+  rw [log_one, exp_zero, log_exp]
+  have e1 : exp y - (0 : Real) = exp y := by mach_ring
+  have e2 : exp ((1 : Real) - log y) - -1 = exp (1 - log y) + 1 := by
+    mach_mpoly [exp ((1 : Real) - log y)]
+  rw [e1, e2]
+
+/-- **`ExpExpGapBelow` also fails at depth 3 — the collapse is systematic, not specific to
+`const_left`.**
+
+`depth_le_three_gap_below_refuted` kills the constant-gap shape for the `const_left` cell. This kills
+it for `var_left` too: `ExpExpGapBelow` (`EMLDepthTameness:6909`) is a *theorem* for depth-≤2 `Q`,
+and its depth-≤3 analogue is false.
+
+Witness, depth 3:
+
+    Q = eml (eml var (const 1)) (eml (eml (const 0) var) (const (exp (-1))))
+    Q y = exp (exp y) − log (exp (1 − log y) + 1)
+
+so `exp (exp y) − Q y = log (1 + e/y)`, which is strictly positive for every `y` — the hypothesis
+`Q y < exp (exp y)` therefore fires everywhere — and tends to `0`, so no uniform `ε` exists.
+
+**The decay rate is the useful part.** Here the gap vanishes only **polynomially** (`~1/y`: `9.9e−3`
+at `y = 100`, `1.0e−16` at `y = 1e16`), against the **doubly exponential** vanishing of the
+`const_left` witness. So the two cells need floors of very different strength — `exp (−C − log y)`
+suffices here where `const_left` needs `exp (−C − exp y)`. A single decaying-floor shape covers both
+only if it is taken at the weaker (`const_left`) rate.
+
+**Why depth 2 is safe**, which is what makes `ExpExpGapBelow` provable there: the offset must tend to
+`0` from *above*, and at depth ≤ 1 nothing does — the shapes are constant, `x`, `c − log x`,
+`exp x − d`, `exp x − log x`, which go to a constant, `±∞`, or hit `0` exactly. The vanishing offset
+here is `exp (1 − log y)`, and building it needs a `log` inside an `exp`, i.e. one more level. -/
+private theorem d3_expexp_small {ε X : Real} (hc : 0 < exp ε - 1)
+    (hX : 1 + 1 - log (exp ε - 1) ≤ log X) : log (exp (1 - log X) + 1) < ε := by
+  have h1 : 1 - log X < log (exp ε - 1) := by
+    have u := add_le_add_wit (le_refl (1 : Real)) (neg_le_neg_wit hX)
+    have e1 : (1 : Real) + -(1 + 1 - log (exp ε - 1)) = log (exp ε - 1) - 1 := by
+      mach_mpoly [log (exp ε - 1)]
+    have e2 : (1 : Real) + -log X = 1 - log X := by mach_mpoly [log X]
+    rw [e1, e2] at u
+    have hlt : log (exp ε - 1) - 1 < log (exp ε - 1) := by
+      have w := add_lt_add_left zero_lt_one_ax (log (exp ε - 1) - 1)
+      have f1 : log (exp ε - 1) - 1 + 0 = log (exp ε - 1) - 1 := by mach_ring
+      have f2 : log (exp ε - 1) - 1 + 1 = log (exp ε - 1) := by mach_mpoly [log (exp ε - 1)]
+      rw [f1, f2] at w; exact w
+    exact lt_of_le_of_lt u hlt
+  have h2 : exp (1 - log X) < exp ε - 1 := by
+    have w := exp_lt h1
+    rw [exp_log hc] at w; exact w
+  have h3 : exp (1 - log X) + 1 < exp ε := by
+    have u := add_lt_add_left h2 (1 : Real)
+    have e1 : (1 : Real) + exp (1 - log X) = exp (1 - log X) + 1 := by
+      mach_mpoly [exp (1 - log X)]
+    have e2 : (1 : Real) + (exp ε - 1) = exp ε := by mach_mpoly [exp ε]
+    rw [e1, e2] at u; exact u
+  have hpos : (0 : Real) < exp (1 - log X) + 1 := by
+    have u := add_lt_add_left (exp_pos (1 - log X)) (0 : Real)
+    have e1 : (0 : Real) + 0 = 0 := by mach_ring
+    have e2 : (0 : Real) + exp (1 - log X) = exp (1 - log X) := by mach_ring
+    rw [e1, e2] at u
+    exact lt_trans_ax u (by
+      have w := add_lt_add_left zero_lt_one_ax (exp (1 - log X))
+      have f1 : exp (1 - log X) + 0 = exp (1 - log X) := by mach_ring
+      rw [f1] at w; exact w)
+  have w := log_lt_log hpos h3
+  rw [log_exp] at w; exact w
+
+theorem expExpGapBelow_depth_three_refuted :
+    ¬ ∀ Q : EMLTree, Q.depth ≤ 3 → ∃ ε X₀ : Real, 0 < ε ∧ 1 ≤ X₀ ∧
+        ∀ x : Real, X₀ ≤ x → Q.eval x < exp (exp x) → ε ≤ exp (exp x) - Q.eval x := by
+  intro h
+  obtain ⟨ε, X₀, hε, hX₀, hgap⟩ :=
+    h (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+        (EMLTree.eml (EMLTree.eml (EMLTree.const 0) EMLTree.var)
+          (EMLTree.const (exp (-1))))) (by simp [EMLTree.depth])
+  have hc : (0 : Real) < exp ε - 1 := by
+    have h1 : (1 : Real) < exp ε := by
+      have w := exp_lt hε
+      rw [exp_zero] at w; exact w
+    have u := add_lt_add_left h1 (-(1 : Real))
+    have e1 : -(1 : Real) + 1 = 0 := by mach_ring
+    have e2 : -(1 : Real) + exp ε = exp ε - 1 := by mach_ring
+    rw [e1, e2] at u; exact u
+  -- evaluate past `exp (1 + 1 - log (exp ε - 1))`, so that `1 - log x < log (exp ε - 1)`
+  have hx1 : (1 : Real) ≤ 1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)) := d2_ray_ge_one _ _
+  have hxX : X₀ ≤ 1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)) := d2_ray_ge_fst _ _
+  have hxE : exp (1 + 1 - log (exp ε - 1)) ≤ 1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)) :=
+    d2_ray_ge_expsnd _ _
+  have hxpos : (0 : Real) < 1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)) :=
+    lt_of_lt_of_le zero_lt_one_ax hx1
+  -- the hypothesis fires: the offset is strictly positive
+  have hoff : (0 : Real) < exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) := exp_pos _
+  have hBgt : (1 : Real) < exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1 := by
+    have u := add_lt_add_left hoff (1 : Real)
+    have e1 : (1 : Real) + 0 = 1 := by mach_ring
+    have e2 : (1 : Real) + exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1))))
+        = exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1 := by
+      mach_mpoly [exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1))))]
+    rw [e1, e2] at u; exact u
+  have hlogpos : (0 : Real)
+      < log (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1) := by
+    have w := log_lt_log zero_lt_one_ax hBgt
+    rw [log_one] at w; exact w
+  -- the evaluation point clears the threshold, so the remaining gap is below `ε`
+  have hlogX : 1 + 1 - log (exp ε - 1)
+      ≤ log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1))) := by
+    have w := log_le_log (exp_pos _) hxE
+    rw [log_exp] at w; exact w
+  have hsmall := d3_expexp_small hc hlogX
+  -- and the hypothesis of the gap statement fires
+  have hlt : (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.eml (EMLTree.eml (EMLTree.const 0) EMLTree.var)
+        (EMLTree.const (exp (-1))))).eval (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))
+      < exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) := by
+    rw [d3_expexp_witness]
+    have u := add_lt_add_left hlogpos
+      (exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) - log
+        (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1))
+    have e1 : exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) - log
+        (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1) + 0
+        = exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) - log
+          (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1) := by mach_ring
+    have e2 : exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) - log
+        (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1)
+        + log (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1)
+        = exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) := by
+      mach_mpoly [exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))),
+        log (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1)]
+    rw [e1, e2] at u; exact u
+  have hforced := hgap _ hxX hlt
+  rw [d3_expexp_witness] at hforced
+  have e : exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1))))
+      - (exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) - log
+        (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1))
+      = log (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1) := by
+    mach_mpoly [exp (exp (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))),
+      log (exp (1 - log (1 + exp X₀ + exp (1 + 1 - log (exp ε - 1)))) + 1)]
+  rw [e] at hforced
+  exact absurd (lt_of_le_of_lt hforced hsmall) (lt_irrefl_ax ε)
+
 
 end MachLib
