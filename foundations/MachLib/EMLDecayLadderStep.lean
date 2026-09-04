@@ -371,13 +371,54 @@ depth-parameterised. The dependency chain terminates:
 NodeDecayBound 3 3
 ├── growing_left  — inputs exist (depth_le_two_approach_constant), liftable now
 ├── const_left → depth_le_three_gap_below (~145)
-│                ├── depth_le_two_form              ← MISSING, but ~free:
-│                │                                    depth_le_two_normal_form already proves it
-│                └── depth_le_two_exp_gap_below (~104) → depth_le_two_classification, same base
+│                ├── depth_le_two_form              ← BUILT 2026-09-03 (`EMLDepth2Form`)
+│                └── depth_le_two_exp_gap_below (~104) → depth_le_two_normal_form, same base
 ├── var_left    └── bounded_left
 ```
 
-So the base of the whole stack is packaging the depth-2 classification as a predicate.
+So the base of the whole stack is packaging the depth-2 classification as a predicate. **That base
+is now built**: `Depth2Form` + `depth_le_two_form` (`MachLib/EMLDepth2Form.lean`), 0 `sorryAx`. It
+was "~free" as predicted, with one structural surprise worth recording: `depth_le_one_form` needs no
+`unfold` because `depth_le_one_classification` already *concludes* `Depth1Form`, whereas
+`depth_le_two_normal_form` states its disjunction **inline**, so the depth-2 wrapper must open the
+definition. The rungs are not the same shape, and a transcription of the depth-1 wrapper fails to
+elaborate — silently becoming a `sorry`, since a failed `def` carries its theorem down with it.
+
+**THE ~436 FIGURE PRICES THE REDUCTION, NOT THE ANALYSIS (measured 2026-09-03).** The four branch
+helpers carry a node to a *gap proposition*; they do not discharge one. The discharges are separate
+and sit far outside the block that figure measured: `expExpGapBelow_holds` (`:11069`) and
+`boundedCellApproach_holds` (`:10811`). The corpus already says these "took an arc each"
+(`:4945`) — and the arc is measurable. From `def BoundedCellApproach` (`:6985`) to its discharge
+(`:10811`) is **3,826 lines / 92 declarations**, and that region is gap analysis throughout, not
+omnibus filler.
+
+Splitting those 92 by name: **59 enumerate depth-2 shapes** (`const_target_of_const_children`,
+`moving_Q_eventual_form`, `gap_below_constant_barrier`, …) and so need a depth-3-child analogue;
+**33 are generic inequalities** (`sq_le_exp_exp`, `double_exp_floor_dominated`, …) that lift
+unchanged. A keyword split is crude and the fraction should be read as an order of magnitude, not a
+line count.
+
+**So the honest price of `NodeDecayBound 3 3` is ~436 lines of reduction PLUS roughly 2,400 lines of
+new gap analysis across two arcs — not ~436 total.** The gap propositions are stated over
+`Q.depth ≤ 2`; depth 4 needs them over `Q.depth ≤ 3`, and their interiors enumerate the depth-2
+normal form, which is exactly what changes.
+
+This is the second time this target has been under-priced, and the mechanism was the same both
+times: **the cheap layer was measured and the expensive layer it rests on was not opened.** First it
+was `depth3DecayExp_holds` (52 lines, resting on 809); now it is those 809 (resting on ~3,800). The
+rule that would have caught both: price a lift by opening what the DISCHARGES cost, not what the
+reductions cost — a reduction to an open proposition is not progress you can count.
+
+Nothing here says depth 4 is out of reach; `decayFloorUpTo_succ` is general, `lowerEnvBound_three`
+is proved, and the base predicate now exists. It says the remaining work is two research arcs, and
+should be planned as such rather than as a transcription.
+
+**CORRECTION to the tree above (2026-09-03):** an earlier draft routed `depth_le_two_exp_gap_below`
+through `depth_le_two_classification`. **There is no such theorem.** Depth 1 has
+`depth_le_one_classification`; depth 2 names the same content `depth_le_two_normal_form`. That is
+the *third* time a name in this note was extrapolated from depth-1 vocabulary and turned out not to
+exist — this corpus does not name by depth-indexed pattern, so absence here must be checked by grep,
+never by analogy.
 
 (Prose, not a theorem. "One rung away" counts rungs of the ladder, not effort — see the measured
 cost above, which an earlier draft of this note did not have and which made the rung read as cheaper
