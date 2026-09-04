@@ -196,8 +196,14 @@ def self_test() -> int:
         print(f"{GREEN}[self-test] canary 3 fires. ✓{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] canary 4 (control): a TRUE absence claim must stay SILENT …{RST}")
+    # The positive_control requirement was added to `check` after this canary was written, and the
+    # canary was not updated -- so the CONTROL has been failing (UNAVAILABLE: no positive_control)
+    # while the gate itself passed on the real registry. Nothing surfaced it because the suite never
+    # ran this selftest. The control needs an instrument shown capable of a hit: a string the pattern
+    # matches, while the corpus search still finds nothing.
     good = {"id": "c4", "source_file": "MachLib.lean", "claim_text": ["import"],
-            "search": {"pattern": "zzq_definitely_absent_zzq", "paths": "MachLib"}}
+            "search": {"pattern": "zzq_definitely_absent_zzq", "paths": "MachLib",
+                       "positive_control": "a line mentioning zzq_definitely_absent_zzq"}}
     if check(good):
         print(f"{RED}[self-test] FAILED: a true absence claim reported problems.{RST}"); ok = False
     else:

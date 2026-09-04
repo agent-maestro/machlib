@@ -75,20 +75,26 @@ else
   echo "=== MachLib: all gates + measurement harnesses ==="
   run "build"        lake build
   run "aggregator"   bash scripts/check_aggregator.sh
+  # `--selftest` REPLACES this gate rather than adding to it, so it gets its own run. Putting the
+  # flag on the line above would swap a real check for a self-check and still print green.
+  run "aggregator-selftest" bash scripts/check_aggregator.sh --selftest
   run "consistency"  bash scripts/check_consistency_model.sh
   run "axiom-ledger" lake env lean AxiomLedger.lean
   run "obligations"  bash tools/check_obligations.sh
   run "discovered"   bash scripts/check_discovered_compiles.sh 4
+  # forge-cert selftest is NOT wired: it both REPLACES the gate and writes a canary .lean into the
+  # tree, which would mutate the worktree mid-run and endanger this run's own fingerprint.
   run "forge-cert"   bash scripts/check_forge_certificates.sh
   # --selftest here injects faults into IN-MEMORY copies of the ledger/bridge (no writes),
   # so it is safe inside a gated run. Do NOT add --mutate: it writes a temp file into
   # tools/, which mutates the worktree mid-run and voids this run's tree fingerprint.
   run "soundness"    python3 tools/soundness_witness_audit.py --selftest
-  run "machsig-trust" python3 tools/machsig/trust_gate.py
+  run "machsig-trust" python3 tools/machsig/trust_gate.py --selftest
+  # claims selftest is NOT wired: it did not finish in 240s. Worth making it cheap enough to wire.
   run "claims"       python3 tools/claim_audit/claim_audit.py
   run "witness"      python3 tools/witness_audit.py
-  run "hypothesis"   python3 tools/hypothesis_audit.py
-  run "absence"      python3 tools/absence_audit.py
+  run "hypothesis"   python3 tools/hypothesis_audit.py --self-test
+  run "absence"      python3 tools/absence_audit.py --self-test
   run "sorry"        lake env lean tools/sorry_audit.lean
 fi
 
