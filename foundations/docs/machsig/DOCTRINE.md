@@ -151,8 +151,26 @@ on `soundness`. Had the wiring been decorative, the suite would have stayed gree
 prevent, reintroduced by the act of hardening it. The tree was then restored from backup and
 `sha256sum -c` confirmed it byte-identical to the state the green run certified.
 
-**Audit note.** All 14 gates in `check_all.sh` carry some self-test; they are **not** all at the same
-tier. At injection tier: `check_forge_certificates.sh`, `check_obligations.sh`'s 18 canaries,
+**Audit note (updated 2026-09-04).** The suite is now **15 gates** and CI runs **7 selftests**, up
+from 2. `soundness`, `machsig-trust`, `hypothesis` and `absence` run their selftest *and* their gate;
+`aggregator-selftest` is a gate in its own right, because `--selftest` there **replaces** the
+aggregator rather than adding to it — putting the flag on the gate's line would have swapped a real
+check for a self-check and still printed green.
+
+Three remain unwired **with reasons, not silence**: `forge-cert` replaces its gate *and* writes a
+canary into the tree (mutating the worktree mid-run); `claims` does not finish its selftest in 240s;
+`discovered`, `consistency` and `witness` have no selftest at all.
+
+Wiring found a defect immediately: **`absence_audit`'s control canary had been failing silently** —
+`check` was tightened to demand a `positive_control` and the canary was never updated, so the control
+returned UNAVAILABLE while the gate passed green daily. A gate whose control fires discriminates
+nothing. Nothing surfaced it because CI never ran the selftest.
+
+**Keep the scoreboard honest:** wiring a selftest makes CI *run* it, not makes it *good*. Only
+`soundness` and `absence` have a **demonstrated** red path end-to-end; the other five are verified to
+run and pass, which is weaker.
+
+They are **not** all at the same tier. At injection tier: `check_forge_certificates.sh`, `check_obligations.sh`'s 18 canaries,
 `check_aggregator.sh`, `tools/machsig/trust_gate.py`, and now `tools/soundness_witness_audit.py`
 (7 specimens, 4 perturbations of the live files, mutation-tested above — upgraded from the
 predicate-only version written earlier in this same effort, whose weakness this document named
