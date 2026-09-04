@@ -119,5 +119,79 @@ private theorem depth_le_two_exp_gap_below_fires (x : Real) :
   show exp 0 < exp 1
   exact exp_lt zero_lt_one_ax
 
+/-! ## The depth-2 logarithm bound is exponential, and that is not a naming accident -/
+
+/-- `EMLDepthTameness`'s `one_le_ray` / `fst_le_ray` are `private`, so the two facts are re-proved
+here rather than reached for. Same content, one threshold instead of two. -/
+private theorem d2_one_le_shift (a : Real) : (1 : Real) ≤ 1 + exp a := by
+  have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos a))
+  have e : (1 : Real) + 0 = 1 := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d2_le_shift (a : Real) : a ≤ 1 + exp a := by
+  have h1 : a ≤ exp a := le_of_lt (exp_grows_strictly_thm a)
+  have h2 : exp a ≤ 1 + exp a := by
+    have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp a))
+    have e : (0 : Real) + exp a = exp a := by mach_ring
+    rw [e] at u; exact u
+  exact le_trans h1 h2
+
+
+/-- **There is no linear bound on `log` of a depth-≤2 tree.**
+
+Depth 1 has `depth_le_one_log_le_linear` (`log (B x) ≤ x + C`). Depth 2 has only
+`depth_le_two_log_le_exp` (`log (B x) ≤ exp x + K`), and `EMLDecayLadderStep`'s route note once
+recorded these as "identical statement". They are not, and the gap between them is where the
+depth-4 `const_left` branch loses its argument: `depth_le_two_gap_below`'s growing-left cell closes
+because `exp x − (x + D)` outruns any `k`, which spends the **linear** bound. Replace it with the
+exponential one and the same cell nets a constant instead of diverging.
+
+So the absence of `depth_le_two_log_le_linear` is a **theorem, not a gap in the corpus**, and this
+records it as one. The witness is `exp (exp x − log x) − log 1`: depth 2, and its logarithm is
+`exp x − log x`, which outgrows every line.
+
+Proved rather than asserted because the failure mode it guards against is silent — a phantom *name*
+fails loudly at elaboration, whereas a bound assumed stronger than it is compiles fine and breaks
+whatever consumes it. -/
+theorem depth_le_two_log_not_le_linear :
+    ¬ ∀ B : EMLTree, B.depth ≤ 2 →
+        ∃ C : Real, ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ x + C := by
+  intro h
+  obtain ⟨C, hC⟩ := h (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) (EMLTree.const 1))
+    (by simp [EMLTree.depth])
+  obtain ⟨D, hD⟩ := depth_le_one_log_le_linear EMLTree.var (by simp [EMLTree.depth])
+  obtain ⟨T, hT⟩ := two_mul_add_le_exp (C + D + 1)
+  -- a point past both thresholds
+  have hx1 : (1 : Real) ≤ 1 + exp T := d2_one_le_shift T
+  have hxT : T ≤ 1 + exp T := d2_le_shift T
+  have hCx := hC (1 + exp T) hx1
+  have hDx := hD (1 + exp T) hx1
+  have hTx := hT (1 + exp T) hxT
+  -- `hD` is stated about `EMLTree.var.eval`, which is `x` only up to unfolding
+  have hDx' : log (1 + exp T) ≤ (1 + exp T) + D := hDx
+  -- the witness' logarithm is `exp x − log x`
+  have hval : log ((EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var)
+      (EMLTree.const 1)).eval (1 + exp T))
+      = exp (1 + exp T) - log (1 + exp T) := by
+    show log (exp (exp (1 + exp T) - log (1 + exp T)) - log (1 : Real)) = _
+    rw [log_one]
+    have e : exp (exp (1 + exp T) - log (1 + exp T)) - 0
+        = exp (exp (1 + exp T) - log (1 + exp T)) := by mach_ring
+    rw [e, log_exp]
+  rw [hval] at hCx
+  -- `exp x − log x ≥ x + (C + 1)`, against `hCx : exp x − log x ≤ x + C`
+  have v := add_le_add_wit hTx (neg_le_neg_wit hDx')
+  have e1 : (1 + exp T) + (1 + exp T) + (C + D + 1)
+      + -((1 + exp T) + D) = (1 + exp T) + (C + 1) := by mach_ring
+  have e2 : exp (1 + exp T) + -log (1 + exp T)
+      = exp (1 + exp T) - log (1 + exp T) := by mach_ring
+  rw [e1, e2] at v
+  have hcontra := le_trans v hCx
+  have w := add_le_add_wit hcontra (le_refl (-((1 + exp T) + C)))
+  have e3 : (1 + exp T) + (C + 1) + -((1 + exp T) + C) = (1 : Real) := by mach_ring
+  have e4 : (1 + exp T) + C + -((1 + exp T) + C) = (0 : Real) := by mach_ring
+  rw [e3, e4] at w
+  exact absurd (lt_of_lt_of_le zero_lt_one_ax w) (lt_irrefl_ax 0)
+
 
 end MachLib
