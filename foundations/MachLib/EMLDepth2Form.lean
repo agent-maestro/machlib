@@ -565,4 +565,77 @@ theorem depth_le_three_gap_below_refuted :
     rw [e1, e2] at u; exact u
   exact absurd (lt_of_le_of_lt hforced hsmall) (lt_irrefl_ax ε)
 
+/-- **The decaying floor DOES hold on the very witness that refutes the constant gap.**
+
+`depth_le_three_gap_below_refuted` kills the *shape* of the depth-3 statement, not the branch. What
+`const_left` needs is `−log (exp c − log (Q x)) ≤ C + towerFn m x`, and an exponentially shrinking
+gap still supplies that — `−log` of an exponentially small quantity is only *linearly* large in the
+tower's argument. The replacement shape therefore mirrors `depth_le_two_approach_constant`
+(`EMLDepthTameness:5751`), which already carries a decaying floor for approach from *above*:
+
+    t x < k  →  exp (−C − exp x) ≤ k − t x
+
+This is the firing specimen for that shape, on the witness where the constant version provably
+fails, with `k = 0` and **`C = 1`**.
+
+**`C = 1` makes it exact, which is why the constant is `1` and not a slack bound.** Writing
+`z = exp (−1 − exp x)`, the tangent bound `exp z ≤ 1 + z·e` (`exp_le_one_add_scaled`) gives
+`exp (exp x) · exp z ≤ exp (exp x) + exp (exp x)·z·e`, and `exp (exp x)·z·e = exp (exp x − 1 − exp x + 1) = exp 0 = 1`
+exactly. So the inequality closes with no room to spare — `C = 1` is forced by the algebra, not chosen.
+Numerically the true gap is `e/2 ≈ 1.36` times this floor.
+
+Note the exponent: depth 2's floor is `exp (−C − x)`, depth 3's is `exp (−C − exp x)`. That is the
+corpus's own "one level of nesting buys exactly one exponential", stated for the growth side in
+`depth_le_two_growth_envelope`, appearing here on the decay side. -/
+theorem depth_three_witness_decaying_floor (x : Real) :
+    exp (-1 - exp x)
+      ≤ 0 - (EMLTree.eml EMLTree.var (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+          (EMLTree.const (exp (-1))))).eval x := by
+  have hz0 : (0 : Real) ≤ exp (-1 - exp x) := le_of_lt (exp_pos _)
+  have hz1 : exp (-1 - exp x) ≤ 1 := by
+    have hneg : -1 - exp x < 0 := by
+      have u := add_lt_add_left (exp_pos x) (-1 - exp x)
+      have e1 : -1 - exp x + 0 = -1 - exp x := by mach_ring
+      have e2 : -1 - exp x + exp x = -1 := by mach_mpoly [exp x]
+      rw [e1, e2] at u
+      exact lt_trans_ax u (by
+        have w := add_lt_add_left zero_lt_one_ax (-(1 : Real))
+        have f1 : -(1 : Real) + 0 = -1 := by mach_ring
+        have f2 : -(1 : Real) + 1 = 0 := by mach_ring
+        rw [f1, f2] at w; exact w)
+    have w := exp_monotone (le_of_lt hneg)
+    rw [exp_zero] at w; exact w
+  -- `exp (exp x) * exp z ≤ exp (exp x) + 1`, exactly
+  have hkey : exp (exp x) * (exp (-1 - exp x) * exp 1) = 1 := by
+    rw [← exp_add, ← exp_add]
+    have e : exp x + (-1 - exp x + 1) = 0 := by mach_mpoly [exp x]
+    rw [e, exp_zero]
+  have hmul := mul_le_mul_of_nonneg_left (exp_le_one_add_scaled hz0 hz1)
+    (le_of_lt (exp_pos (exp x)))
+  have hbound : exp (exp x) * exp (exp (-1 - exp x)) ≤ exp (exp x) + 1 := by
+    have e : exp (exp x) * (1 + exp (-1 - exp x) * exp 1)
+        = exp (exp x) + exp (exp x) * (exp (-1 - exp x) * exp 1) := by
+      mach_mpoly [exp (exp x), exp (-1 - exp x), exp 1]
+    rw [e, hkey] at hmul
+    exact hmul
+  -- so `exp x + z ≤ log (exp (exp x) + 1)`
+  have hsum : exp (exp x + exp (-1 - exp x)) ≤ exp (exp x) + 1 := by
+    rw [exp_add]; exact hbound
+  have hlog : exp x + exp (-1 - exp x) ≤ log (exp (exp x) + 1) := by
+    have w := log_le_log (exp_pos _) hsum
+    rw [log_exp] at w; exact w
+  -- unfold the witness and rearrange
+  show exp (-1 - exp x)
+    ≤ 0 - (exp x - log ((EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+        (EMLTree.const (exp (-1)))).eval x))
+  rw [d3_witness_right]
+  have u := add_le_add_wit hlog (le_refl (-exp x))
+  have e1 : exp x + exp (-1 - exp x) + -exp x = exp (-1 - exp x) := by
+    mach_mpoly [exp x, exp (-1 - exp x)]
+  have e2 : log (exp (exp x) + 1) + -exp x = 0 - (exp x - log (exp (exp x) + 1)) := by
+    mach_mpoly [exp x, log (exp (exp x) + 1)]
+  rw [e1, e2] at u
+  exact u
+
+
 end MachLib
