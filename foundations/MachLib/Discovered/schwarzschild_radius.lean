@@ -26,11 +26,21 @@ noncomputable def R_MAX : Real := (1e+25 : Real)
 noncomputable def schwarzschild_radius (mass_kg : Real) : Real :=
   ((((2.0 : Real) * G_GRAV) * mass_kg) / C_SQ)
 
+-- source obligations for schwarzschild_radius: {O1}
+--   O1 [ad05e21d11c3] -> PRESERVED (accounted)  theorem schwarzschild_radius_proportional_to_mass
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem schwarzschild_radius_proportional_to_mass (mass_kg : Real)
     (h1 : (mass_kg >= M_MIN))
     (h2 : (mass_kg <= M_MAX)) :
     ((schwarzschild_radius mass_kg) >= (0 : Real)) := by
   unfold schwarzschild_radius
+  try unfold G_GRAV at *
+  try unfold C_LIGHT at *
+  try unfold C_SQ at *
+  try unfold M_MIN at *
+  try unfold M_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -54,6 +64,9 @@ theorem schwarzschild_radius_proportional_to_mass (mass_kg : Real)
 noncomputable def gravitational_redshift_factor (schwarzschild_r : Real) (radius : Real) : Real :=
   ((1 : Real) / (Real.sqrt (min (max ((1 : Real) - (schwarzschild_r / radius)) (1e-09 : Real)) (1 : Real))))
 
+-- source obligations for gravitational_redshift_factor: {O1}
+--   O1 [a0025ef24cbe] -> PRESERVED (accounted)  theorem redshift_unity_at_infinity
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem redshift_unity_at_infinity (schwarzschild_r : Real) (radius : Real)
     (h1 : (schwarzschild_r >= (0 : Real)))
     (h2 : (schwarzschild_r <= R_MAX))
@@ -63,6 +76,13 @@ theorem redshift_unity_at_infinity (schwarzschild_r : Real) (radius : Real)
     (h_clamp1 : (1e-09 : Real) ≤ (1 : Real)) :
     ((gravitational_redshift_factor schwarzschild_r radius) >= (1 : Real)) := by
   unfold gravitational_redshift_factor
+  try unfold G_GRAV at *
+  try unfold C_LIGHT at *
+  try unfold C_SQ at *
+  try unfold M_MIN at *
+  try unfold M_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -86,6 +106,9 @@ theorem redshift_unity_at_infinity (schwarzschild_r : Real) (radius : Real)
 noncomputable def newtonian_orbital_velocity (mass_kg : Real) (radius : Real) : Real :=
   (Real.sqrt ((G_GRAV * mass_kg) / radius))
 
+-- source obligations for newtonian_orbital_velocity: {O1}
+--   O1 [794d7b835fdc] -> PRESERVED (accounted)  theorem orbital_velocity_decreases_with_radius
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem orbital_velocity_decreases_with_radius (mass_kg : Real) (radius : Real)
     (h1 : (mass_kg >= M_MIN))
     (h2 : (mass_kg <= M_MAX))
@@ -93,6 +116,13 @@ theorem orbital_velocity_decreases_with_radius (mass_kg : Real) (radius : Real)
     (h4 : (radius <= R_MAX)) :
     ((newtonian_orbital_velocity mass_kg radius) >= (0 : Real)) := by
   unfold newtonian_orbital_velocity
+  try unfold G_GRAV at *
+  try unfold C_LIGHT at *
+  try unfold C_SQ at *
+  try unfold M_MIN at *
+  try unfold M_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -116,11 +146,21 @@ theorem orbital_velocity_decreases_with_radius (mass_kg : Real) (radius : Real)
 noncomputable def photon_sphere_radius (schwarzschild_r : Real) : Real :=
   ((1.5 : Real) * schwarzschild_r)
 
+-- source obligations for photon_sphere_radius: {O1}
+--   O1 [6682a1928389] -> PRESERVED (accounted)  theorem photon_sphere_above_horizon
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem photon_sphere_above_horizon (schwarzschild_r : Real)
     (h1 : (schwarzschild_r >= (0 : Real)))
     (h2 : (schwarzschild_r <= R_MAX)) :
     ((photon_sphere_radius schwarzschild_r) >= (0 : Real)) := by
   unfold photon_sphere_radius
+  try unfold G_GRAV at *
+  try unfold C_LIGHT at *
+  try unfold C_SQ at *
+  try unfold M_MIN at *
+  try unfold M_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

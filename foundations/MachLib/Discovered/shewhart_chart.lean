@@ -25,6 +25,7 @@ noncomputable def L_MAX : Real := (6.0 : Real)
 noncomputable def upper_control_limit (centerline : Real) (sigma : Real) (subgroup_size : Real) (sigma_factor : Real) : Real :=
   (centerline + ((sigma_factor * sigma) / (Real.sqrt subgroup_size)))
 
+-- obligations for upper_control_limit: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,6 +41,7 @@ theorem ucl_above_centerline (centerline : Real) (sigma : Real) (subgroup_size :
 noncomputable def lower_control_limit (centerline : Real) (sigma : Real) (subgroup_size : Real) (sigma_factor : Real) : Real :=
   (centerline - ((sigma_factor * sigma) / (Real.sqrt subgroup_size)))
 
+-- obligations for lower_control_limit: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -55,6 +57,7 @@ theorem lcl_below_centerline (centerline : Real) (sigma : Real) (subgroup_size :
 noncomputable def process_capability (mean : Real) (sigma : Real) (lower_spec_limit : Real) (upper_spec_limit : Real) : Real :=
   ((min (max (mean - lower_spec_limit) (0 : Real)) (upper_spec_limit - mean)) / ((3.0 : Real) * sigma))
 
+-- obligations for process_capability: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -72,6 +75,7 @@ theorem cpk_zero_when_at_spec_boundary (mean : Real) (sigma : Real) (lower_spec_
 noncomputable def subgroup_z_score (subgroup_mean : Real) (target : Real) (sigma : Real) (subgroup_size : Real) : Real :=
   (((subgroup_mean - target) * (Real.sqrt subgroup_size)) / sigma)
 
+-- obligations for subgroup_z_score: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

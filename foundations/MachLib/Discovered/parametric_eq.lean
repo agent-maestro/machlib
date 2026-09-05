@@ -30,6 +30,7 @@ axiom normalised_freq (f0 : Real) (sample_rate : Real) : Real  -- helper (axioma
 noncomputable def cookbook_alpha (omega : Real) (q : Real) : Real :=
   ((Real.sin omega) / ((2.0 : Real) * q))
 
+-- obligations for cookbook_alpha: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -46,6 +47,7 @@ theorem alpha_inverse_proportional_to_q (omega : Real) (q : Real)
 noncomputable def peaking_b0 (omega : Real) (alpha : Real) (gain_amp : Real) : Real :=
   (((1 : Real) + (alpha * gain_amp)) / ((1 : Real) + (alpha / gain_amp)))
 
+-- obligations for peaking_b0: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -64,11 +66,23 @@ theorem peaking_b0_unity_at_zero_gain (omega : Real) (alpha : Real) (gain_amp : 
 noncomputable def gain_amplitude (gain_db : Real) : Real :=
   ((10.0 : Real) ^ (gain_db / (40.0 : Real)))
 
+-- source obligations for gain_amplitude: {O1}
+--   O1 [6e12c9d61659] -> PRESERVED (accounted)  theorem gain_amp_unity_at_zero_db
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem gain_amp_unity_at_zero_db (gain_db : Real)
     (h1 : (gain_db >= GAIN_DB_MIN))
     (h2 : (gain_db <= GAIN_DB_MAX)) :
     ((gain_amplitude gain_db) > (0 : Real)) := by
   unfold gain_amplitude
+  try unfold SAMPLE_RATE_MIN at *
+  try unfold SAMPLE_RATE_MAX at *
+  try unfold F0_MIN at *
+  try unfold F0_MAX at *
+  try unfold Q_MIN at *
+  try unfold Q_MAX at *
+  try unfold GAIN_DB_MIN at *
+  try unfold GAIN_DB_MAX at *
+  try unfold TWO_PI at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

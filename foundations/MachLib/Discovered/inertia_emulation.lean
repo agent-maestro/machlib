@@ -28,6 +28,7 @@ noncomputable def POWER_MAX : Real := (1000.0 : Real)
 noncomputable def synthetic_power_command (df_dt : Real) (frequency_meas : Real) (frequency_nominal : Real) (k_inertia : Real) (k_droop : Real) : Real :=
   (((-k_inertia) * df_dt) - (k_droop * (frequency_meas - frequency_nominal)))
 
+-- obligations for synthetic_power_command: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -45,6 +46,7 @@ theorem synthetic_inertia_response_signed (df_dt : Real) (frequency_meas : Real)
 noncomputable def rocof_estimate (frequency_now : Real) (frequency_prev : Real) (dt : Real) : Real :=
   ((frequency_now - frequency_prev) / dt)
 
+-- obligations for rocof_estimate: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -60,6 +62,7 @@ theorem rocof_zero_at_constant_frequency (frequency_now : Real) (frequency_prev 
 noncomputable def headroom_limited_response (desired_power : Real) (headroom_up : Real) (headroom_down : Real) : Real :=
   (min (max desired_power (-headroom_down)) headroom_up)
 
+-- obligations for headroom_limited_response: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

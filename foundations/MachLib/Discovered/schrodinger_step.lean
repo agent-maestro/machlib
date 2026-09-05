@@ -24,6 +24,9 @@ axiom laplacian (psi_left : Real) (psi_center : Real) (psi_right : Real) : Real 
 noncomputable def psi_real_step (psi_real : Real) (psi_imag_left : Real) (psi_imag_center : Real) (psi_imag_right : Real) : Real :=
   (psi_real - (HALF_DT * (((psi_imag_right - ((2.0 : Real) * psi_imag_center)) + psi_imag_left) * DX_SQ_INV)))
 
+-- source obligations for psi_real_step: {O1}
+--   O1 [0912d6294250] -> PRESERVED (accounted)  theorem schrodinger_step_amplitude_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem schrodinger_step_amplitude_bounded (psi_real : Real) (psi_imag_left : Real) (psi_imag_center : Real) (psi_imag_right : Real)
     (h1 : ((abs psi_real) < (10.0 : Real)))
     (h2 : ((abs psi_imag_left) < (10.0 : Real)))
@@ -31,6 +34,9 @@ theorem schrodinger_step_amplitude_bounded (psi_real : Real) (psi_imag_left : Re
     (h4 : ((abs psi_imag_right) < (10.0 : Real))) :
     ((abs (psi_real_step psi_real psi_imag_left psi_imag_center psi_imag_right)) < (100.0 : Real)) := by
   unfold psi_real_step
+  try unfold DT at *
+  try unfold DX_SQ_INV at *
+  try unfold HALF_DT at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

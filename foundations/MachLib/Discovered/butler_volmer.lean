@@ -26,6 +26,7 @@ axiom current_density_symmetric (exchange_current_density : Real) (alpha : Real)
 noncomputable def current_density (exchange_current_density : Real) (alpha_anodic : Real) (alpha_cathodic : Real) (overpotential : Real) (temperature : Real) : Real :=
   (exchange_current_density * ((Real.exp (alpha_anodic * ((F_FARAD * overpotential) / (R_GAS * temperature)))) - (Real.exp ((-alpha_cathodic) * ((F_FARAD * overpotential) / (R_GAS * temperature))))))
 
+-- obligations for current_density: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -25,6 +25,9 @@ axiom cottrell_slope (n_electrons : Real) (electrode_area : Real) (bulk_concentr
 noncomputable def diffusion_current (n_electrons : Real) (electrode_area : Real) (bulk_concentration : Real) (diffusion_coefficient : Real) (time : Real) : Real :=
   ((((n_electrons * F_FARAD) * electrode_area) * bulk_concentration) * (Real.sqrt (diffusion_coefficient / (PI * time))))
 
+-- source obligations for diffusion_current: {O1}
+--   O1 [d57ec1bc2dac] -> PRESERVED (accounted)  theorem cottrell_decays_with_time
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cottrell_decays_with_time (n_electrons : Real) (electrode_area : Real) (bulk_concentration : Real) (diffusion_coefficient : Real) (time : Real)
     (h1 : (n_electrons > (0 : Real)))
     (h2 : (electrode_area > (0 : Real)))
@@ -34,6 +37,10 @@ theorem cottrell_decays_with_time (n_electrons : Real) (electrode_area : Real) (
     (h6 : (time <= T_MAX)) :
     ((diffusion_current n_electrons electrode_area bulk_concentration diffusion_coefficient time) >= (0 : Real)) := by
   unfold diffusion_current
+  try unfold F_FARAD at *
+  try unfold PI at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

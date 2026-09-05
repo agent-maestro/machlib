@@ -22,12 +22,16 @@ axiom path_worst_loss (running_min : Real) (path_loss : Real) : Real  -- helper 
 noncomputable def parametric_var (mean_return : Real) (stdev_return : Real) (horizon_days : Real) (inv_cdf : Real) : Real :=
   (((-mean_return) * horizon_days) + ((stdev_return * (Real.sqrt horizon_days)) * inv_cdf))
 
+-- source obligations for parametric_var: {O1}
+--   O1 [4573ed00622b] -> PRESERVED (accounted)  theorem parametric_var_monotone_in_sigma
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem parametric_var_monotone_in_sigma (mean_return : Real) (stdev_return : Real) (horizon_days : Real) (inv_cdf : Real)
     (h_stdev_return : (stdev_return > (0 : Real)))
     (h_horizon_days : (horizon_days > (0 : Real)))
     (h_inv_cdf : (inv_cdf > (0 : Real))) :
     ((parametric_var mean_return stdev_return horizon_days inv_cdf) > (0 : Real)) := by
   unfold parametric_var
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -51,6 +55,7 @@ theorem parametric_var_monotone_in_sigma (mean_return : Real) (stdev_return : Re
 noncomputable def log_return_step (mean_return : Real) (stdev_return : Real) (z : Real) : Real :=
   (mean_return + (stdev_return * z))
 
+-- obligations for log_return_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

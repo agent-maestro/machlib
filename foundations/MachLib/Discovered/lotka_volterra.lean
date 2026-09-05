@@ -22,6 +22,7 @@ noncomputable def DT_MAX : Real := (1 : Real)
 noncomputable def prey_step (prey : Real) (predator : Real) (alpha : Real) (beta : Real) (dt : Real) : Real :=
   (prey + (dt * ((alpha * prey) - ((beta * prey) * predator))))
 
+-- obligations for prey_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -44,6 +45,7 @@ theorem prey_step_nonneg_under_small_dt (prey : Real) (predator : Real) (alpha :
 noncomputable def predator_step (prey : Real) (predator : Real) (gamma : Real) (delta : Real) (dt : Real) : Real :=
   (predator + (dt * (((-gamma) * predator) + ((delta * prey) * predator))))
 
+-- obligations for predator_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -66,6 +68,7 @@ theorem predator_step_decays_without_prey (prey : Real) (predator : Real) (gamma
 noncomputable def lyapunov_invariant (prey : Real) (predator : Real) (alpha : Real) (beta : Real) (gamma : Real) (delta : Real) : Real :=
   ((((delta * prey) - (gamma * (Real.log prey))) + (beta * predator)) - (alpha * (Real.log predator)))
 
+-- obligations for lyapunov_invariant: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

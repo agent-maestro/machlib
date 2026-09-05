@@ -25,6 +25,7 @@ noncomputable def YAW_MOMENT_MAX : Real := (5000.0 : Real)
 noncomputable def left_wheel_torque (total_drive_torque : Real) (desired_yaw_moment : Real) (track_width : Real) (rolling_radius : Real) : Real :=
   (min (max (((0.5 : Real) * total_drive_torque) - ((desired_yaw_moment * rolling_radius) / track_width)) (-TORQUE_MAX)) TORQUE_MAX)
 
+-- obligations for left_wheel_torque: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -42,6 +43,7 @@ theorem left_torque_within_limit (total_drive_torque : Real) (desired_yaw_moment
 noncomputable def right_wheel_torque (total_drive_torque : Real) (desired_yaw_moment : Real) (track_width : Real) (rolling_radius : Real) : Real :=
   (min (max (((0.5 : Real) * total_drive_torque) + ((desired_yaw_moment * rolling_radius) / track_width)) (-TORQUE_MAX)) TORQUE_MAX)
 
+-- obligations for right_wheel_torque: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -59,6 +61,7 @@ theorem right_torque_complements_left (total_drive_torque : Real) (desired_yaw_m
 noncomputable def yaw_moment_from_split (left_torque : Real) (right_torque : Real) (track_width : Real) (rolling_radius : Real) : Real :=
   (((right_torque - left_torque) * track_width) / ((2.0 : Real) * rolling_radius))
 
+-- obligations for yaw_moment_from_split: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

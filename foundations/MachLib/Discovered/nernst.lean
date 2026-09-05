@@ -27,6 +27,7 @@ axiom pH_from_potential (e_observed : Real) (e_reference : Real) : Real  -- help
 noncomputable def electrode_potential (standard_potential : Real) (n_electrons : Real) (temperature : Real) (reaction_quotient : Real) : Real :=
   (standard_potential - (((R_GAS * temperature) / (n_electrons * F_FARAD)) * (Real.log reaction_quotient)))
 
+-- obligations for electrode_potential: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

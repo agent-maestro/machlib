@@ -29,6 +29,9 @@ noncomputable def LN10_INV : Real := (0.4342944819032518 : Real)
 noncomputable def received_power_linear (p_tx : Real) (g_tx : Real) (g_rx : Real) (frequency_hz : Real) (distance_m : Real) : Real :=
   ((((p_tx * g_tx) * g_rx) * ((C_LIGHT / frequency_hz) / (FOUR_PI * distance_m))) * ((C_LIGHT / frequency_hz) / (FOUR_PI * distance_m)))
 
+-- source obligations for received_power_linear: {O1}
+--   O1 [c59ffd963ef3] -> PRESERVED (accounted)  theorem received_power_decreases_with_distance
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem received_power_decreases_with_distance (p_tx : Real) (g_tx : Real) (g_rx : Real) (frequency_hz : Real) (distance_m : Real)
     (h1 : (p_tx >= (0 : Real)))
     (h2 : (p_tx <= (1000000000.0 : Real)))
@@ -42,6 +45,16 @@ theorem received_power_decreases_with_distance (p_tx : Real) (g_tx : Real) (g_rx
     (h10 : (distance_m <= D_MAX)) :
     ((received_power_linear p_tx g_tx g_rx frequency_hz distance_m) >= (0 : Real)) := by
   unfold received_power_linear
+  try unfold D_MIN at *
+  try unfold D_MAX at *
+  try unfold F_MHZ_MIN at *
+  try unfold F_MHZ_MAX at *
+  try unfold P_DBM_MIN at *
+  try unfold P_DBM_MAX at *
+  try unfold G_DB_MAX at *
+  try unfold C_LIGHT at *
+  try unfold FOUR_PI at *
+  try unfold LN10_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -65,6 +78,9 @@ theorem received_power_decreases_with_distance (p_tx : Real) (g_tx : Real) (g_rx
 noncomputable def free_space_path_loss_db (distance_km : Real) (frequency_mhz : Real) : Real :=
   ((((20.0 : Real) * LN10_INV) * ((Real.log distance_km) + (Real.log frequency_mhz))) + (32.45 : Real))
 
+-- source obligations for free_space_path_loss_db: {O1}
+--   O1 [e45ff8d8005d] -> PRESERVED (accounted)  theorem fspl_db_increases_with_log_distance
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem fspl_db_increases_with_log_distance (distance_km : Real) (frequency_mhz : Real)
     (h1 : (distance_km >= (D_MIN / (1000.0 : Real))))
     (h2 : (distance_km <= (D_MAX / (1000.0 : Real))))
@@ -72,6 +88,16 @@ theorem fspl_db_increases_with_log_distance (distance_km : Real) (frequency_mhz 
     (h4 : (frequency_mhz <= F_MHZ_MAX)) :
     ((free_space_path_loss_db distance_km frequency_mhz) >= (0 : Real)) := by
   unfold free_space_path_loss_db
+  try unfold D_MIN at *
+  try unfold D_MAX at *
+  try unfold F_MHZ_MIN at *
+  try unfold F_MHZ_MAX at *
+  try unfold P_DBM_MIN at *
+  try unfold P_DBM_MAX at *
+  try unfold G_DB_MAX at *
+  try unfold C_LIGHT at *
+  try unfold FOUR_PI at *
+  try unfold LN10_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -95,6 +121,7 @@ theorem fspl_db_increases_with_log_distance (distance_km : Real) (frequency_mhz 
 noncomputable def link_margin_db (p_rx_dbm : Real) (sensitivity_dbm : Real) : Real :=
   (p_rx_dbm - sensitivity_dbm)
 
+-- obligations for link_margin_db: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

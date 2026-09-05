@@ -20,6 +20,7 @@ axiom sum_magnitude (sum_real : Real) (sum_imag : Real) : Real  -- helper (axiom
 noncomputable def monopulse_angle (delta_real : Real) (sum_real : Real) : Real :=
   (Real.arctan (delta_real / sum_real))
 
+-- obligations for monopulse_angle: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

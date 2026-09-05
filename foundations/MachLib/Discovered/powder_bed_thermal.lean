@@ -30,6 +30,9 @@ noncomputable def TWO_PI : Real := (6.283185307179586 : Real)
 noncomputable def rosenthal_delta_t (laser_power : Real) (conductivity : Real) (diffusivity : Real) (scan_velocity : Real) (radial_distance : Real) (streamwise_offset : Real) : Real :=
   ((laser_power / ((TWO_PI * conductivity) * radial_distance)) * (Real.exp (((-scan_velocity) * (radial_distance + streamwise_offset)) / ((2.0 : Real) * diffusivity))))
 
+-- source obligations for rosenthal_delta_t: {O1}
+--   O1 [779c7b45a27e] -> PRESERVED (accounted)  theorem rosenthal_decreases_with_radius
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rosenthal_decreases_with_radius (laser_power : Real) (conductivity : Real) (diffusivity : Real) (scan_velocity : Real) (radial_distance : Real) (streamwise_offset : Real)
     (h1 : (laser_power >= P_MIN))
     (h2 : (laser_power <= P_MAX))
@@ -44,6 +47,17 @@ theorem rosenthal_decreases_with_radius (laser_power : Real) (conductivity : Rea
     (h11 : ((abs streamwise_offset) <= R_MAX)) :
     ((rosenthal_delta_t laser_power conductivity diffusivity scan_velocity radial_distance streamwise_offset) >= (0 : Real)) := by
   unfold rosenthal_delta_t
+  try unfold P_MIN at *
+  try unfold P_MAX at *
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold ALPHA_MIN at *
+  try unfold ALPHA_MAX at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold TWO_PI at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -67,6 +81,9 @@ theorem rosenthal_decreases_with_radius (laser_power : Real) (conductivity : Rea
 noncomputable def linear_energy_density (laser_power : Real) (scan_velocity : Real) (hatch_spacing : Real) (layer_thickness : Real) : Real :=
   (laser_power / ((scan_velocity * hatch_spacing) * layer_thickness))
 
+-- source obligations for linear_energy_density: {O1}
+--   O1 [a5e82ca25267] -> PRESERVED (accounted)  theorem energy_density_inverse_to_velocity
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem energy_density_inverse_to_velocity (laser_power : Real) (scan_velocity : Real) (hatch_spacing : Real) (layer_thickness : Real)
     (h1 : (laser_power >= P_MIN))
     (h2 : (laser_power <= P_MAX))
@@ -78,6 +95,17 @@ theorem energy_density_inverse_to_velocity (laser_power : Real) (scan_velocity :
     (h8 : (layer_thickness <= (0.001 : Real))) :
     ((linear_energy_density laser_power scan_velocity hatch_spacing layer_thickness) >= (0 : Real)) := by
   unfold linear_energy_density
+  try unfold P_MIN at *
+  try unfold P_MAX at *
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold ALPHA_MIN at *
+  try unfold ALPHA_MAX at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold TWO_PI at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -101,6 +129,9 @@ theorem energy_density_inverse_to_velocity (laser_power : Real) (scan_velocity :
 noncomputable def critical_cooling_rate (scan_velocity : Real) (delta_t_peak : Real) (diffusivity : Real) : Real :=
   (((scan_velocity * scan_velocity) * delta_t_peak) / diffusivity)
 
+-- source obligations for critical_cooling_rate: {O1}
+--   O1 [e6d6b447d982] -> PRESERVED (accounted)  theorem cooling_rate_proportional_to_speed_squared
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cooling_rate_proportional_to_speed_squared (scan_velocity : Real) (delta_t_peak : Real) (diffusivity : Real)
     (h1 : (scan_velocity >= V_MIN))
     (h2 : (scan_velocity <= V_MAX))
@@ -110,6 +141,17 @@ theorem cooling_rate_proportional_to_speed_squared (scan_velocity : Real) (delta
     (h6 : (diffusivity <= ALPHA_MAX)) :
     ((critical_cooling_rate scan_velocity delta_t_peak diffusivity) >= (0 : Real)) := by
   unfold critical_cooling_rate
+  try unfold P_MIN at *
+  try unfold P_MAX at *
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold ALPHA_MIN at *
+  try unfold ALPHA_MAX at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold TWO_PI at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

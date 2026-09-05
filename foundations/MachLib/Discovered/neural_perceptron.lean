@@ -23,12 +23,21 @@ noncomputable def SUM_MAX : Real := (1000000.0 : Real)
 noncomputable def perceptron_threshold (weighted_sum : Real) (bias : Real) : Real :=
   (min (max ((weighted_sum + bias) / (0.001 : Real)) (0 : Real)) (1 : Real))
 
+-- source obligations for perceptron_threshold: {O1, O2}
+--   O1 [168e969f6b9c] -> PRESERVED (accounted)  theorem perceptron_threshold_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [08d98e8267a5] -> PRESERVED (accounted)  theorem perceptron_threshold_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem perceptron_threshold_in_unit_interval (weighted_sum : Real) (bias : Real)
     (h1 : ((abs weighted_sum) <= SUM_MAX))
     (h2 : ((abs bias) <= BIAS_MAX))
     (h_clamp1 : (0 : Real) ≤ (1 : Real)) :
     (((perceptron_threshold weighted_sum bias) >= (0 : Real))) ∧ (((perceptron_threshold weighted_sum bias) <= (1 : Real))) := by
   unfold perceptron_threshold
+  try unfold W_MAX at *
+  try unfold X_MAX at *
+  try unfold BIAS_MAX at *
+  try unfold SUM_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -53,6 +62,7 @@ theorem perceptron_threshold_in_unit_interval (weighted_sum : Real) (bias : Real
 noncomputable def two_input_perceptron (x1 : Real) (x2 : Real) (w1 : Real) (w2 : Real) (bias : Real) : Real :=
   (min (max ((((w1 * x1) + (w2 * x2)) + bias) / (0.001 : Real)) (0 : Real)) (1 : Real))
 
+-- obligations for two_input_perceptron: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -71,6 +81,9 @@ theorem two_input_perceptron_linear_in_weights (x1 : Real) (x2 : Real) (w1 : Rea
 noncomputable def rate_coded_response (weighted_sum : Real) (threshold_v : Real) (max_rate : Real) (gain : Real) : Real :=
   (min (max (gain * (weighted_sum - threshold_v)) (0 : Real)) max_rate)
 
+-- source obligations for rate_coded_response: {O1}
+--   O1 [40ddea61d842] -> PRESERVED (accounted)  theorem rate_coded_bounded_in_max_rate
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rate_coded_bounded_in_max_rate (weighted_sum : Real) (threshold_v : Real) (max_rate : Real) (gain : Real)
     (h1 : ((abs weighted_sum) <= SUM_MAX))
     (h2 : ((abs threshold_v) <= BIAS_MAX))
@@ -81,6 +94,10 @@ theorem rate_coded_bounded_in_max_rate (weighted_sum : Real) (threshold_v : Real
     (h_clamp1 : (0 : Real) ≤ max_rate) :
     ((rate_coded_response weighted_sum threshold_v max_rate gain) >= (0 : Real)) := by
   unfold rate_coded_response
+  try unfold W_MAX at *
+  try unfold X_MAX at *
+  try unfold BIAS_MAX at *
+  try unfold SUM_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -104,6 +121,7 @@ theorem rate_coded_bounded_in_max_rate (weighted_sum : Real) (threshold_v : Real
 noncomputable def hebbian_weight_step (weight_prev : Real) (presynaptic_rate : Real) (postsynaptic_rate : Real) (learning_rate : Real) : Real :=
   (weight_prev + ((learning_rate * presynaptic_rate) * postsynaptic_rate))
 
+-- obligations for hebbian_weight_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

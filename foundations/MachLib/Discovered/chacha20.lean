@@ -27,6 +27,9 @@ axiom rotl (a : Real) (n : Int) : Real  -- extern (axiomatised in MachLib/Discov
 
 axiom quarter_round (a : Real) (b : Real) (c : Real) (d : Real) : Real -- tuple-return; axiomatised for now
 
+-- source obligations for quarter_round: {O1}
+--   O1 [a12ba302536f] -> PRESERVED (accounted)  theorem chacha20_quarter_round_invertible
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem chacha20_quarter_round_invertible (a : Real) (b : Real) (c : Real) (d : Real)
     (h1 : True) :
     True := by

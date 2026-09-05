@@ -24,6 +24,7 @@ axiom linear_range_flag (modulation_index : Real) : Real  -- helper (axiomatised
 noncomputable def common_mode_offset (va_ref : Real) (vb_ref : Real) (vc_ref : Real) : Real :=
   ((-HALF) * ((min (max vc_ref (min (max va_ref vb_ref) VOLTAGE_MAX)) VOLTAGE_MAX) + (min (max vc_ref (-VOLTAGE_MAX)) (min (max vb_ref (-VOLTAGE_MAX)) va_ref))))
 
+-- obligations for common_mode_offset: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -43,6 +44,11 @@ theorem common_mode_centers_vector (va_ref : Real) (vb_ref : Real) (vc_ref : Rea
 noncomputable def phase_duty (v_phase_ref : Real) (v_common_mode : Real) (v_dc : Real) : Real :=
   (min (max (HALF + ((v_phase_ref + v_common_mode) / v_dc)) (0 : Real)) (1 : Real))
 
+-- source obligations for phase_duty: {O1, O2}
+--   O1 [6940ed2b717d] -> PRESERVED (accounted)  theorem phase_duty_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [0932bc16cb7f] -> PRESERVED (accounted)  theorem phase_duty_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem phase_duty_in_unit_interval (v_phase_ref : Real) (v_common_mode : Real) (v_dc : Real)
     (h_v_phase_ref : (-VOLTAGE_MAX ≤ v_phase_ref ∧ v_phase_ref ≤ VOLTAGE_MAX))
     (h_v_common_mode : (-VOLTAGE_MAX ≤ v_common_mode ∧ v_common_mode ≤ VOLTAGE_MAX))
@@ -50,6 +56,9 @@ theorem phase_duty_in_unit_interval (v_phase_ref : Real) (v_common_mode : Real) 
     (h_clamp1 : (0 : Real) ≤ (1 : Real)) :
     (((phase_duty v_phase_ref v_common_mode v_dc) >= (0 : Real))) ∧ (((phase_duty v_phase_ref v_common_mode v_dc) <= (1 : Real))) := by
   unfold phase_duty
+  try unfold VOLTAGE_MAX at *
+  try unfold HALF at *
+  try unfold M_LIN_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -74,11 +83,17 @@ theorem phase_duty_in_unit_interval (v_phase_ref : Real) (v_common_mode : Real) 
 noncomputable def modulation_index (v_ref_magnitude : Real) (v_dc : Real) : Real :=
   (((2.0 : Real) * v_ref_magnitude) / v_dc)
 
+-- source obligations for modulation_index: {O1}
+--   O1 [0b9de865415a] -> PRESERVED (accounted)  theorem modulation_index_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem modulation_index_nonneg (v_ref_magnitude : Real) (v_dc : Real)
     (h_v_ref_magnitude : (((0 : Real) <= v_ref_magnitude) ∧ (v_ref_magnitude <= VOLTAGE_MAX)))
     (h_v_dc : (((1 : Real) <= v_dc) ∧ (v_dc <= VOLTAGE_MAX))) :
     ((modulation_index v_ref_magnitude v_dc) >= (0 : Real)) := by
   unfold modulation_index
+  try unfold VOLTAGE_MAX at *
+  try unfold HALF at *
+  try unfold M_LIN_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

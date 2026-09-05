@@ -22,11 +22,17 @@ noncomputable def G_MAX : Real := (5.0 : Real)
 noncomputable def relative_supersaturation (concentration : Real) (saturation_concentration : Real) : Real :=
   (concentration / saturation_concentration)
 
+-- source obligations for relative_supersaturation: {O1}
+--   O1 [751dc336d483] -> PRESERVED (accounted)  theorem supersaturation_zero_at_solubility
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem supersaturation_zero_at_solubility (concentration : Real) (saturation_concentration : Real)
     (h1 : (concentration >= (0 : Real)))
     (h2 : (saturation_concentration > (0 : Real))) :
     (((relative_supersaturation concentration saturation_concentration) >= (0 : Real)) ∨ (concentration < saturation_concentration)) := by
   unfold relative_supersaturation
+  try unfold C_MAX at *
+  try unfold KG_MAX at *
+  try unfold G_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -50,6 +56,7 @@ theorem supersaturation_zero_at_solubility (concentration : Real) (saturation_co
 noncomputable def absolute_supersaturation (concentration : Real) (saturation_concentration : Real) : Real :=
   ((concentration - saturation_concentration) / saturation_concentration)
 
+-- obligations for absolute_supersaturation: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -64,6 +71,9 @@ theorem absolute_supersaturation_zero_at_solubility (concentration : Real) (satu
 noncomputable def power_law_growth_rate (growth_constant : Real) (concentration : Real) (saturation_concentration : Real) (growth_exponent : Real) : Real :=
   (growth_constant * ((max (concentration - saturation_concentration) (0 : Real)) ^ growth_exponent))
 
+-- source obligations for power_law_growth_rate: {O1}
+--   O1 [79648937d4f0] -> PRESERVED (accounted)  theorem growth_rate_nonneg_above_solubility
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem growth_rate_nonneg_above_solubility (growth_constant : Real) (concentration : Real) (saturation_concentration : Real) (growth_exponent : Real)
     (h1 : (growth_constant >= (0 : Real)))
     (h2 : (growth_constant <= KG_MAX))
@@ -73,6 +83,9 @@ theorem growth_rate_nonneg_above_solubility (growth_constant : Real) (concentrat
     (h6 : (growth_exponent <= G_MAX)) :
     ((power_law_growth_rate growth_constant concentration saturation_concentration growth_exponent) >= (0 : Real)) := by
   unfold power_law_growth_rate
+  try unfold C_MAX at *
+  try unfold KG_MAX at *
+  try unfold G_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

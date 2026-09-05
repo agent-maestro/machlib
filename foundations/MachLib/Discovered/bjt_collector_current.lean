@@ -26,6 +26,7 @@ noncomputable def VA_MAX : Real := (1000.0 : Real)
 noncomputable def collector_current (saturation_current : Real) (base_emitter_voltage : Real) (thermal_voltage : Real) : Real :=
   (saturation_current * ((Real.exp (base_emitter_voltage / thermal_voltage)) - (1 : Real)))
 
+-- obligations for collector_current: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -44,6 +45,7 @@ theorem ic_monotone_in_vbe (saturation_current : Real) (base_emitter_voltage : R
 noncomputable def collector_current_with_early (saturation_current : Real) (base_emitter_voltage : Real) (collector_emitter_voltage : Real) (thermal_voltage : Real) (early_voltage : Real) : Real :=
   ((saturation_current * ((Real.exp (base_emitter_voltage / thermal_voltage)) - (1 : Real))) * ((1 : Real) + (collector_emitter_voltage / early_voltage)))
 
+-- obligations for collector_current_with_early: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -66,6 +68,9 @@ theorem ic_with_early_increases_with_vce (saturation_current : Real) (base_emitt
 noncomputable def transconductance (collector_current : Real) (thermal_voltage : Real) : Real :=
   (collector_current / thermal_voltage)
 
+-- source obligations for transconductance: {O1}
+--   O1 [cd1c3d77979b] -> PRESERVED (accounted)  theorem transconductance_proportional_to_ic
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem transconductance_proportional_to_ic (collector_current : Real) (thermal_voltage : Real)
     (h1 : (collector_current >= (0 : Real)))
     (h2 : (collector_current <= (1 : Real)))
@@ -73,6 +78,13 @@ theorem transconductance_proportional_to_ic (collector_current : Real) (thermal_
     (h4 : (thermal_voltage <= (0.1 : Real))) :
     ((transconductance collector_current thermal_voltage) >= (0 : Real)) := by
   unfold transconductance
+  try unfold VT_300K at *
+  try unfold IS_MIN at *
+  try unfold IS_MAX at *
+  try unfold VBE_MIN at *
+  try unfold VBE_MAX at *
+  try unfold VA_MIN at *
+  try unfold VA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -28,6 +28,9 @@ axiom auc_inf (dose : Real) (volume_of_distribution : Real) (elimination_rate : 
 noncomputable def plasma_concentration (dose : Real) (volume_of_distribution : Real) (elimination_rate : Real) (time : Real) : Real :=
   ((dose / volume_of_distribution) * (Real.exp ((-elimination_rate) * time)))
 
+-- source obligations for plasma_concentration: {O1}
+--   O1 [068ff8c3f7cb] -> PRESERVED (accounted)  theorem iv_bolus_decay_monotone
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem iv_bolus_decay_monotone (dose : Real) (volume_of_distribution : Real) (elimination_rate : Real) (time : Real)
     (h1 : (dose >= (0 : Real)))
     (h2 : (dose <= D_MAX))
@@ -39,6 +42,11 @@ theorem iv_bolus_decay_monotone (dose : Real) (volume_of_distribution : Real) (e
     (h8 : (time <= T_MAX)) :
     ((plasma_concentration dose volume_of_distribution elimination_rate time) >= (0 : Real)) := by
   unfold plasma_concentration
+  try unfold T_MAX at *
+  try unfold KE_MAX at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold D_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

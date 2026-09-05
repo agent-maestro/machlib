@@ -22,6 +22,7 @@ axiom shockley_at_room_temp (voltage : Real) (saturation_current : Real) (ideali
 noncomputable def shockley_current (voltage : Real) (saturation_current : Real) (ideality : Real) (thermal_voltage : Real) : Real :=
   (saturation_current * ((Real.exp (voltage / (ideality * thermal_voltage))) - (1 : Real)))
 
+-- obligations for shockley_current: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

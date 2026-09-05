@@ -24,11 +24,19 @@ noncomputable def B_MAGNUS : Real := (243.12 : Real)
 noncomputable def saturation_vapor_pressure (temperature_c : Real) : Real :=
   (PS_REF * (Real.exp ((A_MAGNUS * temperature_c) / (B_MAGNUS + temperature_c))))
 
+-- source obligations for saturation_vapor_pressure: {O1}
+--   O1 [ce6a7cf78dd3] -> PRESERVED (accounted)  theorem saturation_pressure_monotone_in_temperature
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem saturation_pressure_monotone_in_temperature (temperature_c : Real)
     (h1 : (temperature_c >= T_MIN_C))
     (h2 : (temperature_c <= T_MAX_C)) :
     ((saturation_vapor_pressure temperature_c) >= (0 : Real)) := by
   unfold saturation_vapor_pressure
+  try unfold T_MIN_C at *
+  try unfold T_MAX_C at *
+  try unfold PS_REF at *
+  try unfold A_MAGNUS at *
+  try unfold B_MAGNUS at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -52,6 +60,9 @@ theorem saturation_pressure_monotone_in_temperature (temperature_c : Real)
 noncomputable def relative_humidity (vapor_pressure : Real) (saturation_pressure : Real) : Real :=
   (min (max (vapor_pressure / saturation_pressure) (0 : Real)) (1 : Real))
 
+-- source obligations for relative_humidity: {O1}
+--   O1 [431180e4e230] -> PRESERVED (accounted)  theorem relative_humidity_in_unit_interval_magnus
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem relative_humidity_in_unit_interval_magnus (vapor_pressure : Real) (saturation_pressure : Real)
     (h1 : (vapor_pressure >= (0 : Real)))
     (h2 : (vapor_pressure <= (10000.0 : Real)))
@@ -60,6 +71,11 @@ theorem relative_humidity_in_unit_interval_magnus (vapor_pressure : Real) (satur
     (h_clamp1 : (0 : Real) ≤ (1 : Real)) :
     ((relative_humidity vapor_pressure saturation_pressure) >= (0 : Real)) := by
   unfold relative_humidity
+  try unfold T_MIN_C at *
+  try unfold T_MAX_C at *
+  try unfold PS_REF at *
+  try unfold A_MAGNUS at *
+  try unfold B_MAGNUS at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -83,6 +99,7 @@ theorem relative_humidity_in_unit_interval_magnus (vapor_pressure : Real) (satur
 noncomputable def dew_point (temperature_c : Real) (relative_humidity : Real) : Real :=
   ((B_MAGNUS * ((Real.log relative_humidity) + ((A_MAGNUS * temperature_c) / (B_MAGNUS + temperature_c)))) / (A_MAGNUS - ((Real.log relative_humidity) + ((A_MAGNUS * temperature_c) / (B_MAGNUS + temperature_c)))))
 
+-- obligations for dew_point: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -99,6 +116,9 @@ theorem dew_point_below_temperature_when_rh_below_one (temperature_c : Real) (re
 noncomputable def specific_humidity (vapor_pressure : Real) (atmospheric_pressure : Real) : Real :=
   (((0.622 : Real) * vapor_pressure) / (atmospheric_pressure - ((0.378 : Real) * vapor_pressure)))
 
+-- source obligations for specific_humidity: {O1}
+--   O1 [7608269158fa] -> PRESERVED (accounted)  theorem specific_humidity_increases_with_vapor
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem specific_humidity_increases_with_vapor (vapor_pressure : Real) (atmospheric_pressure : Real)
     (h1 : (vapor_pressure >= (0 : Real)))
     (h2 : (vapor_pressure <= (10000.0 : Real)))
@@ -106,6 +126,11 @@ theorem specific_humidity_increases_with_vapor (vapor_pressure : Real) (atmosphe
     (h4 : (atmospheric_pressure <= (110000.0 : Real))) :
     ((specific_humidity vapor_pressure atmospheric_pressure) >= (0 : Real)) := by
   unfold specific_humidity
+  try unfold T_MIN_C at *
+  try unfold T_MAX_C at *
+  try unfold PS_REF at *
+  try unfold A_MAGNUS at *
+  try unfold B_MAGNUS at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -28,11 +28,19 @@ axiom binary_cross_entropy (p : Real) (y : Real) : Real  -- helper (axiomatised 
 noncomputable def classify (x1 : Real) (x2 : Real) : Real :=
   (((Real.tanh ((((W1 * x1) + (W2 * x2)) + BIAS) / (2.0 : Real))) / (2.0 : Real)) + (0.5 : Real))
 
+-- source obligations for classify: {O1, O2}
+--   O1 [8b54889c62c3] -> PRESERVED (accounted)  theorem binary_classifier_probability_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [0f7af2172bde] -> PRESERVED (accounted)  theorem binary_classifier_probability_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem binary_classifier_probability_bounded (x1 : Real) (x2 : Real)
     (h1 : ((abs x1) < (100.0 : Real)))
     (h2 : ((abs x2) < (100.0 : Real))) :
     (((0 : Real) <= (classify x1 x2))) ∧ (((classify x1 x2) <= (1 : Real))) := by
   unfold classify
+  try unfold W1 at *
+  try unfold W2 at *
+  try unfold BIAS at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

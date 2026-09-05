@@ -25,6 +25,7 @@ noncomputable def EPS_MAX : Real := (0.001 : Real)
 noncomputable def first_moment_update (prev_m : Real) (gradient : Real) (beta1 : Real) : Real :=
   ((beta1 * prev_m) + (((1 : Real) - beta1) * gradient))
 
+-- obligations for first_moment_update: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -41,6 +42,9 @@ theorem first_moment_convex_combination (prev_m : Real) (gradient : Real) (beta1
 noncomputable def second_moment_update (prev_v : Real) (gradient : Real) (beta2 : Real) : Real :=
   ((beta2 * prev_v) + ((((1 : Real) - beta2) * gradient) * gradient))
 
+-- source obligations for second_moment_update: {O1}
+--   O1 [51f104daaf90] -> PRESERVED (accounted)  theorem second_moment_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem second_moment_nonneg (prev_v : Real) (gradient : Real) (beta2 : Real)
     (h1 : (prev_v >= (0 : Real)))
     (h2 : (prev_v <= VAL_MAX))
@@ -49,6 +53,12 @@ theorem second_moment_nonneg (prev_v : Real) (gradient : Real) (beta2 : Real)
     (h5 : (beta2 <= BETA_MAX)) :
     ((second_moment_update prev_v gradient beta2) >= (0 : Real)) := by
   unfold second_moment_update
+  try unfold LR_MIN at *
+  try unfold LR_MAX at *
+  try unfold BETA_MAX at *
+  try unfold VAL_MAX at *
+  try unfold EPS_MIN at *
+  try unfold EPS_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -72,6 +82,7 @@ theorem second_moment_nonneg (prev_v : Real) (gradient : Real) (beta2 : Real)
 noncomputable def adam_param_step (theta : Real) (m_hat : Real) (v_hat : Real) (lr : Real) (eps : Real) : Real :=
   (theta - ((lr * m_hat) / ((Real.sqrt v_hat) + eps)))
 
+-- obligations for adam_param_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -92,6 +103,7 @@ theorem adam_param_step_descent_when_aligned (theta : Real) (m_hat : Real) (v_ha
 noncomputable def adamw_param_step (theta : Real) (m_hat : Real) (v_hat : Real) (lr : Real) (eps : Real) (weight_decay : Real) : Real :=
   (theta - (lr * ((m_hat / ((Real.sqrt v_hat) + eps)) + (weight_decay * theta))))
 
+-- obligations for adamw_param_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -30,6 +30,7 @@ noncomputable def G_REF : Real := (1000.0 : Real)
 noncomputable def cell_current (v : Real) (photocurrent : Real) (saturation_current : Real) (ideality : Real) (thermal_voltage : Real) : Real :=
   (photocurrent - (saturation_current * ((Real.exp (v / (ideality * thermal_voltage))) - (1 : Real))))
 
+-- obligations for cell_current: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -52,6 +53,9 @@ theorem pv_current_decreases_with_voltage (v : Real) (photocurrent : Real) (satu
 noncomputable def photocurrent_under_conditions (irradiance : Real) (iph_ref : Real) (temperature_k : Real) (temperature_ref : Real) (alpha_temp_coeff : Real) : Real :=
   (min (max ((irradiance / G_REF) * (iph_ref + (alpha_temp_coeff * (temperature_k - temperature_ref)))) (0 : Real)) IPH_MAX)
 
+-- source obligations for photocurrent_under_conditions: {O1}
+--   O1 [152830d069c7] -> PRESERVED (accounted)  theorem photocurrent_proportional_to_irradiance
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem photocurrent_proportional_to_irradiance (irradiance : Real) (iph_ref : Real) (temperature_k : Real) (temperature_ref : Real) (alpha_temp_coeff : Real)
     (h1 : (irradiance >= (0 : Real)))
     (h2 : (irradiance <= G_MAX))
@@ -65,6 +69,17 @@ theorem photocurrent_proportional_to_irradiance (irradiance : Real) (iph_ref : R
     (h_clamp1 : (0 : Real) ≤ IPH_MAX) :
     ((photocurrent_under_conditions irradiance iph_ref temperature_k temperature_ref alpha_temp_coeff) >= (0 : Real)) := by
   unfold photocurrent_under_conditions
+  try unfold VT_300K at *
+  try unfold IPH_MAX at *
+  try unfold IS_MIN at *
+  try unfold IS_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold V_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold G_MAX at *
+  try unfold G_REF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -88,6 +103,9 @@ theorem photocurrent_proportional_to_irradiance (irradiance : Real) (iph_ref : R
 noncomputable def open_circuit_voltage (photocurrent : Real) (saturation_current : Real) (ideality : Real) (thermal_voltage : Real) : Real :=
   ((ideality * thermal_voltage) * (Real.log ((photocurrent / saturation_current) + (1 : Real))))
 
+-- source obligations for open_circuit_voltage: {O1}
+--   O1 [a5883d4a99ee] -> PRESERVED (accounted)  theorem voc_increases_with_photocurrent
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem voc_increases_with_photocurrent (photocurrent : Real) (saturation_current : Real) (ideality : Real) (thermal_voltage : Real)
     (h1 : (photocurrent >= IS_MIN))
     (h2 : (photocurrent <= IPH_MAX))
@@ -99,6 +117,17 @@ theorem voc_increases_with_photocurrent (photocurrent : Real) (saturation_curren
     (h8 : (thermal_voltage <= (0.1 : Real))) :
     ((open_circuit_voltage photocurrent saturation_current ideality thermal_voltage) >= (0 : Real)) := by
   unfold open_circuit_voltage
+  try unfold VT_300K at *
+  try unfold IPH_MAX at *
+  try unfold IS_MIN at *
+  try unfold IS_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold V_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold G_MAX at *
+  try unfold G_REF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

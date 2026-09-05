@@ -25,12 +25,21 @@ axiom symmetric_scale (min_val : Real) (max_val : Real) : Real  -- helper (axiom
 noncomputable def q8_quantize (x : Real) (scale : Real) : Real :=
   (min (max (x / scale) Q8_MIN) Q8_MAX)
 
+-- source obligations for q8_quantize: {O1, O2}
+--   O1 [3becf7c76ee2] -> PRESERVED (accounted)  theorem q8_quantize_in_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [44c82b2adf95] -> PRESERVED (accounted)  theorem q8_quantize_in_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem q8_quantize_in_range (x : Real) (scale : Real)
     (h1 : (scale >= SCALE_MIN))
     (h2 : (scale <= SCALE_MAX))
     (h_clamp1 : Q8_MIN ≤ Q8_MAX) :
     (((q8_quantize x scale) >= Q8_MIN)) ∧ (((q8_quantize x scale) <= Q8_MAX)) := by
   unfold q8_quantize
+  try unfold Q8_MAX at *
+  try unfold Q8_MIN at *
+  try unfold SCALE_MIN at *
+  try unfold SCALE_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -55,6 +64,11 @@ theorem q8_quantize_in_range (x : Real) (scale : Real)
 noncomputable def q8_quantize_asym (x : Real) (scale : Real) (zero_point : Real) : Real :=
   (min (max ((x / scale) + zero_point) (-128.0 : Real)) (127.0 : Real))
 
+-- source obligations for q8_quantize_asym: {O1, O2}
+--   O1 [98bedbb35d4d] -> PRESERVED (accounted)  theorem q8_quantize_asym_in_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [a5995d19ad84] -> PRESERVED (accounted)  theorem q8_quantize_asym_in_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem q8_quantize_asym_in_range (x : Real) (scale : Real) (zero_point : Real)
     (h1 : (scale >= SCALE_MIN))
     (h2 : (scale <= SCALE_MAX))
@@ -63,6 +77,10 @@ theorem q8_quantize_asym_in_range (x : Real) (scale : Real) (zero_point : Real)
     (h_clamp1 : (-128.0 : Real) ≤ (127.0 : Real)) :
     (((q8_quantize_asym x scale zero_point) >= (-(128.0 : Real)))) ∧ (((q8_quantize_asym x scale zero_point) <= (127.0 : Real))) := by
   unfold q8_quantize_asym
+  try unfold Q8_MAX at *
+  try unfold Q8_MIN at *
+  try unfold SCALE_MIN at *
+  try unfold SCALE_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

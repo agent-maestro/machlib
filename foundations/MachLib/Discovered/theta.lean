@@ -32,6 +32,7 @@ axiom d2 (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expir
 noncomputable def call_theta (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   (((((-spot) * (SQRT_2_PI_INV * (Real.exp (((-HALF) * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry))))) * vol) / ((2.0 : Real) * (Real.sqrt time_to_expiry))) + ((((-rate) * strike) * (Real.exp ((-rate) * time_to_expiry))) * (HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * (((d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry))) + (((GELU_C3 * ((d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))) * ((d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))) * ((d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))))))))))
 
+-- obligations for call_theta: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -48,6 +49,7 @@ theorem bs_call_theta_negative_in_money (spot : Real) (strike : Real) (rate : Re
 noncomputable def put_theta (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   (((((-spot) * (SQRT_2_PI_INV * (Real.exp (((-HALF) * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry))))) * vol) / ((2.0 : Real) * (Real.sqrt time_to_expiry))) + (((rate * strike) * (Real.exp ((-rate) * time_to_expiry))) * (HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * ((-((d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))) + (((GELU_C3 * (-((d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry))))) * (-((d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry))))) * (-((d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry))))))))))))
 
+-- obligations for put_theta: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

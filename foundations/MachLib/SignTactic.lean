@@ -2,6 +2,7 @@ import MachLib.Decimal
 import MachLib.Linarith
 import MachLib.SelfMapConjugacy
 import MachLib.Trig
+import Lean
 
 /-!
 # `mach_sign` — automated sign/positivity for Forge `> 0` obligations
@@ -159,10 +160,49 @@ macro_rules
       | (refine le_trans ?_ (le_add_of_nonneg_right ?_) <;> (first | mach_le | mach_sign_core))
       | (apply mul_le_mul_of_nonneg_left <;> (first | mach_le | mach_sign_core)))
 
+open Lean Elab Tactic Meta in
+/-- **`mach_split_hyps`** — destructure every `∧` hypothesis in the local context, repeatedly, so
+nested conjunctions split too. The components keep the constructor's field names (`left`,
+`right`) and are ordinary hypotheses afterwards, which is all `assumption` needs.
+
+Why it exists (2026-09-05): Forge emits a refinement type `x : Real[lo, hi]` as ONE hypothesis
+`h_x : lo ≤ x ∧ x ≤ hi`. `mach_sign_core`'s bound-transitivity arms find their midpoint with
+`by assumption`, and `assumption` does not look inside a conjunction — so `0 < x` from
+`1e-06 ≤ x ∧ x ≤ 1` failed while the same fact as two hypotheses closed. Measured on the
+`Discovered/` corpus: the case is the commonest shape among the residual obligations.
+
+Written as an elaborator that walks the context BY TYPE. The obvious macro,
+`repeat (rcases ‹_ ∧ _› with ⟨_, _⟩)`, diverges: the anonymous-hypothesis term tries to unify
+`_ ∧ _` against every hypothesis by `isDefEq`, and against a `Real` inequality with decimal
+literals that is a `whnf` timeout, not a failure. -/
+elab "mach_split_hyps" : tactic => do
+  let mut fuel := 64
+  while fuel > 0 do
+    fuel := fuel - 1
+    let goal ← getMainGoal
+    let found? ← goal.withContext do
+      let lctx ← getLCtx
+      let mut hit : Option FVarId := none
+      for d in lctx do
+        if d.isImplementationDetail then continue
+        let ty ← instantiateMVars d.type
+        if ty.isAppOfArity ``And 2 then
+          hit := some d.fvarId
+          break
+      pure hit
+    match found? with
+    | none => break
+    | some fv =>
+      let subgoals ← goal.cases fv
+      match subgoals with
+      | #[sg] => replaceMainGoal [sg.mvarId]
+      | _ => throwError "mach_split_hyps: `cases` on a conjunction produced {subgoals.size} goals"
+
 /-- **`mach_sign`** — close a Forge `f(vars) > 0` / `0 < f(vars)` obligation. Normalise the decimal
-zero, then run the positivity recursion. -/
+zero, split conjunction hypotheses so the bound arms can see their halves, then run the
+positivity recursion. -/
 macro "mach_sign" : tactic => `(tactic|
-  ((try simp only [ofSci_zero] at *) <;> mach_sign_core))
+  ((try simp only [ofSci_zero] at *) <;> (try mach_split_hyps) <;> mach_sign_core))
 
 /-- `¬ a ≤ b → b ≤ a` on `Real` (totality of the order, from `lt_total`).
 The negated-guard branch of an `if a ≤ b … else …` @verify obligation

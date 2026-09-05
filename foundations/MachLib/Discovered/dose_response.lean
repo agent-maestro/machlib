@@ -24,6 +24,11 @@ axiom inhibitor_effect (e_baseline : Real) (concentration : Real) (ic50 : Real) 
 noncomputable def effect (e_max : Real) (concentration : Real) (ec50 : Real) (hill_coefficient : Real) : Real :=
   ((e_max * (concentration ^ hill_coefficient)) / ((ec50 ^ hill_coefficient) + (concentration ^ hill_coefficient)))
 
+-- source obligations for effect: {O1, O2}
+--   O1 [26e72bd0355b] -> PRESERVED (accounted)  theorem dose_response_saturating
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [5a4fc6dac83f] -> PRESERVED (accounted)  theorem dose_response_saturating
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem dose_response_saturating (e_max : Real) (concentration : Real) (ec50 : Real) (hill_coefficient : Real)
     (h1 : (e_max >= (0 : Real)))
     (h2 : (concentration >= (0 : Real)))
@@ -34,6 +39,9 @@ theorem dose_response_saturating (e_max : Real) (concentration : Real) (ec50 : R
     (h7 : (hill_coefficient <= N_MAX)) :
     (((effect e_max concentration ec50 hill_coefficient) >= (0 : Real))) ∧ (((effect e_max concentration ec50 hill_coefficient) <= e_max)) := by
   unfold effect
+  try unfold C_MAX at *
+  try unfold N_MAX at *
+  try unfold EC50_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

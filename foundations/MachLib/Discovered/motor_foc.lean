@@ -28,6 +28,9 @@ axiom pi_step (error : Real) (integral : Real) (Kp : Real) (Ki : Real) : Real  -
 noncomputable def foc_d_axis (i_d_setpoint : Real) (i_d_measured : Real) (i_d_integral : Real) : Real :=
   (min (max ((Kp_d * (i_d_setpoint - i_d_measured)) + (Ki_d * i_d_integral)) (-V_LIMIT)) V_LIMIT)
 
+-- source obligations for foc_d_axis: {O1}
+--   O1 [9fe413d78931] -> PRESERVED (accounted)  theorem vd_command_within_inverter_limits
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem vd_command_within_inverter_limits (i_d_setpoint : Real) (i_d_measured : Real) (i_d_integral : Real)
     (h_i_d_setpoint : (-(500.0 : Real) < i_d_setpoint ∧ i_d_setpoint < (500.0 : Real)))
     (h_i_d_measured : (-(500.0 : Real) < i_d_measured ∧ i_d_measured < (500.0 : Real)))
@@ -35,6 +38,13 @@ theorem vd_command_within_inverter_limits (i_d_setpoint : Real) (i_d_measured : 
     (h_clamp1 : (-V_LIMIT) ≤ V_LIMIT) :
     ((abs (foc_d_axis i_d_setpoint i_d_measured i_d_integral)) < V_LIMIT) := by
   unfold foc_d_axis
+  try unfold Kp_d at *
+  try unfold Ki_d at *
+  try unfold Kp_q at *
+  try unfold Ki_q at *
+  try unfold dt at *
+  try unfold V_DC at *
+  try unfold V_LIMIT at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

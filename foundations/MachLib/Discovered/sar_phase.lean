@@ -18,6 +18,7 @@ open MachLib.Real
 noncomputable def sar_phase_arg (range_r0 : Real) (t_az : Real) (v_plat : Real) (lambda_m : Real) : Real :=
   ((((12.566370614359172 : Real) * range_r0) * ((1 : Real) - (Real.cos ((v_plat * t_az) / range_r0)))) / lambda_m)
 
+-- obligations for sar_phase_arg: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -32,6 +33,7 @@ theorem sar_phase_arg_zero_at_broadside (range_r0 : Real) (t_az : Real) (v_plat 
 noncomputable def sar_kernel_real (arg : Real) : Real :=
   (Real.cos arg)
 
+-- obligations for sar_kernel_real: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -44,6 +46,7 @@ theorem sar_kernel_real_unit_at_zero_arg (arg : Real) :
 noncomputable def sar_kernel_imag (arg : Real) : Real :=
   (Real.sin arg)
 
+-- obligations for sar_kernel_imag: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

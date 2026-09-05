@@ -24,6 +24,7 @@ axiom mercator_x (lon : Real) : Real  -- helper (axiomatised in MachLib/Discover
 noncomputable def mercator_y (lat : Real) : Real :=
   (Real.log (Real.tan (PI_OVER_4 + (HALF * lat))))
 
+-- obligations for mercator_y: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

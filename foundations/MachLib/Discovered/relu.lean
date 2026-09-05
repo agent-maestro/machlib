@@ -23,10 +23,17 @@ axiom prelu (x : Real) (alpha : Real) : Real  -- helper (axiomatised in MachLib/
 noncomputable def relu (x : Real) : Real :=
   (min (max x (0 : Real)) RELU_UPPER)
 
+-- source obligations for relu: {O1, O2}
+--   O1 [2d73d374ba72] -> PRESERVED (accounted)  theorem relu_nonnegative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [d103ed5c0cdc] -> PRESERVED (accounted)  theorem relu_nonnegative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem relu_nonnegative (x : Real)
     (h_clamp1 : (0 : Real) ≤ RELU_UPPER) :
     (((relu x) >= (0 : Real))) ∧ (((relu x) >= x)) := by
   unfold relu
+  try unfold RELU_UPPER at *
+  try unfold ALPHA_LEAKY at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -51,6 +58,7 @@ theorem relu_nonnegative (x : Real)
 noncomputable def leaky_relu (x : Real) (alpha : Real) : Real :=
   (min (max x (alpha * x)) RELU_UPPER)
 
+-- obligations for leaky_relu: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -66,10 +74,17 @@ theorem leaky_relu_monotone_in_x (x : Real) (alpha : Real)
 noncomputable def relu6 (x : Real) : Real :=
   (min (max x (0 : Real)) (6.0 : Real))
 
+-- source obligations for relu6: {O1, O2}
+--   O1 [0b702eee0e30] -> PRESERVED (accounted)  theorem relu6_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [995ee13a20b9] -> PRESERVED (accounted)  theorem relu6_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem relu6_bounded (x : Real)
     (h_clamp1 : (0 : Real) ≤ (6.0 : Real)) :
     (((relu6 x) >= (0 : Real))) ∧ (((relu6 x) <= (6.0 : Real))) := by
   unfold relu6
+  try unfold RELU_UPPER at *
+  try unfold ALPHA_LEAKY at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

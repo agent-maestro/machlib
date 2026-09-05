@@ -27,6 +27,7 @@ axiom tail_loss_accumulator (prev_sum : Real) (path_loss : Real) (tail_threshold
 noncomputable def parametric_es (mean_return : Real) (stdev_return : Real) (horizon_days : Real) (z_alpha : Real) (phi_at_z : Real) (alpha : Real) : Real :=
   (((-mean_return) * horizon_days) + (((stdev_return * phi_at_z) / ((1 : Real) - alpha)) * horizon_days))
 
+-- obligations for parametric_es: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -45,11 +46,20 @@ theorem es_increases_with_sigma (mean_return : Real) (stdev_return : Real) (hori
 noncomputable def mc_es_estimate (tail_loss_sum : Real) (tail_count : Real) : Real :=
   (tail_loss_sum / tail_count)
 
+-- source obligations for mc_es_estimate: {O1}
+--   O1 [4f9c996d8285] -> PRESERVED (accounted)  theorem mc_es_zero_at_zero_count
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem mc_es_zero_at_zero_count (tail_loss_sum : Real) (tail_count : Real)
     (h_tail_loss_sum : (((0 : Real) <= tail_loss_sum) ∧ (tail_loss_sum <= (1000000000000.0 : Real))))
     (h_tail_count : (((1 : Real) <= tail_count) ∧ (tail_count <= (1000000000.0 : Real)))) :
     ((mc_es_estimate tail_loss_sum tail_count) >= (0 : Real)) := by
   unfold mc_es_estimate
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold ALPHA_MIN at *
+  try unfold ALPHA_MAX at *
+  try unfold PHI_MAX at *
+  try unfold HORIZON_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

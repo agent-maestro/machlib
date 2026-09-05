@@ -29,6 +29,7 @@ axiom standard_normal_pdf (z : Real) : Real  -- helper (axiomatised in MachLib/D
 noncomputable def parametric_var (pnl_mean : Real) (pnl_stddev : Real) (portfolio_value : Real) (z_alpha : Real) : Real :=
   ((-(pnl_mean - (z_alpha * pnl_stddev))) * portfolio_value)
 
+-- obligations for parametric_var: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -44,6 +45,7 @@ theorem parametric_var_nonneg_when_z_positive (pnl_mean : Real) (pnl_stddev : Re
 noncomputable def expected_shortfall (pnl_mean : Real) (pnl_stddev : Real) (portfolio_value : Real) (z_alpha : Real) (alpha : Real) : Real :=
   ((-(pnl_mean - (((ONE_OVER_SQRT_2PI * (Real.exp ((-(z_alpha * z_alpha)) * HALF))) / (ONE - alpha)) * pnl_stddev))) * portfolio_value)
 
+-- obligations for expected_shortfall: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

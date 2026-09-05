@@ -23,6 +23,9 @@ axiom centroid_pair (coord : Real) : Real  -- helper (axiomatised in MachLib/Dis
 noncomputable def point_to_point_residual_sq (src_x : Real) (src_y : Real) (src_z : Real) (tgt_x : Real) (tgt_y : Real) (tgt_z : Real) : Real :=
   ((((src_x - tgt_x) * (src_x - tgt_x)) + ((src_y - tgt_y) * (src_y - tgt_y))) + ((src_z - tgt_z) * (src_z - tgt_z)))
 
+-- source obligations for point_to_point_residual_sq: {O1}
+--   O1 [12337a97a3aa] -> PRESERVED (accounted)  theorem icp_residual_sq_nonnegative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem icp_residual_sq_nonnegative (src_x : Real) (src_y : Real) (src_z : Real) (tgt_x : Real) (tgt_y : Real) (tgt_z : Real)
     (h1 : ((abs src_x) <= COORD_MAX))
     (h2 : ((abs src_y) <= COORD_MAX))
@@ -32,6 +35,8 @@ theorem icp_residual_sq_nonnegative (src_x : Real) (src_y : Real) (src_z : Real)
     (h6 : ((abs tgt_z) <= COORD_MAX)) :
     ((point_to_point_residual_sq src_x src_y src_z tgt_x tgt_y tgt_z) >= (0 : Real)) := by
   unfold point_to_point_residual_sq
+  try unfold COORD_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -55,6 +60,9 @@ theorem icp_residual_sq_nonnegative (src_x : Real) (src_y : Real) (src_z : Real)
 noncomputable def weighted_residual (residual : Real) (delta : Real) : Real :=
   (((HALF * (min (max (abs residual) (0 : Real)) delta)) * (min (max (abs residual) (0 : Real)) delta)) + (delta * ((abs residual) - (min (max (abs residual) (0 : Real)) delta))))
 
+-- source obligations for weighted_residual: {O1}
+--   O1 [34712db04d17] -> PRESERVED (accounted)  theorem huber_weighted_residual_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem huber_weighted_residual_bounded (residual : Real) (delta : Real)
     (h1 : ((abs residual) <= COORD_MAX))
     (h2 : (delta > (0 : Real)))
@@ -62,6 +70,8 @@ theorem huber_weighted_residual_bounded (residual : Real) (delta : Real)
     (h_clamp1 : (0 : Real) ≤ delta) :
     ((weighted_residual residual delta) >= (0 : Real)) := by
   unfold weighted_residual
+  try unfold COORD_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -85,6 +95,7 @@ theorem huber_weighted_residual_bounded (residual : Real) (delta : Real)
 noncomputable def point_to_plane_residual (src_x : Real) (src_y : Real) (src_z : Real) (tgt_x : Real) (tgt_y : Real) (tgt_z : Real) (n_x : Real) (n_y : Real) (n_z : Real) : Real :=
   ((((src_x - tgt_x) * n_x) + ((src_y - tgt_y) * n_y)) + ((src_z - tgt_z) * n_z))
 
+-- obligations for point_to_plane_residual: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

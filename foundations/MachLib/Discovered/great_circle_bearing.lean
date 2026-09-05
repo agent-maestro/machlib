@@ -22,6 +22,11 @@ noncomputable def TWO_PI : Real := (6.283185307179586 : Real)
 noncomputable def initial_bearing (lat1 : Real) (lon1 : Real) (lat2 : Real) (lon2 : Real) : Real :=
   (atan2 ((Real.sin (lon2 - lon1)) * (Real.cos lat2)) (((Real.cos lat1) * (Real.sin lat2)) - (((Real.sin lat1) * (Real.cos lat2)) * (Real.cos (lon2 - lon1)))))
 
+-- source obligations for initial_bearing: {O1, O2}
+--   O1 [700f34544c3b] -> PRESERVED (accounted)  theorem initial_bearing_in_atan2_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [3f0ee9f5916f] -> PRESERVED (accounted)  theorem initial_bearing_in_atan2_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem initial_bearing_in_atan2_range (lat1 : Real) (lon1 : Real) (lat2 : Real) (lon2 : Real)
     (h1 : (lat1 >= (-PI_HALF)))
     (h2 : (lat1 <= PI_HALF))
@@ -33,6 +38,9 @@ theorem initial_bearing_in_atan2_range (lat1 : Real) (lon1 : Real) (lat2 : Real)
     (h8 : (lon2 <= PI)) :
     (((initial_bearing lat1 lon1 lat2 lon2) > (-PI))) ∧ (((initial_bearing lat1 lon1 lat2 lon2) <= PI)) := by
   unfold initial_bearing
+  try unfold PI_HALF at *
+  try unfold PI at *
+  try unfold TWO_PI at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -57,6 +65,7 @@ theorem initial_bearing_in_atan2_range (lat1 : Real) (lon1 : Real) (lat2 : Real)
 noncomputable def final_bearing (lat1 : Real) (lon1 : Real) (lat2 : Real) (lon2 : Real) : Real :=
   ((initial_bearing lat2 lon2 lat1 lon1) + PI)
 
+-- obligations for final_bearing: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -77,6 +86,7 @@ theorem final_bearing_reciprocal_of_reverse_initial (lat1 : Real) (lon1 : Real) 
 noncomputable def cross_track_distance (arc_query_distance : Real) (bearing_path : Real) (bearing_query : Real) (earth_radius : Real) : Real :=
   ((arcsin ((Real.sin (arc_query_distance / earth_radius)) * (Real.sin (bearing_query - bearing_path)))) * earth_radius)
 
+-- obligations for cross_track_distance: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

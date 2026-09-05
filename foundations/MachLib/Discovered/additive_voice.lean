@@ -29,6 +29,9 @@ axiom envelope (t : Real) : Real  -- helper (axiomatised in MachLib/Discovered)
 noncomputable def voice_sample (t : Real) (freq : Real) : Real :=
   (((1 : Real) - (Real.exp ((-ATTACK_RATE) * t))) * ((((Real.sin ((TWO_PI * freq) * t)) + (PARTIAL_2 * (Real.sin (((TWO_PI * freq) * (2.0 : Real)) * t)))) + (PARTIAL_3 * (Real.sin (((TWO_PI * freq) * (3.0 : Real)) * t)))) + (PARTIAL_4 * (Real.sin (((TWO_PI * freq) * (4.0 : Real)) * t)))))
 
+-- source obligations for voice_sample: {O1}
+--   O1 [31fdf0107345] -> PRESERVED (accounted)  theorem additive_voice_amplitude_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem additive_voice_amplitude_bounded (t : Real) (freq : Real)
     (h1 : (t >= (0 : Real)))
     (h2 : (t < (1000000.0 : Real)))
@@ -36,6 +39,12 @@ theorem additive_voice_amplitude_bounded (t : Real) (freq : Real)
     (h4 : (freq < (22050.0 : Real))) :
     ((abs (voice_sample t freq)) < (4.0 : Real)) := by
   unfold voice_sample
+  try unfold PI at *
+  try unfold TWO_PI at *
+  try unfold ATTACK_RATE at *
+  try unfold PARTIAL_2 at *
+  try unfold PARTIAL_3 at *
+  try unfold PARTIAL_4 at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

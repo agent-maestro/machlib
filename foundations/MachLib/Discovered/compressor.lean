@@ -28,6 +28,9 @@ noncomputable def LN10_INV : Real := (0.4342944819032518 : Real)
 noncomputable def hard_knee_gain (level_db : Real) (threshold_db : Real) (ratio : Real) : Real :=
   ((-(min (max (level_db - threshold_db) (0 : Real)) LEVEL_MAX)) * ((1 : Real) - ((1 : Real) / ratio)))
 
+-- source obligations for hard_knee_gain: {O1}
+--   O1 [3d7c5a6457a9] -> PRESERVED (accounted)  theorem hard_knee_unity_below_threshold
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem hard_knee_unity_below_threshold (level_db : Real) (threshold_db : Real) (ratio : Real)
     (h1 : (level_db >= LEVEL_MIN))
     (h2 : (level_db <= LEVEL_MAX))
@@ -38,6 +41,15 @@ theorem hard_knee_unity_below_threshold (level_db : Real) (threshold_db : Real) 
     (h_clamp1 : (0 : Real) ≤ LEVEL_MAX) :
     ((hard_knee_gain level_db threshold_db ratio) <= (0 : Real)) := by
   unfold hard_knee_gain
+  try unfold THRESHOLD_MIN at *
+  try unfold THRESHOLD_MAX at *
+  try unfold RATIO_MIN at *
+  try unfold RATIO_MAX at *
+  try unfold KNEE_MIN at *
+  try unfold KNEE_MAX at *
+  try unfold LEVEL_MIN at *
+  try unfold LEVEL_MAX at *
+  try unfold LN10_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -61,6 +73,7 @@ theorem hard_knee_unity_below_threshold (level_db : Real) (threshold_db : Real) 
 noncomputable def soft_knee_gain (level_db : Real) (threshold_db : Real) (ratio : Real) (knee_db : Real) : Real :=
   ((-((1 : Real) - ((1 : Real) / ratio))) * (((((min (max (level_db - threshold_db) (-((0.5 : Real) * knee_db))) ((0.5 : Real) * knee_db)) + ((0.5 : Real) * knee_db)) * ((min (max (level_db - threshold_db) (-((0.5 : Real) * knee_db))) ((0.5 : Real) * knee_db)) + ((0.5 : Real) * knee_db))) / ((2.0 : Real) * knee_db)) + (min (max ((level_db - threshold_db) - ((0.5 : Real) * knee_db)) (0 : Real)) LEVEL_MAX)))
 
+-- obligations for soft_knee_gain: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -83,6 +96,7 @@ theorem soft_knee_continuous_at_boundary (level_db : Real) (threshold_db : Real)
 noncomputable def linear_to_db (linear : Real) : Real :=
   (((20.0 : Real) * LN10_INV) * (Real.log linear))
 
+-- obligations for linear_to_db: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -97,11 +111,23 @@ theorem linear_to_db_monotone (linear : Real)
 noncomputable def db_to_linear (db : Real) : Real :=
   (Real.exp (db / ((20.0 : Real) * LN10_INV)))
 
+-- source obligations for db_to_linear: {O1}
+--   O1 [2e2fb3a211fb] -> PRESERVED (accounted)  theorem db_to_linear_monotone
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem db_to_linear_monotone (db : Real)
     (h1 : (db >= LEVEL_MIN))
     (h2 : (db <= LEVEL_MAX)) :
     ((db_to_linear db) >= (0 : Real)) := by
   unfold db_to_linear
+  try unfold THRESHOLD_MIN at *
+  try unfold THRESHOLD_MAX at *
+  try unfold RATIO_MIN at *
+  try unfold RATIO_MAX at *
+  try unfold KNEE_MIN at *
+  try unfold KNEE_MAX at *
+  try unfold LEVEL_MIN at *
+  try unfold LEVEL_MAX at *
+  try unfold LN10_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

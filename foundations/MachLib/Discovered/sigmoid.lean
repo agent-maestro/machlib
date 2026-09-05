@@ -23,10 +23,17 @@ axiom logit (p : Real) : Real  -- helper (axiomatised in MachLib/Discovered)
 noncomputable def sigmoid (x : Real) : Real :=
   ((1 : Real) / ((1 : Real) + (Real.exp (-x))))
 
+-- source obligations for sigmoid: {O1, O2}
+--   O1 [bf5cd9561a2a] -> PRESERVED (accounted)  theorem sigmoid_monotone_in_x
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [04d162656613] -> PRESERVED (accounted)  theorem sigmoid_monotone_in_x
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem sigmoid_monotone_in_x (x : Real)
     (h1 : ((abs x) < SIGMOID_X_MAX)) :
     (((sigmoid x) >= (0 : Real))) ∧ (((sigmoid x) <= (1 : Real))) := by
   unfold sigmoid
+  try unfold SIGMOID_X_MAX at *
+  try unfold HALF at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -51,10 +58,17 @@ theorem sigmoid_monotone_in_x (x : Real)
 noncomputable def sigmoid_alt (x : Real) : Real :=
   (((Real.tanh (x * HALF)) * HALF) + HALF)
 
+-- source obligations for sigmoid_alt: {O1, O2}
+--   O1 [0d0629fbace6] -> PRESERVED (accounted)  theorem sigmoid_alt_equals_canonical
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [6a6988bdee21] -> PRESERVED (accounted)  theorem sigmoid_alt_equals_canonical
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem sigmoid_alt_equals_canonical (x : Real)
     (h1 : ((abs x) < SIGMOID_X_MAX)) :
     (((sigmoid_alt x) >= (0 : Real))) ∧ (((sigmoid_alt x) <= (1 : Real))) := by
   unfold sigmoid_alt
+  try unfold SIGMOID_X_MAX at *
+  try unfold HALF at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

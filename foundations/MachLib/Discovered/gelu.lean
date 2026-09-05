@@ -23,6 +23,7 @@ noncomputable def HALF : Real := (0.5 : Real)
 noncomputable def gelu_tanh (x : Real) : Real :=
   ((HALF * x) * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * (x + (((GELU_CUBIC * x) * x) * x))))))
 
+-- obligations for gelu_tanh: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -36,6 +37,7 @@ theorem gelu_tanh_monotone_in_x (x : Real)
 noncomputable def quick_gelu (x : Real) : Real :=
   (x / ((1 : Real) + (Real.exp ((-1.702 : Real) * x))))
 
+-- obligations for quick_gelu: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

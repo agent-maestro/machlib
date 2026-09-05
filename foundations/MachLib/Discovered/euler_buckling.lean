@@ -35,6 +35,9 @@ noncomputable def SY_MAX : Real := (10000000000.0 : Real)
 noncomputable def critical_load (modulus : Real) (second_moment : Real) (effective_length_factor : Real) (unsupported_length : Real) : Real :=
   (((PI_SQUARED * modulus) * second_moment) / ((effective_length_factor * unsupported_length) * (effective_length_factor * unsupported_length)))
 
+-- source obligations for critical_load: {O1}
+--   O1 [2eac436cfc50] -> PRESERVED (accounted)  theorem euler_critical_load_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem euler_critical_load_nonneg (modulus : Real) (second_moment : Real) (effective_length_factor : Real) (unsupported_length : Real)
     (h1 : (modulus >= E_MIN))
     (h2 : (modulus <= E_MAX))
@@ -46,6 +49,22 @@ theorem euler_critical_load_nonneg (modulus : Real) (second_moment : Real) (effe
     (h8 : (unsupported_length <= L_MAX)) :
     ((critical_load modulus second_moment effective_length_factor unsupported_length) >= (0 : Real)) := by
   unfold critical_load
+  try unfold PI_SQUARED at *
+  try unfold ONE at *
+  try unfold TWO at *
+  try unfold E_MIN at *
+  try unfold E_MAX at *
+  try unfold I_MIN at *
+  try unfold I_MAX at *
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold L_MIN at *
+  try unfold L_MAX at *
+  try unfold R_GYRATION_MIN at *
+  try unfold R_GYRATION_MAX at *
+  try unfold SLENDERNESS_MAX at *
+  try unfold SY_MIN at *
+  try unfold SY_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -69,6 +88,11 @@ theorem euler_critical_load_nonneg (modulus : Real) (second_moment : Real) (effe
 noncomputable def slenderness_ratio (effective_length_factor : Real) (unsupported_length : Real) (radius_of_gyration : Real) : Real :=
   ((effective_length_factor * unsupported_length) / radius_of_gyration)
 
+-- source obligations for slenderness_ratio: {O1, O2}
+--   O1 [54dffd81c674] -> PRESERVED (accounted)  theorem slenderness_ratio_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [888085b8d9f3] -> PRESERVED (accounted)  theorem slenderness_ratio_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem slenderness_ratio_nonneg (effective_length_factor : Real) (unsupported_length : Real) (radius_of_gyration : Real)
     (h1 : (effective_length_factor >= K_MIN))
     (h2 : (effective_length_factor <= K_MAX))
@@ -78,6 +102,22 @@ theorem slenderness_ratio_nonneg (effective_length_factor : Real) (unsupported_l
     (h6 : (radius_of_gyration <= R_GYRATION_MAX)) :
     (((slenderness_ratio effective_length_factor unsupported_length radius_of_gyration) >= (0 : Real))) ∧ (((slenderness_ratio effective_length_factor unsupported_length radius_of_gyration) <= SLENDERNESS_MAX)) := by
   unfold slenderness_ratio
+  try unfold PI_SQUARED at *
+  try unfold ONE at *
+  try unfold TWO at *
+  try unfold E_MIN at *
+  try unfold E_MAX at *
+  try unfold I_MIN at *
+  try unfold I_MAX at *
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold L_MIN at *
+  try unfold L_MAX at *
+  try unfold R_GYRATION_MIN at *
+  try unfold R_GYRATION_MAX at *
+  try unfold SLENDERNESS_MAX at *
+  try unfold SY_MIN at *
+  try unfold SY_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -102,6 +142,11 @@ theorem slenderness_ratio_nonneg (effective_length_factor : Real) (unsupported_l
 noncomputable def johnson_short_column_stress (yield_strength : Real) (slenderness : Real) (modulus : Real) : Real :=
   (yield_strength - (((yield_strength * slenderness) * (yield_strength * slenderness)) / (((4.0 : Real) * PI_SQUARED) * modulus)))
 
+-- source obligations for johnson_short_column_stress: {O1, O2}
+--   O1 [03e709102fd4] -> PRESERVED (accounted)  theorem johnson_short_column_below_yield
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [473a2333caa2] -> PRESERVED (accounted)  theorem johnson_short_column_below_yield
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem johnson_short_column_below_yield (yield_strength : Real) (slenderness : Real) (modulus : Real)
     (h1 : (yield_strength >= SY_MIN))
     (h2 : (yield_strength <= SY_MAX))
@@ -111,6 +156,22 @@ theorem johnson_short_column_below_yield (yield_strength : Real) (slenderness : 
     (h6 : (modulus <= E_MAX)) :
     (((johnson_short_column_stress yield_strength slenderness modulus) >= (0 : Real))) ∧ (((johnson_short_column_stress yield_strength slenderness modulus) <= yield_strength)) := by
   unfold johnson_short_column_stress
+  try unfold PI_SQUARED at *
+  try unfold ONE at *
+  try unfold TWO at *
+  try unfold E_MIN at *
+  try unfold E_MAX at *
+  try unfold I_MIN at *
+  try unfold I_MAX at *
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold L_MIN at *
+  try unfold L_MAX at *
+  try unfold R_GYRATION_MIN at *
+  try unfold R_GYRATION_MAX at *
+  try unfold SLENDERNESS_MAX at *
+  try unfold SY_MIN at *
+  try unfold SY_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

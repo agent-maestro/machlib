@@ -26,6 +26,11 @@ axiom weighted_contribution (weight : Real) (intensity : Real) : Real  -- helper
 noncomputable def bilateral_weight (dx : Real) (dy : Real) (di : Real) (sigma_spatial : Real) (sigma_range : Real) : Real :=
   (Real.exp ((-HALF) * ((((dx * dx) + (dy * dy)) / (sigma_spatial * sigma_spatial)) + ((di * di) / (sigma_range * sigma_range)))))
 
+-- source obligations for bilateral_weight: {O1, O2}
+--   O1 [091b28ee03ce] -> PRESERVED (accounted)  theorem bilateral_weight_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [c5d3a3628bb1] -> PRESERVED (accounted)  theorem bilateral_weight_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bilateral_weight_in_unit_interval (dx : Real) (dy : Real) (di : Real) (sigma_spatial : Real) (sigma_range : Real)
     (h1 : ((abs dx) <= COORD_MAX))
     (h2 : ((abs dy) <= COORD_MAX))
@@ -36,6 +41,11 @@ theorem bilateral_weight_in_unit_interval (dx : Real) (dy : Real) (di : Real) (s
     (h7 : (sigma_range <= SIGMA_MAX)) :
     (((bilateral_weight dx dy di sigma_spatial sigma_range) >= (0 : Real))) ∧ (((bilateral_weight dx dy di sigma_spatial sigma_range) <= (1 : Real))) := by
   unfold bilateral_weight
+  try unfold COORD_MAX at *
+  try unfold INTENSITY_MAX at *
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold HALF at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -60,6 +70,11 @@ theorem bilateral_weight_in_unit_interval (dx : Real) (dy : Real) (di : Real) (s
 noncomputable def spatial_gaussian_weight (dx : Real) (dy : Real) (sigma : Real) : Real :=
   (Real.exp (((-HALF) * ((dx * dx) + (dy * dy))) / (sigma * sigma)))
 
+-- source obligations for spatial_gaussian_weight: {O1, O2}
+--   O1 [2f9b0aaa39e7] -> PRESERVED (accounted)  theorem spatial_gaussian_weight_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [0fc4e274240c] -> PRESERVED (accounted)  theorem spatial_gaussian_weight_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem spatial_gaussian_weight_in_unit_interval (dx : Real) (dy : Real) (sigma : Real)
     (h1 : ((abs dx) <= COORD_MAX))
     (h2 : ((abs dy) <= COORD_MAX))
@@ -67,6 +82,11 @@ theorem spatial_gaussian_weight_in_unit_interval (dx : Real) (dy : Real) (sigma 
     (h4 : (sigma <= SIGMA_MAX)) :
     (((spatial_gaussian_weight dx dy sigma) >= (0 : Real))) ∧ (((spatial_gaussian_weight dx dy sigma) <= (1 : Real))) := by
   unfold spatial_gaussian_weight
+  try unfold COORD_MAX at *
+  try unfold INTENSITY_MAX at *
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold HALF at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

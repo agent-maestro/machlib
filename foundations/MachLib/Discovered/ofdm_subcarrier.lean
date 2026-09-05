@@ -22,6 +22,7 @@ noncomputable def SPREAD_MAX : Real := (0.001 : Real)
 noncomputable def subcarrier_phase (bin_index : Real) (n_total : Real) : Real :=
   (((-6.283185307179586 : Real) * bin_index) / n_total)
 
+-- obligations for subcarrier_phase: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -38,6 +39,7 @@ theorem subcarrier_phase_proportional_to_bin (bin_index : Real) (n_total : Real)
 noncomputable def pilot_channel_estimate (received : Real) (transmitted : Real) : Real :=
   (received / transmitted)
 
+-- obligations for pilot_channel_estimate: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -53,6 +55,9 @@ theorem pilot_correction_unity_at_known_pilot (received : Real) (transmitted : R
 noncomputable def cyclic_prefix_min_samples (delay_spread_s : Real) (sample_rate_hz : Real) : Real :=
   (delay_spread_s * sample_rate_hz)
 
+-- source obligations for cyclic_prefix_min_samples: {O1}
+--   O1 [661db9f0c522] -> PRESERVED (accounted)  theorem cp_length_proportional_to_delay_spread
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cp_length_proportional_to_delay_spread (delay_spread_s : Real) (sample_rate_hz : Real)
     (h1 : (delay_spread_s >= (0 : Real)))
     (h2 : (delay_spread_s <= SPREAD_MAX))
@@ -60,6 +65,9 @@ theorem cp_length_proportional_to_delay_spread (delay_spread_s : Real) (sample_r
     (h4 : (sample_rate_hz <= FS_MAX)) :
     ((cyclic_prefix_min_samples delay_spread_s sample_rate_hz) >= (0 : Real)) := by
   unfold cyclic_prefix_min_samples
+  try unfold N_MAX at *
+  try unfold FS_MAX at *
+  try unfold SPREAD_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -83,6 +91,7 @@ theorem cp_length_proportional_to_delay_spread (delay_spread_s : Real) (sample_r
 noncomputable def carrier_freq_offset (phase_diff : Real) (preamble_duration_s : Real) : Real :=
   (phase_diff / ((6.283185307179586 : Real) * preamble_duration_s))
 
+-- obligations for carrier_freq_offset: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

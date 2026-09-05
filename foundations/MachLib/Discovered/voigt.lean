@@ -23,12 +23,17 @@ axiom voigt_eta (fwhm_lorentzian : Real) (fwhm_combined : Real) : Real  -- helpe
 noncomputable def pseudo_voigt (frequency : Real) (centre : Real) (fwhm_combined : Real) (eta : Real) : Real :=
   ((eta * (((0.5 : Real) * fwhm_combined) / (PI * (((frequency - centre) * (frequency - centre)) + (((0.5 : Real) * fwhm_combined) * ((0.5 : Real) * fwhm_combined)))))) + (((1 : Real) - eta) * ((Real.exp (((-(frequency - centre)) * (frequency - centre)) / (((2.0 : Real) * (fwhm_combined / (2.3548200450309493 : Real))) * (fwhm_combined / (2.3548200450309493 : Real))))) / ((fwhm_combined / (2.3548200450309493 : Real)) * SQRT_2PI))))
 
+-- source obligations for pseudo_voigt: {O1}
+--   O1 [eaaef29fbe54] -> PRESERVED (accounted)  theorem voigt_peak_at_centre
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem voigt_peak_at_centre (frequency : Real) (centre : Real) (fwhm_combined : Real) (eta : Real)
     (h1 : (fwhm_combined > (0 : Real)))
     (h2 : (eta >= (0 : Real)))
     (h3 : (eta <= (1 : Real))) :
     ((pseudo_voigt frequency centre fwhm_combined eta) >= (0 : Real)) := by
   unfold pseudo_voigt
+  try unfold PI at *
+  try unfold SQRT_2PI at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

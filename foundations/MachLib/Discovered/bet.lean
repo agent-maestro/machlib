@@ -24,6 +24,9 @@ axiom linearised_bet_y (relative_pressure : Real) (adsorbed_volume : Real) : Rea
 noncomputable def ratio_to_monolayer (relative_pressure : Real) (bet_constant : Real) : Real :=
   ((bet_constant * relative_pressure) / (((1 : Real) - relative_pressure) * (((1 : Real) - relative_pressure) + (bet_constant * relative_pressure))))
 
+-- source obligations for ratio_to_monolayer: {O1}
+--   O1 [96ba396bc765] -> PRESERVED (accounted)  theorem bet_diverges_at_p0
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bet_diverges_at_p0 (relative_pressure : Real) (bet_constant : Real)
     (h1 : (relative_pressure >= X_MIN))
     (h2 : (relative_pressure <= X_MAX))
@@ -31,6 +34,9 @@ theorem bet_diverges_at_p0 (relative_pressure : Real) (bet_constant : Real)
     (h4 : (bet_constant <= C_MAX)) :
     ((ratio_to_monolayer relative_pressure bet_constant) >= (0 : Real)) := by
   unfold ratio_to_monolayer
+  try unfold C_MAX at *
+  try unfold X_MIN at *
+  try unfold X_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

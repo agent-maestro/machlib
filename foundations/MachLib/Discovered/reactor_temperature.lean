@@ -28,6 +28,7 @@ axiom required_cooling_duty (reaction_heat : Real) (safety_factor : Real) : Real
 noncomputable def reaction_heat_load (delta_h_rxn : Real) (reactor_volume : Real) (concentration_a : Real) (pre_exp_factor : Real) (activation_energy : Real) (temperature : Real) : Real :=
   (((delta_h_rxn * reactor_volume) * concentration_a) * (pre_exp_factor * (Real.exp ((-activation_energy) / (R_GAS * temperature)))))
 
+-- obligations for reaction_heat_load: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -24,6 +24,9 @@ axiom molecular_weight_from_viscosity (measured_viscosity : Real) (k_param : Rea
 noncomputable def intrinsic_viscosity (k_param : Real) (a_exponent : Real) (molecular_weight : Real) : Real :=
   (k_param * (molecular_weight ^ a_exponent))
 
+-- source obligations for intrinsic_viscosity: {O1}
+--   O1 [d992cbb2a132] -> PRESERVED (accounted)  theorem mark_houwink_monotone_in_m
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem mark_houwink_monotone_in_m (k_param : Real) (a_exponent : Real) (molecular_weight : Real)
     (h1 : (k_param >= (0 : Real)))
     (h2 : (k_param <= K_MAX))
@@ -33,6 +36,9 @@ theorem mark_houwink_monotone_in_m (k_param : Real) (a_exponent : Real) (molecul
     (h6 : (molecular_weight <= M_MAX)) :
     ((intrinsic_viscosity k_param a_exponent molecular_weight) >= (0 : Real)) := by
   unfold intrinsic_viscosity
+  try unfold M_MAX at *
+  try unfold K_MAX at *
+  try unfold A_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

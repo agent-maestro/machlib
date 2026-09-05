@@ -24,6 +24,7 @@ noncomputable def STEER_MAX : Real := (0.7 : Real)
 noncomputable def bicycle_yaw_rate (speed : Real) (steer : Real) (wheelbase : Real) : Real :=
   ((speed * (Real.tan steer)) / wheelbase)
 
+-- obligations for bicycle_yaw_rate: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,6 +41,7 @@ theorem bicycle_yaw_rate_zero_when_steer_zero (speed : Real) (steer : Real) (whe
 noncomputable def ackermann_inner_tan (centerline_steer : Real) (wheelbase : Real) (track : Real) : Real :=
   ((wheelbase * (Real.tan centerline_steer)) / (wheelbase - (((0.5 : Real) * track) * (Real.tan centerline_steer))))
 
+-- obligations for ackermann_inner_tan: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -57,6 +59,7 @@ theorem ackermann_inner_steeper_than_outer (centerline_steer : Real) (wheelbase 
 noncomputable def ackermann_outer_tan (centerline_steer : Real) (wheelbase : Real) (track : Real) : Real :=
   ((wheelbase * (Real.tan centerline_steer)) / (wheelbase + (((0.5 : Real) * track) * (Real.tan centerline_steer))))
 
+-- obligations for ackermann_outer_tan: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -74,6 +77,7 @@ theorem ackermann_outer_shallower_than_inner (centerline_steer : Real) (wheelbas
 noncomputable def turn_radius (steer : Real) (wheelbase : Real) : Real :=
   (wheelbase / (Real.tan steer))
 
+-- obligations for turn_radius: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

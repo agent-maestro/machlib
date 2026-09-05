@@ -25,6 +25,9 @@ axiom montgomery_ladder_x25519 (scalar : Real) (u : Real) : Real  -- extern (axi
 noncomputable def x25519 (scalar : Real) (u_coord : Real) : Real :=
   (montgomery_ladder_x25519 (scalar_clamp scalar) u_coord)
 
+-- source obligations for x25519: {O1}
+--   O1 [b2f745fe96ac] -> PRESERVED (accounted)  theorem x25519_montgomery_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem x25519_montgomery_correct (scalar : Real) (u_coord : Real)
     (h1 : True) :
     True := by

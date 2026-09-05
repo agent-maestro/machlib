@@ -27,6 +27,7 @@ axiom tafel_slope (alpha : Real) (temperature : Real) : Real  -- helper (axiomat
 noncomputable def overpotential_from_current (intercept_a : Real) (slope_b : Real) (current_density : Real) : Real :=
   (intercept_a + (slope_b * (log10 current_density)))
 
+-- obligations for overpotential_from_current: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

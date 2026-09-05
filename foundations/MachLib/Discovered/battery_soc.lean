@@ -27,6 +27,11 @@ noncomputable def DT_MAX : Real := (60.0 : Real)
 noncomputable def coulomb_count_step (soc_prev : Real) (current_a : Real) (capacity_ah : Real) (dt_s : Real) : Real :=
   (min (max (soc_prev - (((current_a * dt_s) / (3600.0 : Real)) / capacity_ah)) SOC_MIN) SOC_MAX)
 
+-- source obligations for coulomb_count_step: {O1, O2}
+--   O1 [fcf8d6e7e167] -> PRESERVED (accounted)  theorem soc_coulomb_count_decreases_under_discharge
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [92429b2d18cc] -> PRESERVED (accounted)  theorem soc_coulomb_count_decreases_under_discharge
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem soc_coulomb_count_decreases_under_discharge (soc_prev : Real) (current_a : Real) (capacity_ah : Real) (dt_s : Real)
     (h_soc_prev : ((SOC_MIN <= soc_prev) ∧ (soc_prev <= SOC_MAX)))
     (h_current_a : (-I_MAX ≤ current_a ∧ current_a ≤ I_MAX))
@@ -35,6 +40,14 @@ theorem soc_coulomb_count_decreases_under_discharge (soc_prev : Real) (current_a
     (h_clamp1 : SOC_MIN ≤ SOC_MAX) :
     (((coulomb_count_step soc_prev current_a capacity_ah dt_s) >= SOC_MIN)) ∧ (((coulomb_count_step soc_prev current_a capacity_ah dt_s) <= SOC_MAX)) := by
   unfold coulomb_count_step
+  try unfold SOC_MIN at *
+  try unfold SOC_MAX at *
+  try unfold I_MAX at *
+  try unfold Q_MIN at *
+  try unfold Q_MAX at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold DT_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -59,10 +72,23 @@ theorem soc_coulomb_count_decreases_under_discharge (soc_prev : Real) (current_a
 noncomputable def lithium_ion_ocv_curve (soc : Real) : Real :=
   ((((3.0 : Real) + ((1.5 : Real) * soc)) - ((1.2 : Real) * (soc * soc))) + ((0.5 : Real) * ((soc * soc) * soc)))
 
+-- source obligations for lithium_ion_ocv_curve: {O1, O2}
+--   O1 [e438adc8eb3a] -> PRESERVED (accounted)  theorem ocv_curve_monotone_in_soc
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [8aaa4e6895aa] -> PRESERVED (accounted)  theorem ocv_curve_monotone_in_soc
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ocv_curve_monotone_in_soc (soc : Real)
     (h_soc : (((0.05 : Real) <= soc) ∧ (soc <= (0.95 : Real)))) :
     (((lithium_ion_ocv_curve soc) >= V_MIN)) ∧ (((lithium_ion_ocv_curve soc) <= V_MAX)) := by
   unfold lithium_ion_ocv_curve
+  try unfold SOC_MIN at *
+  try unfold SOC_MAX at *
+  try unfold I_MAX at *
+  try unfold Q_MIN at *
+  try unfold Q_MAX at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold DT_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -87,12 +113,25 @@ theorem ocv_curve_monotone_in_soc (soc : Real)
 noncomputable def mixed_soc_estimate (soc_coulomb : Real) (soc_from_ocv : Real) (alpha : Real) : Real :=
   ((alpha * soc_coulomb) + (((1 : Real) - alpha) * soc_from_ocv))
 
+-- source obligations for mixed_soc_estimate: {O1, O2}
+--   O1 [49dcb740bbd0] -> PRESERVED (accounted)  theorem mixed_soc_blends_estimators
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [fc28b2f02cf0] -> PRESERVED (accounted)  theorem mixed_soc_blends_estimators
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem mixed_soc_blends_estimators (soc_coulomb : Real) (soc_from_ocv : Real) (alpha : Real)
     (h_soc_coulomb : ((SOC_MIN <= soc_coulomb) ∧ (soc_coulomb <= SOC_MAX)))
     (h_soc_from_ocv : ((SOC_MIN <= soc_from_ocv) ∧ (soc_from_ocv <= SOC_MAX)))
     (h_alpha : (((0 : Real) <= alpha) ∧ (alpha <= (1 : Real)))) :
     (((mixed_soc_estimate soc_coulomb soc_from_ocv alpha) >= SOC_MIN)) ∧ (((mixed_soc_estimate soc_coulomb soc_from_ocv alpha) <= SOC_MAX)) := by
   unfold mixed_soc_estimate
+  try unfold SOC_MIN at *
+  try unfold SOC_MAX at *
+  try unfold I_MAX at *
+  try unfold Q_MIN at *
+  try unfold Q_MAX at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold DT_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

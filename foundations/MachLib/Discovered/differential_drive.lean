@@ -23,6 +23,7 @@ noncomputable def OMEGA_MAX : Real := (50.0 : Real)
 noncomputable def body_linear_velocity (left_wheel : Real) (right_wheel : Real) : Real :=
   ((0.5 : Real) * (left_wheel + right_wheel))
 
+-- obligations for body_linear_velocity: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -37,6 +38,7 @@ theorem diff_drive_linear_velocity_average (left_wheel : Real) (right_wheel : Re
 noncomputable def body_angular_velocity (left_wheel : Real) (right_wheel : Real) (track_width : Real) : Real :=
   ((right_wheel - left_wheel) / track_width)
 
+-- obligations for body_angular_velocity: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -53,6 +55,7 @@ theorem diff_drive_angular_velocity_difference (left_wheel : Real) (right_wheel 
 noncomputable def left_wheel_command (body_v : Real) (body_omega : Real) (track_width : Real) : Real :=
   (body_v - ((body_omega * track_width) * (0.5 : Real)))
 
+-- obligations for left_wheel_command: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -69,6 +72,7 @@ theorem diff_drive_inverse_consistent_with_forward (body_v : Real) (body_omega :
 noncomputable def right_wheel_command (body_v : Real) (body_omega : Real) (track_width : Real) : Real :=
   (body_v + ((body_omega * track_width) * (0.5 : Real)))
 
+-- obligations for right_wheel_command: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -85,6 +89,7 @@ theorem diff_drive_right_inverse_consistent (body_v : Real) (body_omega : Real) 
 noncomputable def pose_x_step (x_prev : Real) (body_v : Real) (theta : Real) (dt : Real) : Real :=
   (x_prev + ((body_v * (Real.cos theta)) * dt))
 
+-- obligations for pose_x_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -102,6 +107,7 @@ theorem pose_x_integration_step_linear_in_dt (x_prev : Real) (body_v : Real) (th
 noncomputable def pose_y_step (y_prev : Real) (body_v : Real) (theta : Real) (dt : Real) : Real :=
   (y_prev + ((body_v * (Real.sin theta)) * dt))
 
+-- obligations for pose_y_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

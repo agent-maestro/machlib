@@ -28,6 +28,7 @@ axiom qfe_altitude (static_pressure : Real) (field_pressure : Real) : Real  -- h
 noncomputable def pressure_to_altitude (static_pressure : Real) : Real :=
   (T0_OVER_L * ((1 : Real) - ((static_pressure / P0) ^ RL_OVER_G)))
 
+-- obligations for pressure_to_altitude: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -41,10 +42,22 @@ theorem baro_altitude_monotone_decreasing_in_pressure (static_pressure : Real)
 noncomputable def altitude_to_pressure (altitude : Real) : Real :=
   (P0 * (((1 : Real) - ((LAPSE * altitude) / T0)) ^ (5.25588 : Real)))
 
+-- source obligations for altitude_to_pressure: {O1, O2}
+--   O1 [dfa2a6fc3a5d] -> PRESERVED (accounted)  theorem altitude_to_pressure_inverse
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [57cb25cb2e90] -> PRESERVED (accounted)  theorem altitude_to_pressure_inverse
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem altitude_to_pressure_inverse (altitude : Real)
     (h_altitude : (((-(500.0 : Real)) <= altitude) ∧ (altitude <= (11000.0 : Real)))) :
     (((altitude_to_pressure altitude) >= P_MIN)) ∧ (((altitude_to_pressure altitude) <= P_MAX)) := by
   unfold altitude_to_pressure
+  try unfold P0 at *
+  try unfold T0 at *
+  try unfold LAPSE at *
+  try unfold RL_OVER_G at *
+  try unfold T0_OVER_L at *
+  try unfold P_MIN at *
+  try unfold P_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

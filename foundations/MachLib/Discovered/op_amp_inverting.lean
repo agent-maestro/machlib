@@ -28,6 +28,7 @@ noncomputable def GBW_MAX : Real := (10000000000.0 : Real)
 noncomputable def inverting_output (v_in : Real) (r_feedback : Real) (r_input : Real) : Real :=
   ((-(r_feedback / r_input)) * v_in)
 
+-- obligations for inverting_output: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -45,6 +46,7 @@ theorem inverting_gain_negative_proportional (v_in : Real) (r_feedback : Real) (
 noncomputable def inverting_output_with_rails (v_in : Real) (r_feedback : Real) (r_input : Real) (v_pos_rail : Real) (v_neg_rail : Real) : Real :=
   (min (max ((-(r_feedback / r_input)) * v_in) v_neg_rail) v_pos_rail)
 
+-- obligations for inverting_output_with_rails: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -67,6 +69,9 @@ theorem rail_clipped_within_supplies (v_in : Real) (r_feedback : Real) (r_input 
 noncomputable def closed_loop_bandwidth (gbw : Real) (r_feedback : Real) (r_input : Real) : Real :=
   (gbw / ((1 : Real) + (r_feedback / r_input)))
 
+-- source obligations for closed_loop_bandwidth: {O1}
+--   O1 [d0dfaeedfabc] -> PRESERVED (accounted)  theorem bandwidth_decreases_with_gain
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bandwidth_decreases_with_gain (gbw : Real) (r_feedback : Real) (r_input : Real)
     (h1 : (gbw >= GBW_MIN))
     (h2 : (gbw <= GBW_MAX))
@@ -76,6 +81,15 @@ theorem bandwidth_decreases_with_gain (gbw : Real) (r_feedback : Real) (r_input 
     (h6 : (r_input <= RES_MAX)) :
     ((closed_loop_bandwidth gbw r_feedback r_input) >= (0 : Real)) := by
   unfold closed_loop_bandwidth
+  try unfold RES_MIN at *
+  try unfold RES_MAX at *
+  try unfold V_RAIL_MIN at *
+  try unfold V_RAIL_MAX at *
+  try unfold V_IN_MAX at *
+  try unfold FREQ_MIN at *
+  try unfold FREQ_MAX at *
+  try unfold GBW_MIN at *
+  try unfold GBW_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -99,6 +113,9 @@ theorem bandwidth_decreases_with_gain (gbw : Real) (r_feedback : Real) (r_input 
 noncomputable def magnitude_at_freq (g_dc_magnitude : Real) (frequency : Real) (bandwidth : Real) : Real :=
   (g_dc_magnitude / (Real.sqrt ((1 : Real) + ((frequency / bandwidth) * (frequency / bandwidth)))))
 
+-- source obligations for magnitude_at_freq: {O1}
+--   O1 [c777fdfcb25b] -> PRESERVED (accounted)  theorem magnitude_rolloff_minus3db_at_bw
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem magnitude_rolloff_minus3db_at_bw (g_dc_magnitude : Real) (frequency : Real) (bandwidth : Real)
     (h1 : (g_dc_magnitude >= (0 : Real)))
     (h2 : (g_dc_magnitude <= (1000000.0 : Real)))
@@ -108,6 +125,15 @@ theorem magnitude_rolloff_minus3db_at_bw (g_dc_magnitude : Real) (frequency : Re
     (h6 : (bandwidth <= FREQ_MAX)) :
     ((magnitude_at_freq g_dc_magnitude frequency bandwidth) >= (0 : Real)) := by
   unfold magnitude_at_freq
+  try unfold RES_MIN at *
+  try unfold RES_MAX at *
+  try unfold V_RAIL_MIN at *
+  try unfold V_RAIL_MAX at *
+  try unfold V_IN_MAX at *
+  try unfold FREQ_MIN at *
+  try unfold FREQ_MAX at *
+  try unfold GBW_MIN at *
+  try unfold GBW_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

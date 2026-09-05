@@ -25,6 +25,11 @@ axiom wet_dry_mix (dry : Real) (wet : Real) (mix : Real) : Real  -- helper (axio
 noncomputable def reverb_envelope (time_s : Real) (rt60 : Real) : Real :=
   (Real.exp (((-time_s) * LN_1000) / rt60))
 
+-- source obligations for reverb_envelope: {O1, O2}
+--   O1 [0c8ceb7cbe25] -> PRESERVED (accounted)  theorem reverb_envelope_decreases_with_time
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [4604326e07c2] -> PRESERVED (accounted)  theorem reverb_envelope_decreases_with_time
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem reverb_envelope_decreases_with_time (time_s : Real) (rt60 : Real)
     (h1 : (time_s >= (0 : Real)))
     (h2 : (time_s <= T_MAX))
@@ -32,6 +37,10 @@ theorem reverb_envelope_decreases_with_time (time_s : Real) (rt60 : Real)
     (h4 : (rt60 <= RT60_MAX)) :
     (((reverb_envelope time_s rt60) >= (0 : Real))) ∧ (((reverb_envelope time_s rt60) <= (1 : Real))) := by
   unfold reverb_envelope
+  try unfold RT60_MIN at *
+  try unfold RT60_MAX at *
+  try unfold T_MAX at *
+  try unfold LN_1000 at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -56,6 +65,11 @@ theorem reverb_envelope_decreases_with_time (time_s : Real) (rt60 : Real)
 noncomputable def schroeder_gain (target_decay : Real) (n_samples : Real) (n_total : Real) : Real :=
   (target_decay ^ (n_samples / n_total))
 
+-- source obligations for schroeder_gain: {O1, O2}
+--   O1 [e4b1aedcd384] -> PRESERVED (accounted)  theorem schroeder_gain_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [278bc6d96f81] -> PRESERVED (accounted)  theorem schroeder_gain_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem schroeder_gain_in_unit_interval (target_decay : Real) (n_samples : Real) (n_total : Real)
     (h1 : (target_decay >= (1e-09 : Real)))
     (h2 : (target_decay <= (1 : Real)))
@@ -65,6 +79,10 @@ theorem schroeder_gain_in_unit_interval (target_decay : Real) (n_samples : Real)
     (h6 : (n_total <= (1000000.0 : Real))) :
     (((schroeder_gain target_decay n_samples n_total) >= (0 : Real))) ∧ (((schroeder_gain target_decay n_samples n_total) <= (1 : Real))) := by
   unfold schroeder_gain
+  try unfold RT60_MIN at *
+  try unfold RT60_MAX at *
+  try unfold T_MAX at *
+  try unfold LN_1000 at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

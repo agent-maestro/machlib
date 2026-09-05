@@ -23,6 +23,7 @@ noncomputable def TWO_PI : Real := (6.283185307179586 : Real)
 noncomputable def chirp_phase (start_freq : Real) (chirp_rate : Real) (time_s : Real) : Real :=
   (TWO_PI * ((start_freq * time_s) + ((((0.5 : Real) * chirp_rate) * time_s) * time_s)))
 
+-- obligations for chirp_phase: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,6 +41,7 @@ theorem chirp_phase_zero_at_t0 (start_freq : Real) (chirp_rate : Real) (time_s :
 noncomputable def chirp_instantaneous_freq (start_freq : Real) (chirp_rate : Real) (time_s : Real) : Real :=
   (start_freq + (chirp_rate * time_s))
 
+-- obligations for chirp_instantaneous_freq: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -57,6 +59,11 @@ theorem chirp_instantaneous_freq_linear_in_t (start_freq : Real) (chirp_rate : R
 noncomputable def chirp_sample (start_freq : Real) (chirp_rate : Real) (time_s : Real) : Real :=
   (Real.cos (TWO_PI * ((start_freq * time_s) + ((((0.5 : Real) * chirp_rate) * time_s) * time_s))))
 
+-- source obligations for chirp_sample: {O1, O2}
+--   O1 [47b8b25003ff] -> PRESERVED (accounted)  theorem chirp_sample_bounded_by_unit
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [dae9456c0a97] -> PRESERVED (accounted)  theorem chirp_sample_bounded_by_unit
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem chirp_sample_bounded_by_unit (start_freq : Real) (chirp_rate : Real) (time_s : Real)
     (h1 : (start_freq >= (0 : Real)))
     (h2 : (start_freq <= F0_MAX))
@@ -65,6 +72,10 @@ theorem chirp_sample_bounded_by_unit (start_freq : Real) (chirp_rate : Real) (ti
     (h5 : (time_s <= T_MAX)) :
     (((chirp_sample start_freq chirp_rate time_s) >= (-(1 : Real)))) ∧ (((chirp_sample start_freq chirp_rate time_s) <= (1 : Real))) := by
   unfold chirp_sample
+  try unfold F0_MAX at *
+  try unfold RATE_MAX at *
+  try unfold T_MAX at *
+  try unfold TWO_PI at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

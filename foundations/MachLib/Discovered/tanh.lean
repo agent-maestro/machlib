@@ -20,10 +20,16 @@ noncomputable def TANH_X_MAX : Real := (30.0 : Real)
 noncomputable def tanh_activation (x : Real) : Real :=
   (Real.tanh x)
 
+-- source obligations for tanh_activation: {O1, O2}
+--   O1 [4a47fe809f49] -> PRESERVED (accounted)  theorem tanh_monotone_in_x
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [6b0d99305139] -> PRESERVED (accounted)  theorem tanh_monotone_in_x
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem tanh_monotone_in_x (x : Real)
     (h1 : ((abs x) < TANH_X_MAX)) :
     (((tanh_activation x) >= (-(1 : Real)))) ∧ (((tanh_activation x) <= (1 : Real))) := by
   unfold tanh_activation
+  try unfold TANH_X_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -48,10 +54,16 @@ theorem tanh_monotone_in_x (x : Real)
 noncomputable def tanh_from_sigmoid (x : Real) : Real :=
   (((2.0 : Real) / ((1 : Real) + (Real.exp ((-2.0 : Real) * x)))) - (1 : Real))
 
+-- source obligations for tanh_from_sigmoid: {O1, O2}
+--   O1 [04e146c7b6f5] -> PRESERVED (accounted)  theorem tanh_from_sigmoid_equals_canonical
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [8be9b8523869] -> PRESERVED (accounted)  theorem tanh_from_sigmoid_equals_canonical
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem tanh_from_sigmoid_equals_canonical (x : Real)
     (h1 : ((abs x) < TANH_X_MAX)) :
     (((tanh_from_sigmoid x) >= (-(1 : Real)))) ∧ (((tanh_from_sigmoid x) <= (1 : Real))) := by
   unfold tanh_from_sigmoid
+  try unfold TANH_X_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -76,10 +88,16 @@ theorem tanh_from_sigmoid_equals_canonical (x : Real)
 noncomputable def hard_tanh (x : Real) : Real :=
   (min (max x (-1.0 : Real)) (1 : Real))
 
+-- source obligations for hard_tanh: {O1, O2}
+--   O1 [fd1bc7091673] -> PRESERVED (accounted)  theorem hard_tanh_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [99592f3b7ef2] -> PRESERVED (accounted)  theorem hard_tanh_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem hard_tanh_bounded (x : Real)
     (h_clamp1 : (-1.0 : Real) ≤ (1 : Real)) :
     (((hard_tanh x) >= (-(1 : Real)))) ∧ (((hard_tanh x) <= (1 : Real))) := by
   unfold hard_tanh
+  try unfold TANH_X_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

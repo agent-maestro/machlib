@@ -24,6 +24,7 @@ axiom true_heading (magnetic_heading : Real) (declination : Real) : Real  -- hel
 noncomputable def tilt_compensated_x (mag_x : Real) (mag_z : Real) (pitch : Real) : Real :=
   ((mag_x * (Real.cos pitch)) + (mag_z * (Real.sin pitch)))
 
+-- obligations for tilt_compensated_x: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -39,6 +40,7 @@ theorem tilt_x_unchanged_at_level (mag_x : Real) (mag_z : Real) (pitch : Real)
 noncomputable def tilt_compensated_y (mag_x : Real) (mag_y : Real) (mag_z : Real) (pitch : Real) (roll : Real) : Real :=
   ((((mag_x * (Real.sin roll)) * (Real.sin pitch)) + (mag_y * (Real.cos roll))) - ((mag_z * (Real.sin roll)) * (Real.cos pitch)))
 
+-- obligations for tilt_compensated_y: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -56,11 +58,19 @@ theorem tilt_y_unchanged_at_level (mag_x : Real) (mag_y : Real) (mag_z : Real) (
 noncomputable def magnetic_heading (mag_x_h : Real) (mag_y_h : Real) : Real :=
   (atan2 (-mag_y_h) mag_x_h)
 
+-- source obligations for magnetic_heading: {O1, O2}
+--   O1 [1592ac6b59cc] -> PRESERVED (accounted)  theorem heading_zero_due_north
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [314de6ceb97f] -> PRESERVED (accounted)  theorem heading_zero_due_north
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem heading_zero_due_north (mag_x_h : Real) (mag_y_h : Real)
     (h1 : ((abs mag_x_h) <= MAG_COMPONENT_MAX))
     (h2 : ((abs mag_y_h) <= MAG_COMPONENT_MAX)) :
     (((magnetic_heading mag_x_h mag_y_h) >= (-(3.1416 : Real)))) ∧ (((magnetic_heading mag_x_h mag_y_h) <= (3.1416 : Real))) := by
   unfold magnetic_heading
+  try unfold MAG_COMPONENT_MAX at *
+  try unfold ANGLE_MAX at *
+  try unfold PITCH_ROLL_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

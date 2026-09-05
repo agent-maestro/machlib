@@ -24,6 +24,7 @@ axiom e_swish (x : Real) (beta : Real) : Real  -- helper (axiomatised in MachLib
 noncomputable def swish (x : Real) : Real :=
   (x / ((1 : Real) + (Real.exp (-x))))
 
+-- obligations for swish: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -37,6 +38,7 @@ theorem swish_smooth_at_zero (x : Real)
 noncomputable def hard_swish (x : Real) : Real :=
   ((x * (min (max (x + HARD_SWISH_OFFSET) (0 : Real)) HARD_SWISH_DENOM)) / HARD_SWISH_DENOM)
 
+-- obligations for hard_swish: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

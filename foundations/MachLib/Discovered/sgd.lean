@@ -25,6 +25,7 @@ axiom sgdw_step (theta : Real) (gradient : Real) (lr : Real) (weight_decay : Rea
 noncomputable def sgd_step (theta : Real) (gradient : Real) (lr : Real) : Real :=
   (theta - (lr * gradient))
 
+-- obligations for sgd_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -41,6 +42,7 @@ theorem sgd_step_descent_when_grad_signed (theta : Real) (gradient : Real) (lr :
 noncomputable def momentum_velocity_step (velocity : Real) (gradient : Real) (beta : Real) : Real :=
   ((beta * velocity) + gradient)
 
+-- obligations for momentum_velocity_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -57,6 +59,7 @@ theorem momentum_velocity_decays_with_beta (velocity : Real) (gradient : Real) (
 noncomputable def nesterov_step (theta : Real) (velocity : Real) (gradient : Real) (beta : Real) (lr : Real) : Real :=
   (theta - (lr * ((beta * velocity) + gradient)))
 
+-- obligations for nesterov_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

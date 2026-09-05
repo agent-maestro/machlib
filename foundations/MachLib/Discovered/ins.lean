@@ -21,11 +21,16 @@ noncomputable def ATT_LIMIT : Real := (6.28319 : Real)
 noncomputable def attitude_step (attitude : Real) (rate_gyro : Real) : Real :=
   ((attitude + (rate_gyro * dt)) * ((1 : Real) - (((((0.5 : Real) * rate_gyro) * dt) * rate_gyro) * dt)))
 
+-- source obligations for attitude_step: {O1}
+--   O1 [a5b58aa9e5a1] -> PRESERVED (accounted)  theorem ins_attitude_update_bounded
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ins_attitude_update_bounded (attitude : Real) (rate_gyro : Real)
     (h1 : ((abs attitude) < ATT_LIMIT))
     (h2 : ((abs rate_gyro) < (100.0 : Real))) :
     ((abs (attitude_step attitude rate_gyro)) < (ATT_LIMIT * (2.0 : Real))) := by
   unfold attitude_step
+  try unfold dt at *
+  try unfold ATT_LIMIT at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

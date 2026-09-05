@@ -22,6 +22,7 @@ axiom update_variance (gain : Real) (p_pred : Real) : Real  -- helper (axiomatis
 noncomputable def predict_position (x_pos : Real) (x_vel : Real) (dt : Real) : Real :=
   (x_pos + (x_vel * dt))
 
+-- obligations for predict_position: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -35,6 +36,7 @@ theorem track_position_predict_linear (x_pos : Real) (x_vel : Real) (dt : Real)
 noncomputable def innovation (z_meas : Real) (x_pred : Real) : Real :=
   (z_meas - x_pred)
 
+-- obligations for innovation: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -47,6 +49,11 @@ theorem track_innovation_zero_when_aligned (z_meas : Real) (x_pred : Real) :
 noncomputable def kalman_gain (p_pred : Real) (r_meas : Real) : Real :=
   (p_pred / (p_pred + r_meas))
 
+-- source obligations for kalman_gain: {O1, O2}
+--   O1 [5365885cbe55] -> PRESERVED (accounted)  theorem track_gain_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [55757c17dec0] -> PRESERVED (accounted)  theorem track_gain_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem track_gain_in_unit_interval (p_pred : Real) (r_meas : Real)
     (h1 : (p_pred >= (0 : Real)))
     (h2 : (r_meas > (0 : Real))) :

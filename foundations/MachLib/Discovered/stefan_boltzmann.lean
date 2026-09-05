@@ -24,6 +24,9 @@ noncomputable def EPS_MAX : Real := (1 : Real)
 noncomputable def radiative_flux (emissivity : Real) (temperature_k : Real) : Real :=
   ((emissivity * SIGMA_SB) * (temperature_k ^ (4.0 : Real)))
 
+-- source obligations for radiative_flux: {O1}
+--   O1 [ca718fd05d73] -> PRESERVED (accounted)  theorem stefan_boltzmann_monotone_in_T
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem stefan_boltzmann_monotone_in_T (emissivity : Real) (temperature_k : Real)
     (h1 : (emissivity >= EPS_MIN))
     (h2 : (emissivity <= EPS_MAX))
@@ -31,6 +34,11 @@ theorem stefan_boltzmann_monotone_in_T (emissivity : Real) (temperature_k : Real
     (h4 : (temperature_k <= T_MAX)) :
     ((radiative_flux emissivity temperature_k) >= (0 : Real)) := by
   unfold radiative_flux
+  try unfold SIGMA_SB at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold EPS_MIN at *
+  try unfold EPS_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -54,6 +62,7 @@ theorem stefan_boltzmann_monotone_in_T (emissivity : Real) (temperature_k : Real
 noncomputable def net_exchange (emissivity : Real) (surface_t : Real) (ambient_t : Real) : Real :=
   ((emissivity * SIGMA_SB) * ((surface_t ^ (4.0 : Real)) - (ambient_t ^ (4.0 : Real))))
 
+-- obligations for net_exchange: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -72,11 +81,19 @@ theorem net_exchange_zero_at_equilibrium (emissivity : Real) (surface_t : Real) 
 noncomputable def wien_peak_wavelength (temperature_k : Real) : Real :=
   ((0.002897771955 : Real) / temperature_k)
 
+-- source obligations for wien_peak_wavelength: {O1}
+--   O1 [8912d0d490c8] -> PRESERVED (accounted)  theorem wien_inversely_proportional_to_T
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem wien_inversely_proportional_to_T (temperature_k : Real)
     (h1 : (temperature_k >= T_MIN))
     (h2 : (temperature_k <= T_MAX)) :
     ((wien_peak_wavelength temperature_k) > (0 : Real)) := by
   unfold wien_peak_wavelength
+  try unfold SIGMA_SB at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold EPS_MIN at *
+  try unfold EPS_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

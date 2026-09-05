@@ -27,6 +27,7 @@ noncomputable def T_CONST_MAX : Real := (60.0 : Real)
 noncomputable def terminal_pn_command (n_terminal : Real) (closing_speed : Real) (sigma_dot : Real) (time_to_go : Real) (time_constant : Real) : Real :=
   ((((n_terminal * closing_speed) * sigma_dot) * time_to_go) / time_constant)
 
+-- obligations for terminal_pn_command: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -44,11 +45,22 @@ theorem terminal_pn_high_gain_at_tgo_zero (n_terminal : Real) (closing_speed : R
 noncomputable def time_to_go_estimate (range_m : Real) (closing_speed : Real) : Real :=
   (range_m / closing_speed)
 
+-- source obligations for time_to_go_estimate: {O1}
+--   O1 [ab5000dfe649] -> PRESERVED (accounted)  theorem tgo_inverse_proportional_to_closing
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem tgo_inverse_proportional_to_closing (range_m : Real) (closing_speed : Real)
     (h_range_m : (((0 : Real) <= range_m) ∧ (range_m <= (500000.0 : Real))))
     (h_closing_speed : (((1 : Real) <= closing_speed) ∧ (closing_speed <= V_MAX))) :
     ((time_to_go_estimate range_m closing_speed) >= (0 : Real)) := by
   unfold time_to_go_estimate
+  try unfold N_TERM_MIN at *
+  try unfold N_TERM_MAX at *
+  try unfold V_MAX at *
+  try unfold SIGMA_MAX at *
+  try unfold TGO_MIN at *
+  try unfold TGO_MAX at *
+  try unfold T_CONST_MIN at *
+  try unfold T_CONST_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -72,6 +84,7 @@ theorem tgo_inverse_proportional_to_closing (range_m : Real) (closing_speed : Re
 noncomputable def true_pn_gain (n_base : Real) (time_to_go : Real) (total_time : Real) : Real :=
   (n_base * ((1 : Real) + ((total_time - time_to_go) / total_time)))
 
+-- obligations for true_pn_gain: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

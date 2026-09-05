@@ -31,6 +31,9 @@ axiom bs_d2 (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_ex
 noncomputable def rho_call (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   (((strike * time_to_expiry) * (Real.exp ((-rate) * time_to_expiry))) * (HALF * (ONE + (Real.tanh (SQRT_2_OVER_PI * ((bs_d2 spot strike rate vol time_to_expiry) + (((GELU_C3 * (bs_d2 spot strike rate vol time_to_expiry)) * (bs_d2 spot strike rate vol time_to_expiry)) * (bs_d2 spot strike rate vol time_to_expiry))))))))
 
+-- source obligations for rho_call: {O1}
+--   O1 [3b22740bfc24] -> PRESERVED (accounted)  theorem rho_call_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rho_call_nonneg (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
     (h_spot : (spot > (0 : Real)))
     (h_strike : (((0 : Real) < strike) ∧ (strike <= STRIKE_MAX)))
@@ -39,6 +42,14 @@ theorem rho_call_nonneg (spot : Real) (strike : Real) (rate : Real) (vol : Real)
     (h_time_to_expiry : ((TINY_T <= time_to_expiry) ∧ (time_to_expiry <= T_MAX))) :
     ((rho_call spot strike rate vol time_to_expiry) >= (0 : Real)) := by
   unfold rho_call
+  try unfold SQRT_2_OVER_PI at *
+  try unfold GELU_C3 at *
+  try unfold HALF at *
+  try unfold ONE at *
+  try unfold TINY_T at *
+  try unfold T_MAX at *
+  try unfold STRIKE_MAX at *
+  try unfold RATE_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -62,6 +73,9 @@ theorem rho_call_nonneg (spot : Real) (strike : Real) (rate : Real) (vol : Real)
 noncomputable def rho_put (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   ((((-strike) * time_to_expiry) * (Real.exp ((-rate) * time_to_expiry))) * (ONE - (HALF * (ONE + (Real.tanh (SQRT_2_OVER_PI * ((bs_d2 spot strike rate vol time_to_expiry) + (((GELU_C3 * (bs_d2 spot strike rate vol time_to_expiry)) * (bs_d2 spot strike rate vol time_to_expiry)) * (bs_d2 spot strike rate vol time_to_expiry)))))))))
 
+-- source obligations for rho_put: {O1}
+--   O1 [3523072b9992] -> PRESERVED (accounted)  theorem rho_put_nonpos
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rho_put_nonpos (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
     (h_spot : (spot > (0 : Real)))
     (h_strike : (((0 : Real) < strike) ∧ (strike <= STRIKE_MAX)))
@@ -70,6 +84,14 @@ theorem rho_put_nonpos (spot : Real) (strike : Real) (rate : Real) (vol : Real) 
     (h_time_to_expiry : ((TINY_T <= time_to_expiry) ∧ (time_to_expiry <= T_MAX))) :
     ((rho_put spot strike rate vol time_to_expiry) <= (0 : Real)) := by
   unfold rho_put
+  try unfold SQRT_2_OVER_PI at *
+  try unfold GELU_C3 at *
+  try unfold HALF at *
+  try unfold ONE at *
+  try unfold TINY_T at *
+  try unfold T_MAX at *
+  try unfold STRIKE_MAX at *
+  try unfold RATE_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

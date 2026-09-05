@@ -25,11 +25,20 @@ noncomputable def DT_MAX : Real := (10.0 : Real)
 noncomputable def up_factor (vol : Real) (dt : Real) : Real :=
   (Real.exp (vol * (Real.sqrt dt)))
 
+-- source obligations for up_factor: {O1}
+--   O1 [aea9c18b61d2] -> PRESERVED (accounted)  theorem binomial_up_factor_strictly_above_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem binomial_up_factor_strictly_above_one (vol : Real) (dt : Real)
     (h_vol : ((VOL_MIN <= vol) ∧ (vol <= VOL_MAX)))
     (h_dt : ((DT_MIN <= dt) ∧ (dt <= DT_MAX))) :
     ((up_factor vol dt) > (1 : Real)) := by
   unfold up_factor
+  try unfold ONE at *
+  try unfold TINY at *
+  try unfold VOL_MIN at *
+  try unfold VOL_MAX at *
+  try unfold DT_MIN at *
+  try unfold DT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -53,11 +62,22 @@ theorem binomial_up_factor_strictly_above_one (vol : Real) (dt : Real)
 noncomputable def down_factor (vol : Real) (dt : Real) : Real :=
   (ONE / (Real.exp (vol * (Real.sqrt dt))))
 
+-- source obligations for down_factor: {O1, O2}
+--   O1 [2fddd148ca4c] -> PRESERVED (accounted)  theorem binomial_down_factor_below_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [a7d76fc2d056] -> PRESERVED (accounted)  theorem binomial_down_factor_below_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem binomial_down_factor_below_one (vol : Real) (dt : Real)
     (h_vol : ((VOL_MIN <= vol) ∧ (vol <= VOL_MAX)))
     (h_dt : ((DT_MIN <= dt) ∧ (dt <= DT_MAX))) :
     (((down_factor vol dt) < (1 : Real))) ∧ (((down_factor vol dt) > (0 : Real))) := by
   unfold down_factor
+  try unfold ONE at *
+  try unfold TINY at *
+  try unfold VOL_MIN at *
+  try unfold VOL_MAX at *
+  try unfold DT_MIN at *
+  try unfold DT_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -82,6 +102,11 @@ theorem binomial_down_factor_below_one (vol : Real) (dt : Real)
 noncomputable def risk_neutral_prob (rate : Real) (vol : Real) (dt : Real) : Real :=
   (((Real.exp (rate * dt)) - (ONE / (Real.exp (vol * (Real.sqrt dt))))) / (((Real.exp (vol * (Real.sqrt dt))) - (ONE / (Real.exp (vol * (Real.sqrt dt))))) + TINY))
 
+-- source obligations for risk_neutral_prob: {O1, O2}
+--   O1 [df1e5b1cec8c] -> PRESERVED (accounted)  theorem risk_neutral_prob_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [1c82e9b4e1ad] -> PRESERVED (accounted)  theorem risk_neutral_prob_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem risk_neutral_prob_in_unit_interval (rate : Real) (vol : Real) (dt : Real)
     (h_vol : ((VOL_MIN <= vol) ∧ (vol <= VOL_MAX)))
     (h_dt : ((DT_MIN <= dt) ∧ (dt <= DT_MAX)))
@@ -89,6 +114,12 @@ theorem risk_neutral_prob_in_unit_interval (rate : Real) (vol : Real) (dt : Real
     (h_assume2 : ((rate * dt) > ((-vol) * (Real.sqrt dt)))) :
     (((risk_neutral_prob rate vol dt) > (0 : Real))) ∧ (((risk_neutral_prob rate vol dt) < (1 : Real))) := by
   unfold risk_neutral_prob
+  try unfold ONE at *
+  try unfold TINY at *
+  try unfold VOL_MIN at *
+  try unfold VOL_MAX at *
+  try unfold DT_MIN at *
+  try unfold DT_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -113,6 +144,9 @@ theorem risk_neutral_prob_in_unit_interval (rate : Real) (vol : Real) (dt : Real
 noncomputable def step_back (rate : Real) (dt : Real) (p : Real) (value_up : Real) (value_down : Real) : Real :=
   ((Real.exp ((-rate) * dt)) * ((p * value_up) + ((ONE - p) * value_down)))
 
+-- source obligations for step_back: {O1}
+--   O1 [f72448efbb4b] -> PRESERVED (accounted)  theorem binomial_step_back_convex_combination
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem binomial_step_back_convex_combination (rate : Real) (dt : Real) (p : Real) (value_up : Real) (value_down : Real)
     (h_dt : ((DT_MIN <= dt) ∧ (dt <= DT_MAX)))
     (h_p : (((0 : Real) <= p) ∧ (p <= (1 : Real))))
@@ -120,6 +154,12 @@ theorem binomial_step_back_convex_combination (rate : Real) (dt : Real) (p : Rea
     (h_value_down : (value_down >= (0 : Real))) :
     ((step_back rate dt p value_up value_down) >= (0 : Real)) := by
   unfold step_back
+  try unfold ONE at *
+  try unfold TINY at *
+  try unfold VOL_MIN at *
+  try unfold VOL_MAX at *
+  try unfold DT_MIN at *
+  try unfold DT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

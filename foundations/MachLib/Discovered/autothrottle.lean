@@ -25,6 +25,11 @@ noncomputable def DT_MAX : Real := (1 : Real)
 noncomputable def autothrottle_step (speed_target : Real) (speed_meas : Real) (integral : Real) (kp : Real) (ki : Real) : Real :=
   (min (max ((kp * (speed_target - speed_meas)) + (ki * integral)) (0 : Real)) THROTTLE_MAX)
 
+-- source obligations for autothrottle_step: {O1, O2}
+--   O1 [3b3d3c7a785c] -> PRESERVED (accounted)  theorem autothrottle_within_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [a926ecc05d16] -> PRESERVED (accounted)  theorem autothrottle_within_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem autothrottle_within_unit_interval (speed_target : Real) (speed_meas : Real) (integral : Real) (kp : Real) (ki : Real)
     (h_speed_target : (-V_MAX ≤ speed_target ∧ speed_target ≤ V_MAX))
     (h_speed_meas : (-V_MAX ≤ speed_meas ∧ speed_meas ≤ V_MAX))
@@ -34,6 +39,12 @@ theorem autothrottle_within_unit_interval (speed_target : Real) (speed_meas : Re
     (h_clamp1 : (0 : Real) ≤ THROTTLE_MAX) :
     (((autothrottle_step speed_target speed_meas integral kp ki) >= (0 : Real))) ∧ (((autothrottle_step speed_target speed_meas integral kp ki) <= THROTTLE_MAX)) := by
   unfold autothrottle_step
+  try unfold V_MAX at *
+  try unfold KP_MAX at *
+  try unfold KI_MAX at *
+  try unfold I_LIMIT_MAX at *
+  try unfold THROTTLE_MAX at *
+  try unfold DT_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -58,6 +69,7 @@ theorem autothrottle_within_unit_interval (speed_target : Real) (speed_meas : Re
 noncomputable def speed_integral_step (integral_prev : Real) (error : Real) (error_prev : Real) (dt : Real) (saturation_active : Real) : Real :=
   (min (max (integral_prev + (((1 : Real) - saturation_active) * (((0.5 : Real) * (error + error_prev)) * dt))) (-I_LIMIT_MAX)) I_LIMIT_MAX)
 
+-- obligations for speed_integral_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -76,6 +88,7 @@ theorem speed_integral_held_under_saturation (integral_prev : Real) (error : Rea
 noncomputable def rate_limited_throttle (cmd_new : Real) (cmd_prev : Real) (rate_limit : Real) (dt : Real) : Real :=
   (cmd_prev + (min (max (cmd_new - cmd_prev) (-(rate_limit * dt))) (rate_limit * dt)))
 
+-- obligations for rate_limited_throttle: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

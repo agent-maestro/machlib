@@ -23,11 +23,18 @@ noncomputable def LN10_INV : Real := (0.4342944819032518 : Real)
 noncomputable def magnitude_squared (real_part : Real) (imag_part : Real) : Real :=
   ((real_part * real_part) + (imag_part * imag_part))
 
+-- source obligations for magnitude_squared: {O1}
+--   O1 [12ee68d7ebab] -> PRESERVED (accounted)  theorem magnitude_squared_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem magnitude_squared_nonneg (real_part : Real) (imag_part : Real)
     (h1 : ((abs real_part) <= COMPONENT_MAX))
     (h2 : ((abs imag_part) <= COMPONENT_MAX)) :
     ((magnitude_squared real_part imag_part) >= (0 : Real)) := by
   unfold magnitude_squared
+  try unfold COMPONENT_MAX at *
+  try unfold POWER_MIN at *
+  try unfold POWER_MAX at *
+  try unfold LN10_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -51,6 +58,7 @@ theorem magnitude_squared_nonneg (real_part : Real) (imag_part : Real)
 noncomputable def log_magnitude_db (power : Real) : Real :=
   (((10.0 : Real) * LN10_INV) * (Real.log power))
 
+-- obligations for log_magnitude_db: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -65,6 +73,11 @@ theorem log_magnitude_db_finite_above_floor (power : Real)
 noncomputable def spectrum_detect (power : Real) (noise_floor : Real) (margin : Real) : Real :=
   ((min (max (power - (margin * noise_floor)) (0 : Real)) (1 : Real)) / (min (max (power - (margin * noise_floor)) (1e-30 : Real)) (1 : Real)))
 
+-- source obligations for spectrum_detect: {O1, O2}
+--   O1 [f591963594d1] -> PRESERVED (accounted)  theorem spectrum_detect_zero_below_threshold
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [1927dd99ab48] -> PRESERVED (accounted)  theorem spectrum_detect_zero_below_threshold
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem spectrum_detect_zero_below_threshold (power : Real) (noise_floor : Real) (margin : Real)
     (h1 : (power >= (0 : Real)))
     (h2 : (power <= POWER_MAX))
@@ -76,6 +89,10 @@ theorem spectrum_detect_zero_below_threshold (power : Real) (noise_floor : Real)
     (h_clamp2 : (1e-30 : Real) ≤ (1 : Real)) :
     (((spectrum_detect power noise_floor margin) >= (0 : Real))) ∧ (((spectrum_detect power noise_floor margin) <= (1 : Real))) := by
   unfold spectrum_detect
+  try unfold COMPONENT_MAX at *
+  try unfold POWER_MIN at *
+  try unfold POWER_MAX at *
+  try unfold LN10_INV at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

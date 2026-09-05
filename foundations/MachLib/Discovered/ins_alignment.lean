@@ -23,6 +23,7 @@ noncomputable def PITCH_MAX : Real := (1.5708 : Real)
 noncomputable def coarse_pitch (accel_x : Real) (accel_y : Real) (accel_z : Real) : Real :=
   (atan2 (-accel_x) (Real.sqrt ((accel_y * accel_y) + (accel_z * accel_z))))
 
+-- obligations for coarse_pitch: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -38,6 +39,7 @@ theorem pitch_initial_zero_at_level (accel_x : Real) (accel_y : Real) (accel_z :
 noncomputable def coarse_roll (accel_y : Real) (accel_z : Real) : Real :=
   (atan2 accel_y accel_z)
 
+-- obligations for coarse_roll: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -52,6 +54,7 @@ theorem roll_initial_zero_at_level (accel_y : Real) (accel_z : Real)
 noncomputable def coarse_heading (gyro_y_horizontal : Real) (gyro_x_horizontal : Real) : Real :=
   (atan2 (-gyro_y_horizontal) gyro_x_horizontal)
 
+-- obligations for coarse_heading: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -66,6 +69,7 @@ theorem heading_initial_zero_due_north (gyro_y_horizontal : Real) (gyro_x_horizo
 noncomputable def gravity_residual (accel_x : Real) (accel_y : Real) (accel_z : Real) : Real :=
   ((Real.sqrt (((accel_x * accel_x) + (accel_y * accel_y)) + (accel_z * accel_z))) - G_REF)
 
+-- obligations for gravity_residual: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

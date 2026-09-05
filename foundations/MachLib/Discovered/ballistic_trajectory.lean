@@ -24,6 +24,7 @@ noncomputable def DT_MAX : Real := (1 : Real)
 noncomputable def x_step (x_prev : Real) (vx : Real) (dt : Real) : Real :=
   (x_prev + (vx * dt))
 
+-- obligations for x_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -39,6 +40,7 @@ theorem x_step_linear_in_dt (x_prev : Real) (vx : Real) (dt : Real)
 noncomputable def y_step (y_prev : Real) (vy : Real) (dt : Real) : Real :=
   (y_prev + (vy * dt))
 
+-- obligations for y_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -54,6 +56,7 @@ theorem y_step_linear_in_dt (y_prev : Real) (vy : Real) (dt : Real)
 noncomputable def vx_step (vx_prev : Real) (drag_k : Real) (dt : Real) : Real :=
   (vx_prev - ((drag_k * vx_prev) * dt))
 
+-- obligations for vx_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -69,6 +72,7 @@ theorem vx_step_decays_with_drag (vx_prev : Real) (drag_k : Real) (dt : Real)
 noncomputable def vy_step (vy_prev : Real) (drag_k : Real) (dt : Real) : Real :=
   ((vy_prev - (G_GRAVITY * dt)) - ((drag_k * vy_prev) * dt))
 
+-- obligations for vy_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -84,11 +88,19 @@ theorem vy_step_includes_gravity_and_drag (vy_prev : Real) (drag_k : Real) (dt :
 noncomputable def vacuum_range (muzzle_velocity : Real) (elevation_angle : Real) : Real :=
   (((muzzle_velocity * muzzle_velocity) * (Real.sin ((2.0 : Real) * elevation_angle))) / G_GRAVITY)
 
+-- source obligations for vacuum_range: {O1}
+--   O1 [add2df196a3d] -> PRESERVED (accounted)  theorem vacuum_range_max_at_45deg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem vacuum_range_max_at_45deg (muzzle_velocity : Real) (elevation_angle : Real)
     (h_muzzle_velocity : (((0 : Real) <= muzzle_velocity) ∧ (muzzle_velocity <= VEL_MAX)))
     (h_elevation_angle : (-(1.5708 : Real) ≤ elevation_angle ∧ elevation_angle ≤ (1.5708 : Real))) :
     ((vacuum_range muzzle_velocity elevation_angle) >= (0 : Real)) := by
   unfold vacuum_range
+  try unfold G_GRAVITY at *
+  try unfold POS_MAX at *
+  try unfold VEL_MAX at *
+  try unfold KD_MAX at *
+  try unfold DT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

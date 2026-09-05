@@ -20,6 +20,7 @@ noncomputable def TAU : Real := (6.283185307179586 : Real)
 noncomputable def pulse_tap (sample_i : Real) (sample_q : Real) (phase : Real) : Real :=
   ((sample_i * (Real.cos phase)) + (sample_q * (Real.sin phase)))
 
+-- obligations for pulse_tap: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

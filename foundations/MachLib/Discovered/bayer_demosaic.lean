@@ -21,6 +21,11 @@ noncomputable def PIX_MAX : Real := (65535.0 : Real)
 noncomputable def demosaic_green_at_red (g_north : Real) (g_south : Real) (g_east : Real) (g_west : Real) : Real :=
   ((0.25 : Real) * (((g_north + g_south) + g_east) + g_west))
 
+-- source obligations for demosaic_green_at_red: {O1, O2}
+--   O1 [151323173c42] -> PRESERVED (accounted)  theorem demosaic_g_at_r_in_pixel_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [e317955d7645] -> PRESERVED (accounted)  theorem demosaic_g_at_r_in_pixel_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem demosaic_g_at_r_in_pixel_range (g_north : Real) (g_south : Real) (g_east : Real) (g_west : Real)
     (h1 : (g_north >= PIX_MIN))
     (h2 : (g_north <= PIX_MAX))
@@ -32,6 +37,8 @@ theorem demosaic_g_at_r_in_pixel_range (g_north : Real) (g_south : Real) (g_east
     (h8 : (g_west <= PIX_MAX)) :
     (((demosaic_green_at_red g_north g_south g_east g_west) >= PIX_MIN)) ∧ (((demosaic_green_at_red g_north g_south g_east g_west) <= PIX_MAX)) := by
   unfold demosaic_green_at_red
+  try unfold PIX_MIN at *
+  try unfold PIX_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -56,6 +63,11 @@ theorem demosaic_g_at_r_in_pixel_range (g_north : Real) (g_south : Real) (g_east
 noncomputable def demosaic_red_at_green_horiz (r_left : Real) (r_right : Real) : Real :=
   ((0.5 : Real) * (r_left + r_right))
 
+-- source obligations for demosaic_red_at_green_horiz: {O1, O2}
+--   O1 [f2c355111e2b] -> PRESERVED (accounted)  theorem demosaic_r_at_g_in_pixel_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [a0e229a74a70] -> PRESERVED (accounted)  theorem demosaic_r_at_g_in_pixel_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem demosaic_r_at_g_in_pixel_range (r_left : Real) (r_right : Real)
     (h1 : (r_left >= PIX_MIN))
     (h2 : (r_left <= PIX_MAX))
@@ -63,6 +75,8 @@ theorem demosaic_r_at_g_in_pixel_range (r_left : Real) (r_right : Real)
     (h4 : (r_right <= PIX_MAX)) :
     (((demosaic_red_at_green_horiz r_left r_right) >= PIX_MIN)) ∧ (((demosaic_red_at_green_horiz r_left r_right) <= PIX_MAX)) := by
   unfold demosaic_red_at_green_horiz
+  try unfold PIX_MIN at *
+  try unfold PIX_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -87,6 +101,11 @@ theorem demosaic_r_at_g_in_pixel_range (r_left : Real) (r_right : Real)
 noncomputable def demosaic_blue_at_red (b_nw : Real) (b_ne : Real) (b_sw : Real) (b_se : Real) : Real :=
   ((0.25 : Real) * (((b_nw + b_ne) + b_sw) + b_se))
 
+-- source obligations for demosaic_blue_at_red: {O1, O2}
+--   O1 [23725ee1801b] -> PRESERVED (accounted)  theorem demosaic_b_at_r_in_pixel_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [627cab5c8bdf] -> PRESERVED (accounted)  theorem demosaic_b_at_r_in_pixel_range
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem demosaic_b_at_r_in_pixel_range (b_nw : Real) (b_ne : Real) (b_sw : Real) (b_se : Real)
     (h1 : (b_nw >= PIX_MIN))
     (h2 : (b_nw <= PIX_MAX))
@@ -98,6 +117,8 @@ theorem demosaic_b_at_r_in_pixel_range (b_nw : Real) (b_ne : Real) (b_sw : Real)
     (h8 : (b_se <= PIX_MAX)) :
     (((demosaic_blue_at_red b_nw b_ne b_sw b_se) >= PIX_MIN)) ∧ (((demosaic_blue_at_red b_nw b_ne b_sw b_se) <= PIX_MAX)) := by
   unfold demosaic_blue_at_red
+  try unfold PIX_MIN at *
+  try unfold PIX_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -122,6 +143,9 @@ theorem demosaic_b_at_r_in_pixel_range (b_nw : Real) (b_ne : Real) (b_sw : Real)
 noncomputable def white_balance_channel (pixel : Real) (gain : Real) : Real :=
   (min (max (pixel * gain) PIX_MIN) PIX_MAX)
 
+-- source obligations for white_balance_channel: {O1}
+--   O1 [7722c79fd105] -> PRESERVED (accounted)  theorem white_balance_scales_channel
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem white_balance_scales_channel (pixel : Real) (gain : Real)
     (h1 : (pixel >= PIX_MIN))
     (h2 : (pixel <= PIX_MAX))
@@ -130,6 +154,8 @@ theorem white_balance_scales_channel (pixel : Real) (gain : Real)
     (h_clamp1 : PIX_MIN ≤ PIX_MAX) :
     ((white_balance_channel pixel gain) >= PIX_MIN) := by
   unfold white_balance_channel
+  try unfold PIX_MIN at *
+  try unfold PIX_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

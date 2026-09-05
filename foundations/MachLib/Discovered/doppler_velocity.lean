@@ -25,6 +25,7 @@ noncomputable def PRF_MAX : Real := (1000000.0 : Real)
 noncomputable def doppler_shift_hz (radial_velocity : Real) (wavelength : Real) : Real :=
   (((2.0 : Real) * radial_velocity) / wavelength)
 
+-- obligations for doppler_shift_hz: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,6 +41,7 @@ theorem doppler_shift_proportional_to_velocity (radial_velocity : Real) (wavelen
 noncomputable def velocity_from_shift (doppler_hz : Real) (wavelength : Real) : Real :=
   (((0.5 : Real) * doppler_hz) * wavelength)
 
+-- obligations for velocity_from_shift: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -55,6 +57,9 @@ theorem velocity_from_shift_signed (doppler_hz : Real) (wavelength : Real)
 noncomputable def unambiguous_velocity (pulse_repetition_freq : Real) (wavelength : Real) : Real :=
   (((0.25 : Real) * wavelength) * pulse_repetition_freq)
 
+-- source obligations for unambiguous_velocity: {O1}
+--   O1 [c6ceefa32024] -> PRESERVED (accounted)  theorem unambiguous_velocity_proportional_to_prf
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem unambiguous_velocity_proportional_to_prf (pulse_repetition_freq : Real) (wavelength : Real)
     (h1 : (pulse_repetition_freq >= PRF_MIN))
     (h2 : (pulse_repetition_freq <= PRF_MAX))
@@ -62,6 +67,12 @@ theorem unambiguous_velocity_proportional_to_prf (pulse_repetition_freq : Real) 
     (h4 : (wavelength <= LAMBDA_MAX)) :
     ((unambiguous_velocity pulse_repetition_freq wavelength) > (0 : Real)) := by
   unfold unambiguous_velocity
+  try unfold LAMBDA_MIN at *
+  try unfold LAMBDA_MAX at *
+  try unfold VEL_MAX at *
+  try unfold FREQ_MAX at *
+  try unfold PRF_MIN at *
+  try unfold PRF_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -85,6 +96,9 @@ theorem unambiguous_velocity_proportional_to_prf (pulse_repetition_freq : Real) 
 noncomputable def velocity_resolution (n_pulses : Real) (pulse_repetition_freq : Real) (wavelength : Real) : Real :=
   ((((0.5 : Real) * wavelength) * pulse_repetition_freq) / n_pulses)
 
+-- source obligations for velocity_resolution: {O1}
+--   O1 [2bd137c6bbb0] -> PRESERVED (accounted)  theorem velocity_resolution_inverse_to_dwell
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem velocity_resolution_inverse_to_dwell (n_pulses : Real) (pulse_repetition_freq : Real) (wavelength : Real)
     (h1 : (n_pulses >= (1 : Real)))
     (h2 : (n_pulses <= (1000000.0 : Real)))
@@ -94,6 +108,12 @@ theorem velocity_resolution_inverse_to_dwell (n_pulses : Real) (pulse_repetition
     (h6 : (wavelength <= LAMBDA_MAX)) :
     ((velocity_resolution n_pulses pulse_repetition_freq wavelength) >= (0 : Real)) := by
   unfold velocity_resolution
+  try unfold LAMBDA_MIN at *
+  try unfold LAMBDA_MAX at *
+  try unfold VEL_MAX at *
+  try unfold FREQ_MAX at *
+  try unfold PRF_MIN at *
+  try unfold PRF_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

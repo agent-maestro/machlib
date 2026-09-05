@@ -25,6 +25,9 @@ axiom time_to_cmax (absorption_rate : Real) (elimination_rate : Real) : Real  --
 noncomputable def plasma_concentration (dose : Real) (bioavailability : Real) (volume_of_distribution : Real) (absorption_rate : Real) (elimination_rate : Real) (time : Real) : Real :=
   ((((absorption_rate * bioavailability) * dose) / (volume_of_distribution * (absorption_rate - elimination_rate))) * ((Real.exp ((-elimination_rate) * time)) - (Real.exp ((-absorption_rate) * time))))
 
+-- source obligations for plasma_concentration: {O1}
+--   O1 [2deb2919ec0f] -> PRESERVED (accounted)  theorem po_absorption_rises_then_decays
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem po_absorption_rises_then_decays (dose : Real) (bioavailability : Real) (volume_of_distribution : Real) (absorption_rate : Real) (elimination_rate : Real) (time : Real)
     (h1 : (dose >= (0 : Real)))
     (h2 : (bioavailability >= (0 : Real)))
@@ -40,6 +43,10 @@ theorem po_absorption_rises_then_decays (dose : Real) (bioavailability : Real) (
     (h12 : (time <= T_MAX)) :
     ((plasma_concentration dose bioavailability volume_of_distribution absorption_rate elimination_rate time) >= (0 : Real)) := by
   unfold plasma_concentration
+  try unfold T_MAX at *
+  try unfold RATE_MAX at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

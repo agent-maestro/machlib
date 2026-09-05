@@ -26,6 +26,7 @@ noncomputable def DT_MAX : Real := (0.1 : Real)
 noncomputable def voltage_step (voltage : Real) (m_gate : Real) (h_gate : Real) (n_gate : Real) (g_na : Real) (g_k : Real) (g_l : Real) (e_na : Real) (e_k : Real) (e_l : Real) (i_ext : Real) (cm : Real) (dt : Real) : Real :=
   (voltage + ((dt * (((i_ext - (((g_na * ((m_gate * m_gate) * m_gate)) * h_gate) * (voltage - e_na))) - ((g_k * (((n_gate * n_gate) * n_gate) * n_gate)) * (voltage - e_k))) - (g_l * (voltage - e_l)))) / cm))
 
+-- obligations for voltage_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -60,6 +61,11 @@ theorem hh_voltage_bounded_under_step (voltage : Real) (m_gate : Real) (h_gate :
 noncomputable def gating_step (gate : Real) (alpha : Real) (beta : Real) (dt : Real) : Real :=
   (min (max (gate + (dt * ((alpha * ((1 : Real) - gate)) - (beta * gate)))) (0 : Real)) (1 : Real))
 
+-- source obligations for gating_step: {O1, O2}
+--   O1 [3f2443d004a3] -> PRESERVED (accounted)  theorem gating_step_bounded_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [d4298f1e9094] -> PRESERVED (accounted)  theorem gating_step_bounded_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem gating_step_bounded_in_unit_interval (gate : Real) (alpha : Real) (beta : Real) (dt : Real)
     (h1 : (gate >= (0 : Real)))
     (h2 : (gate <= (1 : Real)))
@@ -72,6 +78,13 @@ theorem gating_step_bounded_in_unit_interval (gate : Real) (alpha : Real) (beta 
     (h_clamp1 : (0 : Real) ≤ (1 : Real)) :
     (((gating_step gate alpha beta dt) >= (0 : Real))) ∧ (((gating_step gate alpha beta dt) <= (1 : Real))) := by
   unfold gating_step
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold G_MAX at *
+  try unfold I_MAX at *
+  try unfold CM_MIN at *
+  try unfold CM_MAX at *
+  try unfold DT_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

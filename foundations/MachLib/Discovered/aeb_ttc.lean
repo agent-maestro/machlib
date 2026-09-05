@@ -24,11 +24,19 @@ noncomputable def EPS : Real := (0.01 : Real)
 noncomputable def ttc_constant_velocity (range_m : Real) (range_rate : Real) : Real :=
   ((-range_m) / range_rate)
 
+-- source obligations for ttc_constant_velocity: {O1}
+--   O1 [d1bea64d0a60] -> PRESERVED (accounted)  theorem ttc_positive_when_closing
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ttc_positive_when_closing (range_m : Real) (range_rate : Real)
     (h_range_m : (((0 : Real) <= range_m) ∧ (range_m <= RANGE_MAX)))
     (h_range_rate : (((-VEL_MAX) <= range_rate) ∧ (range_rate < (-EPS)))) :
     ((ttc_constant_velocity range_m range_rate) >= (0 : Real)) := by
   unfold ttc_constant_velocity
+  try unfold RANGE_MAX at *
+  try unfold VEL_MAX at *
+  try unfold ACCEL_MAX at *
+  try unfold TTC_MAX at *
+  try unfold EPS at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -52,6 +60,7 @@ theorem ttc_positive_when_closing (range_m : Real) (range_rate : Real)
 noncomputable def ttc_constant_acceleration (range_m : Real) (range_rate : Real) (rel_accel : Real) : Real :=
   (((-range_rate) - (Real.sqrt (min (max ((range_rate * range_rate) - (((2.0 : Real) * rel_accel) * range_m)) (0 : Real)) (1000000000.0 : Real)))) / (min (max rel_accel EPS) ACCEL_MAX))
 
+-- obligations for ttc_constant_acceleration: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -69,11 +78,19 @@ theorem ttc_constant_accel_real_when_discriminant_nonneg (range_m : Real) (range
 noncomputable def stopping_distance (speed : Real) (deceleration : Real) : Real :=
   ((speed * speed) / ((2.0 : Real) * deceleration))
 
+-- source obligations for stopping_distance: {O1}
+--   O1 [5dc84298f57f] -> PRESERVED (accounted)  theorem stopping_distance_quadratic_in_speed
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem stopping_distance_quadratic_in_speed (speed : Real) (deceleration : Real)
     (h_speed : (((0 : Real) <= speed) ∧ (speed <= VEL_MAX)))
     (h_deceleration : ((EPS <= deceleration) ∧ (deceleration <= ACCEL_MAX))) :
     ((stopping_distance speed deceleration) >= (0 : Real)) := by
   unfold stopping_distance
+  try unfold RANGE_MAX at *
+  try unfold VEL_MAX at *
+  try unfold ACCEL_MAX at *
+  try unfold TTC_MAX at *
+  try unfold EPS at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

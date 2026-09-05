@@ -23,11 +23,20 @@ noncomputable def F_MAX : Real := (1e+30 : Real)
 noncomputable def recession_doppler_ratio (beta : Real) : Real :=
   (Real.sqrt ((ONE - beta) / (ONE + beta)))
 
+-- source obligations for recession_doppler_ratio: {O1, O2}
+--   O1 [863dda9a41a3] -> PRESERVED (accounted)  theorem doppler_recession_factor_below_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [8672c9db32ea] -> PRESERVED (accounted)  theorem doppler_recession_factor_below_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem doppler_recession_factor_below_one (beta : Real)
     (h1 : (beta >= (0 : Real)))
     (h2 : (beta <= BETA_MAX)) :
     (((recession_doppler_ratio beta) <= ONE)) ∧ (((recession_doppler_ratio beta) > (0 : Real))) := by
   unfold recession_doppler_ratio
+  try unfold ONE at *
+  try unfold C_LIGHT at *
+  try unfold BETA_MAX at *
+  try unfold F_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -52,11 +61,18 @@ theorem doppler_recession_factor_below_one (beta : Real)
 noncomputable def approach_doppler_ratio (beta : Real) : Real :=
   (Real.sqrt ((ONE + beta) / (ONE - beta)))
 
+-- source obligations for approach_doppler_ratio: {O1}
+--   O1 [91e7505a03b3] -> PRESERVED (accounted)  theorem doppler_approach_factor_above_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem doppler_approach_factor_above_one (beta : Real)
     (h1 : (beta >= (0 : Real)))
     (h2 : (beta <= BETA_MAX)) :
     ((approach_doppler_ratio beta) >= ONE) := by
   unfold approach_doppler_ratio
+  try unfold ONE at *
+  try unfold C_LIGHT at *
+  try unfold BETA_MAX at *
+  try unfold F_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -80,6 +96,9 @@ theorem doppler_approach_factor_above_one (beta : Real)
 noncomputable def observed_frequency (source_frequency : Real) (doppler_ratio : Real) : Real :=
   (source_frequency * doppler_ratio)
 
+-- source obligations for observed_frequency: {O1}
+--   O1 [e2dcf151fa86] -> PRESERVED (accounted)  theorem doppler_observed_frequency_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem doppler_observed_frequency_positive (source_frequency : Real) (doppler_ratio : Real)
     (h1 : (source_frequency > (0 : Real)))
     (h2 : (source_frequency <= F_MAX))
@@ -87,6 +106,10 @@ theorem doppler_observed_frequency_positive (source_frequency : Real) (doppler_r
     (h4 : (doppler_ratio <= (1000000.0 : Real))) :
     ((observed_frequency source_frequency doppler_ratio) > (0 : Real)) := by
   unfold observed_frequency
+  try unfold ONE at *
+  try unfold C_LIGHT at *
+  try unfold BETA_MAX at *
+  try unfold F_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -110,11 +133,18 @@ theorem doppler_observed_frequency_positive (source_frequency : Real) (doppler_r
 noncomputable def lorentz_factor (beta : Real) : Real :=
   (ONE / (Real.sqrt (ONE - (beta * beta))))
 
+-- source obligations for lorentz_factor: {O1}
+--   O1 [22e285c55834] -> PRESERVED (accounted)  theorem lorentz_factor_at_least_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem lorentz_factor_at_least_one (beta : Real)
     (h1 : (beta >= (0 : Real)))
     (h2 : (beta <= BETA_MAX)) :
     ((lorentz_factor beta) >= ONE) := by
   unfold lorentz_factor
+  try unfold ONE at *
+  try unfold C_LIGHT at *
+  try unfold BETA_MAX at *
+  try unfold F_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -138,11 +168,20 @@ theorem lorentz_factor_at_least_one (beta : Real)
 noncomputable def velocity_to_beta (velocity_m_per_s : Real) : Real :=
   (velocity_m_per_s / C_LIGHT)
 
+-- source obligations for velocity_to_beta: {O1, O2}
+--   O1 [5c98416af23e] -> PRESERVED (accounted)  theorem beta_in_unit_interval_for_subluminal_v
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [16d0ff9a521c] -> PRESERVED (accounted)  theorem beta_in_unit_interval_for_subluminal_v
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem beta_in_unit_interval_for_subluminal_v (velocity_m_per_s : Real)
     (h1 : (velocity_m_per_s >= (0 : Real)))
     (h2 : (velocity_m_per_s <= (BETA_MAX * C_LIGHT))) :
     (((velocity_to_beta velocity_m_per_s) >= (0 : Real))) ∧ (((velocity_to_beta velocity_m_per_s) <= BETA_MAX)) := by
   unfold velocity_to_beta
+  try unfold ONE at *
+  try unfold C_LIGHT at *
+  try unfold BETA_MAX at *
+  try unfold F_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

@@ -23,6 +23,7 @@ noncomputable def C2_MAX : Real := (0.05 : Real)
 noncomputable def lane_lateral_offset (x_longitudinal : Real) (c0 : Real) (c1 : Real) (c2 : Real) : Real :=
   ((((c2 * x_longitudinal) * x_longitudinal) + (c1 * x_longitudinal)) + c0)
 
+-- obligations for lane_lateral_offset: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,6 +41,7 @@ theorem lane_polynomial_eval_bounded_in_corridor (x_longitudinal : Real) (c0 : R
 noncomputable def lane_departure_error (lookahead : Real) (c0_left : Real) (c1_left : Real) (c2_left : Real) (c0_right : Real) (c1_right : Real) (c2_right : Real) : Real :=
   ((0.5 : Real) * (((((c2_left * lookahead) * lookahead) + (c1_left * lookahead)) + c0_left) + ((((c2_right * lookahead) * lookahead) + (c1_right * lookahead)) + c0_right)))
 
+-- obligations for lane_departure_error: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -60,6 +62,7 @@ theorem lane_error_bounded_by_corridor (lookahead : Real) (c0_left : Real) (c1_l
 noncomputable def lane_curvature (c1 : Real) (c2 : Real) : Real :=
   (((2.0 : Real) * c2) / (((1 : Real) + (c1 * c1)) ^ (1.5 : Real)))
 
+-- obligations for lane_curvature: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

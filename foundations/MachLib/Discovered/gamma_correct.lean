@@ -20,6 +20,9 @@ axiom srgb_to_linear (x : Real) : Real  -- helper (axiomatised in MachLib/Discov
 noncomputable def gamma_correct (x : Real) (gamma : Real) : Real :=
   (x ^ ((1 : Real) / gamma))
 
+-- source obligations for gamma_correct: {O1}
+--   O1 [bbe2c0171b44] -> PRESERVED (accounted)  theorem gamma_correct_monotone_in_x
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem gamma_correct_monotone_in_x (x : Real) (gamma : Real)
     (h1 : (x >= (0 : Real)))
     (h2 : (x <= (1 : Real)))

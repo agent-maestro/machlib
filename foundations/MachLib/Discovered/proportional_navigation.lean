@@ -25,6 +25,7 @@ axiom closing_speed_from_rate (range_rate : Real) : Real  -- helper (axiomatised
 noncomputable def pn_command (n : Real) (closing_speed : Real) (sigma_dot : Real) : Real :=
   ((n * closing_speed) * sigma_dot)
 
+-- obligations for pn_command: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,6 +41,7 @@ theorem pn_command_proportional_to_los_rate (n : Real) (closing_speed : Real) (s
 noncomputable def augmented_pn_command (n : Real) (closing_speed : Real) (sigma_dot : Real) (target_accel : Real) : Real :=
   (((n * closing_speed) * sigma_dot) + (((0.5 : Real) * n) * target_accel))
 
+-- obligations for augmented_pn_command: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -56,11 +58,20 @@ theorem augmented_pn_includes_target_accel (n : Real) (closing_speed : Real) (si
 noncomputable def los_angle (rel_x : Real) (rel_y : Real) : Real :=
   (atan2 rel_y rel_x)
 
+-- source obligations for los_angle: {O1, O2}
+--   O1 [1f4d8da6cfa1] -> PRESERVED (accounted)  theorem los_angle_well_defined
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [d4e621a0f36a] -> PRESERVED (accounted)  theorem los_angle_well_defined
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem los_angle_well_defined (rel_x : Real) (rel_y : Real)
     (h_rel_x : (-(1000000.0 : Real) ≤ rel_x ∧ rel_x ≤ (1000000.0 : Real)))
     (h_rel_y : (-(1000000.0 : Real) ≤ rel_y ∧ rel_y ≤ (1000000.0 : Real))) :
     (((los_angle rel_x rel_y) >= (-(3.1416 : Real)))) ∧ (((los_angle rel_x rel_y) <= (3.1416 : Real))) := by
   unfold los_angle
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold V_MAX at *
+  try unfold SIGMA_DOT_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

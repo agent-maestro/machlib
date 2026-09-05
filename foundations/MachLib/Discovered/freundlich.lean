@@ -24,6 +24,9 @@ axiom linearised_log_q (adsorbed_amount : Real) : Real  -- helper (axiomatised i
 noncomputable def adsorbed_amount (freundlich_k : Real) (concentration : Real) (heterogeneity_index : Real) : Real :=
   (freundlich_k * (concentration ^ ((1 : Real) / heterogeneity_index)))
 
+-- source obligations for adsorbed_amount: {O1}
+--   O1 [a4ce763c2d8f] -> PRESERVED (accounted)  theorem freundlich_monotone_in_concentration
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem freundlich_monotone_in_concentration (freundlich_k : Real) (concentration : Real) (heterogeneity_index : Real)
     (h1 : (freundlich_k >= (0 : Real)))
     (h2 : (freundlich_k <= K_MAX))
@@ -33,6 +36,9 @@ theorem freundlich_monotone_in_concentration (freundlich_k : Real) (concentratio
     (h6 : (heterogeneity_index <= N_MAX)) :
     ((adsorbed_amount freundlich_k concentration heterogeneity_index) >= (0 : Real)) := by
   unfold adsorbed_amount
+  try unfold K_MAX at *
+  try unfold N_MAX at *
+  try unfold C_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

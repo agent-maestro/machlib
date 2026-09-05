@@ -26,6 +26,11 @@ noncomputable def MOTOR_MAX : Real := (500.0 : Real)
 noncomputable def motor_command (prescribed_rate : Real) (measured_rate : Real) (rate_integral : Real) : Real :=
   (min (max ((Kp * (prescribed_rate - measured_rate)) + (Ki * rate_integral)) MOTOR_MIN) MOTOR_MAX)
 
+-- source obligations for motor_command: {O1, O2}
+--   O1 [bea9608be7e8] -> PRESERVED (accounted)  theorem infusion_motor_command_safe
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [6c3430558ef0] -> PRESERVED (accounted)  theorem infusion_motor_command_safe
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem infusion_motor_command_safe (prescribed_rate : Real) (measured_rate : Real) (rate_integral : Real)
     (h_prescribed_rate : ((RATE_MIN <= prescribed_rate) ∧ (prescribed_rate <= RATE_MAX)))
     (h_measured_rate : (-RATE_MAX < measured_rate ∧ measured_rate < RATE_MAX))
@@ -33,6 +38,13 @@ theorem infusion_motor_command_safe (prescribed_rate : Real) (measured_rate : Re
     (h_clamp1 : MOTOR_MIN ≤ MOTOR_MAX) :
     ((MOTOR_MIN <= (motor_command prescribed_rate measured_rate rate_integral))) ∧ (((motor_command prescribed_rate measured_rate rate_integral) <= MOTOR_MAX)) := by
   unfold motor_command
+  try unfold Kp at *
+  try unfold Ki at *
+  try unfold dt at *
+  try unfold RATE_MIN at *
+  try unfold RATE_MAX at *
+  try unfold MOTOR_MIN at *
+  try unfold MOTOR_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

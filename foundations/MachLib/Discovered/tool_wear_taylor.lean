@@ -27,12 +27,23 @@ noncomputable def C_MAX : Real := (100000.0 : Real)
 noncomputable def tool_life_minutes (cutting_speed : Real) (taylor_n : Real) (taylor_c : Real) : Real :=
   ((taylor_c / cutting_speed) ^ ((1 : Real) / taylor_n))
 
+-- source obligations for tool_life_minutes: {O1}
+--   O1 [5e6747126a45] -> PRESERVED (accounted)  theorem tool_life_decreases_with_speed
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem tool_life_decreases_with_speed (cutting_speed : Real) (taylor_n : Real) (taylor_c : Real)
     (h_cutting_speed : ((V_MIN <= cutting_speed) ∧ (cutting_speed <= V_MAX)))
     (h_taylor_n : ((N_MIN <= taylor_n) ∧ (taylor_n <= N_MAX)))
     (h_taylor_c : ((C_MIN <= taylor_c) ∧ (taylor_c <= C_MAX))) :
     ((tool_life_minutes cutting_speed taylor_n taylor_c) >= (0 : Real)) := by
   unfold tool_life_minutes
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold C_MIN at *
+  try unfold C_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -56,12 +67,23 @@ theorem tool_life_decreases_with_speed (cutting_speed : Real) (taylor_n : Real) 
 noncomputable def max_cutting_speed (target_life_minutes : Real) (taylor_n : Real) (taylor_c : Real) : Real :=
   (taylor_c / (target_life_minutes ^ taylor_n))
 
+-- source obligations for max_cutting_speed: {O1}
+--   O1 [0a191079968c] -> PRESERVED (accounted)  theorem max_speed_decreases_with_target_life
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem max_speed_decreases_with_target_life (target_life_minutes : Real) (taylor_n : Real) (taylor_c : Real)
     (h_target_life_minutes : ((T_MIN <= target_life_minutes) ∧ (target_life_minutes <= T_MAX)))
     (h_taylor_n : ((N_MIN <= taylor_n) ∧ (taylor_n <= N_MAX)))
     (h_taylor_c : ((C_MIN <= taylor_c) ∧ (taylor_c <= C_MAX))) :
     ((max_cutting_speed target_life_minutes taylor_n taylor_c) >= (0 : Real)) := by
   unfold max_cutting_speed
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold C_MIN at *
+  try unfold C_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -85,6 +107,9 @@ theorem max_speed_decreases_with_target_life (target_life_minutes : Real) (taylo
 noncomputable def extended_tool_life (cutting_speed : Real) (feed_rate : Real) (depth_of_cut : Real) (taylor_n : Real) (feed_exponent : Real) (depth_exponent : Real) (taylor_c : Real) : Real :=
   ((taylor_c / ((cutting_speed * (feed_rate ^ feed_exponent)) * (depth_of_cut ^ depth_exponent))) ^ ((1 : Real) / taylor_n))
 
+-- source obligations for extended_tool_life: {O1}
+--   O1 [2c646d0c0436] -> PRESERVED (accounted)  theorem extended_taylor_consistent_with_classical
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem extended_taylor_consistent_with_classical (cutting_speed : Real) (feed_rate : Real) (depth_of_cut : Real) (taylor_n : Real) (feed_exponent : Real) (depth_exponent : Real) (taylor_c : Real)
     (h_cutting_speed : ((V_MIN <= cutting_speed) ∧ (cutting_speed <= V_MAX)))
     (h_feed_rate : (((0.001 : Real) <= feed_rate) ∧ (feed_rate <= (1 : Real))))
@@ -95,6 +120,14 @@ theorem extended_taylor_consistent_with_classical (cutting_speed : Real) (feed_r
     (h_taylor_c : ((C_MIN <= taylor_c) ∧ (taylor_c <= C_MAX))) :
     ((extended_tool_life cutting_speed feed_rate depth_of_cut taylor_n feed_exponent depth_exponent taylor_c) >= (0 : Real)) := by
   unfold extended_tool_life
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold C_MIN at *
+  try unfold C_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

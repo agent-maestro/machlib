@@ -23,6 +23,9 @@ axiom bce_with_logits_grad (logit : Real) (target : Real) : Real  -- helper (axi
 noncomputable def bce_loss (prediction : Real) (target : Real) : Real :=
   (-((target * (Real.log prediction)) + (((1 : Real) - target) * (Real.log ((1 : Real) - prediction)))))
 
+-- source obligations for bce_loss: {O1}
+--   O1 [ee989bcff358] -> PRESERVED (accounted)  theorem bce_loss_nonnegative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bce_loss_nonnegative (prediction : Real) (target : Real)
     (h1 : (target >= (0 : Real)))
     (h2 : (target <= (1 : Real)))
@@ -30,6 +33,8 @@ theorem bce_loss_nonnegative (prediction : Real) (target : Real)
     (h_dom2 : (prediction < (1 : Real))) :
     ((bce_loss prediction target) >= (0 : Real)) := by
   unfold bce_loss
+  try unfold MAX_LOGIT at *
+  try unfold EPS at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -53,6 +58,9 @@ theorem bce_loss_nonnegative (prediction : Real) (target : Real)
 noncomputable def bce_with_logits (logit : Real) (target : Real) : Real :=
   (((min (max logit (0 : Real)) MAX_LOGIT) - (logit * target)) + (Real.log ((1 : Real) + (Real.exp (-(abs logit))))))
 
+-- source obligations for bce_with_logits: {O1}
+--   O1 [cbfc25fbc04a] -> PRESERVED (accounted)  theorem bce_with_logits_equals_bce
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bce_with_logits_equals_bce (logit : Real) (target : Real)
     (h1 : ((abs logit) < MAX_LOGIT))
     (h2 : (target >= (0 : Real)))
@@ -60,6 +68,8 @@ theorem bce_with_logits_equals_bce (logit : Real) (target : Real)
     (h_clamp1 : (0 : Real) ≤ MAX_LOGIT) :
     ((bce_with_logits logit target) >= (0 : Real)) := by
   unfold bce_with_logits
+  try unfold MAX_LOGIT at *
+  try unfold EPS at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -83,6 +93,7 @@ theorem bce_with_logits_equals_bce (logit : Real) (target : Real)
 noncomputable def categorical_ce_pair (logit : Real) (log_sum_exp_val : Real) (target_one_hot : Real) : Real :=
   (target_one_hot * (log_sum_exp_val - logit))
 
+-- obligations for categorical_ce_pair: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

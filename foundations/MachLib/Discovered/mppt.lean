@@ -24,6 +24,11 @@ noncomputable def POWER_MAX : Real := (50000.0 : Real)
 noncomputable def mppt_step (voltage_now : Real) (power_now : Real) (power_prev : Real) : Real :=
   (min (max (voltage_now + (STEP * (Real.tanh (power_now - power_prev)))) V_MIN) V_MAX)
 
+-- source obligations for mppt_step: {O1, O2}
+--   O1 [d1d168ef39cb] -> PRESERVED (accounted)  theorem mppt_voltage_command_safe
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [0e59db6b1c76] -> PRESERVED (accounted)  theorem mppt_voltage_command_safe
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem mppt_voltage_command_safe (voltage_now : Real) (power_now : Real) (power_prev : Real)
     (h_voltage_now : ((V_MIN <= voltage_now) ∧ (voltage_now <= V_MAX)))
     (h_power_now : ((POWER_MIN <= power_now) ∧ (power_now <= POWER_MAX)))
@@ -31,6 +36,11 @@ theorem mppt_voltage_command_safe (voltage_now : Real) (power_now : Real) (power
     (h_clamp1 : V_MIN ≤ V_MAX) :
     ((V_MIN <= (mppt_step voltage_now power_now power_prev))) ∧ (((mppt_step voltage_now power_now power_prev) <= V_MAX)) := by
   unfold mppt_step
+  try unfold STEP at *
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold POWER_MIN at *
+  try unfold POWER_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

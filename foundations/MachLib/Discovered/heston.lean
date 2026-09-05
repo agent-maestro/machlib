@@ -24,6 +24,7 @@ axiom heston_variance_step (variance : Real) (kappa : Real) (theta : Real) (xi :
 noncomputable def heston_log_spot_step (log_spot : Real) (variance : Real) (drift : Real) (sqrt_dt : Real) (z1 : Real) : Real :=
   ((log_spot + ((drift - (HALF * (min (max variance VAR_FLOOR) VAR_CEILING))) * (sqrt_dt * sqrt_dt))) + (((Real.sqrt (min (max variance VAR_FLOOR) VAR_CEILING)) * sqrt_dt) * z1))
 
+-- obligations for heston_log_spot_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

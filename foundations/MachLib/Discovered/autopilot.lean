@@ -31,6 +31,9 @@ axiom rate_controller (pitch_error : Real) (pitch_integral : Real) (pitch_measur
 noncomputable def autopilot_step (pitch_setpoint : Real) (pitch_measured : Real) (pitch_integral : Real) : Real :=
   (min (max (Kr * (((Kp * (pitch_setpoint - pitch_measured)) + (Ki * pitch_integral)) + (GRAVITY_GAIN * (Real.cos pitch_measured)))) ELEVATOR_MIN) ELEVATOR_MAX)
 
+-- source obligations for autopilot_step: {O1}
+--   O1 [5839dd75fe17] -> PRESERVED (accounted)  theorem autopilot_command_within_limits
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem autopilot_command_within_limits (pitch_setpoint : Real) (pitch_measured : Real) (pitch_integral : Real)
     (h_pitch_setpoint : (-(1.5708 : Real) < pitch_setpoint ∧ pitch_setpoint < (1.5708 : Real)))
     (h_pitch_measured : (-(1.5708 : Real) < pitch_measured ∧ pitch_measured < (1.5708 : Real)))
@@ -38,6 +41,14 @@ theorem autopilot_command_within_limits (pitch_setpoint : Real) (pitch_measured 
     (h_clamp1 : ELEVATOR_MIN ≤ ELEVATOR_MAX) :
     ((abs (autopilot_step pitch_setpoint pitch_measured pitch_integral)) < ELEVATOR_MAX) := by
   unfold autopilot_step
+  try unfold Kp at *
+  try unfold Ki at *
+  try unfold Kr at *
+  try unfold dt at *
+  try unfold INTEGRAL_LIMIT at *
+  try unfold ELEVATOR_MIN at *
+  try unfold ELEVATOR_MAX at *
+  try unfold GRAVITY_GAIN at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -25,6 +25,9 @@ axiom effective_activation_energy (k1 : Real) (k2 : Real) (t1 : Real) (t2 : Real
 noncomputable def rate_constant (pre_exp_factor : Real) (activation_energy : Real) (temperature : Real) : Real :=
   (pre_exp_factor * (Real.exp ((-activation_energy) / (R_GAS * temperature))))
 
+-- source obligations for rate_constant: {O1}
+--   O1 [439ae6dd271d] -> PRESERVED (accounted)  theorem arrhenius_monotone_in_temperature
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem arrhenius_monotone_in_temperature (pre_exp_factor : Real) (activation_energy : Real) (temperature : Real)
     (h1 : (pre_exp_factor > (0 : Real)))
     (h2 : (activation_energy >= (0 : Real)))
@@ -33,6 +36,10 @@ theorem arrhenius_monotone_in_temperature (pre_exp_factor : Real) (activation_en
     (h5 : (temperature <= T_MAX)) :
     ((rate_constant pre_exp_factor activation_energy temperature) >= (0 : Real)) := by
   unfold rate_constant
+  try unfold R_GAS at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold EA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

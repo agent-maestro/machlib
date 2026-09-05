@@ -28,6 +28,9 @@ noncomputable def T_DATUM : Real := (-(10.0 : Real))
 noncomputable def compressive_strength (a_intercept : Real) (k_decay : Real) (water_cement_ratio : Real) : Real :=
   (a_intercept * (Real.exp ((-k_decay) * water_cement_ratio)))
 
+-- source obligations for compressive_strength: {O1}
+--   O1 [e17731314157] -> PRESERVED (accounted)  theorem abrams_strength_decreases_with_wc
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem abrams_strength_decreases_with_wc (a_intercept : Real) (k_decay : Real) (water_cement_ratio : Real)
     (h1 : (a_intercept >= (0 : Real)))
     (h2 : (a_intercept <= A_MAX))
@@ -37,6 +40,15 @@ theorem abrams_strength_decreases_with_wc (a_intercept : Real) (k_decay : Real) 
     (h6 : (water_cement_ratio <= WC_MAX)) :
     ((compressive_strength a_intercept k_decay water_cement_ratio) >= (0 : Real)) := by
   unfold compressive_strength
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold A_MAX at *
+  try unfold K_MAX at *
+  try unfold WC_MIN at *
+  try unfold WC_MAX at *
+  try unfold M_MAX at *
+  try unfold T_MIN_C at *
+  try unfold T_DATUM at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -60,6 +72,7 @@ theorem abrams_strength_decreases_with_wc (a_intercept : Real) (k_decay : Real) 
 noncomputable def nurse_saul_step (temperature_c : Real) (dt_hours : Real) : Real :=
   ((temperature_c - T_DATUM) * dt_hours)
 
+-- obligations for nurse_saul_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -76,6 +89,9 @@ theorem nurse_saul_step_nonneg_above_datum (temperature_c : Real) (dt_hours : Re
 noncomputable def age_strength_factor (age_days : Real) (alpha : Real) (beta : Real) : Real :=
   (age_days / (alpha + (beta * age_days)))
 
+-- source obligations for age_strength_factor: {O1}
+--   O1 [376123810e91] -> PRESERVED (accounted)  theorem aci_age_strength_factor_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem aci_age_strength_factor_in_unit_interval (age_days : Real) (alpha : Real) (beta : Real)
     (h1 : (age_days >= (1 : Real)))
     (h2 : (age_days <= (1000.0 : Real)))
@@ -85,6 +101,15 @@ theorem aci_age_strength_factor_in_unit_interval (age_days : Real) (alpha : Real
     (h6 : (beta <= (5.0 : Real))) :
     ((age_strength_factor age_days alpha beta) >= (0 : Real)) := by
   unfold age_strength_factor
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold A_MAX at *
+  try unfold K_MAX at *
+  try unfold WC_MIN at *
+  try unfold WC_MAX at *
+  try unfold M_MAX at *
+  try unfold T_MIN_C at *
+  try unfold T_DATUM at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

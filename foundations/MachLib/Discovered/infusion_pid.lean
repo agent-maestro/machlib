@@ -25,6 +25,9 @@ noncomputable def ERR_MAX : Real := (1000.0 : Real)
 noncomputable def infusion_pid_step (error : Real) (integral : Real) (derivative : Real) (kp : Real) (ki : Real) (kd : Real) (integral_limit : Real) (rate_max : Real) : Real :=
   (min (max (((kp * error) + (ki * (min (max integral (-integral_limit)) integral_limit))) + (kd * derivative)) (0 : Real)) rate_max)
 
+-- source obligations for infusion_pid_step: {O1}
+--   O1 [4eb13237dd33] -> PRESERVED (accounted)  theorem infusion_pid_within_pump_limit
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem infusion_pid_within_pump_limit (error : Real) (integral : Real) (derivative : Real) (kp : Real) (ki : Real) (kd : Real) (integral_limit : Real) (rate_max : Real)
     (h_error : (-ERR_MAX ≤ error ∧ error ≤ ERR_MAX))
     (h_integral : (-I_LIMIT_MAX ≤ integral ∧ integral ≤ I_LIMIT_MAX))
@@ -38,6 +41,12 @@ theorem infusion_pid_within_pump_limit (error : Real) (integral : Real) (derivat
     (h_clamp2 : (0 : Real) ≤ rate_max) :
     ((infusion_pid_step error integral derivative kp ki kd integral_limit rate_max) >= (0 : Real)) := by
   unfold infusion_pid_step
+  try unfold RATE_MAX at *
+  try unfold I_LIMIT_MAX at *
+  try unfold KP_MAX at *
+  try unfold KI_MAX at *
+  try unfold KD_MAX at *
+  try unfold ERR_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -61,6 +70,7 @@ theorem infusion_pid_within_pump_limit (error : Real) (integral : Real) (derivat
 noncomputable def infusion_integral_step (integral_prev : Real) (error : Real) (error_prev : Real) (dt : Real) (saturation_active : Real) : Real :=
   (integral_prev + (((1 : Real) - saturation_active) * (((0.5 : Real) * (error + error_prev)) * dt)))
 
+-- obligations for infusion_integral_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -78,6 +88,7 @@ theorem infusion_integral_held_under_saturation (integral_prev : Real) (error : 
 noncomputable def bis_error (target_bis : Real) (measured_bis : Real) : Real :=
   (min (max (target_bis - measured_bis) (-50.0 : Real)) (50.0 : Real))
 
+-- obligations for bis_error: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

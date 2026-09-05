@@ -29,6 +29,9 @@ noncomputable def LN10_INV : Real := (0.4342944819032518 : Real)
 noncomputable def monostatic_received_power (p_tx : Real) (gain : Real) (wavelength : Real) (rcs : Real) (range_m : Real) : Real :=
   ((((((p_tx * gain) * gain) * wavelength) * wavelength) * rcs) / (PI_4_CUBED * ((range_m * range_m) * (range_m * range_m))))
 
+-- source obligations for monostatic_received_power: {O1}
+--   O1 [b5ad43255d36] -> PRESERVED (accounted)  theorem monostatic_falls_with_r4
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem monostatic_falls_with_r4 (p_tx : Real) (gain : Real) (wavelength : Real) (rcs : Real) (range_m : Real)
     (h1 : (p_tx >= (0 : Real)))
     (h2 : (p_tx <= P_MAX))
@@ -42,6 +45,16 @@ theorem monostatic_falls_with_r4 (p_tx : Real) (gain : Real) (wavelength : Real)
     (h10 : (range_m <= R_MAX)) :
     ((monostatic_received_power p_tx gain wavelength rcs range_m) >= (0 : Real)) := by
   unfold monostatic_received_power
+  try unfold PI_4_CUBED at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold G_MAX at *
+  try unfold P_MAX at *
+  try unfold LAMBDA_MIN at *
+  try unfold LAMBDA_MAX at *
+  try unfold LN10_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -65,6 +78,9 @@ theorem monostatic_falls_with_r4 (p_tx : Real) (gain : Real) (wavelength : Real)
 noncomputable def bistatic_received_power (p_tx : Real) (g_tx : Real) (g_rx : Real) (wavelength : Real) (rcs_bistatic : Real) (range_tx : Real) (range_rx : Real) : Real :=
   ((((((p_tx * g_tx) * g_rx) * wavelength) * wavelength) * rcs_bistatic) / ((((PI_4_CUBED * range_tx) * range_tx) * range_rx) * range_rx))
 
+-- source obligations for bistatic_received_power: {O1}
+--   O1 [42aa801449ba] -> PRESERVED (accounted)  theorem bistatic_falls_with_rt2_rr2
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bistatic_falls_with_rt2_rr2 (p_tx : Real) (g_tx : Real) (g_rx : Real) (wavelength : Real) (rcs_bistatic : Real) (range_tx : Real) (range_rx : Real)
     (h1 : (p_tx >= (0 : Real)))
     (h2 : (p_tx <= P_MAX))
@@ -82,6 +98,16 @@ theorem bistatic_falls_with_rt2_rr2 (p_tx : Real) (g_tx : Real) (g_rx : Real) (w
     (h14 : (range_rx <= R_MAX)) :
     ((bistatic_received_power p_tx g_tx g_rx wavelength rcs_bistatic range_tx range_rx) >= (0 : Real)) := by
   unfold bistatic_received_power
+  try unfold PI_4_CUBED at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold G_MAX at *
+  try unfold P_MAX at *
+  try unfold LAMBDA_MIN at *
+  try unfold LAMBDA_MAX at *
+  try unfold LN10_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -105,6 +131,9 @@ theorem bistatic_falls_with_rt2_rr2 (p_tx : Real) (g_tx : Real) (g_rx : Real) (w
 noncomputable def max_detection_range (p_tx : Real) (gain : Real) (wavelength : Real) (rcs : Real) (p_min_detectable : Real) : Real :=
   (((((((p_tx * gain) * gain) * wavelength) * wavelength) * rcs) / (PI_4_CUBED * p_min_detectable)) ^ (0.25 : Real))
 
+-- source obligations for max_detection_range: {O1}
+--   O1 [c074e74c81a3] -> PRESERVED (accounted)  theorem max_range_increases_with_pt_pow_quarter
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem max_range_increases_with_pt_pow_quarter (p_tx : Real) (gain : Real) (wavelength : Real) (rcs : Real) (p_min_detectable : Real)
     (h1 : (p_tx >= (0 : Real)))
     (h2 : (p_tx <= P_MAX))
@@ -118,6 +147,16 @@ theorem max_range_increases_with_pt_pow_quarter (p_tx : Real) (gain : Real) (wav
     (h10 : (p_min_detectable <= (1 : Real))) :
     ((max_detection_range p_tx gain wavelength rcs p_min_detectable) >= (0 : Real)) := by
   unfold max_detection_range
+  try unfold PI_4_CUBED at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold G_MAX at *
+  try unfold P_MAX at *
+  try unfold LAMBDA_MIN at *
+  try unfold LAMBDA_MAX at *
+  try unfold LN10_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

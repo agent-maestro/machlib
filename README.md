@@ -110,8 +110,8 @@ consistency check, the axiom ledger, the obligations ledger, the Forge `@verify`
 Forge certificates, the soundness witness, MachSig signatures, the claim audit, the witness and
 hypothesis and absence audits, and the sorry audit — most with their own self-tests, each of which
 must be shown able to fail before its pass is read. `scripts/closerate.sh` is a measurement, not a
-gate: the Forge `@verify(lean)` corpus auto-closes **77.1 %** of its obligations
-(553 of 717, measured 2026-08-01 under Lean v4.32.2).
+gate: the Forge `@verify(lean)` corpus auto-closes **79.8 %** of its obligations
+(572 of 717, measured 2026-09-05 under Lean v4.32.2).
 
 ## Numbers, measured
 

@@ -27,6 +27,7 @@ noncomputable def DT_MAX : Real := (0.1 : Real)
 noncomputable def rotor_angle_step (delta_prev : Real) (omega : Real) (dt : Real) : Real :=
   (delta_prev + (omega * dt))
 
+-- obligations for rotor_angle_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -43,6 +44,7 @@ theorem rotor_angle_step_linear_in_dt (delta_prev : Real) (omega : Real) (dt : R
 noncomputable def rotor_speed_step (omega_prev : Real) (p_mechanical : Real) (p_electrical : Real) (inertia : Real) (damping : Real) (dt : Real) : Real :=
   (omega_prev + ((dt * ((p_mechanical - p_electrical) - (damping * omega_prev))) / inertia))
 
+-- obligations for rotor_speed_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -64,6 +66,7 @@ theorem rotor_speed_step_balances_power (omega_prev : Real) (p_mechanical : Real
 noncomputable def power_angle_curve (internal_emf : Real) (bus_voltage : Real) (reactance : Real) (rotor_angle : Real) : Real :=
   (((internal_emf * bus_voltage) * (Real.sin rotor_angle)) / reactance)
 
+-- obligations for power_angle_curve: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -24,6 +24,7 @@ axiom chi_critical_symmetric (degree_of_polymerisation : Real) : Real  -- helper
 noncomputable def delta_g_per_site (phi_1 : Real) (n_1 : Real) (phi_2 : Real) (n_2 : Real) (chi : Real) : Real :=
   ((((phi_1 / n_1) * (Real.log phi_1)) + ((phi_2 / n_2) * (Real.log phi_2))) + ((chi * phi_1) * phi_2))
 
+-- obligations for delta_g_per_site: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -23,6 +23,7 @@ noncomputable def SHININESS_MAX : Real := (1024.0 : Real)
 noncomputable def ambient (k_ambient : Real) (light_ambient : Real) : Real :=
   (k_ambient * light_ambient)
 
+-- obligations for ambient: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -39,6 +40,7 @@ theorem phong_ambient_below_input (k_ambient : Real) (light_ambient : Real)
 noncomputable def diffuse (k_diffuse : Real) (n_dot_l_clamped : Real) (light_diffuse : Real) : Real :=
   ((k_diffuse * n_dot_l_clamped) * light_diffuse)
 
+-- obligations for diffuse: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -57,6 +59,7 @@ theorem phong_diffuse_below_kd_times_id (k_diffuse : Real) (n_dot_l_clamped : Re
 noncomputable def specular (k_specular : Real) (r_dot_v_clamped : Real) (shininess : Real) (light_specular : Real) : Real :=
   ((k_specular * (r_dot_v_clamped ^ shininess)) * light_specular)
 
+-- obligations for specular: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -77,6 +80,7 @@ theorem phong_specular_below_ks_times_is (k_specular : Real) (r_dot_v_clamped : 
 noncomputable def shade (ambient_i : Real) (diffuse_i : Real) (specular_i : Real) : Real :=
   ((ambient_i + diffuse_i) + specular_i)
 
+-- obligations for shade: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

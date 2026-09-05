@@ -25,6 +25,7 @@ axiom accel_trust (accel_mag : Real) : Real  -- helper (axiomatised in MachLib/D
 noncomputable def pitch_update (pitch_prev : Real) (gyro_y : Real) (accel_x : Real) (accel_z : Real) (dt : Real) (alpha : Real) : Real :=
   ((alpha * (pitch_prev + (gyro_y * dt))) + (((1 : Real) - alpha) * (atan2 accel_x accel_z)))
 
+-- obligations for pitch_update: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -43,6 +44,7 @@ theorem complementary_filter_bounded_drift (pitch_prev : Real) (gyro_y : Real) (
 noncomputable def roll_update (roll_prev : Real) (gyro_x : Real) (accel_y : Real) (accel_z : Real) (dt : Real) (alpha : Real) : Real :=
   ((alpha * (roll_prev + (gyro_x * dt))) + (((1 : Real) - alpha) * (atan2 accel_y accel_z)))
 
+-- obligations for roll_update: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

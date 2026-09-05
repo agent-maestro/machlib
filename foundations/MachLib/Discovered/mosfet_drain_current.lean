@@ -26,6 +26,9 @@ noncomputable def HALF : Real := (0.5 : Real)
 noncomputable def saturation_current (transconductance_k : Real) (vgs : Real) (vth : Real) (vds : Real) (lambda_clm : Real) : Real :=
   ((((HALF * transconductance_k) * (min (max (vgs - vth) (0 : Real)) V_MAX)) * (min (max (vgs - vth) (0 : Real)) V_MAX)) * ((1 : Real) + (lambda_clm * vds)))
 
+-- source obligations for saturation_current: {O1}
+--   O1 [5df3935c2db1] -> PRESERVED (accounted)  theorem saturation_current_quadratic_in_vgs_minus_vth
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem saturation_current_quadratic_in_vgs_minus_vth (transconductance_k : Real) (vgs : Real) (vth : Real) (vds : Real) (lambda_clm : Real)
     (h1 : (transconductance_k >= K_MIN))
     (h2 : (transconductance_k <= K_MAX))
@@ -40,6 +43,13 @@ theorem saturation_current_quadratic_in_vgs_minus_vth (transconductance_k : Real
     (h_clamp1 : (0 : Real) ≤ V_MAX) :
     ((saturation_current transconductance_k vgs vth vds lambda_clm) >= (0 : Real)) := by
   unfold saturation_current
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold VTH_MIN at *
+  try unfold VTH_MAX at *
+  try unfold V_MAX at *
+  try unfold LAMBDA_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -63,6 +73,9 @@ theorem saturation_current_quadratic_in_vgs_minus_vth (transconductance_k : Real
 noncomputable def triode_current (transconductance_k : Real) (vgs : Real) (vth : Real) (vds : Real) : Real :=
   (transconductance_k * (((min (max (vgs - vth) (0 : Real)) V_MAX) * vds) - ((HALF * vds) * vds)))
 
+-- source obligations for triode_current: {O1}
+--   O1 [1f9f52f03ede] -> PRESERVED (accounted)  theorem triode_current_linear_in_vds_at_low_vds
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem triode_current_linear_in_vds_at_low_vds (transconductance_k : Real) (vgs : Real) (vth : Real) (vds : Real)
     (h1 : (transconductance_k >= K_MIN))
     (h2 : (transconductance_k <= K_MAX))
@@ -75,6 +88,13 @@ theorem triode_current_linear_in_vds_at_low_vds (transconductance_k : Real) (vgs
     (h_clamp1 : (0 : Real) ≤ V_MAX) :
     ((triode_current transconductance_k vgs vth vds) >= (0 : Real)) := by
   unfold triode_current
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold VTH_MIN at *
+  try unfold VTH_MAX at *
+  try unfold V_MAX at *
+  try unfold LAMBDA_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -98,6 +118,9 @@ theorem triode_current_linear_in_vds_at_low_vds (transconductance_k : Real) (vgs
 noncomputable def drain_current_branchless (transconductance_k : Real) (vgs : Real) (vth : Real) (vds : Real) (lambda_clm : Real) : Real :=
   ((transconductance_k * (((min (max (vgs - vth) (0 : Real)) V_MAX) * (min (max vds (0 : Real)) (min (max (vgs - vth) (0 : Real)) V_MAX))) - ((HALF * (min (max vds (0 : Real)) (min (max (vgs - vth) (0 : Real)) V_MAX))) * (min (max vds (0 : Real)) (min (max (vgs - vth) (0 : Real)) V_MAX))))) * ((1 : Real) + (lambda_clm * vds)))
 
+-- source obligations for drain_current_branchless: {O1}
+--   O1 [ef37ebb67801] -> PRESERVED (accounted)  theorem branchless_matches_per_region
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem branchless_matches_per_region (transconductance_k : Real) (vgs : Real) (vth : Real) (vds : Real) (lambda_clm : Real)
     (h1 : (transconductance_k >= K_MIN))
     (h2 : (transconductance_k <= K_MAX))
@@ -113,6 +136,13 @@ theorem branchless_matches_per_region (transconductance_k : Real) (vgs : Real) (
     (h_clamp2 : (0 : Real) ≤ overdrive) :
     ((drain_current_branchless transconductance_k vgs vth vds lambda_clm) >= (0 : Real)) := by
   unfold drain_current_branchless
+  try unfold K_MIN at *
+  try unfold K_MAX at *
+  try unfold VTH_MIN at *
+  try unfold VTH_MAX at *
+  try unfold V_MAX at *
+  try unfold LAMBDA_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

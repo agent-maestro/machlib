@@ -23,6 +23,9 @@ noncomputable def COEF_MAX : Real := (1000.0 : Real)
 noncomputable def plasma_concentration (coef_a : Real) (rate_alpha : Real) (coef_b : Real) (rate_beta : Real) (time_min : Real) : Real :=
   ((coef_a * (Real.exp ((-rate_alpha) * time_min))) + (coef_b * (Real.exp ((-rate_beta) * time_min))))
 
+-- source obligations for plasma_concentration: {O1}
+--   O1 [37c95cdcda87] -> PRESERVED (accounted)  theorem plasma_concentration_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem plasma_concentration_nonneg (coef_a : Real) (rate_alpha : Real) (coef_b : Real) (rate_beta : Real) (time_min : Real)
     (h_coef_a : (((0 : Real) <= coef_a) ∧ (coef_a <= COEF_MAX)))
     (h_rate_alpha : ((RATE_MIN <= rate_alpha) ∧ (rate_alpha <= RATE_MAX)))
@@ -31,6 +34,10 @@ theorem plasma_concentration_nonneg (coef_a : Real) (rate_alpha : Real) (coef_b 
     (h_time_min : (((0 : Real) <= time_min) ∧ (time_min <= T_MAX))) :
     ((plasma_concentration coef_a rate_alpha coef_b rate_beta time_min) >= (0 : Real)) := by
   unfold plasma_concentration
+  try unfold T_MAX at *
+  try unfold RATE_MIN at *
+  try unfold RATE_MAX at *
+  try unfold COEF_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -54,6 +61,9 @@ theorem plasma_concentration_nonneg (coef_a : Real) (rate_alpha : Real) (coef_b 
 noncomputable def auc_inf (coef_a : Real) (rate_alpha : Real) (coef_b : Real) (rate_beta : Real) : Real :=
   ((coef_a / rate_alpha) + (coef_b / rate_beta))
 
+-- source obligations for auc_inf: {O1}
+--   O1 [b14f3701cebb] -> PRESERVED (accounted)  theorem auc_inf_finite_for_positive_rates
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem auc_inf_finite_for_positive_rates (coef_a : Real) (rate_alpha : Real) (coef_b : Real) (rate_beta : Real)
     (h_coef_a : (((0 : Real) <= coef_a) ∧ (coef_a <= COEF_MAX)))
     (h_rate_alpha : ((RATE_MIN <= rate_alpha) ∧ (rate_alpha <= RATE_MAX)))
@@ -61,6 +71,10 @@ theorem auc_inf_finite_for_positive_rates (coef_a : Real) (rate_alpha : Real) (c
     (h_rate_beta : ((RATE_MIN <= rate_beta) ∧ (rate_beta <= RATE_MAX))) :
     ((auc_inf coef_a rate_alpha coef_b rate_beta) >= (0 : Real)) := by
   unfold auc_inf
+  try unfold T_MAX at *
+  try unfold RATE_MIN at *
+  try unfold RATE_MAX at *
+  try unfold COEF_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -84,6 +98,9 @@ theorem auc_inf_finite_for_positive_rates (coef_a : Real) (rate_alpha : Real) (c
 noncomputable def effect_site_step (ce_prev : Real) (central_c : Real) (rate_keo : Real) (dt : Real) : Real :=
   (min (max (ce_prev + ((dt * rate_keo) * (central_c - ce_prev))) (0 : Real)) COEF_MAX)
 
+-- source obligations for effect_site_step: {O1}
+--   O1 [eb48dd5c444a] -> PRESERVED (accounted)  theorem effect_site_tracks_central_compartment
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem effect_site_tracks_central_compartment (ce_prev : Real) (central_c : Real) (rate_keo : Real) (dt : Real)
     (h_ce_prev : (((0 : Real) <= ce_prev) ∧ (ce_prev <= COEF_MAX)))
     (h_central_c : (((0 : Real) <= central_c) ∧ (central_c <= COEF_MAX)))
@@ -92,6 +109,10 @@ theorem effect_site_tracks_central_compartment (ce_prev : Real) (central_c : Rea
     (h_clamp1 : (0 : Real) ≤ COEF_MAX) :
     ((effect_site_step ce_prev central_c rate_keo dt) >= (0 : Real)) := by
   unfold effect_site_step
+  try unfold T_MAX at *
+  try unfold RATE_MIN at *
+  try unfold RATE_MAX at *
+  try unfold COEF_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

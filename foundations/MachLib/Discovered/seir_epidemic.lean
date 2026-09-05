@@ -24,6 +24,9 @@ noncomputable def DT_MAX : Real := (1 : Real)
 noncomputable def step_susceptible (s : Real) (i : Real) (n : Real) (beta : Real) (dt : Real) : Real :=
   (s - ((((beta * s) * i) / n) * dt))
 
+-- source obligations for step_susceptible: {O1}
+--   O1 [d8abb6234507] -> PRESERVED (accounted)  theorem seir_step_susceptible_nonincreasing
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem seir_step_susceptible_nonincreasing (s : Real) (i : Real) (n : Real) (beta : Real) (dt : Real)
     (h1 : (s >= (0 : Real)))
     (h2 : (i >= (0 : Real)))
@@ -35,6 +38,11 @@ theorem seir_step_susceptible_nonincreasing (s : Real) (i : Real) (n : Real) (be
     (h8 : (dt <= DT_MAX)) :
     ((step_susceptible s i n beta dt) <= s) := by
   unfold step_susceptible
+  try unfold ONE at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold RATE_MAX at *
+  try unfold DT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -58,6 +66,7 @@ theorem seir_step_susceptible_nonincreasing (s : Real) (i : Real) (n : Real) (be
 noncomputable def step_exposed (s : Real) (e : Real) (i : Real) (n : Real) (beta : Real) (sigma : Real) (dt : Real) : Real :=
   (e + (((((beta * s) * i) / n) - (sigma * e)) * dt))
 
+-- obligations for step_exposed: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -82,6 +91,7 @@ theorem seir_step_exposed_nonneg (s : Real) (e : Real) (i : Real) (n : Real) (be
 noncomputable def step_infectious (e : Real) (i : Real) (sigma : Real) (gamma : Real) (dt : Real) : Real :=
   (i + (((sigma * e) - (gamma * i)) * dt))
 
+-- obligations for step_infectious: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -103,6 +113,9 @@ theorem seir_step_infectious_nonneg (e : Real) (i : Real) (sigma : Real) (gamma 
 noncomputable def step_recovered (i : Real) (r : Real) (gamma : Real) (dt : Real) : Real :=
   (r + ((gamma * i) * dt))
 
+-- source obligations for step_recovered: {O1}
+--   O1 [7fd1388b885f] -> PRESERVED (accounted)  theorem seir_step_recovered_nondecreasing
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem seir_step_recovered_nondecreasing (i : Real) (r : Real) (gamma : Real) (dt : Real)
     (h1 : (i >= (0 : Real)))
     (h2 : (r >= (0 : Real)))
@@ -112,6 +125,11 @@ theorem seir_step_recovered_nondecreasing (i : Real) (r : Real) (gamma : Real) (
     (h6 : (dt <= DT_MAX)) :
     ((step_recovered i r gamma dt) >= r) := by
   unfold step_recovered
+  try unfold ONE at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold RATE_MAX at *
+  try unfold DT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -135,6 +153,9 @@ theorem seir_step_recovered_nondecreasing (i : Real) (r : Real) (gamma : Real) (
 noncomputable def basic_reproduction_number (beta : Real) (gamma : Real) : Real :=
   (beta / gamma)
 
+-- source obligations for basic_reproduction_number: {O1}
+--   O1 [de0b7378cc82] -> PRESERVED (accounted)  theorem seir_r0_threshold_at_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem seir_r0_threshold_at_one (beta : Real) (gamma : Real)
     (h1 : (beta >= (0 : Real)))
     (h2 : (beta <= RATE_MAX))
@@ -142,6 +163,11 @@ theorem seir_r0_threshold_at_one (beta : Real) (gamma : Real)
     (h4 : (gamma <= RATE_MAX)) :
     ((basic_reproduction_number beta gamma) >= (0 : Real)) := by
   unfold basic_reproduction_number
+  try unfold ONE at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold RATE_MAX at *
+  try unfold DT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

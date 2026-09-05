@@ -24,6 +24,7 @@ noncomputable def MC_MAX : Real := (5.0 : Real)
 noncomputable def frtb_capital_charge (var_average : Real) (var_max : Real) (multiplier : Real) : Real :=
   (multiplier * (min (max var_max var_average) CAP_MAX))
 
+-- obligations for frtb_capital_charge: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,11 +41,19 @@ theorem capital_max_dominates_average (var_average : Real) (var_max : Real) (mul
 noncomputable def ima_total_capital (capital_unstressed : Real) (capital_stressed : Real) : Real :=
   (Real.sqrt ((capital_unstressed * capital_unstressed) + (capital_stressed * capital_stressed)))
 
+-- source obligations for ima_total_capital: {O1}
+--   O1 [68864bd00955] -> PRESERVED (accounted)  theorem stressed_unstressed_pythagorean
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem stressed_unstressed_pythagorean (capital_unstressed : Real) (capital_stressed : Real)
     (h_capital_unstressed : (((0 : Real) <= capital_unstressed) ∧ (capital_unstressed <= CAP_MAX)))
     (h_capital_stressed : (((0 : Real) <= capital_stressed) ∧ (capital_stressed <= CAP_MAX))) :
     ((ima_total_capital capital_unstressed capital_stressed) >= (0 : Real)) := by
   unfold ima_total_capital
+  try unfold CAP_MAX at *
+  try unfold RHO_MIN at *
+  try unfold RHO_MAX at *
+  try unfold MC_MIN at *
+  try unfold MC_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -68,6 +77,7 @@ theorem stressed_unstressed_pythagorean (capital_unstressed : Real) (capital_str
 noncomputable def diversification_pair (cap_i : Real) (cap_j : Real) (rho : Real) : Real :=
   ((rho * cap_i) * cap_j)
 
+-- obligations for diversification_pair: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -83,10 +93,18 @@ theorem diversification_pair_signed_by_rho (cap_i : Real) (cap_j : Real) (rho : 
 noncomputable def risk_aggregate_finalize (accumulated_sum : Real) : Real :=
   (Real.sqrt accumulated_sum)
 
+-- source obligations for risk_aggregate_finalize: {O1}
+--   O1 [a11acc2eb978] -> PRESERVED (accounted)  theorem risk_finalize_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem risk_finalize_nonneg (accumulated_sum : Real)
     (h_accumulated_sum : (((0 : Real) <= accumulated_sum) ∧ (accumulated_sum <= (CAP_MAX * CAP_MAX)))) :
     ((risk_aggregate_finalize accumulated_sum) >= (0 : Real)) := by
   unfold risk_aggregate_finalize
+  try unfold CAP_MAX at *
+  try unfold RHO_MIN at *
+  try unfold RHO_MAX at *
+  try unfold MC_MIN at *
+  try unfold MC_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

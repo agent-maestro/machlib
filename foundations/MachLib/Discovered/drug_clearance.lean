@@ -28,6 +28,9 @@ axiom crcl_female (age_years : Real) (weight_kg : Real) (serum_creatinine : Real
 noncomputable def clearance (dose : Real) (bioavailability : Real) (auc : Real) : Real :=
   ((dose * bioavailability) / auc)
 
+-- source obligations for clearance: {O1}
+--   O1 [f87b4689b056] -> PRESERVED (accounted)  theorem clearance_proportional_to_dose
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem clearance_proportional_to_dose (dose : Real) (bioavailability : Real) (auc : Real)
     (h1 : (dose >= (0 : Real)))
     (h2 : (dose <= D_MAX))
@@ -36,6 +39,13 @@ theorem clearance_proportional_to_dose (dose : Real) (bioavailability : Real) (a
     (h5 : (auc >= AUC_MIN)) :
     ((clearance dose bioavailability auc) >= (0 : Real)) := by
   unfold clearance
+  try unfold D_MAX at *
+  try unfold AUC_MIN at *
+  try unfold AGE_MIN at *
+  try unfold AGE_MAX at *
+  try unfold WT_MIN at *
+  try unfold WT_MAX at *
+  try unfold SCR_MIN at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -59,6 +69,9 @@ theorem clearance_proportional_to_dose (dose : Real) (bioavailability : Real) (a
 noncomputable def crcl_male (age_years : Real) (weight_kg : Real) (serum_creatinine : Real) : Real :=
   (((max ((140.0 : Real) - age_years) (0 : Real)) * weight_kg) / ((72.0 : Real) * serum_creatinine))
 
+-- source obligations for crcl_male: {O1}
+--   O1 [23eee4d8944e] -> PRESERVED (accounted)  theorem cockcroft_gault_decreases_with_age
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cockcroft_gault_decreases_with_age (age_years : Real) (weight_kg : Real) (serum_creatinine : Real)
     (h1 : (age_years >= AGE_MIN))
     (h2 : (age_years <= AGE_MAX))
@@ -67,6 +80,13 @@ theorem cockcroft_gault_decreases_with_age (age_years : Real) (weight_kg : Real)
     (h5 : (serum_creatinine >= SCR_MIN)) :
     ((crcl_male age_years weight_kg serum_creatinine) >= (0 : Real)) := by
   unfold crcl_male
+  try unfold D_MAX at *
+  try unfold AUC_MIN at *
+  try unfold AGE_MIN at *
+  try unfold AGE_MAX at *
+  try unfold WT_MIN at *
+  try unfold WT_MAX at *
+  try unfold SCR_MIN at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -29,6 +29,9 @@ axiom bs_d2 (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_ex
 noncomputable def black_scholes_call (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   ((spot * (HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * ((bs_d1 spot strike rate vol time_to_expiry) + (((GELU_C3 * (bs_d1 spot strike rate vol time_to_expiry)) * (bs_d1 spot strike rate vol time_to_expiry)) * (bs_d1 spot strike rate vol time_to_expiry)))))))) - ((strike * (Real.exp ((-rate) * time_to_expiry))) * (HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * (((bs_d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry))) + (((GELU_C3 * ((bs_d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))) * ((bs_d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))) * ((bs_d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))))))))))
 
+-- source obligations for black_scholes_call: {O1}
+--   O1 [bbeac458f300] -> PRESERVED (accounted)  theorem black_scholes_call_no_arb
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem black_scholes_call_no_arb (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
     (h_spot : (spot > (0 : Real)))
     (h_strike : (strike > (0 : Real)))
@@ -36,6 +39,10 @@ theorem black_scholes_call_no_arb (spot : Real) (strike : Real) (rate : Real) (v
     (h_time_to_expiry : (time_to_expiry > TINY_T)) :
     ((black_scholes_call spot strike rate vol time_to_expiry) >= (0 : Real)) := by
   unfold black_scholes_call
+  try unfold SQRT_2_OVER_PI at *
+  try unfold GELU_C3 at *
+  try unfold HALF at *
+  try unfold TINY_T at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -59,6 +66,9 @@ theorem black_scholes_call_no_arb (spot : Real) (strike : Real) (rate : Real) (v
 noncomputable def black_scholes_put (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   (((black_scholes_call spot strike rate vol time_to_expiry) - spot) + (strike * (Real.exp ((-rate) * time_to_expiry))))
 
+-- source obligations for black_scholes_put: {O1}
+--   O1 [508a446a6728] -> PRESERVED (accounted)  theorem black_scholes_put_via_parity
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem black_scholes_put_via_parity (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
     (h_spot : (spot > (0 : Real)))
     (h_strike : (strike > (0 : Real)))
@@ -66,6 +76,10 @@ theorem black_scholes_put_via_parity (spot : Real) (strike : Real) (rate : Real)
     (h_time_to_expiry : (time_to_expiry > TINY_T)) :
     ((black_scholes_put spot strike rate vol time_to_expiry) >= (0 : Real)) := by
   unfold black_scholes_put
+  try unfold SQRT_2_OVER_PI at *
+  try unfold GELU_C3 at *
+  try unfold HALF at *
+  try unfold TINY_T at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

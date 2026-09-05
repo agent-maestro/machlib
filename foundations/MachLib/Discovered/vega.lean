@@ -26,6 +26,9 @@ axiom d1 (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expir
 noncomputable def bs_vega (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   ((spot * (SQRT_2_PI_INV * (Real.exp (((-HALF) * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry))))) * (Real.sqrt time_to_expiry))
 
+-- source obligations for bs_vega: {O1}
+--   O1 [b74017c9dc29] -> PRESERVED (accounted)  theorem bs_vega_non_negative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bs_vega_non_negative (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
     (h_spot : (spot > (0 : Real)))
     (h_strike : (strike > (0 : Real)))
@@ -33,6 +36,9 @@ theorem bs_vega_non_negative (spot : Real) (strike : Real) (rate : Real) (vol : 
     (h_time_to_expiry : (time_to_expiry > TINY_T)) :
     ((bs_vega spot strike rate vol time_to_expiry) >= (0 : Real)) := by
   unfold bs_vega
+  try unfold HALF at *
+  try unfold SQRT_2_PI_INV at *
+  try unfold TINY_T at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

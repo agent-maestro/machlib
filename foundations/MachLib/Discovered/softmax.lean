@@ -20,12 +20,18 @@ noncomputable def SOFTMAX_X_MAX : Real := (30.0 : Real)
 noncomputable def softmax_shift_exp (logit : Real) (max_logit : Real) : Real :=
   (Real.exp (logit - max_logit))
 
+-- source obligations for softmax_shift_exp: {O1, O2}
+--   O1 [31e785df70ac] -> PRESERVED (accounted)  theorem softmax_numerator_bounded_by_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [7291e581d406] -> PRESERVED (accounted)  theorem softmax_numerator_bounded_by_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem softmax_numerator_bounded_by_one (logit : Real) (max_logit : Real)
     (h1 : ((abs logit) < SOFTMAX_X_MAX))
     (h2 : ((abs max_logit) < SOFTMAX_X_MAX))
     (h3 : (logit <= max_logit)) :
     (((softmax_shift_exp logit max_logit) >= (0 : Real))) ∧ (((softmax_shift_exp logit max_logit) <= (1 : Real))) := by
   unfold softmax_shift_exp
+  try unfold SOFTMAX_X_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -50,12 +56,18 @@ theorem softmax_numerator_bounded_by_one (logit : Real) (max_logit : Real)
 noncomputable def softmax_normalize (numer : Real) (denom_sum : Real) : Real :=
   (numer / denom_sum)
 
+-- source obligations for softmax_normalize: {O1, O2}
+--   O1 [2b9c58428599] -> PRESERVED (accounted)  theorem softmax_value_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [a3a762af11df] -> PRESERVED (accounted)  theorem softmax_value_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem softmax_value_in_unit_interval (numer : Real) (denom_sum : Real)
     (h1 : (numer >= (0 : Real)))
     (h2 : (denom_sum > (0 : Real)))
     (h3 : (numer <= denom_sum)) :
     (((softmax_normalize numer denom_sum) >= (0 : Real))) ∧ (((softmax_normalize numer denom_sum) <= (1 : Real))) := by
   unfold softmax_normalize
+  try unfold SOFTMAX_X_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -80,11 +92,17 @@ theorem softmax_value_in_unit_interval (numer : Real) (denom_sum : Real)
 noncomputable def softmax_two_logit (a : Real) (b : Real) : Real :=
   ((1 : Real) / ((1 : Real) + (Real.exp (b - a))))
 
+-- source obligations for softmax_two_logit: {O1, O2}
+--   O1 [980d62945442] -> PRESERVED (accounted)  theorem softmax_two_equals_sigmoid_diff
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [395962bca805] -> PRESERVED (accounted)  theorem softmax_two_equals_sigmoid_diff
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem softmax_two_equals_sigmoid_diff (a : Real) (b : Real)
     (h1 : ((abs a) < SOFTMAX_X_MAX))
     (h2 : ((abs b) < SOFTMAX_X_MAX)) :
     (((softmax_two_logit a b) >= (0 : Real))) ∧ (((softmax_two_logit a b) <= (1 : Real))) := by
   unfold softmax_two_logit
+  try unfold SOFTMAX_X_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -109,6 +127,7 @@ theorem softmax_two_equals_sigmoid_diff (a : Real) (b : Real)
 noncomputable def log_sum_exp_pair (a : Real) (b : Real) : Real :=
   ((min (max a b) SOFTMAX_X_MAX) + (Real.log ((Real.exp (a - (min (max a b) SOFTMAX_X_MAX))) + (Real.exp (b - (min (max a b) SOFTMAX_X_MAX))))))
 
+-- obligations for log_sum_exp_pair: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

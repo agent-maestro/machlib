@@ -28,6 +28,9 @@ axiom eyring_rate_split (delta_h_double_dagger : Real) (delta_s_double_dagger : 
 noncomputable def eyring_rate_constant (delta_g_double_dagger : Real) (temperature : Real) : Real :=
   ((KB_OVER_H * temperature) * (Real.exp ((-delta_g_double_dagger) / (R_GAS * temperature))))
 
+-- source obligations for eyring_rate_constant: {O1}
+--   O1 [b5efc28e01fc] -> PRESERVED (accounted)  theorem eyring_rate_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem eyring_rate_positive (delta_g_double_dagger : Real) (temperature : Real)
     (h1 : (delta_g_double_dagger >= (0 : Real)))
     (h2 : (delta_g_double_dagger <= DG_MAX))
@@ -35,6 +38,13 @@ theorem eyring_rate_positive (delta_g_double_dagger : Real) (temperature : Real)
     (h4 : (temperature <= T_MAX)) :
     ((eyring_rate_constant delta_g_double_dagger temperature) > (0 : Real)) := by
   unfold eyring_rate_constant
+  try unfold KB at *
+  try unfold H_PL at *
+  try unfold KB_OVER_H at *
+  try unfold R_GAS at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold DG_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

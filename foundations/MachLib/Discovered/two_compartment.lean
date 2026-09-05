@@ -25,6 +25,9 @@ axiom auc_inf (a_coeff : Real) (alpha_rate : Real) (b_coeff : Real) (beta_rate :
 noncomputable def plasma_concentration (a_coeff : Real) (alpha_rate : Real) (b_coeff : Real) (beta_rate : Real) (time : Real) : Real :=
   ((a_coeff * (Real.exp ((-alpha_rate) * time))) + (b_coeff * (Real.exp ((-beta_rate) * time))))
 
+-- source obligations for plasma_concentration: {O1}
+--   O1 [6465968db608] -> PRESERVED (accounted)  theorem two_compartment_alpha_dominates_early
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem two_compartment_alpha_dominates_early (a_coeff : Real) (alpha_rate : Real) (b_coeff : Real) (beta_rate : Real) (time : Real)
     (h1 : (a_coeff >= (0 : Real)))
     (h2 : (b_coeff >= (0 : Real)))
@@ -36,6 +39,8 @@ theorem two_compartment_alpha_dominates_early (a_coeff : Real) (alpha_rate : Rea
     (h8 : (time <= T_MAX)) :
     ((plasma_concentration a_coeff alpha_rate b_coeff beta_rate time) >= (0 : Real)) := by
   unfold plasma_concentration
+  try unfold T_MAX at *
+  try unfold RATE_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

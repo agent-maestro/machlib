@@ -22,6 +22,7 @@ axiom worst_scenario_pnl (scenario_a : Real) (scenario_b : Real) : Real  -- help
 noncomputable def linear_pnl (delta : Real) (vega : Real) (spot_shock_pct : Real) (vol_shock_abs : Real) : Real :=
   ((delta * spot_shock_pct) + (vega * vol_shock_abs))
 
+-- obligations for linear_pnl: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -34,6 +35,7 @@ theorem stress_pnl_linear (delta : Real) (vega : Real) (spot_shock_pct : Real) (
 noncomputable def quadratic_pnl (delta : Real) (gamma : Real) (vega : Real) (vanna : Real) (spot_shock_pct : Real) (vol_shock_abs : Real) : Real :=
   (((delta * spot_shock_pct) + (vega * vol_shock_abs)) + ((((HALF * gamma) * spot_shock_pct) * spot_shock_pct) + ((vanna * spot_shock_pct) * vol_shock_abs)))
 
+-- obligations for quadratic_pnl: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

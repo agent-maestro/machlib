@@ -28,6 +28,9 @@ noncomputable def ION_MAX : Real := (0.1 : Real)
 noncomputable def saturation_state (calcium_concentration : Real) (carbonate_concentration : Real) (ksp_aragonite : Real) : Real :=
   ((calcium_concentration * carbonate_concentration) / ksp_aragonite)
 
+-- source obligations for saturation_state: {O1}
+--   O1 [b828a733bb6c] -> PRESERVED (accounted)  theorem aragonite_saturation_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem aragonite_saturation_nonneg (calcium_concentration : Real) (carbonate_concentration : Real) (ksp_aragonite : Real)
     (h1 : (calcium_concentration >= (0 : Real)))
     (h2 : (calcium_concentration <= ION_MAX))
@@ -37,6 +40,15 @@ theorem aragonite_saturation_nonneg (calcium_concentration : Real) (carbonate_co
     (h6 : (ksp_aragonite <= KSP_MAX)) :
     ((saturation_state calcium_concentration carbonate_concentration ksp_aragonite) >= (0 : Real)) := by
   unfold saturation_state
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold T_REF at *
+  try unfold R_GAS at *
+  try unfold KSP_MAX at *
+  try unfold KSP_MIN at *
+  try unfold ION_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -60,6 +72,9 @@ theorem aragonite_saturation_nonneg (calcium_concentration : Real) (carbonate_co
 noncomputable def ksp_at_temperature (ksp_reference : Real) (delta_h_dissolution : Real) (temperature_k : Real) : Real :=
   (ksp_reference * (Real.exp (((-delta_h_dissolution) / R_GAS) * ((ONE / temperature_k) - (ONE / T_REF)))))
 
+-- source obligations for ksp_at_temperature: {O1}
+--   O1 [5f3949a17247] -> PRESERVED (accounted)  theorem vant_hoff_temperature_correction_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem vant_hoff_temperature_correction_positive (ksp_reference : Real) (delta_h_dissolution : Real) (temperature_k : Real)
     (h1 : (ksp_reference >= KSP_MIN))
     (h2 : (ksp_reference <= KSP_MAX))
@@ -69,6 +84,15 @@ theorem vant_hoff_temperature_correction_positive (ksp_reference : Real) (delta_
     (h6 : (temperature_k <= T_MAX)) :
     ((ksp_at_temperature ksp_reference delta_h_dissolution temperature_k) > (0 : Real)) := by
   unfold ksp_at_temperature
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold T_REF at *
+  try unfold R_GAS at *
+  try unfold KSP_MAX at *
+  try unfold KSP_MIN at *
+  try unfold ION_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

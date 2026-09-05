@@ -25,6 +25,9 @@ axiom sign_p256_r (d : Real) (k : Real) (h : Real) : Real  -- extern (axiomatise
 noncomputable def scalar_mul_x (scalar : Real) (point_x : Real) : Real :=
   (montgomery_ladder_p256_x scalar point_x)
 
+-- source obligations for scalar_mul_x: {O1}
+--   O1 [f9ad1b5bc022] -> PRESERVED (accounted)  theorem ecdsa_scalar_mul_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ecdsa_scalar_mul_correct (scalar : Real) (point_x : Real)
     (h1 : True) :
     True := by
@@ -35,6 +38,9 @@ theorem ecdsa_scalar_mul_correct (scalar : Real) (point_x : Real)
 noncomputable def sign_r (private_key : Real) (nonce : Real) (msg_hash : Real) : Real :=
   (sign_p256_r private_key nonce msg_hash)
 
+-- source obligations for sign_r: {O1}
+--   O1 [7da59964d330] -> PRESERVED (accounted)  theorem ecdsa_sign_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ecdsa_sign_correct (private_key : Real) (nonce : Real) (msg_hash : Real)
     (h1 : (nonce > (0 : Real))) :
     True := by

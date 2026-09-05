@@ -30,6 +30,9 @@ noncomputable def GAMMA_MAX : Real := (100.0 : Real)
 noncomputable def rubisco_limited (ci : Real) (gamma_star : Real) (vcmax : Real) (kc : Real) (ko : Real) (o2 : Real) : Real :=
   ((vcmax * (ci - gamma_star)) / (ci + (kc * (ONE + (o2 / ko)))))
 
+-- source obligations for rubisco_limited: {O1}
+--   O1 [7eab704f319b] -> PRESERVED (accounted)  theorem farquhar_ac_nonneg_when_ci_above_gamma_star
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem farquhar_ac_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Real) (vcmax : Real) (kc : Real) (ko : Real) (o2 : Real)
     (h1 : (ci >= CI_MIN))
     (h2 : (ci <= CI_MAX))
@@ -44,6 +47,17 @@ theorem farquhar_ac_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Re
     (h11 : (o2 <= O2_MAX)) :
     ((rubisco_limited ci gamma_star vcmax kc ko o2) >= (0 : Real)) := by
   unfold rubisco_limited
+  try unfold FOUR at *
+  try unfold EIGHT at *
+  try unfold ONE at *
+  try unfold CI_MIN at *
+  try unfold CI_MAX at *
+  try unfold O2_MIN at *
+  try unfold O2_MAX at *
+  try unfold VCMAX_MAX at *
+  try unfold J_MAX at *
+  try unfold RD_MAX at *
+  try unfold GAMMA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -67,6 +81,9 @@ theorem farquhar_ac_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Re
 noncomputable def light_limited (ci : Real) (gamma_star : Real) (electron_transport : Real) : Real :=
   ((electron_transport * (ci - gamma_star)) / ((FOUR * ci) + (EIGHT * gamma_star)))
 
+-- source obligations for light_limited: {O1}
+--   O1 [12c7393a6196] -> PRESERVED (accounted)  theorem farquhar_aj_nonneg_when_ci_above_gamma_star
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem farquhar_aj_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Real) (electron_transport : Real)
     (h1 : (ci >= CI_MIN))
     (h2 : (ci <= CI_MAX))
@@ -77,6 +94,17 @@ theorem farquhar_aj_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Re
     (h7 : (electron_transport <= J_MAX)) :
     ((light_limited ci gamma_star electron_transport) >= (0 : Real)) := by
   unfold light_limited
+  try unfold FOUR at *
+  try unfold EIGHT at *
+  try unfold ONE at *
+  try unfold CI_MIN at *
+  try unfold CI_MAX at *
+  try unfold O2_MIN at *
+  try unfold O2_MAX at *
+  try unfold VCMAX_MAX at *
+  try unfold J_MAX at *
+  try unfold RD_MAX at *
+  try unfold GAMMA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -100,6 +128,7 @@ theorem farquhar_aj_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Re
 noncomputable def net_assimilation (rubisco_rate : Real) (light_rate : Real) (dark_respiration : Real) : Real :=
   ((min rubisco_rate light_rate) - dark_respiration)
 
+-- obligations for net_assimilation: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

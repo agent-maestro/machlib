@@ -61,9 +61,9 @@
     "manifest_standard":  { "kind": "file", "file": "foundations/AXIOM_MANIFEST.md", "pattern": "^\\| standard \\| (\\d+) \\|" },
     "manifest_float":     { "kind": "file", "file": "foundations/AXIOM_MANIFEST.md", "pattern": "^\\| float-bridge \\| (\\d+) \\|" },
     "manifest_trusted":   { "kind": "sum", "of": ["manifest_witnessed", "manifest_mapped", "manifest_standard", "manifest_float"] },
-    "closerate_pct":      { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_08_01.md", "pattern": "close-rate \\(of compiled\\): ([0-9.]+)%" },
-    "closerate_closed":   { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_08_01.md", "pattern": "close-rate \\(of compiled\\): [0-9.]+%\\s+\\((\\d+)/\\d+\\)" },
-    "closerate_compiled": { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_08_01.md", "pattern": "close-rate \\(of compiled\\): [0-9.]+%\\s+\\(\\d+/(\\d+)\\)" }
+    "closerate_pct":      { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_09_05.md", "pattern": "close-rate \\(of compiled\\): ([0-9.]+)%" },
+    "closerate_closed":   { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_09_05.md", "pattern": "close-rate \\(of compiled\\): [0-9.]+%\\s+\\((\\d+)/\\d+\\)" },
+    "closerate_compiled": { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_09_05.md", "pattern": "close-rate \\(of compiled\\): [0-9.]+%\\s+\\(\\d+/(\\d+)\\)" }
   },
   "claims": [
     { "id": "readme.theorems_core",       "file": "README.md", "pattern": "theorems outside `Discovered/` \\| ([0-9 \\u202f]+) \\|", "source": "theorems_core" },
@@ -83,8 +83,8 @@
     { "id": "readme.reachable",           "file": "README.md", "pattern": "modules reachable from the aggregator \\| ([0-9 \\u202f]+) of [0-9 \\u202f]+ \\|", "source": "aggregator", "group": 1 },
     { "id": "readme.modules_total",       "file": "README.md", "pattern": "modules reachable from the aggregator \\| [0-9 \\u202f]+ of ([0-9 \\u202f]+) \\|", "source": "aggregator", "group": 2 },
     { "id": "readme.closerate_pct",       "file": "README.md", "pattern": "auto-closes \\*\\*([0-9.]+) %\\*\\*", "source": "closerate_pct" },
-    { "id": "readme.closerate_closed",    "file": "README.md", "pattern": "\\((\\d+) of \\d+, measured 2026-08-01", "source": "closerate_closed" },
-    { "id": "readme.closerate_compiled",  "file": "README.md", "pattern": "\\(\\d+ of (\\d+), measured 2026-08-01", "source": "closerate_compiled" },
+    { "id": "readme.closerate_closed",    "file": "README.md", "pattern": "\\((\\d+) of \\d+, measured 2026-09-05", "source": "closerate_closed" },
+    { "id": "readme.closerate_compiled",  "file": "README.md", "pattern": "\\(\\d+ of (\\d+), measured 2026-09-05", "source": "closerate_compiled" },
 
     { "id": "claude.lean_files",          "file": "CLAUDE.md", "pattern": "holds \\*\\*([0-9 \\u202f]+) `\\.lean` files\\*\\*", "source": "lean_files" },
     { "id": "claude.lean_files_top",      "file": "CLAUDE.md", "pattern": "`\\.lean` files\\*\\* \\(([0-9 \\u202f]+) top-level", "source": "lean_files_top" },

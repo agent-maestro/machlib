@@ -26,6 +26,9 @@ axiom concentration_from_absorbance (absorbance_value : Real) (molar_absorptivit
 noncomputable def absorbance (molar_absorptivity : Real) (path_length : Real) (concentration : Real) : Real :=
   ((molar_absorptivity * path_length) * concentration)
 
+-- source obligations for absorbance: {O1}
+--   O1 [4be718136d89] -> PRESERVED (accounted)  theorem beer_lambert_linear_in_concentration
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem beer_lambert_linear_in_concentration (molar_absorptivity : Real) (path_length : Real) (concentration : Real)
     (h1 : (molar_absorptivity >= (0 : Real)))
     (h2 : (path_length >= (0 : Real)))
@@ -34,6 +37,9 @@ theorem beer_lambert_linear_in_concentration (molar_absorptivity : Real) (path_l
     (h5 : (concentration <= C_MAX)) :
     ((absorbance molar_absorptivity path_length concentration) >= (0 : Real)) := by
   unfold absorbance
+  try unfold A_MAX at *
+  try unfold C_MAX at *
+  try unfold L_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -57,11 +63,19 @@ theorem beer_lambert_linear_in_concentration (molar_absorptivity : Real) (path_l
 noncomputable def transmittance (absorbance_value : Real) : Real :=
   (Real.exp (-absorbance_value))
 
+-- source obligations for transmittance: {O1, O2}
+--   O1 [a5b7e9ce87d7] -> PRESERVED (accounted)  theorem transmittance_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [f70a7997fadf] -> PRESERVED (accounted)  theorem transmittance_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem transmittance_in_unit_interval (absorbance_value : Real)
     (h1 : (absorbance_value >= (0 : Real)))
     (h2 : (absorbance_value <= A_MAX)) :
     (((transmittance absorbance_value) >= (0 : Real))) ∧ (((transmittance absorbance_value) <= (1 : Real))) := by
   unfold transmittance
+  try unfold A_MAX at *
+  try unfold C_MAX at *
+  try unfold L_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

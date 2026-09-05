@@ -27,6 +27,7 @@ noncomputable def CP_MAX : Real := (0.0015 : Real)
 noncomputable def reference_et0 (delta_slope : Real) (net_radiation : Real) (soil_heat_flux : Real) (air_density : Real) (specific_heat : Real) (sat_vapor_pressure : Real) (actual_vapor_pressure : Real) (aero_resistance : Real) (surface_resistance : Real) (psychrometric : Real) : Real :=
   (((delta_slope * (net_radiation - soil_heat_flux)) + (((air_density * specific_heat) * (sat_vapor_pressure - actual_vapor_pressure)) / aero_resistance)) / (delta_slope + (psychrometric * (ONE + (surface_resistance / aero_resistance)))))
 
+-- obligations for reference_et0: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

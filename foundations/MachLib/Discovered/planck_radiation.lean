@@ -26,6 +26,9 @@ noncomputable def T_MAX : Real := (100000.0 : Real)
 noncomputable def spectral_radiance (wavelength_m : Real) (temperature_k : Real) : Real :=
   ((TWO_HC2 / ((((wavelength_m * wavelength_m) * wavelength_m) * wavelength_m) * wavelength_m)) / ((Real.exp (HC_OVER_K / (wavelength_m * temperature_k))) - (1 : Real)))
 
+-- source obligations for spectral_radiance: {O1}
+--   O1 [262701b735ae] -> PRESERVED (accounted)  theorem planck_radiance_increases_with_temperature
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem planck_radiance_increases_with_temperature (wavelength_m : Real) (temperature_k : Real)
     (h1 : (wavelength_m >= LAMBDA_MIN))
     (h2 : (wavelength_m <= LAMBDA_MAX))
@@ -33,6 +36,13 @@ theorem planck_radiance_increases_with_temperature (wavelength_m : Real) (temper
     (h4 : (temperature_k <= T_MAX)) :
     ((spectral_radiance wavelength_m temperature_k) >= (0 : Real)) := by
   unfold spectral_radiance
+  try unfold HC at *
+  try unfold HC_OVER_K at *
+  try unfold TWO_HC2 at *
+  try unfold LAMBDA_MIN at *
+  try unfold LAMBDA_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -56,11 +66,21 @@ theorem planck_radiance_increases_with_temperature (wavelength_m : Real) (temper
 noncomputable def wien_lambda_max (temperature_k : Real) : Real :=
   ((0.002897771955 : Real) / temperature_k)
 
+-- source obligations for wien_lambda_max: {O1}
+--   O1 [0aa12061bf44] -> PRESERVED (accounted)  theorem wien_constant_inversely_proportional_to_T
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem wien_constant_inversely_proportional_to_T (temperature_k : Real)
     (h1 : (temperature_k >= T_MIN))
     (h2 : (temperature_k <= T_MAX)) :
     ((wien_lambda_max temperature_k) >= (0 : Real)) := by
   unfold wien_lambda_max
+  try unfold HC at *
+  try unfold HC_OVER_K at *
+  try unfold TWO_HC2 at *
+  try unfold LAMBDA_MIN at *
+  try unfold LAMBDA_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -84,6 +104,9 @@ theorem wien_constant_inversely_proportional_to_T (temperature_k : Real)
 noncomputable def rayleigh_jeans_radiance (wavelength_m : Real) (temperature_k : Real) : Real :=
   (((8.278163146904841e-15 : Real) * temperature_k) / (((wavelength_m * wavelength_m) * wavelength_m) * wavelength_m))
 
+-- source obligations for rayleigh_jeans_radiance: {O1}
+--   O1 [91cfac650340] -> PRESERVED (accounted)  theorem rayleigh_jeans_underestimates_at_short_wavelength
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rayleigh_jeans_underestimates_at_short_wavelength (wavelength_m : Real) (temperature_k : Real)
     (h1 : (wavelength_m >= LAMBDA_MIN))
     (h2 : (wavelength_m <= LAMBDA_MAX))
@@ -91,6 +114,13 @@ theorem rayleigh_jeans_underestimates_at_short_wavelength (wavelength_m : Real) 
     (h4 : (temperature_k <= T_MAX)) :
     ((rayleigh_jeans_radiance wavelength_m temperature_k) >= (0 : Real)) := by
   unfold rayleigh_jeans_radiance
+  try unfold HC at *
+  try unfold HC_OVER_K at *
+  try unfold TWO_HC2 at *
+  try unfold LAMBDA_MIN at *
+  try unfold LAMBDA_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

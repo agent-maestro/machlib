@@ -22,6 +22,7 @@ axiom pulse_phase (f_d : Real) (n : Real) (t_pri : Real) : Real  -- helper (axio
 noncomputable def doppler_real (s_real : Real) (s_imag : Real) (phase : Real) : Real :=
   ((s_real * (Real.cos phase)) + (s_imag * (Real.sin phase)))
 
+-- obligations for doppler_real: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -36,6 +37,7 @@ theorem doppler_real_bounded_by_magnitude (s_real : Real) (s_imag : Real) (phase
 noncomputable def doppler_imag (s_real : Real) (s_imag : Real) (phase : Real) : Real :=
   ((s_imag * (Real.cos phase)) - (s_real * (Real.sin phase)))
 
+-- obligations for doppler_imag: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

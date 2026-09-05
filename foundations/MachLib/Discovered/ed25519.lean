@@ -26,6 +26,9 @@ axiom sign_ed25519_r (sk : Real) (msg_first : Real) : Real  -- extern (axiomatis
 noncomputable def edwards_add_y (p_y : Real) (q_y : Real) : Real :=
   (edwards_add_complete_y p_y q_y)
 
+-- source obligations for edwards_add_y: {O1}
+--   O1 [124ab8304940] -> PRESERVED (accounted)  theorem ed25519_point_addition_complete
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ed25519_point_addition_complete (p_y : Real) (q_y : Real)
     (h1 : True) :
     True := by
@@ -36,6 +39,9 @@ theorem ed25519_point_addition_complete (p_y : Real) (q_y : Real)
 noncomputable def sign_r (private_key : Real) (msg_first : Real) : Real :=
   (sign_ed25519_r private_key msg_first)
 
+-- source obligations for sign_r: {O1}
+--   O1 [7da59964d330] -> PRESERVED (accounted)  theorem ed25519_sign_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ed25519_sign_correct (private_key : Real) (msg_first : Real)
     (h1 : True) :
     True := by

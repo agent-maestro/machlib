@@ -25,6 +25,9 @@ axiom falcon_butterfly (coeff : Real) (twiddle : Real) : Real  -- extern (axioma
 noncomputable def ntt_butterfly (coeff : Real) (twiddle : Real) : Real :=
   (falcon_butterfly coeff twiddle)
 
+-- source obligations for ntt_butterfly: {O1}
+--   O1 [f03ec05e33f8] -> PRESERVED (accounted)  theorem falcon_ntt_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem falcon_ntt_correct (coeff : Real) (twiddle : Real)
     (h1 : True) :
     True := by

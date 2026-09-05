@@ -28,6 +28,9 @@ axiom affine_transform (b : Real) : Real  -- extern (axiomatised in MachLib/Disc
 noncomputable def gf256_inverse (input : Real) : Real :=
   (gf256_mul (gf256_square (gf256_square (gf256_square (gf256_square (gf256_square (gf256_square (gf256_square input))))))) (gf256_mul (gf256_square (gf256_square (gf256_square (gf256_square (gf256_square (gf256_square input)))))) (gf256_mul (gf256_square (gf256_square (gf256_square (gf256_square (gf256_square input))))) (gf256_mul (gf256_square (gf256_square (gf256_square (gf256_square input)))) (gf256_mul (gf256_square (gf256_square (gf256_square input))) (gf256_mul (gf256_square (gf256_square input)) (gf256_square input)))))))
 
+-- source obligations for gf256_inverse: {O1}
+--   O1 [c5a25141b283] -> PRESERVED (accounted)  theorem gf256_inverse_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem gf256_inverse_correct (input : Real)
     (h1 : True) :
     True := by
@@ -38,6 +41,9 @@ theorem gf256_inverse_correct (input : Real)
 noncomputable def aes_sbox (input : Real) : Real :=
   (affine_transform (gf256_inverse input))
 
+-- source obligations for aes_sbox: {O1}
+--   O1 [538f6aa968f1] -> PRESERVED (accounted)  theorem aes_sbox_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem aes_sbox_correct (input : Real)
     (h1 : True) :
     True := by

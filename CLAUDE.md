@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 093 `.lean` files** (777 top-level + 316 in subdirectories) /
-**244 860 lines** / **7 570 theorems**, re-exported through the aggregator
+**247 357 lines** / **7 570 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -180,7 +180,7 @@ search is the anti-pattern the registry exists to discourage.
 `lake env lean tools/sorry_audit.lean` is useful (`1 sorryAx`, allowlisted) but is **not** a CI gate,
 and note its scope: it walks the **environment** after `import MachLib`, so it cannot see
 `Discovered/`. Neither is `scripts/closerate.sh`, which is a *measurement* harness (close-rate,
-77.1% at the last sweep), not pass/fail. The CI gate set is exactly the seven above
+79.8% at the last sweep), not pass/fail. The CI gate set is exactly the seven above
 (`.github/workflows/build-time.yml`).
 
 Note what the last two gate, because it is *not* the same thing. The claim auditor pins prose to the

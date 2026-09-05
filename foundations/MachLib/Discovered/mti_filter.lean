@@ -20,6 +20,7 @@ noncomputable def SAMPLE_MAX : Real := (1000000.0 : Real)
 noncomputable def mti_2pulse (sample_now : Real) (sample_prev : Real) : Real :=
   (sample_now - sample_prev)
 
+-- obligations for mti_2pulse: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -34,6 +35,7 @@ theorem mti_2pulse_canceller_zeros_dc (sample_now : Real) (sample_prev : Real)
 noncomputable def mti_3pulse (sample_now : Real) (sample_prev1 : Real) (sample_prev2 : Real) : Real :=
   ((sample_now - ((2.0 : Real) * sample_prev1)) + sample_prev2)
 
+-- obligations for mti_3pulse: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -49,6 +51,7 @@ theorem mti_3pulse_canceller_zeros_dc_and_first_doppler (sample_now : Real) (sam
 noncomputable def mti_4pulse_weighted (s0 : Real) (s1 : Real) (s2 : Real) (s3 : Real) : Real :=
   (((s0 - ((3.0 : Real) * s1)) + ((3.0 : Real) * s2)) - s3)
 
+-- obligations for mti_4pulse_weighted: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -65,6 +68,9 @@ theorem mti_4pulse_weighted_canceller (s0 : Real) (s1 : Real) (s2 : Real) (s3 : 
 noncomputable def improvement_factor (clutter_in_power : Real) (clutter_out_power : Real) : Real :=
   (clutter_in_power / clutter_out_power)
 
+-- source obligations for improvement_factor: {O1}
+--   O1 [316c02d9d186] -> PRESERVED (accounted)  theorem improvement_factor_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem improvement_factor_nonneg (clutter_in_power : Real) (clutter_out_power : Real)
     (h1 : (clutter_in_power >= (0 : Real)))
     (h2 : (clutter_in_power <= (1000000000000.0 : Real)))
@@ -72,6 +78,7 @@ theorem improvement_factor_nonneg (clutter_in_power : Real) (clutter_out_power :
     (h4 : (clutter_out_power <= (1000000000000.0 : Real))) :
     ((improvement_factor clutter_in_power clutter_out_power) >= (0 : Real)) := by
   unfold improvement_factor
+  try unfold SAMPLE_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

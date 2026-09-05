@@ -24,11 +24,19 @@ noncomputable def Q_MAX : Real := (100000.0 : Real)
 noncomputable def indicated_airspeed (dynamic_pressure : Real) : Real :=
   (Real.sqrt (((2.0 : Real) * dynamic_pressure) / RHO_0))
 
+-- source obligations for indicated_airspeed: {O1}
+--   O1 [3c042853bff3] -> PRESERVED (accounted)  theorem ias_monotone_in_dynamic_pressure
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ias_monotone_in_dynamic_pressure (dynamic_pressure : Real)
     (h1 : (dynamic_pressure >= Q_MIN))
     (h2 : (dynamic_pressure <= Q_MAX)) :
     ((indicated_airspeed dynamic_pressure) >= (0 : Real)) := by
   unfold indicated_airspeed
+  try unfold RHO_0 at *
+  try unfold RHO_MIN at *
+  try unfold RHO_MAX at *
+  try unfold Q_MIN at *
+  try unfold Q_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -52,6 +60,9 @@ theorem ias_monotone_in_dynamic_pressure (dynamic_pressure : Real)
 noncomputable def true_airspeed (ias : Real) (local_density : Real) : Real :=
   (ias * (Real.sqrt (RHO_0 / local_density)))
 
+-- source obligations for true_airspeed: {O1}
+--   O1 [3957c9301748] -> PRESERVED (accounted)  theorem tas_equals_ias_at_sea_level
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem tas_equals_ias_at_sea_level (ias : Real) (local_density : Real)
     (h1 : (ias >= (0 : Real)))
     (h2 : (ias <= (1000.0 : Real)))
@@ -59,6 +70,11 @@ theorem tas_equals_ias_at_sea_level (ias : Real) (local_density : Real)
     (h4 : (local_density <= RHO_MAX)) :
     ((true_airspeed ias local_density) >= (0 : Real)) := by
   unfold true_airspeed
+  try unfold RHO_0 at *
+  try unfold RHO_MIN at *
+  try unfold RHO_MAX at *
+  try unfold Q_MIN at *
+  try unfold Q_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -82,6 +98,7 @@ theorem tas_equals_ias_at_sea_level (ias : Real) (local_density : Real)
 noncomputable def calibrated_airspeed (ias : Real) (position_error : Real) : Real :=
   (ias + position_error)
 
+-- obligations for calibrated_airspeed: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

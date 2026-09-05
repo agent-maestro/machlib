@@ -26,6 +26,7 @@ noncomputable def ELEV_MAX : Real := (0.7 : Real)
 noncomputable def sas_pitch_command (pitch_rate_meas : Real) (pitch_rate_cmd : Real) (gain : Real) : Real :=
   (min (max ((-gain) * (pitch_rate_meas - pitch_rate_cmd)) (-ELEV_MAX)) ELEV_MAX)
 
+-- obligations for sas_pitch_command: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -42,6 +43,9 @@ theorem sas_pitch_command_signed_by_rate_error (pitch_rate_meas : Real) (pitch_r
 noncomputable def scheduled_gain (base_gain : Real) (mach : Real) (altitude : Real) (a_mach : Real) (a_altitude : Real) : Real :=
   (min (max (base_gain * (((1 : Real) + (a_mach * mach)) + (a_altitude * (altitude / H_MAX)))) (0 : Real)) ((5.0 : Real) * K_BASE_MAX))
 
+-- source obligations for scheduled_gain: {O1}
+--   O1 [345d647107d9] -> PRESERVED (accounted)  theorem scheduled_gain_increases_with_dynamic_pressure
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem scheduled_gain_increases_with_dynamic_pressure (base_gain : Real) (mach : Real) (altitude : Real) (a_mach : Real) (a_altitude : Real)
     (h_base_gain : (((0 : Real) <= base_gain) ∧ (base_gain <= K_BASE_MAX)))
     (h_mach : (((0 : Real) <= mach) ∧ (mach <= M_MAX)))
@@ -51,6 +55,13 @@ theorem scheduled_gain_increases_with_dynamic_pressure (base_gain : Real) (mach 
     (h_clamp1 : (0 : Real) ≤ ((5.0 : Real) * K_BASE_MAX)) :
     ((scheduled_gain base_gain mach altitude a_mach a_altitude) >= (0 : Real)) := by
   unfold scheduled_gain
+  try unfold Q_MAX at *
+  try unfold M_MAX at *
+  try unfold H_MAX at *
+  try unfold K_BASE_MAX at *
+  try unfold A_M_MAX at *
+  try unfold A_H_MAX at *
+  try unfold ELEV_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -74,6 +85,7 @@ theorem scheduled_gain_increases_with_dynamic_pressure (base_gain : Real) (mach 
 noncomputable def elevator_with_trim (sas_command : Real) (pilot_stick : Real) (trim_bias : Real) : Real :=
   (min (max ((sas_command + pilot_stick) + trim_bias) (-ELEV_MAX)) ELEV_MAX)
 
+-- obligations for elevator_with_trim: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

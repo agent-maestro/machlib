@@ -25,11 +25,16 @@ axiom gaussian_area_normalised (frequency : Real) (centre : Real) (sigma : Real)
 noncomputable def gaussian_density (frequency : Real) (centre : Real) (sigma : Real) : Real :=
   ((Real.exp (((-(frequency - centre)) * (frequency - centre)) / (((2.0 : Real) * sigma) * sigma))) / (sigma * SQRT_2PI))
 
+-- source obligations for gaussian_density: {O1}
+--   O1 [eb6b9385ef71] -> PRESERVED (accounted)  theorem gaussian_peak_at_centre
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem gaussian_peak_at_centre (frequency : Real) (centre : Real) (sigma : Real)
     (h1 : (sigma > (0 : Real)))
     (h2 : (sigma <= SIGMA_MAX)) :
     ((gaussian_density frequency centre sigma) > (0 : Real)) := by
   unfold gaussian_density
+  try unfold SQRT_2PI at *
+  try unfold SIGMA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

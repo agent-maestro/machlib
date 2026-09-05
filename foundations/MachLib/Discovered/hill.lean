@@ -23,6 +23,11 @@ axiom hill_logit (velocity_obs : Real) (vmax : Real) : Real  -- helper (axiomati
 noncomputable def hill_velocity (vmax : Real) (substrate : Real) (half_saturation : Real) (hill_coefficient : Real) : Real :=
   ((vmax * (substrate ^ hill_coefficient)) / ((half_saturation ^ hill_coefficient) + (substrate ^ hill_coefficient)))
 
+-- source obligations for hill_velocity: {O1, O2}
+--   O1 [4cdd4e9d1838] -> PRESERVED (accounted)  theorem hill_monotone_in_substrate
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [5713c39b463e] -> PRESERVED (accounted)  theorem hill_monotone_in_substrate
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem hill_monotone_in_substrate (vmax : Real) (substrate : Real) (half_saturation : Real) (hill_coefficient : Real)
     (h1 : (vmax > (0 : Real)))
     (h2 : (substrate >= (0 : Real)))
@@ -33,6 +38,8 @@ theorem hill_monotone_in_substrate (vmax : Real) (substrate : Real) (half_satura
     (h7 : (hill_coefficient <= N_MAX)) :
     (((hill_velocity vmax substrate half_saturation hill_coefficient) >= (0 : Real))) ∧ (((hill_velocity vmax substrate half_saturation hill_coefficient) <= vmax)) := by
   unfold hill_velocity
+  try unfold S_MAX at *
+  try unfold N_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

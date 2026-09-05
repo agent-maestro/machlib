@@ -25,6 +25,9 @@ axiom ln_k_at_inverse_t (intercept : Real) (slope : Real) (inverse_t : Real) : R
 noncomputable def predict_k (k1 : Real) (delta_h : Real) (t1 : Real) (t2 : Real) : Real :=
   (k1 * (Real.exp ((delta_h / R_GAS) * (((1 : Real) / t1) - ((1 : Real) / t2)))))
 
+-- source obligations for predict_k: {O1}
+--   O1 [f9ceee3497ee] -> PRESERVED (accounted)  theorem vant_hoff_predict_k
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem vant_hoff_predict_k (k1 : Real) (delta_h : Real) (t1 : Real) (t2 : Real)
     (h1 : (k1 > (0 : Real)))
     (h2 : (delta_h >= (-DH_MAX)))
@@ -35,6 +38,10 @@ theorem vant_hoff_predict_k (k1 : Real) (delta_h : Real) (t1 : Real) (t2 : Real)
     (h7 : (t2 <= T_MAX)) :
     ((predict_k k1 delta_h t1 t2) > (0 : Real)) := by
   unfold predict_k
+  try unfold R_GAS at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold DH_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

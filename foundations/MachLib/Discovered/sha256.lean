@@ -33,6 +33,9 @@ axiom wadd5 (a : Real) (b : Real) (c : Real) (d : Real) (e : Real) : Real  -- ex
 
 axiom sha256_round (a : Real) (b : Real) (c : Real) (d : Real) (e : Real) (f : Real) (g : Real) (h : Real) (k_t : Real) (w_t : Real) : Real -- tuple-return; axiomatised for now
 
+-- source obligations for sha256_round: {O1}
+--   O1 [36951e4d1f6a] -> PRESERVED (accounted)  theorem sha256_round_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem sha256_round_correct (a : Real) (b : Real) (c : Real) (d : Real) (e : Real) (f : Real) (g : Real) (h : Real) (k_t : Real) (w_t : Real)
     (h1 : True) :
     True := by

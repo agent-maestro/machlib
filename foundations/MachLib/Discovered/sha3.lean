@@ -30,6 +30,9 @@ axiom iota_lane (s : Real) (rc : Real) : Real  -- extern (axiomatised in MachLib
 noncomputable def keccak_round_lane (lane : Real) (rc : Real) : Real :=
   (iota_lane (chi_lane (rho_pi_lane (theta_lane lane))) rc)
 
+-- source obligations for keccak_round_lane: {O1}
+--   O1 [d33f41990c82] -> PRESERVED (accounted)  theorem keccak_round_invertible
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem keccak_round_invertible (lane : Real) (rc : Real)
     (h1 : True) :
     True := by

@@ -22,6 +22,7 @@ axiom membrane_flux (permeability : Real) (donor_concentration : Real) (receiver
 noncomputable def flux (diffusion_coefficient : Real) (concentration_gradient : Real) : Real :=
   ((-diffusion_coefficient) * concentration_gradient)
 
+-- obligations for flux: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -23,11 +23,18 @@ axiom montgomery_ladder (base : Real) (exp : Real) (modulus : Real) : Real  -- e
 noncomputable def modexp_montgomery (base : Real) (exp : Real) (modulus : Real) : Real :=
   (montgomery_ladder base exp modulus)
 
+-- source obligations for modexp_montgomery: {O1, O2}
+--   O1 [1b118481c4ba] -> PRESERVED (accounted)  theorem rsa_modexp_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [6271a92aad8e] -> PRESERVED (accounted)  theorem rsa_modexp_correct
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rsa_modexp_correct (base : Real) (exp : Real) (modulus : Real)
     (h1 : (modulus > (1 : Real)))
     (h2 : (base < modulus)) :
     (True) ∧ (((modexp_montgomery base exp modulus) < modulus)) := by
   unfold modexp_montgomery
+  try unfold KEY_BITS at *
+  try unfold E_DEFAULT at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

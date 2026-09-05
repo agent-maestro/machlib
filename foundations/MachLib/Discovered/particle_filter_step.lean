@@ -27,6 +27,9 @@ axiom propagate_constant_velocity (x_prev : Real) (velocity : Real) (dt : Real) 
 noncomputable def particle_weight_update (prior_weight : Real) (observation : Real) (predicted : Real) (sigma : Real) : Real :=
   (prior_weight * (Real.exp ((((-HALF) * (observation - predicted)) * (observation - predicted)) / (sigma * sigma))))
 
+-- source obligations for particle_weight_update: {O1}
+--   O1 [5d283ec2cb33] -> PRESERVED (accounted)  theorem particle_weight_nonnegative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem particle_weight_nonnegative (prior_weight : Real) (observation : Real) (predicted : Real) (sigma : Real)
     (h1 : (prior_weight >= (0 : Real)))
     (h2 : (prior_weight <= (1 : Real)))
@@ -36,6 +39,10 @@ theorem particle_weight_nonnegative (prior_weight : Real) (observation : Real) (
     (h6 : (sigma <= SIGMA_MAX)) :
     ((particle_weight_update prior_weight observation predicted sigma) >= (0 : Real)) := by
   unfold particle_weight_update
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold Z_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

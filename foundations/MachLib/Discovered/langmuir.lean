@@ -25,6 +25,11 @@ axiom linearised_pressure_over_n (pressure : Real) (adsorbed_amount : Real) : Re
 noncomputable def coverage (langmuir_constant : Real) (pressure : Real) : Real :=
   ((langmuir_constant * pressure) / ((1 : Real) + (langmuir_constant * pressure)))
 
+-- source obligations for coverage: {O1, O2}
+--   O1 [cd2b36238aff] -> PRESERVED (accounted)  theorem langmuir_saturating
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [a60e0abca6f1] -> PRESERVED (accounted)  theorem langmuir_saturating
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem langmuir_saturating (langmuir_constant : Real) (pressure : Real)
     (h1 : (langmuir_constant >= (0 : Real)))
     (h2 : (langmuir_constant <= K_MAX))
@@ -32,6 +37,8 @@ theorem langmuir_saturating (langmuir_constant : Real) (pressure : Real)
     (h4 : (pressure <= P_MAX)) :
     (((coverage langmuir_constant pressure) >= (0 : Real))) ∧ (((coverage langmuir_constant pressure) <= (1 : Real))) := by
   unfold coverage
+  try unfold K_MAX at *
+  try unfold P_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

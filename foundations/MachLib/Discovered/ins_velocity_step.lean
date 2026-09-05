@@ -23,6 +23,7 @@ noncomputable def DT_MAX : Real := (0.1 : Real)
 noncomputable def velocity_north_step (v_north_prev : Real) (accel_north : Real) (dt : Real) : Real :=
   (v_north_prev + (accel_north * dt))
 
+-- obligations for velocity_north_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -39,6 +40,7 @@ theorem ins_vx_step_linear_in_dt (v_north_prev : Real) (accel_north : Real) (dt 
 noncomputable def velocity_east_step (v_east_prev : Real) (accel_east : Real) (dt : Real) : Real :=
   (v_east_prev + (accel_east * dt))
 
+-- obligations for velocity_east_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -55,6 +57,7 @@ theorem ins_vy_step_linear_in_dt (v_east_prev : Real) (accel_east : Real) (dt : 
 noncomputable def velocity_down_step (v_down_prev : Real) (accel_down : Real) (dt : Real) : Real :=
   (v_down_prev + ((accel_down + G_GRAVITY) * dt))
 
+-- obligations for velocity_down_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -71,6 +74,7 @@ theorem ins_vz_step_includes_gravity (v_down_prev : Real) (accel_down : Real) (d
 noncomputable def position_step (pos_prev : Real) (v_prev : Real) (v_curr : Real) (dt : Real) : Real :=
   (pos_prev + (((0.5 : Real) * (v_prev + v_curr)) * dt))
 
+-- obligations for position_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -29,6 +29,7 @@ noncomputable def DT_MAX : Real := (0.1 : Real)
 noncomputable def neutron_step (n : Real) (c : Real) (reactivity : Real) (beta : Real) (prompt_lifetime : Real) (decay_const : Real) (dt : Real) : Real :=
   (n + (dt * ((((reactivity - beta) / prompt_lifetime) * n) + (decay_const * c))))
 
+-- obligations for neutron_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -48,6 +49,7 @@ theorem n_step_zero_growth_at_critical_with_zero_c (n : Real) (c : Real) (reacti
 noncomputable def precursor_step (n : Real) (c : Real) (beta : Real) (prompt_lifetime : Real) (decay_const : Real) (dt : Real) : Real :=
   (c + (dt * (((beta / prompt_lifetime) * n) - (decay_const * c))))
 
+-- obligations for precursor_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -66,6 +68,7 @@ theorem precursor_step_decays_without_source (n : Real) (c : Real) (beta : Real)
 noncomputable def reactor_period (reactivity : Real) (prompt_lifetime : Real) (decay_const : Real) : Real :=
   ((prompt_lifetime + (((1 : Real) - reactivity) / decay_const)) / reactivity)
 
+-- obligations for reactor_period: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

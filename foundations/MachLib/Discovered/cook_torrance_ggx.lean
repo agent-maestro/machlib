@@ -27,6 +27,9 @@ noncomputable def ALPHA_MAX : Real := (1 : Real)
 noncomputable def ggx_distribution (n_dot_h_clamped : Real) (alpha : Real) : Real :=
   ((alpha * alpha) / (((PI * (((n_dot_h_clamped * n_dot_h_clamped) * ((alpha * alpha) - ONE)) + ONE)) * (((n_dot_h_clamped * n_dot_h_clamped) * ((alpha * alpha) - ONE)) + ONE)) + TINY))
 
+-- source obligations for ggx_distribution: {O1}
+--   O1 [9536c2ba7043] -> PRESERVED (accounted)  theorem ggx_distribution_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ggx_distribution_nonneg (n_dot_h_clamped : Real) (alpha : Real)
     (h1 : (n_dot_h_clamped >= (0 : Real)))
     (h2 : (n_dot_h_clamped <= ONE))
@@ -34,6 +37,14 @@ theorem ggx_distribution_nonneg (n_dot_h_clamped : Real) (alpha : Real)
     (h4 : (alpha <= ALPHA_MAX)) :
     ((ggx_distribution n_dot_h_clamped alpha) >= (0 : Real)) := by
   unfold ggx_distribution
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold FOUR at *
+  try unfold FIVE at *
+  try unfold PI at *
+  try unfold TINY at *
+  try unfold ALPHA_MIN at *
+  try unfold ALPHA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -57,6 +68,11 @@ theorem ggx_distribution_nonneg (n_dot_h_clamped : Real) (alpha : Real)
 noncomputable def schlick_fresnel (v_dot_h_clamped : Real) (f0 : Real) : Real :=
   (f0 + ((ONE - f0) * ((ONE - v_dot_h_clamped) ^ FIVE)))
 
+-- source obligations for schlick_fresnel: {O1, O2}
+--   O1 [6727ee4fbae9] -> PRESERVED (accounted)  theorem schlick_fresnel_in_unit_interval_when_f0_is
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [2a184f30b9dd] -> PRESERVED (accounted)  theorem schlick_fresnel_in_unit_interval_when_f0_is
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem schlick_fresnel_in_unit_interval_when_f0_is (v_dot_h_clamped : Real) (f0 : Real)
     (h1 : (v_dot_h_clamped >= (0 : Real)))
     (h2 : (v_dot_h_clamped <= ONE))
@@ -64,6 +80,14 @@ theorem schlick_fresnel_in_unit_interval_when_f0_is (v_dot_h_clamped : Real) (f0
     (h4 : (f0 <= ONE)) :
     (((schlick_fresnel v_dot_h_clamped f0) >= f0)) ∧ (((schlick_fresnel v_dot_h_clamped f0) <= ONE)) := by
   unfold schlick_fresnel
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold FOUR at *
+  try unfold FIVE at *
+  try unfold PI at *
+  try unfold TINY at *
+  try unfold ALPHA_MIN at *
+  try unfold ALPHA_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -88,6 +112,11 @@ theorem schlick_fresnel_in_unit_interval_when_f0_is (v_dot_h_clamped : Real) (f0
 noncomputable def smith_schlick_geometry (n_dot_l_clamped : Real) (n_dot_v_clamped : Real) (alpha : Real) : Real :=
   ((n_dot_l_clamped / ((n_dot_l_clamped * (ONE - ((alpha * alpha) / (2.0 : Real)))) + ((alpha * alpha) / (2.0 : Real)))) * (n_dot_v_clamped / ((n_dot_v_clamped * (ONE - ((alpha * alpha) / (2.0 : Real)))) + ((alpha * alpha) / (2.0 : Real)))))
 
+-- source obligations for smith_schlick_geometry: {O1, O2}
+--   O1 [917c1bd4868c] -> PRESERVED (accounted)  theorem smith_schlick_geometry_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [86079a6e03d4] -> PRESERVED (accounted)  theorem smith_schlick_geometry_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem smith_schlick_geometry_in_unit_interval (n_dot_l_clamped : Real) (n_dot_v_clamped : Real) (alpha : Real)
     (h1 : (n_dot_l_clamped > (0 : Real)))
     (h2 : (n_dot_l_clamped <= ONE))
@@ -97,6 +126,14 @@ theorem smith_schlick_geometry_in_unit_interval (n_dot_l_clamped : Real) (n_dot_
     (h6 : (alpha <= ALPHA_MAX)) :
     (((smith_schlick_geometry n_dot_l_clamped n_dot_v_clamped alpha) >= (0 : Real))) ∧ (((smith_schlick_geometry n_dot_l_clamped n_dot_v_clamped alpha) <= ONE)) := by
   unfold smith_schlick_geometry
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold FOUR at *
+  try unfold FIVE at *
+  try unfold PI at *
+  try unfold TINY at *
+  try unfold ALPHA_MIN at *
+  try unfold ALPHA_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -121,6 +158,9 @@ theorem smith_schlick_geometry_in_unit_interval (n_dot_l_clamped : Real) (n_dot_
 noncomputable def specular (distribution : Real) (fresnel : Real) (geometry : Real) (n_dot_l_clamped : Real) (n_dot_v_clamped : Real) : Real :=
   (((distribution * fresnel) * geometry) / (((FOUR * n_dot_l_clamped) * n_dot_v_clamped) + TINY))
 
+-- source obligations for specular: {O1}
+--   O1 [cde7725aec0c] -> PRESERVED (accounted)  theorem cook_torrance_specular_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cook_torrance_specular_nonneg (distribution : Real) (fresnel : Real) (geometry : Real) (n_dot_l_clamped : Real) (n_dot_v_clamped : Real)
     (h1 : (distribution >= (0 : Real)))
     (h2 : (fresnel >= (0 : Real)))
@@ -133,6 +173,14 @@ theorem cook_torrance_specular_nonneg (distribution : Real) (fresnel : Real) (ge
     (h9 : (n_dot_v_clamped <= ONE)) :
     ((specular distribution fresnel geometry n_dot_l_clamped n_dot_v_clamped) >= (0 : Real)) := by
   unfold specular
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold FOUR at *
+  try unfold FIVE at *
+  try unfold PI at *
+  try unfold TINY at *
+  try unfold ALPHA_MIN at *
+  try unfold ALPHA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

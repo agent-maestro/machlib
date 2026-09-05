@@ -25,6 +25,7 @@ noncomputable def T_MAX : Real := (100.0 : Real)
 noncomputable def capacitor_charging (v_supply : Real) (resistance : Real) (capacitance : Real) (time_s : Real) : Real :=
   (v_supply * ((1 : Real) - (Real.exp ((-time_s) / (resistance * capacitance)))))
 
+-- obligations for capacitor_charging: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -44,6 +45,7 @@ theorem rc_charging_voltage_in_unit_interval (v_supply : Real) (resistance : Rea
 noncomputable def capacitor_discharging (v_initial : Real) (resistance : Real) (capacitance : Real) (time_s : Real) : Real :=
   (v_initial * (Real.exp ((-time_s) / (resistance * capacitance))))
 
+-- obligations for capacitor_discharging: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -63,6 +65,9 @@ theorem rc_discharging_voltage_decays_to_zero (v_initial : Real) (resistance : R
 noncomputable def cutoff_frequency (resistance : Real) (capacitance : Real) : Real :=
   ((1 : Real) / (((6.283185307179586 : Real) * resistance) * capacitance))
 
+-- source obligations for cutoff_frequency: {O1}
+--   O1 [3f7a1135fb5c] -> PRESERVED (accounted)  theorem cutoff_freq_inverse_to_rc
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cutoff_freq_inverse_to_rc (resistance : Real) (capacitance : Real)
     (h1 : (resistance >= R_MIN))
     (h2 : (resistance <= R_MAX))
@@ -70,6 +75,12 @@ theorem cutoff_freq_inverse_to_rc (resistance : Real) (capacitance : Real)
     (h4 : (capacitance <= C_MAX)) :
     ((cutoff_frequency resistance capacitance) >= (0 : Real)) := by
   unfold cutoff_frequency
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold C_MIN at *
+  try unfold C_MAX at *
+  try unfold V_MAX at *
+  try unfold T_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -93,6 +104,9 @@ theorem cutoff_freq_inverse_to_rc (resistance : Real) (capacitance : Real)
 noncomputable def time_to_threshold (target_fraction : Real) (resistance : Real) (capacitance : Real) : Real :=
   (((-resistance) * capacitance) * (Real.log ((1 : Real) - target_fraction)))
 
+-- source obligations for time_to_threshold: {O1}
+--   O1 [719188e37962] -> PRESERVED (accounted)  theorem time_to_threshold_increases_with_target
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem time_to_threshold_increases_with_target (target_fraction : Real) (resistance : Real) (capacitance : Real)
     (h1 : (target_fraction >= (0.001 : Real)))
     (h2 : (target_fraction <= (0.999 : Real)))
@@ -102,6 +116,12 @@ theorem time_to_threshold_increases_with_target (target_fraction : Real) (resist
     (h6 : (capacitance <= C_MAX)) :
     ((time_to_threshold target_fraction resistance capacitance) >= (0 : Real)) := by
   unfold time_to_threshold
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold C_MIN at *
+  try unfold C_MAX at *
+  try unfold V_MAX at *
+  try unfold T_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

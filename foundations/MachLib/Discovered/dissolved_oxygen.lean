@@ -31,11 +31,26 @@ noncomputable def DO_MAX : Real := (20.0 : Real)
 noncomputable def fresh_water_saturation (temperature_k : Real) : Real :=
   (Real.exp ((((A1 + (A2 / temperature_k)) + (A3 / (temperature_k * temperature_k))) + (A4 / ((temperature_k * temperature_k) * temperature_k))) + (A5 / (((temperature_k * temperature_k) * temperature_k) * temperature_k))))
 
+-- source obligations for fresh_water_saturation: {O1}
+--   O1 [81e845fd3841] -> PRESERVED (accounted)  theorem do_saturation_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem do_saturation_positive (temperature_k : Real)
     (h1 : (temperature_k >= T_MIN))
     (h2 : (temperature_k <= T_MAX)) :
     ((fresh_water_saturation temperature_k) > (0 : Real)) := by
   unfold fresh_water_saturation
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold HUNDRED at *
+  try unfold A1 at *
+  try unfold A2 at *
+  try unfold A3 at *
+  try unfold A4 at *
+  try unfold A5 at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold SAL_MAX at *
+  try unfold DO_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -59,11 +74,28 @@ theorem do_saturation_positive (temperature_k : Real)
 noncomputable def salinity_correction (salinity_psu : Real) : Real :=
   (Real.exp ((-salinity_psu) * ((0.017674 : Real) + ((0.00054906 : Real) * salinity_psu))))
 
+-- source obligations for salinity_correction: {O1, O2}
+--   O1 [fdd881578578] -> PRESERVED (accounted)  theorem do_salinity_correction_below_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [6b198bda8adb] -> PRESERVED (accounted)  theorem do_salinity_correction_below_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem do_salinity_correction_below_one (salinity_psu : Real)
     (h1 : (salinity_psu >= (0 : Real)))
     (h2 : (salinity_psu <= SAL_MAX)) :
     (((salinity_correction salinity_psu) > (0 : Real))) ∧ (((salinity_correction salinity_psu) <= ONE)) := by
   unfold salinity_correction
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold HUNDRED at *
+  try unfold A1 at *
+  try unfold A2 at *
+  try unfold A3 at *
+  try unfold A4 at *
+  try unfold A5 at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold SAL_MAX at *
+  try unfold DO_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -88,6 +120,11 @@ theorem do_salinity_correction_below_one (salinity_psu : Real)
 noncomputable def apparent_saturation (do_observed : Real) (do_at_equilibrium : Real) : Real :=
   (do_observed / do_at_equilibrium)
 
+-- source obligations for apparent_saturation: {O1, O2}
+--   O1 [6869e7c456c0] -> PRESERVED (accounted)  theorem do_apparent_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [33ec0ecab78f] -> PRESERVED (accounted)  theorem do_apparent_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem do_apparent_in_unit_interval (do_observed : Real) (do_at_equilibrium : Real)
     (h1 : (do_observed >= (0 : Real)))
     (h2 : (do_observed <= DO_MAX))
@@ -96,6 +133,18 @@ theorem do_apparent_in_unit_interval (do_observed : Real) (do_at_equilibrium : R
     (h5 : (do_observed <= do_at_equilibrium)) :
     (((apparent_saturation do_observed do_at_equilibrium) >= (0 : Real))) ∧ (((apparent_saturation do_observed do_at_equilibrium) <= ONE)) := by
   unfold apparent_saturation
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold HUNDRED at *
+  try unfold A1 at *
+  try unfold A2 at *
+  try unfold A3 at *
+  try unfold A4 at *
+  try unfold A5 at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold SAL_MAX at *
+  try unfold DO_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

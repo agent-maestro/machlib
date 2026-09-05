@@ -20,6 +20,9 @@ axiom cfar_scale (p_fa : Real) (n_ref : Real) : Real  -- helper (axiomatised in 
 noncomputable def cfar_threshold (window_mean : Real) (scale : Real) : Real :=
   (scale * window_mean)
 
+-- source obligations for cfar_threshold: {O1}
+--   O1 [271c1ad4f36a] -> PRESERVED (accounted)  theorem cfar_threshold_non_negative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cfar_threshold_non_negative (window_mean : Real) (scale : Real)
     (h1 : (window_mean >= (0 : Real)))
     (h2 : (scale > (0 : Real))) :

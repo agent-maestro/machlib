@@ -34,6 +34,9 @@ noncomputable def M_MAX : Real := (10000000000.0 : Real)
 noncomputable def deflection_simple_center (point_load : Real) (span_length : Real) (modulus : Real) (second_moment : Real) : Real :=
   ((((point_load * span_length) * span_length) * span_length) / ((FOURTY_EIGHT * modulus) * second_moment))
 
+-- source obligations for deflection_simple_center: {O1}
+--   O1 [da7bb58b74f3] -> PRESERVED (accounted)  theorem ssb_center_load_deflection_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ssb_center_load_deflection_nonneg (point_load : Real) (span_length : Real) (modulus : Real) (second_moment : Real)
     (h1 : (point_load >= (0 : Real)))
     (h2 : (point_load <= F_MAX))
@@ -45,6 +48,21 @@ theorem ssb_center_load_deflection_nonneg (point_load : Real) (span_length : Rea
     (h8 : (second_moment <= I_MAX)) :
     ((deflection_simple_center point_load span_length modulus second_moment) >= (0 : Real)) := by
   unfold deflection_simple_center
+  try unfold ONE at *
+  try unfold THREE at *
+  try unfold FOURTY_EIGHT at *
+  try unfold FIVE at *
+  try unfold THREE_EIGHTY_FOUR at *
+  try unfold F_MAX at *
+  try unfold W_MAX at *
+  try unfold L_MIN at *
+  try unfold L_MAX at *
+  try unfold E_MIN at *
+  try unfold E_MAX at *
+  try unfold I_MIN at *
+  try unfold I_MAX at *
+  try unfold C_MAX at *
+  try unfold M_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -68,6 +86,9 @@ theorem ssb_center_load_deflection_nonneg (point_load : Real) (span_length : Rea
 noncomputable def deflection_simple_udl (distributed_load : Real) (span_length : Real) (modulus : Real) (second_moment : Real) : Real :=
   ((((((FIVE * distributed_load) * span_length) * span_length) * span_length) * span_length) / ((THREE_EIGHTY_FOUR * modulus) * second_moment))
 
+-- source obligations for deflection_simple_udl: {O1}
+--   O1 [a92ed3c21955] -> PRESERVED (accounted)  theorem ssb_udl_deflection_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ssb_udl_deflection_nonneg (distributed_load : Real) (span_length : Real) (modulus : Real) (second_moment : Real)
     (h1 : (distributed_load >= (0 : Real)))
     (h2 : (distributed_load <= W_MAX))
@@ -79,6 +100,21 @@ theorem ssb_udl_deflection_nonneg (distributed_load : Real) (span_length : Real)
     (h8 : (second_moment <= I_MAX)) :
     ((deflection_simple_udl distributed_load span_length modulus second_moment) >= (0 : Real)) := by
   unfold deflection_simple_udl
+  try unfold ONE at *
+  try unfold THREE at *
+  try unfold FOURTY_EIGHT at *
+  try unfold FIVE at *
+  try unfold THREE_EIGHTY_FOUR at *
+  try unfold F_MAX at *
+  try unfold W_MAX at *
+  try unfold L_MIN at *
+  try unfold L_MAX at *
+  try unfold E_MIN at *
+  try unfold E_MAX at *
+  try unfold I_MIN at *
+  try unfold I_MAX at *
+  try unfold C_MAX at *
+  try unfold M_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -102,6 +138,9 @@ theorem ssb_udl_deflection_nonneg (distributed_load : Real) (span_length : Real)
 noncomputable def deflection_cantilever_end (point_load : Real) (span_length : Real) (modulus : Real) (second_moment : Real) : Real :=
   ((((point_load * span_length) * span_length) * span_length) / ((THREE * modulus) * second_moment))
 
+-- source obligations for deflection_cantilever_end: {O1}
+--   O1 [826cb0ac51a5] -> PRESERVED (accounted)  theorem cantilever_end_load_deflection_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cantilever_end_load_deflection_nonneg (point_load : Real) (span_length : Real) (modulus : Real) (second_moment : Real)
     (h1 : (point_load >= (0 : Real)))
     (h2 : (point_load <= F_MAX))
@@ -113,6 +152,21 @@ theorem cantilever_end_load_deflection_nonneg (point_load : Real) (span_length :
     (h8 : (second_moment <= I_MAX)) :
     ((deflection_cantilever_end point_load span_length modulus second_moment) >= (0 : Real)) := by
   unfold deflection_cantilever_end
+  try unfold ONE at *
+  try unfold THREE at *
+  try unfold FOURTY_EIGHT at *
+  try unfold FIVE at *
+  try unfold THREE_EIGHTY_FOUR at *
+  try unfold F_MAX at *
+  try unfold W_MAX at *
+  try unfold L_MIN at *
+  try unfold L_MAX at *
+  try unfold E_MIN at *
+  try unfold E_MAX at *
+  try unfold I_MIN at *
+  try unfold I_MAX at *
+  try unfold C_MAX at *
+  try unfold M_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -136,6 +190,7 @@ theorem cantilever_end_load_deflection_nonneg (point_load : Real) (span_length :
 noncomputable def bending_stress (moment : Real) (distance_to_fiber : Real) (second_moment : Real) : Real :=
   ((moment * distance_to_fiber) / second_moment)
 
+-- obligations for bending_stress: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

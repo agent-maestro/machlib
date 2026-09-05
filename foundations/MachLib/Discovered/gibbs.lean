@@ -25,6 +25,7 @@ axiom delta_g_from_k (equilibrium_k : Real) (temperature : Real) : Real  -- help
 noncomputable def delta_g (delta_h : Real) (delta_s : Real) (temperature : Real) : Real :=
   (delta_h - (temperature * delta_s))
 
+-- obligations for delta_g: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -39,6 +40,9 @@ theorem gibbs_linear_in_temperature (delta_h : Real) (delta_s : Real) (temperatu
 noncomputable def equilibrium_constant (delta_g_value : Real) (temperature : Real) : Real :=
   (Real.exp ((-delta_g_value) / (R_GAS * temperature)))
 
+-- source obligations for equilibrium_constant: {O1}
+--   O1 [ecad418b0d0a] -> PRESERVED (accounted)  theorem equilibrium_constant_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem equilibrium_constant_positive (delta_g_value : Real) (temperature : Real)
     (h1 : (temperature >= T_MIN))
     (h2 : (temperature <= T_MAX))
@@ -46,6 +50,10 @@ theorem equilibrium_constant_positive (delta_g_value : Real) (temperature : Real
     (h4 : (delta_g_value <= DG_MAX)) :
     ((equilibrium_constant delta_g_value temperature) > (0 : Real)) := by
   unfold equilibrium_constant
+  try unfold R_GAS at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold DG_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

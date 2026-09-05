@@ -26,6 +26,9 @@ noncomputable def EPS_MAX : Real := (1 : Real)
 noncomputable def equilibrium_temperature (solar_flux : Real) (albedo : Real) (emissivity : Real) : Real :=
   ((((((1 : Real) - albedo) * solar_flux) * QUARTER) / (emissivity * SIGMA_SB)) ^ QUARTER)
 
+-- source obligations for equilibrium_temperature: {O1}
+--   O1 [de0e1853d30b] -> PRESERVED (accounted)  theorem equilibrium_temperature_decreasing_in_albedo
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem equilibrium_temperature_decreasing_in_albedo (solar_flux : Real) (albedo : Real) (emissivity : Real)
     (h1 : (solar_flux > (0 : Real)))
     (h2 : (solar_flux <= ((4.0 : Real) * SOLAR_CONSTANT)))
@@ -35,6 +38,13 @@ theorem equilibrium_temperature_decreasing_in_albedo (solar_flux : Real) (albedo
     (h6 : (emissivity <= EPS_MAX)) :
     ((equilibrium_temperature solar_flux albedo emissivity) > (0 : Real)) := by
   unfold equilibrium_temperature
+  try unfold SOLAR_CONSTANT at *
+  try unfold SIGMA_SB at *
+  try unfold QUARTER at *
+  try unfold ALBEDO_MIN at *
+  try unfold ALBEDO_MAX at *
+  try unfold EPS_MIN at *
+  try unfold EPS_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -58,6 +68,7 @@ theorem equilibrium_temperature_decreasing_in_albedo (solar_flux : Real) (albedo
 noncomputable def climate_response (forcing : Real) (lambda : Real) : Real :=
   (forcing / lambda)
 
+-- obligations for climate_response: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -73,6 +84,7 @@ theorem climate_response_linear_in_forcing (forcing : Real) (lambda : Real)
 noncomputable def toa_imbalance (solar_flux : Real) (albedo : Real) (emissivity : Real) (surface_t : Real) : Real :=
   (((((1 : Real) - albedo) * solar_flux) * QUARTER) - ((emissivity * SIGMA_SB) * (surface_t ^ (4.0 : Real))))
 
+-- obligations for toa_imbalance: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

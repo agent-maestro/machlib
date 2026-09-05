@@ -23,6 +23,9 @@ noncomputable def RANGE_MIN : Real := (1000000.0 : Real)
 noncomputable def geometric_range (sat_x : Real) (sat_y : Real) (sat_z : Real) (user_x : Real) (user_y : Real) (user_z : Real) : Real :=
   (Real.sqrt ((((sat_x - user_x) * (sat_x - user_x)) + ((sat_y - user_y) * (sat_y - user_y))) + ((sat_z - user_z) * (sat_z - user_z))))
 
+-- source obligations for geometric_range: {O1}
+--   O1 [ff74b918a61c] -> PRESERVED (accounted)  theorem range_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem range_nonneg (sat_x : Real) (sat_y : Real) (sat_z : Real) (user_x : Real) (user_y : Real) (user_z : Real)
     (h1 : ((abs sat_x) <= POS_MAX))
     (h2 : ((abs sat_y) <= POS_MAX))
@@ -32,6 +35,10 @@ theorem range_nonneg (sat_x : Real) (sat_y : Real) (sat_z : Real) (user_x : Real
     (h6 : ((abs user_z) <= POS_MAX)) :
     ((geometric_range sat_x sat_y sat_z user_x user_y user_z) >= (0 : Real)) := by
   unfold geometric_range
+  try unfold POS_MAX at *
+  try unfold C_LIGHT at *
+  try unfold CLOCK_MAX at *
+  try unfold RANGE_MIN at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -55,6 +62,7 @@ theorem range_nonneg (sat_x : Real) (sat_y : Real) (sat_z : Real) (user_x : Real
 noncomputable def pseudorange_residual (pseudorange_obs : Real) (geometric_range : Real) (clock_bias : Real) : Real :=
   (pseudorange_obs - (geometric_range + (C_LIGHT * clock_bias)))
 
+-- obligations for pseudorange_residual: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -72,6 +80,11 @@ theorem pseudorange_residual_zero_at_truth (pseudorange_obs : Real) (geometric_r
 noncomputable def line_of_sight_x (sat_x : Real) (user_x : Real) (geometric_range : Real) : Real :=
   (min (max ((user_x - sat_x) / geometric_range) (-1.0 : Real)) (1 : Real))
 
+-- source obligations for line_of_sight_x: {O1, O2}
+--   O1 [eb4e353642ff] -> PRESERVED (accounted)  theorem los_component_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [005dbbe11ba5] -> PRESERVED (accounted)  theorem los_component_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem los_component_in_unit_interval (sat_x : Real) (user_x : Real) (geometric_range : Real)
     (h1 : ((abs sat_x) <= POS_MAX))
     (h2 : ((abs user_x) <= POS_MAX))
@@ -80,6 +93,10 @@ theorem los_component_in_unit_interval (sat_x : Real) (user_x : Real) (geometric
     (h_clamp1 : (-1.0 : Real) ≤ (1 : Real)) :
     (((line_of_sight_x sat_x user_x geometric_range) >= (-(1 : Real)))) ∧ (((line_of_sight_x sat_x user_x geometric_range) <= (1 : Real))) := by
   unfold line_of_sight_x
+  try unfold POS_MAX at *
+  try unfold C_LIGHT at *
+  try unfold CLOCK_MAX at *
+  try unfold RANGE_MIN at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

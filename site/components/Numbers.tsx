@@ -13,7 +13,7 @@ const TILES: { value: string; label: string }[] = [
   { value: "7 570", label: "theorems, outside the Forge corpus" },
   { value: "149", label: "trusted axioms, every one modeled" },
   { value: "4", label: "distinct open obligations" },
-  { value: "77.1 %", label: "of Forge @verify obligations auto-close" },
+  { value: "79.8 %", label: "of Forge @verify obligations auto-close" },
 ];
 
 // Live status is written by CI to an orphan branch on every push to master;

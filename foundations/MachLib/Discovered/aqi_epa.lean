@@ -23,6 +23,11 @@ noncomputable def C_MAX : Real := (100000.0 : Real)
 noncomputable def aqi_in_band (concentration : Real) (c_low : Real) (c_high : Real) (aqi_low : Real) (aqi_high : Real) : Real :=
   ((((aqi_high - aqi_low) / ((c_high - c_low) + TINY)) * (concentration - c_low)) + aqi_low)
 
+-- source obligations for aqi_in_band: {O1, O2}
+--   O1 [999c4f8013dc] -> PRESERVED (accounted)  theorem aqi_within_band_bounds
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [317c4351db11] -> PRESERVED (accounted)  theorem aqi_within_band_bounds
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem aqi_within_band_bounds (concentration : Real) (c_low : Real) (c_high : Real) (aqi_low : Real) (aqi_high : Real)
     (h1 : (concentration >= c_low))
     (h2 : (concentration <= c_high))
@@ -34,6 +39,10 @@ theorem aqi_within_band_bounds (concentration : Real) (c_low : Real) (c_high : R
     (h8 : (aqi_high <= AQI_MAX)) :
     (((aqi_in_band concentration c_low c_high aqi_low aqi_high) >= aqi_low)) ∧ (((aqi_in_band concentration c_low c_high aqi_low aqi_high) <= aqi_high)) := by
   unfold aqi_in_band
+  try unfold ZERO at *
+  try unfold AQI_MAX at *
+  try unfold TINY at *
+  try unfold C_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -58,6 +67,13 @@ theorem aqi_within_band_bounds (concentration : Real) (c_low : Real) (c_high : R
 noncomputable def composite_aqi (aqi_pm25 : Real) (aqi_ozone : Real) (aqi_no2 : Real) : Real :=
   (max (max aqi_pm25 aqi_ozone) aqi_no2)
 
+-- source obligations for composite_aqi: {O1, O2, O3}
+--   O1 [26e3f6aafb48] -> PRESERVED (accounted)  theorem aqi_composite_above_each_input
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [0e6a5553161e] -> PRESERVED (accounted)  theorem aqi_composite_above_each_input
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O3 [b80870a21f65] -> PRESERVED (accounted)  theorem aqi_composite_above_each_input
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem aqi_composite_above_each_input (aqi_pm25 : Real) (aqi_ozone : Real) (aqi_no2 : Real)
     (h1 : (aqi_pm25 >= (0 : Real)))
     (h2 : (aqi_pm25 <= AQI_MAX))
@@ -67,6 +83,10 @@ theorem aqi_composite_above_each_input (aqi_pm25 : Real) (aqi_ozone : Real) (aqi
     (h6 : (aqi_no2 <= AQI_MAX)) :
     (((composite_aqi aqi_pm25 aqi_ozone aqi_no2) >= aqi_pm25)) ∧ (((composite_aqi aqi_pm25 aqi_ozone aqi_no2) >= aqi_ozone)) ∧ (((composite_aqi aqi_pm25 aqi_ozone aqi_no2) >= aqi_no2)) := by
   unfold composite_aqi
+  try unfold ZERO at *
+  try unfold AQI_MAX at *
+  try unfold TINY at *
+  try unfold C_MAX at *
   refine ⟨?_, ?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

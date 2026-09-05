@@ -27,6 +27,7 @@ noncomputable def AREA_MAX : Real := (100.0 : Real)
 noncomputable def gross_thrust (mass_flow : Real) (exhaust_velocity : Real) (exit_pressure : Real) (ambient_pressure : Real) (exit_area : Real) : Real :=
   ((mass_flow * exhaust_velocity) + ((exit_pressure - ambient_pressure) * exit_area))
 
+-- obligations for gross_thrust: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -44,6 +45,7 @@ theorem gross_thrust_nonneg_for_positive_mass_flow (mass_flow : Real) (exhaust_v
 noncomputable def net_thrust (gross : Real) (mass_flow : Real) (freestream_velocity : Real) : Real :=
   (gross - (mass_flow * freestream_velocity))
 
+-- obligations for net_thrust: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -59,11 +61,22 @@ theorem net_thrust_zero_when_velocity_match (gross : Real) (mass_flow : Real) (f
 noncomputable def specific_impulse (thrust : Real) (mass_flow : Real) : Real :=
   (thrust / (mass_flow * G_GRAVITY))
 
+-- source obligations for specific_impulse: {O1}
+--   O1 [8663ebf8ccf1] -> PRESERVED (accounted)  theorem isp_inverse_proportional_to_mass_flow
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem isp_inverse_proportional_to_mass_flow (thrust : Real) (mass_flow : Real)
     (h_thrust : (((0 : Real) <= thrust) ∧ (thrust <= (10000000.0 : Real))))
     (h_mass_flow : (((0.001 : Real) <= mass_flow) ∧ (mass_flow <= MDOT_MAX))) :
     ((specific_impulse thrust mass_flow) >= (0 : Real)) := by
   unfold specific_impulse
+  try unfold G_GRAVITY at *
+  try unfold MDOT_MIN at *
+  try unfold MDOT_MAX at *
+  try unfold VEL_MAX at *
+  try unfold P_MIN at *
+  try unfold P_MAX at *
+  try unfold AREA_MIN at *
+  try unfold AREA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

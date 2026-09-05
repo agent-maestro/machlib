@@ -26,6 +26,9 @@ noncomputable def LN2_INV : Real := (1.4426950408889634 : Real)
 noncomputable def shannon_capacity (bandwidth_hz : Real) (snr_linear : Real) : Real :=
   ((bandwidth_hz * LN2_INV) * (Real.log ((1 : Real) + snr_linear)))
 
+-- source obligations for shannon_capacity: {O1}
+--   O1 [e3dffed8b454] -> PRESERVED (accounted)  theorem capacity_zero_at_zero_snr
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem capacity_zero_at_zero_snr (bandwidth_hz : Real) (snr_linear : Real)
     (h1 : (bandwidth_hz >= B_MIN))
     (h2 : (bandwidth_hz <= B_MAX))
@@ -33,6 +36,13 @@ theorem capacity_zero_at_zero_snr (bandwidth_hz : Real) (snr_linear : Real)
     (h4 : (snr_linear <= SNR_MAX)) :
     ((shannon_capacity bandwidth_hz snr_linear) >= (0 : Real)) := by
   unfold shannon_capacity
+  try unfold B_MIN at *
+  try unfold B_MAX at *
+  try unfold SNR_MIN at *
+  try unfold SNR_MAX at *
+  try unfold SNR_DB_MIN at *
+  try unfold SNR_DB_MAX at *
+  try unfold LN2_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -56,6 +66,9 @@ theorem capacity_zero_at_zero_snr (bandwidth_hz : Real) (snr_linear : Real)
 noncomputable def shannon_capacity_db (bandwidth_hz : Real) (snr_db : Real) : Real :=
   ((bandwidth_hz * LN2_INV) * (Real.log ((1 : Real) + (Real.exp (snr_db / (((10.0 : Real) * LN2_INV) * (0.6931471805599453 : Real)))))))
 
+-- source obligations for shannon_capacity_db: {O1}
+--   O1 [9b2066dc535e] -> PRESERVED (accounted)  theorem capacity_db_consistent_with_linear
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem capacity_db_consistent_with_linear (bandwidth_hz : Real) (snr_db : Real)
     (h1 : (bandwidth_hz >= B_MIN))
     (h2 : (bandwidth_hz <= B_MAX))
@@ -63,6 +76,13 @@ theorem capacity_db_consistent_with_linear (bandwidth_hz : Real) (snr_db : Real)
     (h4 : (snr_db <= SNR_DB_MAX)) :
     ((shannon_capacity_db bandwidth_hz snr_db) >= (0 : Real)) := by
   unfold shannon_capacity_db
+  try unfold B_MIN at *
+  try unfold B_MAX at *
+  try unfold SNR_MIN at *
+  try unfold SNR_MAX at *
+  try unfold SNR_DB_MIN at *
+  try unfold SNR_DB_MAX at *
+  try unfold LN2_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -86,11 +106,21 @@ theorem capacity_db_consistent_with_linear (bandwidth_hz : Real) (snr_db : Real)
 noncomputable def spectral_efficiency (snr_linear : Real) : Real :=
   (LN2_INV * (Real.log ((1 : Real) + snr_linear)))
 
+-- source obligations for spectral_efficiency: {O1}
+--   O1 [f884b39d3620] -> PRESERVED (accounted)  theorem spectral_efficiency_equals_log2_of_one_plus_snr
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem spectral_efficiency_equals_log2_of_one_plus_snr (snr_linear : Real)
     (h1 : (snr_linear >= SNR_MIN))
     (h2 : (snr_linear <= SNR_MAX)) :
     ((spectral_efficiency snr_linear) >= (0 : Real)) := by
   unfold spectral_efficiency
+  try unfold B_MIN at *
+  try unfold B_MAX at *
+  try unfold SNR_MIN at *
+  try unfold SNR_MAX at *
+  try unfold SNR_DB_MIN at *
+  try unfold SNR_DB_MAX at *
+  try unfold LN2_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -114,6 +144,9 @@ theorem spectral_efficiency_equals_log2_of_one_plus_snr (snr_linear : Real)
 noncomputable def high_snr_capacity (bandwidth_hz : Real) (snr_linear : Real) : Real :=
   ((bandwidth_hz * LN2_INV) * (Real.log snr_linear))
 
+-- source obligations for high_snr_capacity: {O1}
+--   O1 [21738def1f44] -> PRESERVED (accounted)  theorem high_snr_asymptotic_capacity
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem high_snr_asymptotic_capacity (bandwidth_hz : Real) (snr_linear : Real)
     (h1 : (bandwidth_hz >= B_MIN))
     (h2 : (bandwidth_hz <= B_MAX))
@@ -121,6 +154,13 @@ theorem high_snr_asymptotic_capacity (bandwidth_hz : Real) (snr_linear : Real)
     (h4 : (snr_linear <= SNR_MAX)) :
     ((high_snr_capacity bandwidth_hz snr_linear) >= (0 : Real)) := by
   unfold high_snr_capacity
+  try unfold B_MIN at *
+  try unfold B_MAX at *
+  try unfold SNR_MIN at *
+  try unfold SNR_MAX at *
+  try unfold SNR_DB_MIN at *
+  try unfold SNR_DB_MAX at *
+  try unfold LN2_INV at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

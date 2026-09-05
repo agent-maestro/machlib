@@ -25,11 +25,16 @@ axiom squared_residual (prediction : Real) (target : Real) : Real  -- helper (ax
 noncomputable def mse_loss (prediction : Real) (target : Real) : Real :=
   ((prediction - target) * (prediction - target))
 
+-- source obligations for mse_loss: {O1}
+--   O1 [a6e00f6d374b] -> PRESERVED (accounted)  theorem mse_loss_nonnegative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem mse_loss_nonnegative (prediction : Real) (target : Real)
     (h1 : ((abs prediction) < MAX_RESIDUAL))
     (h2 : ((abs target) < MAX_RESIDUAL)) :
     ((mse_loss prediction target) >= (0 : Real)) := by
   unfold mse_loss
+  try unfold MAX_RESIDUAL at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -53,6 +58,7 @@ theorem mse_loss_nonnegative (prediction : Real) (target : Real)
 noncomputable def mse_grad (prediction : Real) (target : Real) : Real :=
   ((2.0 : Real) * (prediction - target))
 
+-- obligations for mse_grad: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

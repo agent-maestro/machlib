@@ -25,6 +25,11 @@ axiom time_to_fraction (fraction_remaining : Real) (rate_constant : Real) : Real
 noncomputable def concentration_at (initial_concentration : Real) (rate_constant : Real) (time : Real) : Real :=
   (initial_concentration * (Real.exp ((-rate_constant) * time)))
 
+-- source obligations for concentration_at: {O1, O2}
+--   O1 [23bce2c7818c] -> PRESERVED (accounted)  theorem first_order_decay_monotone
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [bb642d3ea786] -> PRESERVED (accounted)  theorem first_order_decay_monotone
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem first_order_decay_monotone (initial_concentration : Real) (rate_constant : Real) (time : Real)
     (h1 : (initial_concentration >= (0 : Real)))
     (h2 : (rate_constant >= (0 : Real)))
@@ -33,6 +38,8 @@ theorem first_order_decay_monotone (initial_concentration : Real) (rate_constant
     (h5 : (time <= T_MAX)) :
     (((concentration_at initial_concentration rate_constant time) >= (0 : Real))) ∧ (((concentration_at initial_concentration rate_constant time) <= initial_concentration)) := by
   unfold concentration_at
+  try unfold T_MAX at *
+  try unfold K_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

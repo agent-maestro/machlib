@@ -23,6 +23,7 @@ noncomputable def DRAG_MAX : Real := (50.0 : Real)
 noncomputable def velocity_step (velocity : Real) (acceleration : Real) (dt : Real) : Real :=
   (velocity + (acceleration * dt))
 
+-- obligations for velocity_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -41,6 +42,7 @@ theorem euler_step_velocity_linear_in_acceleration (velocity : Real) (accelerati
 noncomputable def position_step (position : Real) (velocity_new : Real) (dt : Real) : Real :=
   (position + (velocity_new * dt))
 
+-- obligations for position_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -57,6 +59,7 @@ theorem euler_step_position_linear_in_velocity (position : Real) (velocity_new :
 noncomputable def velocity_step_with_drag (velocity : Real) (acceleration : Real) (drag_coefficient : Real) (dt : Real) : Real :=
   ((velocity * (Real.exp ((-drag_coefficient) * dt))) + (acceleration * dt))
 
+-- obligations for velocity_step_with_drag: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -30,6 +30,9 @@ axiom layer_time (length_mm : Real) (feed_mm_per_s : Real) : Real  -- helper (ax
 noncomputable def segment_volume (layer_height : Real) (line_width : Real) (length_mm : Real) : Real :=
   ((layer_height * line_width) * length_mm)
 
+-- source obligations for segment_volume: {O1}
+--   O1 [9b937eaa1e92] -> PRESERVED (accounted)  theorem extrusion_volume_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem extrusion_volume_nonneg (layer_height : Real) (line_width : Real) (length_mm : Real)
     (h1 : (layer_height >= H_MIN))
     (h2 : (layer_height <= H_MAX))
@@ -39,6 +42,15 @@ theorem extrusion_volume_nonneg (layer_height : Real) (line_width : Real) (lengt
     (h6 : (length_mm <= L_MAX)) :
     ((segment_volume layer_height line_width length_mm) >= (0 : Real)) := by
   unfold segment_volume
+  try unfold PI at *
+  try unfold QUARTER at *
+  try unfold H_MIN at *
+  try unfold H_MAX at *
+  try unfold W_MIN at *
+  try unfold W_MAX at *
+  try unfold L_MAX at *
+  try unfold DF_MIN at *
+  try unfold DF_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -62,6 +74,9 @@ theorem extrusion_volume_nonneg (layer_height : Real) (line_width : Real) (lengt
 noncomputable def filament_feed_length (layer_height : Real) (line_width : Real) (length_mm : Real) (filament_diameter : Real) : Real :=
   (((layer_height * line_width) * length_mm) / (((PI * QUARTER) * filament_diameter) * filament_diameter))
 
+-- source obligations for filament_feed_length: {O1}
+--   O1 [386cf2b9dace] -> PRESERVED (accounted)  theorem filament_feed_proportional_to_volume
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem filament_feed_proportional_to_volume (layer_height : Real) (line_width : Real) (length_mm : Real) (filament_diameter : Real)
     (h1 : (layer_height >= H_MIN))
     (h2 : (layer_height <= H_MAX))
@@ -73,6 +88,15 @@ theorem filament_feed_proportional_to_volume (layer_height : Real) (line_width :
     (h8 : (filament_diameter <= DF_MAX)) :
     ((filament_feed_length layer_height line_width length_mm filament_diameter) >= (0 : Real)) := by
   unfold filament_feed_length
+  try unfold PI at *
+  try unfold QUARTER at *
+  try unfold H_MIN at *
+  try unfold H_MAX at *
+  try unfold W_MIN at *
+  try unfold W_MAX at *
+  try unfold L_MAX at *
+  try unfold DF_MIN at *
+  try unfold DF_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

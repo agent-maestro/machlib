@@ -23,6 +23,7 @@ noncomputable def ANGLE_MAX : Real := (3.1416 : Real)
 noncomputable def outer_wez_range (weapon_speed : Real) (target_speed : Real) (burn_time : Real) (aspect_angle : Real) : Real :=
   (min (max ((weapon_speed * burn_time) - ((target_speed * burn_time) * (Real.cos aspect_angle))) (0 : Real)) RANGE_MAX)
 
+-- obligations for outer_wez_range: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,6 +41,7 @@ theorem outer_wez_decreases_with_target_speed_aligned (weapon_speed : Real) (tar
 noncomputable def inner_wez_range (safe_arming_distance : Real) : Real :=
   safe_arming_distance
 
+-- obligations for inner_wez_range: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -53,6 +55,7 @@ theorem inner_wez_nonneg (safe_arming_distance : Real)
 noncomputable def time_of_flight (range_m : Real) (weapon_speed : Real) (target_speed : Real) (aspect_angle : Real) : Real :=
   (range_m / (min (max (weapon_speed - (target_speed * (Real.cos aspect_angle))) (1 : Real)) V_MAX))
 
+-- obligations for time_of_flight: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

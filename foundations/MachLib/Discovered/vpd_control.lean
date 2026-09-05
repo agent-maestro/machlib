@@ -28,6 +28,9 @@ axiom vpd (temp_c : Real) (humidity_pct : Real) : Real  -- helper (axiomatised i
 noncomputable def vpd_safe (temp_c : Real) (humidity_pct : Real) : Real :=
   ((TETENS_REF * (Real.exp ((TETENS_A * temp_c) / (TETENS_B + temp_c)))) * ((1 : Real) - (humidity_pct / (100.0 : Real))))
 
+-- source obligations for vpd_safe: {O1}
+--   O1 [e06d44335093] -> PRESERVED (accounted)  theorem vpd_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem vpd_positive (temp_c : Real) (humidity_pct : Real)
     (h1 : (temp_c >= T_MIN_C))
     (h2 : (temp_c <= T_MAX_C))
@@ -35,6 +38,11 @@ theorem vpd_positive (temp_c : Real) (humidity_pct : Real)
     (h4 : (humidity_pct < (100.0 : Real))) :
     ((vpd_safe temp_c humidity_pct) > (0 : Real)) := by
   unfold vpd_safe
+  try unfold TETENS_A at *
+  try unfold TETENS_B at *
+  try unfold TETENS_REF at *
+  try unfold T_MIN_C at *
+  try unfold T_MAX_C at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

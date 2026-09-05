@@ -26,6 +26,9 @@ noncomputable def KI_MAX : Real := (1000.0 : Real)
 noncomputable def competitive_rate (vmax : Real) (substrate : Real) (km : Real) (inhibitor : Real) (ki : Real) : Real :=
   ((vmax * substrate) / ((((1 : Real) + (inhibitor / ki)) * km) + substrate))
 
+-- source obligations for competitive_rate: {O1}
+--   O1 [2f7af5e251f1] -> PRESERVED (accounted)  theorem competitive_decreases_with_inhibitor
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem competitive_decreases_with_inhibitor (vmax : Real) (substrate : Real) (km : Real) (inhibitor : Real) (ki : Real)
     (h1 : (vmax > (0 : Real)))
     (h2 : (vmax <= VMAX_MAX))
@@ -39,6 +42,13 @@ theorem competitive_decreases_with_inhibitor (vmax : Real) (substrate : Real) (k
     (h10 : (ki <= KI_MAX)) :
     ((competitive_rate vmax substrate km inhibitor ki) >= (0 : Real)) := by
   unfold competitive_rate
+  try unfold VMAX_MAX at *
+  try unfold KM_MIN at *
+  try unfold KM_MAX at *
+  try unfold S_MAX at *
+  try unfold I_MAX at *
+  try unfold KI_MIN at *
+  try unfold KI_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -62,6 +72,9 @@ theorem competitive_decreases_with_inhibitor (vmax : Real) (substrate : Real) (k
 noncomputable def noncompetitive_rate (vmax : Real) (substrate : Real) (km : Real) (inhibitor : Real) (ki : Real) : Real :=
   (((vmax / ((1 : Real) + (inhibitor / ki))) * substrate) / (km + substrate))
 
+-- source obligations for noncompetitive_rate: {O1}
+--   O1 [aaef63af60d5] -> PRESERVED (accounted)  theorem noncompetitive_lowers_vmax_only
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem noncompetitive_lowers_vmax_only (vmax : Real) (substrate : Real) (km : Real) (inhibitor : Real) (ki : Real)
     (h1 : (vmax > (0 : Real)))
     (h2 : (vmax <= VMAX_MAX))
@@ -75,6 +88,13 @@ theorem noncompetitive_lowers_vmax_only (vmax : Real) (substrate : Real) (km : R
     (h10 : (ki <= KI_MAX)) :
     ((noncompetitive_rate vmax substrate km inhibitor ki) >= (0 : Real)) := by
   unfold noncompetitive_rate
+  try unfold VMAX_MAX at *
+  try unfold KM_MIN at *
+  try unfold KM_MAX at *
+  try unfold S_MAX at *
+  try unfold I_MAX at *
+  try unfold KI_MIN at *
+  try unfold KI_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -98,6 +118,9 @@ theorem noncompetitive_lowers_vmax_only (vmax : Real) (substrate : Real) (km : R
 noncomputable def uncompetitive_rate (vmax : Real) (substrate : Real) (km : Real) (inhibitor : Real) (ki : Real) : Real :=
   (((vmax / ((1 : Real) + (inhibitor / ki))) * substrate) / ((km / ((1 : Real) + (inhibitor / ki))) + substrate))
 
+-- source obligations for uncompetitive_rate: {O1}
+--   O1 [47f3dd2b8262] -> PRESERVED (accounted)  theorem uncompetitive_scales_both
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem uncompetitive_scales_both (vmax : Real) (substrate : Real) (km : Real) (inhibitor : Real) (ki : Real)
     (h1 : (vmax > (0 : Real)))
     (h2 : (vmax <= VMAX_MAX))
@@ -111,6 +134,13 @@ theorem uncompetitive_scales_both (vmax : Real) (substrate : Real) (km : Real) (
     (h10 : (ki <= KI_MAX)) :
     ((uncompetitive_rate vmax substrate km inhibitor ki) >= (0 : Real)) := by
   unfold uncompetitive_rate
+  try unfold VMAX_MAX at *
+  try unfold KM_MIN at *
+  try unfold KM_MAX at *
+  try unfold S_MAX at *
+  try unfold I_MAX at *
+  try unfold KI_MIN at *
+  try unfold KI_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -134,6 +164,9 @@ theorem uncompetitive_scales_both (vmax : Real) (substrate : Real) (km : Real) (
 noncomputable def ic50_competitive (ki : Real) (substrate : Real) (km : Real) : Real :=
   (ki * ((1 : Real) + (substrate / km)))
 
+-- source obligations for ic50_competitive: {O1}
+--   O1 [fbdcd73bab33] -> PRESERVED (accounted)  theorem ic50_grows_with_substrate
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem ic50_grows_with_substrate (ki : Real) (substrate : Real) (km : Real)
     (h1 : (ki >= KI_MIN))
     (h2 : (ki <= KI_MAX))
@@ -143,6 +176,13 @@ theorem ic50_grows_with_substrate (ki : Real) (substrate : Real) (km : Real)
     (h6 : (km <= KM_MAX)) :
     ((ic50_competitive ki substrate km) >= (0 : Real)) := by
   unfold ic50_competitive
+  try unfold VMAX_MAX at *
+  try unfold KM_MIN at *
+  try unfold KM_MAX at *
+  try unfold S_MAX at *
+  try unfold I_MAX at *
+  try unfold KI_MIN at *
+  try unfold KI_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

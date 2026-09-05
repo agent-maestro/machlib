@@ -26,6 +26,7 @@ noncomputable def ACC_MAX : Real := (4.0 : Real)
 noncomputable def target_distance (ego_speed : Real) (time_headway : Real) (d_min_safe : Real) : Real :=
   ((ego_speed * time_headway) + d_min_safe)
 
+-- obligations for target_distance: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -41,6 +42,7 @@ theorem target_distance_increases_with_speed (ego_speed : Real) (time_headway : 
 noncomputable def distance_error (distance_meas : Real) (distance_target : Real) : Real :=
   (distance_meas - distance_target)
 
+-- obligations for distance_error: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -55,6 +57,11 @@ theorem distance_error_zero_at_target (distance_meas : Real) (distance_target : 
 noncomputable def outer_speed_command (ego_speed : Real) (distance_error : Real) (kp : Real) (set_speed_max : Real) : Real :=
   (min (max (ego_speed + (kp * distance_error)) (0 : Real)) set_speed_max)
 
+-- source obligations for outer_speed_command: {O1, O2}
+--   O1 [3230c919aae2] -> PRESERVED (accounted)  theorem speed_command_within_set_max
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [2f24273f798a] -> PRESERVED (accounted)  theorem speed_command_within_set_max
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem speed_command_within_set_max (ego_speed : Real) (distance_error : Real) (kp : Real) (set_speed_max : Real)
     (h_ego_speed : (((0 : Real) <= ego_speed) ∧ (ego_speed <= V_MAX)))
     (h_distance_error : (-D_MAX ≤ distance_error ∧ distance_error ≤ D_MAX))
@@ -63,6 +70,13 @@ theorem speed_command_within_set_max (ego_speed : Real) (distance_error : Real) 
     (h_clamp1 : (0 : Real) ≤ set_speed_max) :
     (((outer_speed_command ego_speed distance_error kp set_speed_max) >= (0 : Real))) ∧ (((outer_speed_command ego_speed distance_error kp set_speed_max) <= set_speed_max)) := by
   unfold outer_speed_command
+  try unfold V_MAX at *
+  try unfold TH_MIN at *
+  try unfold TH_MAX at *
+  try unfold D_MIN_SAFE at *
+  try unfold D_MAX at *
+  try unfold KP_MAX at *
+  try unfold ACC_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -87,6 +101,7 @@ theorem speed_command_within_set_max (ego_speed : Real) (distance_error : Real) 
 noncomputable def comfort_accel_limiter (accel_cmd : Real) (accel_max : Real) (decel_max : Real) : Real :=
   (min (max accel_cmd (-decel_max)) accel_max)
 
+-- obligations for comfort_accel_limiter: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

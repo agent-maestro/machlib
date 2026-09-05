@@ -24,6 +24,9 @@ noncomputable def ISP_MAX : Real := (1000.0 : Real)
 noncomputable def tsiolkovsky_dv (exhaust_velocity : Real) (initial_mass : Real) (final_mass : Real) : Real :=
   (exhaust_velocity * (Real.log (initial_mass / final_mass)))
 
+-- source obligations for tsiolkovsky_dv: {O1}
+--   O1 [b5ddb725433e] -> PRESERVED (accounted)  theorem tsiolkovsky_dv_monotone_in_mass_ratio
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem tsiolkovsky_dv_monotone_in_mass_ratio (exhaust_velocity : Real) (initial_mass : Real) (final_mass : Real)
     (h_exhaust_velocity : (((0 : Real) <= exhaust_velocity) ∧ (exhaust_velocity <= VEL_MAX)))
     (h_initial_mass : ((MASS_MIN <= initial_mass) ∧ (initial_mass <= MASS_MAX)))
@@ -31,6 +34,11 @@ theorem tsiolkovsky_dv_monotone_in_mass_ratio (exhaust_velocity : Real) (initial
     (h1 : (final_mass <= initial_mass)) :
     ((tsiolkovsky_dv exhaust_velocity initial_mass final_mass) >= (0 : Real)) := by
   unfold tsiolkovsky_dv
+  try unfold G_GRAVITY at *
+  try unfold VEL_MAX at *
+  try unfold MASS_MIN at *
+  try unfold MASS_MAX at *
+  try unfold ISP_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -54,6 +62,7 @@ theorem tsiolkovsky_dv_monotone_in_mass_ratio (exhaust_velocity : Real) (initial
 noncomputable def rocket_gross_thrust (mass_flow : Real) (exhaust_velocity : Real) (exit_pressure : Real) (ambient_pressure : Real) (exit_area : Real) : Real :=
   ((mass_flow * exhaust_velocity) + ((exit_pressure - ambient_pressure) * exit_area))
 
+-- obligations for rocket_gross_thrust: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -71,11 +80,21 @@ theorem rocket_gross_thrust_nonneg_for_positive_mass_flow (mass_flow : Real) (ex
 noncomputable def rocket_specific_impulse (thrust : Real) (mass_flow : Real) : Real :=
   (thrust / (mass_flow * G_GRAVITY))
 
+-- source obligations for rocket_specific_impulse: {O1, O2}
+--   O1 [099bd6eb02a8] -> PRESERVED (accounted)  theorem rocket_isp_inverse_proportional_to_mass_flow
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [c60117654aa0] -> PRESERVED (accounted)  theorem rocket_isp_inverse_proportional_to_mass_flow
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rocket_isp_inverse_proportional_to_mass_flow (thrust : Real) (mass_flow : Real)
     (h_thrust : (((0 : Real) <= thrust) ∧ (thrust <= (100000000.0 : Real))))
     (h_mass_flow : (((0.001 : Real) <= mass_flow) ∧ (mass_flow <= (10000.0 : Real)))) :
     (((rocket_specific_impulse thrust mass_flow) >= (0 : Real))) ∧ (((rocket_specific_impulse thrust mass_flow) <= ISP_MAX)) := by
   unfold rocket_specific_impulse
+  try unfold G_GRAVITY at *
+  try unfold VEL_MAX at *
+  try unfold MASS_MIN at *
+  try unfold MASS_MAX at *
+  try unfold ISP_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

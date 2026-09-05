@@ -24,6 +24,9 @@ axiom discount_factor (rate : Real) (time_to_t : Real) : Real  -- helper (axioma
 noncomputable def cva_cell (expected_exposure : Real) (cum_hazard_prev : Real) (cum_hazard_now : Real) (rate : Real) (time_to_t : Real) (lgd : Real) : Real :=
   (((lgd * expected_exposure) * ((Real.exp (-cum_hazard_prev)) - (Real.exp (-cum_hazard_now)))) * (Real.exp ((-rate) * time_to_t)))
 
+-- source obligations for cva_cell: {O1}
+--   O1 [d8278d957f77] -> PRESERVED (accounted)  theorem cva_cell_non_negative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cva_cell_non_negative (expected_exposure : Real) (cum_hazard_prev : Real) (cum_hazard_now : Real) (rate : Real) (time_to_t : Real) (lgd : Real)
     (h_expected_exposure : (expected_exposure >= (0 : Real)))
     (h_time_to_t : (time_to_t >= (0 : Real)))
@@ -31,6 +34,7 @@ theorem cva_cell_non_negative (expected_exposure : Real) (cum_hazard_prev : Real
     (h1 : (cum_hazard_prev <= cum_hazard_now)) :
     ((cva_cell expected_exposure cum_hazard_prev cum_hazard_now rate time_to_t lgd) >= (0 : Real)) := by
   unfold cva_cell
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

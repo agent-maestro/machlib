@@ -23,6 +23,7 @@ noncomputable def ACC_MAX : Real := (2147483647.0 : Real)
 noncomputable def q8_dequantize (q : Real) (scale : Real) : Real :=
   (q * scale)
 
+-- obligations for q8_dequantize: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -37,6 +38,7 @@ theorem q8_dequantize_inverse_of_quantize (q : Real) (scale : Real)
 noncomputable def q8_dequantize_asym (q : Real) (scale : Real) (zero_point : Real) : Real :=
   ((q - zero_point) * scale)
 
+-- obligations for q8_dequantize_asym: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -53,6 +55,7 @@ theorem q8_dequantize_asym_inverse (q : Real) (scale : Real) (zero_point : Real)
 noncomputable def matmul_rescale (accum : Real) (input_scale : Real) (weight_scale : Real) : Real :=
   ((accum * input_scale) * weight_scale)
 
+-- obligations for matmul_rescale: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

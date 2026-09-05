@@ -32,12 +32,26 @@ axiom chip_thinning_compensation (feed_per_tooth : Real) (diameter : Real) (radi
 noncomputable def linear_feed (num_teeth : Real) (feed_per_tooth : Real) (rpm : Real) : Real :=
   ((num_teeth * feed_per_tooth) * rpm)
 
+-- source obligations for linear_feed: {O1}
+--   O1 [57231e9ceda8] -> PRESERVED (accounted)  theorem cnc_feed_proportional_to_rpm
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cnc_feed_proportional_to_rpm (num_teeth : Real) (feed_per_tooth : Real) (rpm : Real)
     (h_num_teeth : ((N_MIN <= num_teeth) ∧ (num_teeth <= N_MAX)))
     (h_feed_per_tooth : ((FZ_MIN <= feed_per_tooth) ∧ (feed_per_tooth <= FZ_MAX)))
     (h_rpm : ((RPM_MIN <= rpm) ∧ (rpm <= RPM_MAX))) :
     ((linear_feed num_teeth feed_per_tooth rpm) >= (0 : Real)) := by
   unfold linear_feed
+  try unfold PI at *
+  try unfold D_MIN at *
+  try unfold D_MAX at *
+  try unfold RPM_MIN at *
+  try unfold RPM_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold FZ_MIN at *
+  try unfold FZ_MAX at *
+  try unfold SCUT_MIN at *
+  try unfold SCUT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -61,11 +75,25 @@ theorem cnc_feed_proportional_to_rpm (num_teeth : Real) (feed_per_tooth : Real) 
 noncomputable def rpm_from_cutting_speed (cutting_speed : Real) (diameter : Real) : Real :=
   (cutting_speed / (PI * diameter))
 
+-- source obligations for rpm_from_cutting_speed: {O1}
+--   O1 [2c3323fbfb77] -> PRESERVED (accounted)  theorem rpm_inversely_proportional_to_diameter
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rpm_inversely_proportional_to_diameter (cutting_speed : Real) (diameter : Real)
     (h_cutting_speed : ((SCUT_MIN <= cutting_speed) ∧ (cutting_speed <= SCUT_MAX)))
     (h_diameter : ((D_MIN <= diameter) ∧ (diameter <= D_MAX))) :
     ((rpm_from_cutting_speed cutting_speed diameter) >= (0 : Real)) := by
   unfold rpm_from_cutting_speed
+  try unfold PI at *
+  try unfold D_MIN at *
+  try unfold D_MAX at *
+  try unfold RPM_MIN at *
+  try unfold RPM_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold FZ_MIN at *
+  try unfold FZ_MAX at *
+  try unfold SCUT_MIN at *
+  try unfold SCUT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -89,12 +117,26 @@ theorem rpm_inversely_proportional_to_diameter (cutting_speed : Real) (diameter 
 noncomputable def material_removal_rate (feed_mm_per_min : Real) (radial_engagement : Real) (axial_depth : Real) : Real :=
   (((feed_mm_per_min * radial_engagement) * axial_depth) / (1000.0 : Real))
 
+-- source obligations for material_removal_rate: {O1}
+--   O1 [1d942be74d7f] -> PRESERVED (accounted)  theorem mrr_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem mrr_nonneg (feed_mm_per_min : Real) (radial_engagement : Real) (axial_depth : Real)
     (h_feed_mm_per_min : (((0 : Real) <= feed_mm_per_min) ∧ (feed_mm_per_min <= (100000.0 : Real))))
     (h_radial_engagement : (((0 : Real) <= radial_engagement) ∧ (radial_engagement <= D_MAX)))
     (h_axial_depth : (((0 : Real) <= axial_depth) ∧ (axial_depth <= D_MAX))) :
     ((material_removal_rate feed_mm_per_min radial_engagement axial_depth) >= (0 : Real)) := by
   unfold material_removal_rate
+  try unfold PI at *
+  try unfold D_MIN at *
+  try unfold D_MAX at *
+  try unfold RPM_MIN at *
+  try unfold RPM_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold FZ_MIN at *
+  try unfold FZ_MAX at *
+  try unfold SCUT_MIN at *
+  try unfold SCUT_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

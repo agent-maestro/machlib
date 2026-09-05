@@ -24,6 +24,9 @@ axiom msd_one_dimensional (diffusion_coefficient : Real) (time : Real) : Real  -
 noncomputable def point_source_concentration (source_strength : Real) (position : Real) (time : Real) (diffusion_coefficient : Real) : Real :=
   ((source_strength / ((2.0 : Real) * (Real.sqrt ((PI * diffusion_coefficient) * time)))) * (Real.exp (((-position) * position) / (((4.0 : Real) * diffusion_coefficient) * time))))
 
+-- source obligations for point_source_concentration: {O1}
+--   O1 [dfcca6283704] -> PRESERVED (accounted)  theorem diffusion_kernel_normalised
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem diffusion_kernel_normalised (source_strength : Real) (position : Real) (time : Real) (diffusion_coefficient : Real)
     (h1 : (source_strength >= (0 : Real)))
     (h2 : (time >= T_MIN))
@@ -31,6 +34,9 @@ theorem diffusion_kernel_normalised (source_strength : Real) (position : Real) (
     (h4 : (diffusion_coefficient <= D_MAX)) :
     ((point_source_concentration source_strength position time diffusion_coefficient) >= (0 : Real)) := by
   unfold point_source_concentration
+  try unfold PI at *
+  try unfold D_MAX at *
+  try unfold T_MIN at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

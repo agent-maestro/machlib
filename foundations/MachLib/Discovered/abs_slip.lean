@@ -28,6 +28,11 @@ axiom slip_pressure_correction (measured_slip : Real) (target_slip : Real) (kp :
 noncomputable def slip_ratio (vehicle_speed : Real) (wheel_omega : Real) (wheel_radius : Real) : Real :=
   (min (max ((vehicle_speed - (wheel_omega * wheel_radius)) / vehicle_speed) (0 : Real)) SLIP_MAX)
 
+-- source obligations for slip_ratio: {O1, O2}
+--   O1 [b5c06d1be361] -> PRESERVED (accounted)  theorem slip_in_unit_interval_under_braking
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [968d8c296e24] -> PRESERVED (accounted)  theorem slip_in_unit_interval_under_braking
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem slip_in_unit_interval_under_braking (vehicle_speed : Real) (wheel_omega : Real) (wheel_radius : Real)
     (h_vehicle_speed : ((V_MIN <= vehicle_speed) ∧ (vehicle_speed <= V_MAX)))
     (h_wheel_omega : (((0 : Real) <= wheel_omega) ∧ (wheel_omega <= OMEGA_MAX)))
@@ -35,6 +40,13 @@ theorem slip_in_unit_interval_under_braking (vehicle_speed : Real) (wheel_omega 
     (h_clamp1 : (0 : Real) ≤ SLIP_MAX) :
     (((slip_ratio vehicle_speed wheel_omega wheel_radius) >= (0 : Real))) ∧ (((slip_ratio vehicle_speed wheel_omega wheel_radius) <= SLIP_MAX)) := by
   unfold slip_ratio
+  try unfold V_MIN at *
+  try unfold V_MAX at *
+  try unfold OMEGA_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold SLIP_TARGET at *
+  try unfold SLIP_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -59,6 +71,7 @@ theorem slip_in_unit_interval_under_braking (vehicle_speed : Real) (wheel_omega 
 noncomputable def burckhardt_mu (slip : Real) (c1 : Real) (c2 : Real) (c3 : Real) : Real :=
   ((c1 * ((1 : Real) - (Real.exp ((-c2) * slip)))) - (c3 * slip))
 
+-- obligations for burckhardt_mu: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

@@ -25,6 +25,7 @@ noncomputable def LAT_ACCEL_MAX : Real := (100.0 : Real)
 noncomputable def eta_angle (cross_track : Real) (along_track : Real) (heading : Real) : Real :=
   ((atan2 cross_track along_track) - heading)
 
+-- obligations for eta_angle: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -40,6 +41,7 @@ theorem eta_zero_when_aligned (cross_track : Real) (along_track : Real) (heading
 noncomputable def l1_lateral_accel (speed : Real) (eta : Real) (l1_distance : Real) : Real :=
   (((((2.0 : Real) * speed) * speed) * (Real.sin eta)) / l1_distance)
 
+-- obligations for l1_lateral_accel: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -55,6 +57,7 @@ theorem l1_lateral_accel_zero_at_eta_zero (speed : Real) (eta : Real) (l1_distan
 noncomputable def cross_track_distance (px : Real) (py : Real) (x1 : Real) (y1 : Real) (x2 : Real) (y2 : Real) : Real :=
   ((((px - x1) * (y2 - y1)) - ((py - y1) * (x2 - x1))) / (min (max (Real.sqrt (((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)))) (1e-06 : Real)) ((2.0 : Real) * RANGE_MAX)))
 
+-- obligations for cross_track_distance: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

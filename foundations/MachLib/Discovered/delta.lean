@@ -27,6 +27,11 @@ axiom d1 (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expir
 noncomputable def call_delta (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   (HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * ((d1 spot strike rate vol time_to_expiry) + (((GELU_C3 * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry)))))))
 
+-- source obligations for call_delta: {O1, O2}
+--   O1 [eda10f5dee21] -> PRESERVED (accounted)  theorem bs_call_delta_in_zero_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [42a6198f18c0] -> PRESERVED (accounted)  theorem bs_call_delta_in_zero_one
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bs_call_delta_in_zero_one (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
     (h_spot : (spot > (0 : Real)))
     (h_strike : (strike > (0 : Real)))
@@ -34,6 +39,10 @@ theorem bs_call_delta_in_zero_one (spot : Real) (strike : Real) (rate : Real) (v
     (h_time_to_expiry : (time_to_expiry > TINY_T)) :
     (((call_delta spot strike rate vol time_to_expiry) >= (0 : Real))) ∧ (((call_delta spot strike rate vol time_to_expiry) <= (1 : Real))) := by
   unfold call_delta
+  try unfold SQRT_2_OVER_PI at *
+  try unfold GELU_C3 at *
+  try unfold HALF at *
+  try unfold TINY_T at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -58,6 +67,11 @@ theorem bs_call_delta_in_zero_one (spot : Real) (strike : Real) (rate : Real) (v
 noncomputable def put_delta (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real) : Real :=
   ((HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * ((d1 spot strike rate vol time_to_expiry) + (((GELU_C3 * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry))))))) - (1 : Real))
 
+-- source obligations for put_delta: {O1, O2}
+--   O1 [45385b3def34] -> PRESERVED (accounted)  theorem bs_put_delta_in_minus_one_zero
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [6da1aea7f3f3] -> PRESERVED (accounted)  theorem bs_put_delta_in_minus_one_zero
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem bs_put_delta_in_minus_one_zero (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
     (h_spot : (spot > (0 : Real)))
     (h_strike : (strike > (0 : Real)))
@@ -65,6 +79,10 @@ theorem bs_put_delta_in_minus_one_zero (spot : Real) (strike : Real) (rate : Rea
     (h_time_to_expiry : (time_to_expiry > TINY_T)) :
     (((put_delta spot strike rate vol time_to_expiry) >= (-(1 : Real)))) ∧ (((put_delta spot strike rate vol time_to_expiry) <= (0 : Real))) := by
   unfold put_delta
+  try unfold SQRT_2_OVER_PI at *
+  try unfold GELU_C3 at *
+  try unfold HALF at *
+  try unfold TINY_T at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

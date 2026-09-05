@@ -25,6 +25,11 @@ axiom eadie_hofstee (velocity_obs : Real) (substrate : Real) : Real  -- helper (
 noncomputable def velocity (vmax : Real) (substrate : Real) (km : Real) : Real :=
   ((vmax * substrate) / (km + substrate))
 
+-- source obligations for velocity: {O1, O2}
+--   O1 [6f60052f3e75] -> PRESERVED (accounted)  theorem michaelis_menten_saturating
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [9be1993514db] -> PRESERVED (accounted)  theorem michaelis_menten_saturating
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem michaelis_menten_saturating (vmax : Real) (substrate : Real) (km : Real)
     (h1 : (vmax > (0 : Real)))
     (h2 : (vmax <= VMAX_MAX))
@@ -34,6 +39,8 @@ theorem michaelis_menten_saturating (vmax : Real) (substrate : Real) (km : Real)
     (h6 : (km <= S_MAX)) :
     (((velocity vmax substrate km) >= (0 : Real))) ∧ (((velocity vmax substrate km) <= vmax)) := by
   unfold velocity
+  try unfold S_MAX at *
+  try unfold VMAX_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

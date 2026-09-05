@@ -18,6 +18,9 @@ open MachLib.Real
 noncomputable def biquad_lowpass_step (x : Real) (x1 : Real) (x2 : Real) (y1 : Real) (y2 : Real) (b0 : Real) (b1 : Real) (b2 : Real) (a1 : Real) (a2 : Real) : Real :=
   (((((b0 * x) + (b1 * x1)) + (b2 * x2)) - (a1 * y1)) - (a2 * y2))
 
+-- source obligations for biquad_lowpass_step: {O1}
+--   O1 [9350afc8d164] -> PRESERVED (accounted)  theorem biquad_step_bounded_under_normalized_coeffs
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem biquad_step_bounded_under_normalized_coeffs (x : Real) (x1 : Real) (x2 : Real) (y1 : Real) (y2 : Real) (b0 : Real) (b1 : Real) (b2 : Real) (a1 : Real) (a2 : Real)
     (h1 : ((abs x) <= (1 : Real)))
     (h2 : ((abs x1) <= (1 : Real)))

@@ -25,6 +25,7 @@ axiom henderson_hasselbalch (pka : Real) (conjugate_base_concentration : Real) (
 noncomputable def pH_from_concentration (proton_concentration : Real) : Real :=
   (-(log10 proton_concentration))
 
+-- obligations for pH_from_concentration: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -39,11 +40,18 @@ theorem ph_decreases_with_proton_concentration (proton_concentration : Real)
 noncomputable def concentration_from_pH (ph_value : Real) : Real :=
   (exp10 (-ph_value))
 
+-- source obligations for concentration_from_pH: {O1}
+--   O1 [8d4ae2ce63e9] -> PRESERVED (accounted)  theorem proton_concentration_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem proton_concentration_positive (ph_value : Real)
     (h1 : (ph_value >= PH_MIN))
     (h2 : (ph_value <= PH_MAX)) :
     ((concentration_from_pH ph_value) > (0 : Real)) := by
   unfold concentration_from_pH
+  try unfold PH_MIN at *
+  try unfold PH_MAX at *
+  try unfold C_MIN at *
+  try unfold C_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

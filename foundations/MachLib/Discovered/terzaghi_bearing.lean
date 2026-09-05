@@ -29,6 +29,9 @@ noncomputable def FS_MAX : Real := (5.0 : Real)
 noncomputable def ultimate_bearing (cohesion : Real) (n_c : Real) (soil_unit_weight : Real) (embedment_depth : Real) (n_q : Real) (footing_width : Real) (n_gamma : Real) : Real :=
   (((cohesion * n_c) + ((soil_unit_weight * embedment_depth) * n_q)) + (((HALF * soil_unit_weight) * footing_width) * n_gamma))
 
+-- source obligations for ultimate_bearing: {O1}
+--   O1 [d85439ccbc1b] -> PRESERVED (accounted)  theorem terzaghi_bearing_nonneg_under_pos_inputs
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem terzaghi_bearing_nonneg_under_pos_inputs (cohesion : Real) (n_c : Real) (soil_unit_weight : Real) (embedment_depth : Real) (n_q : Real) (footing_width : Real) (n_gamma : Real)
     (h1 : (cohesion >= (0 : Real)))
     (h2 : (cohesion <= C_MAX))
@@ -46,6 +49,16 @@ theorem terzaghi_bearing_nonneg_under_pos_inputs (cohesion : Real) (n_c : Real) 
     (h14 : (n_gamma <= N_MAX)) :
     ((ultimate_bearing cohesion n_c soil_unit_weight embedment_depth n_q footing_width n_gamma) >= (0 : Real)) := by
   unfold ultimate_bearing
+  try unfold HALF at *
+  try unfold ONE at *
+  try unfold C_MAX at *
+  try unfold GAMMA_MAX at *
+  try unfold D_MAX at *
+  try unfold B_MIN at *
+  try unfold B_MAX at *
+  try unfold N_MAX at *
+  try unfold FS_MIN at *
+  try unfold FS_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -69,6 +82,11 @@ theorem terzaghi_bearing_nonneg_under_pos_inputs (cohesion : Real) (n_c : Real) 
 noncomputable def allowable_bearing (ultimate_pressure : Real) (factor_of_safety : Real) : Real :=
   (ultimate_pressure / factor_of_safety)
 
+-- source obligations for allowable_bearing: {O1, O2}
+--   O1 [61755740d91f] -> PRESERVED (accounted)  theorem allowable_bearing_below_ultimate
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [93cb2d90dcae] -> PRESERVED (accounted)  theorem allowable_bearing_below_ultimate
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem allowable_bearing_below_ultimate (ultimate_pressure : Real) (factor_of_safety : Real)
     (h1 : (ultimate_pressure >= (0 : Real)))
     (h2 : (ultimate_pressure <= (1000000.0 : Real)))
@@ -76,6 +94,16 @@ theorem allowable_bearing_below_ultimate (ultimate_pressure : Real) (factor_of_s
     (h4 : (factor_of_safety <= FS_MAX)) :
     (((allowable_bearing ultimate_pressure factor_of_safety) >= (0 : Real))) ∧ (((allowable_bearing ultimate_pressure factor_of_safety) <= ultimate_pressure)) := by
   unfold allowable_bearing
+  try unfold HALF at *
+  try unfold ONE at *
+  try unfold C_MAX at *
+  try unfold GAMMA_MAX at *
+  try unfold D_MAX at *
+  try unfold B_MIN at *
+  try unfold B_MAX at *
+  try unfold N_MAX at *
+  try unfold FS_MIN at *
+  try unfold FS_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

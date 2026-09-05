@@ -26,6 +26,11 @@ noncomputable def THETA_MAX : Real := (0.65 : Real)
 noncomputable def effective_saturation (psi : Real) (alpha : Real) (n_shape : Real) : Real :=
   ((ONE + ((alpha * psi) ^ n_shape)) ^ (-(ONE - (ONE / n_shape))))
 
+-- source obligations for effective_saturation: {O1, O2}
+--   O1 [cc759addbee3] -> PRESERVED (accounted)  theorem vg_effective_saturation_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [cc955108468f] -> PRESERVED (accounted)  theorem vg_effective_saturation_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem vg_effective_saturation_in_unit_interval (psi : Real) (alpha : Real) (n_shape : Real)
     (h1 : (psi >= (0 : Real)))
     (h2 : (psi <= PSI_MAX))
@@ -35,6 +40,13 @@ theorem vg_effective_saturation_in_unit_interval (psi : Real) (alpha : Real) (n_
     (h6 : (n_shape <= N_MAX)) :
     (((effective_saturation psi alpha n_shape) >= (0 : Real))) ∧ (((effective_saturation psi alpha n_shape) <= ONE)) := by
   unfold effective_saturation
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold PSI_MAX at *
+  try unfold ALPHA_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold THETA_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -59,6 +71,11 @@ theorem vg_effective_saturation_in_unit_interval (psi : Real) (alpha : Real) (n_
 noncomputable def water_content (theta_residual : Real) (theta_saturated : Real) (effective_sat : Real) : Real :=
   (theta_residual + ((theta_saturated - theta_residual) * effective_sat))
 
+-- source obligations for water_content: {O1, O2}
+--   O1 [8d883032d575] -> PRESERVED (accounted)  theorem vg_theta_within_residual_saturated_band
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [01bd0a0b7c40] -> PRESERVED (accounted)  theorem vg_theta_within_residual_saturated_band
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem vg_theta_within_residual_saturated_band (theta_residual : Real) (theta_saturated : Real) (effective_sat : Real)
     (h1 : (theta_residual >= (0 : Real)))
     (h2 : (theta_residual <= THETA_MAX))
@@ -68,6 +85,13 @@ theorem vg_theta_within_residual_saturated_band (theta_residual : Real) (theta_s
     (h6 : (effective_sat <= ONE)) :
     (((water_content theta_residual theta_saturated effective_sat) >= theta_residual)) ∧ (((water_content theta_residual theta_saturated effective_sat) <= theta_saturated)) := by
   unfold water_content
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold PSI_MAX at *
+  try unfold ALPHA_MAX at *
+  try unfold N_MIN at *
+  try unfold N_MAX at *
+  try unfold THETA_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

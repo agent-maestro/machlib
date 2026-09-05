@@ -29,6 +29,11 @@ axiom pid_anti_windup (error : Real) (integral : Real) (derivative : Real) (Kp :
 noncomputable def actuator_command (setpoint : Real) (measured : Real) (integral : Real) : Real :=
   (min (max (pid_anti_windup (setpoint - measured) integral (0 : Real) Kp Ki Kd I_LIMIT U_LIMIT) ACTUATOR_MIN) ACTUATOR_MAX)
 
+-- source obligations for actuator_command: {O1, O2}
+--   O1 [4d760a1ae8f4] -> PRESERVED (accounted)  theorem plc_actuator_command_safe
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [aee281408b97] -> PRESERVED (accounted)  theorem plc_actuator_command_safe
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem plc_actuator_command_safe (setpoint : Real) (measured : Real) (integral : Real)
     (h_setpoint : ((ACTUATOR_MIN <= setpoint) ∧ (setpoint <= ACTUATOR_MAX)))
     (h_measured : (-(1000000.0 : Real) < measured ∧ measured < (1000000.0 : Real)))
@@ -36,6 +41,14 @@ theorem plc_actuator_command_safe (setpoint : Real) (measured : Real) (integral 
     (h_clamp1 : ACTUATOR_MIN ≤ ACTUATOR_MAX) :
     (((ACTUATOR_MIN - (1 : Real)) <= (actuator_command setpoint measured integral))) ∧ (((actuator_command setpoint measured integral) <= (ACTUATOR_MAX + (1 : Real)))) := by
   unfold actuator_command
+  try unfold Kp at *
+  try unfold Ki at *
+  try unfold Kd at *
+  try unfold dt at *
+  try unfold I_LIMIT at *
+  try unfold ACTUATOR_MIN at *
+  try unfold ACTUATOR_MAX at *
+  try unfold U_LIMIT at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

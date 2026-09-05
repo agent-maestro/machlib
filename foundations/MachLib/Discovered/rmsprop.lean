@@ -25,6 +25,9 @@ noncomputable def EPS_MAX : Real := (0.001 : Real)
 noncomputable def rmsprop_v_update (prev_v : Real) (gradient : Real) (rho : Real) : Real :=
   ((rho * prev_v) + ((((1 : Real) - rho) * gradient) * gradient))
 
+-- source obligations for rmsprop_v_update: {O1}
+--   O1 [661135243e7e] -> PRESERVED (accounted)  theorem rmsprop_v_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem rmsprop_v_nonneg (prev_v : Real) (gradient : Real) (rho : Real)
     (h1 : (prev_v >= (0 : Real)))
     (h2 : (prev_v <= VAL_MAX))
@@ -33,6 +36,12 @@ theorem rmsprop_v_nonneg (prev_v : Real) (gradient : Real) (rho : Real)
     (h5 : (rho <= RHO_MAX)) :
     ((rmsprop_v_update prev_v gradient rho) >= (0 : Real)) := by
   unfold rmsprop_v_update
+  try unfold LR_MIN at *
+  try unfold LR_MAX at *
+  try unfold RHO_MAX at *
+  try unfold VAL_MAX at *
+  try unfold EPS_MIN at *
+  try unfold EPS_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -56,6 +65,7 @@ theorem rmsprop_v_nonneg (prev_v : Real) (gradient : Real) (rho : Real)
 noncomputable def rmsprop_param_step (theta : Real) (gradient : Real) (v : Real) (lr : Real) (eps : Real) : Real :=
   (theta - ((lr * gradient) / ((Real.sqrt v) + eps)))
 
+-- obligations for rmsprop_param_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -76,6 +86,7 @@ theorem rmsprop_step_descent_when_grad_signed (theta : Real) (gradient : Real) (
 noncomputable def adagrad_param_step (theta : Real) (gradient : Real) (g_squared_sum : Real) (lr : Real) (eps : Real) : Real :=
   (theta - ((lr * gradient) / ((Real.sqrt g_squared_sum) + eps)))
 
+-- obligations for adagrad_param_step: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

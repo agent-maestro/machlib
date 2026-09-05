@@ -25,6 +25,7 @@ noncomputable def WHEEL_OMEGA_MAX : Real := (200.0 : Real)
 noncomputable def front_left_omega (vx : Real) (vy : Real) (omega : Real) (half_base : Real) (half_track : Real) (wheel_radius : Real) : Real :=
   (((vx - vy) - ((half_base + half_track) * omega)) / wheel_radius)
 
+-- obligations for front_left_omega: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -46,6 +47,7 @@ theorem mecanum_fl_zero_at_zero_command (vx : Real) (vy : Real) (omega : Real) (
 noncomputable def front_right_omega (vx : Real) (vy : Real) (omega : Real) (half_base : Real) (half_track : Real) (wheel_radius : Real) : Real :=
   (((vx + vy) + ((half_base + half_track) * omega)) / wheel_radius)
 
+-- obligations for front_right_omega: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -67,6 +69,7 @@ theorem mecanum_fr_signed_in_yaw (vx : Real) (vy : Real) (omega : Real) (half_ba
 noncomputable def rear_left_omega (vx : Real) (vy : Real) (omega : Real) (half_base : Real) (half_track : Real) (wheel_radius : Real) : Real :=
   (((vx + vy) - ((half_base + half_track) * omega)) / wheel_radius)
 
+-- obligations for rear_left_omega: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -88,6 +91,7 @@ theorem mecanum_rl_swap_pattern (vx : Real) (vy : Real) (omega : Real) (half_bas
 noncomputable def rear_right_omega (vx : Real) (vy : Real) (omega : Real) (half_base : Real) (half_track : Real) (wheel_radius : Real) : Real :=
   (((vx - vy) + ((half_base + half_track) * omega)) / wheel_radius)
 
+-- obligations for rear_right_omega: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

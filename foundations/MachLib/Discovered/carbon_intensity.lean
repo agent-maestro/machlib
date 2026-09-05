@@ -25,6 +25,9 @@ noncomputable def USAGE_MAX : Real := (1000000000000.0 : Real)
 noncomputable def intensity (mass_co2_eq : Real) (energy_delivered : Real) : Real :=
   (mass_co2_eq / energy_delivered)
 
+-- source obligations for intensity: {O1}
+--   O1 [0354be536662] -> PRESERVED (accounted)  theorem carbon_intensity_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem carbon_intensity_nonneg (mass_co2_eq : Real) (energy_delivered : Real)
     (h1 : (mass_co2_eq >= (0 : Real)))
     (h2 : (mass_co2_eq <= MASS_MAX))
@@ -32,6 +35,12 @@ theorem carbon_intensity_nonneg (mass_co2_eq : Real) (energy_delivered : Real)
     (h4 : (energy_delivered <= ENERGY_MAX)) :
     ((intensity mass_co2_eq energy_delivered) >= (0 : Real)) := by
   unfold intensity
+  try unfold ZERO at *
+  try unfold ENERGY_MIN at *
+  try unfold ENERGY_MAX at *
+  try unfold MASS_MAX at *
+  try unfold INTENSITY_MAX at *
+  try unfold USAGE_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -55,6 +64,9 @@ theorem carbon_intensity_nonneg (mass_co2_eq : Real) (energy_delivered : Real)
 noncomputable def source_emissions (usage : Real) (source_intensity : Real) : Real :=
   (usage * source_intensity)
 
+-- source obligations for source_emissions: {O1}
+--   O1 [594ee8fefd2b] -> PRESERVED (accounted)  theorem carbon_source_contribution_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem carbon_source_contribution_nonneg (usage : Real) (source_intensity : Real)
     (h1 : (usage >= (0 : Real)))
     (h2 : (usage <= USAGE_MAX))
@@ -62,6 +74,12 @@ theorem carbon_source_contribution_nonneg (usage : Real) (source_intensity : Rea
     (h4 : (source_intensity <= INTENSITY_MAX)) :
     ((source_emissions usage source_intensity) >= (0 : Real)) := by
   unfold source_emissions
+  try unfold ZERO at *
+  try unfold ENERGY_MIN at *
+  try unfold ENERGY_MAX at *
+  try unfold MASS_MAX at *
+  try unfold INTENSITY_MAX at *
+  try unfold USAGE_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -85,6 +103,13 @@ theorem carbon_source_contribution_nonneg (usage : Real) (source_intensity : Rea
 noncomputable def total_emissions_3way (scope1 : Real) (scope2 : Real) (scope3 : Real) : Real :=
   ((scope1 + scope2) + scope3)
 
+-- source obligations for total_emissions_3way: {O1, O2, O3}
+--   O1 [30662433c2a8] -> PRESERVED (accounted)  theorem carbon_total_above_each_source
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [cbded5c31ba9] -> PRESERVED (accounted)  theorem carbon_total_above_each_source
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O3 [965d7e9e0701] -> PRESERVED (accounted)  theorem carbon_total_above_each_source
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem carbon_total_above_each_source (scope1 : Real) (scope2 : Real) (scope3 : Real)
     (h1 : (scope1 >= (0 : Real)))
     (h2 : (scope2 >= (0 : Real)))
@@ -94,6 +119,12 @@ theorem carbon_total_above_each_source (scope1 : Real) (scope2 : Real) (scope3 :
     (h6 : (scope3 <= MASS_MAX)) :
     (((total_emissions_3way scope1 scope2 scope3) >= scope1)) ∧ (((total_emissions_3way scope1 scope2 scope3) >= scope2)) ∧ (((total_emissions_3way scope1 scope2 scope3) >= scope3)) := by
   unfold total_emissions_3way
+  try unfold ZERO at *
+  try unfold ENERGY_MIN at *
+  try unfold ENERGY_MAX at *
+  try unfold MASS_MAX at *
+  try unfold INTENSITY_MAX at *
+  try unfold USAGE_MAX at *
   refine ⟨?_, ?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

@@ -25,6 +25,11 @@ noncomputable def DEPTH_MAX : Real := (1 : Real)
 noncomputable def pcf_4tap (query_depth : Real) (sample0 : Real) (sample1 : Real) (sample2 : Real) (sample3 : Real) (bias : Real) : Real :=
   (QUARTER * ((((step sample0 (query_depth - bias)) + (step sample1 (query_depth - bias))) + (step sample2 (query_depth - bias))) + (step sample3 (query_depth - bias))))
 
+-- source obligations for pcf_4tap: {O1, O2}
+--   O1 [4035e9129dca] -> PRESERVED (accounted)  theorem shadow_pcf4_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [5bc409f9bb5c] -> PRESERVED (accounted)  theorem shadow_pcf4_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem shadow_pcf4_in_unit_interval (query_depth : Real) (sample0 : Real) (sample1 : Real) (sample2 : Real) (sample3 : Real) (bias : Real)
     (h1 : (query_depth >= (0 : Real)))
     (h2 : (query_depth <= DEPTH_MAX))
@@ -40,6 +45,12 @@ theorem shadow_pcf4_in_unit_interval (query_depth : Real) (sample0 : Real) (samp
     (h12 : (bias <= BIAS_MAX)) :
     (((pcf_4tap query_depth sample0 sample1 sample2 sample3 bias) >= (0 : Real))) ∧ (((pcf_4tap query_depth sample0 sample1 sample2 sample3 bias) <= ONE)) := by
   unfold pcf_4tap
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold QUARTER at *
+  try unfold NINTH at *
+  try unfold BIAS_MAX at *
+  try unfold DEPTH_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -64,6 +75,11 @@ theorem shadow_pcf4_in_unit_interval (query_depth : Real) (sample0 : Real) (samp
 noncomputable def pcf_9tap (query_depth : Real) (s0 : Real) (s1 : Real) (s2 : Real) (s3 : Real) (s4 : Real) (s5 : Real) (s6 : Real) (s7 : Real) (s8 : Real) (bias : Real) : Real :=
   (NINTH * (((((((((step s0 (query_depth - bias)) + (step s1 (query_depth - bias))) + (step s2 (query_depth - bias))) + (step s3 (query_depth - bias))) + (step s4 (query_depth - bias))) + (step s5 (query_depth - bias))) + (step s6 (query_depth - bias))) + (step s7 (query_depth - bias))) + (step s8 (query_depth - bias))))
 
+-- source obligations for pcf_9tap: {O1, O2}
+--   O1 [af9ba137c01b] -> PRESERVED (accounted)  theorem shadow_pcf9_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [df70d1b9d054] -> PRESERVED (accounted)  theorem shadow_pcf9_in_unit_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem shadow_pcf9_in_unit_interval (query_depth : Real) (s0 : Real) (s1 : Real) (s2 : Real) (s3 : Real) (s4 : Real) (s5 : Real) (s6 : Real) (s7 : Real) (s8 : Real) (bias : Real)
     (h1 : (query_depth >= (0 : Real)))
     (h2 : (query_depth <= DEPTH_MAX))
@@ -71,6 +87,12 @@ theorem shadow_pcf9_in_unit_interval (query_depth : Real) (s0 : Real) (s1 : Real
     (h4 : (bias <= BIAS_MAX)) :
     (((pcf_9tap query_depth s0 s1 s2 s3 s4 s5 s6 s7 s8 bias) >= (0 : Real))) ∧ (((pcf_9tap query_depth s0 s1 s2 s3 s4 s5 s6 s7 s8 bias) <= ONE)) := by
   unfold pcf_9tap
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold QUARTER at *
+  try unfold NINTH at *
+  try unfold BIAS_MAX at *
+  try unfold DEPTH_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

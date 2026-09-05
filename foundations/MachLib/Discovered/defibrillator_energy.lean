@@ -27,6 +27,7 @@ noncomputable def HALF : Real := (0.5 : Real)
 noncomputable def discharge_voltage (initial_voltage : Real) (duration : Real) (capacitance : Real) (impedance : Real) : Real :=
   (initial_voltage * (Real.exp ((-duration) / (impedance * capacitance))))
 
+-- obligations for discharge_voltage: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -43,6 +44,9 @@ theorem discharge_voltage_decays_exponentially (initial_voltage : Real) (duratio
 noncomputable def phase1_energy (initial_voltage : Real) (final_voltage : Real) (capacitance : Real) : Real :=
   ((HALF * capacitance) * ((initial_voltage * initial_voltage) - (final_voltage * final_voltage)))
 
+-- source obligations for phase1_energy: {O1}
+--   O1 [961cb42de8da] -> PRESERVED (accounted)  theorem phase1_energy_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem phase1_energy_nonneg (initial_voltage : Real) (final_voltage : Real) (capacitance : Real)
     (h_initial_voltage : (-V_MAX ≤ initial_voltage ∧ initial_voltage ≤ V_MAX))
     (h_final_voltage : (-V_MAX ≤ final_voltage ∧ final_voltage ≤ V_MAX))
@@ -50,6 +54,14 @@ theorem phase1_energy_nonneg (initial_voltage : Real) (final_voltage : Real) (ca
     (h1 : ((abs final_voltage) <= (abs initial_voltage))) :
     ((phase1_energy initial_voltage final_voltage capacitance) >= (0 : Real)) := by
   unfold phase1_energy
+  try unfold C_MIN at *
+  try unfold C_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold V_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -73,6 +85,9 @@ theorem phase1_energy_nonneg (initial_voltage : Real) (final_voltage : Real) (ca
 noncomputable def biphasic_total_energy (initial_voltage : Real) (end_voltage : Real) (capacitance : Real) : Real :=
   ((HALF * capacitance) * (min (max ((initial_voltage * initial_voltage) - (end_voltage * end_voltage)) (0 : Real)) (V_MAX * V_MAX)))
 
+-- source obligations for biphasic_total_energy: {O1}
+--   O1 [96708b6095f7] -> PRESERVED (accounted)  theorem biphasic_total_energy_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem biphasic_total_energy_nonneg (initial_voltage : Real) (end_voltage : Real) (capacitance : Real)
     (h_initial_voltage : (-V_MAX ≤ initial_voltage ∧ initial_voltage ≤ V_MAX))
     (h_end_voltage : (-V_MAX ≤ end_voltage ∧ end_voltage ≤ V_MAX))
@@ -80,6 +95,14 @@ theorem biphasic_total_energy_nonneg (initial_voltage : Real) (end_voltage : Rea
     (h_clamp1 : (0 : Real) ≤ (V_MAX * V_MAX)) :
     ((biphasic_total_energy initial_voltage end_voltage capacitance) >= (0 : Real)) := by
   unfold biphasic_total_energy
+  try unfold C_MIN at *
+  try unfold C_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold V_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -103,6 +126,9 @@ theorem biphasic_total_energy_nonneg (initial_voltage : Real) (end_voltage : Rea
 noncomputable def impedance_compensation_v0 (target_joules : Real) (capacitance : Real) (duration : Real) (impedance : Real) : Real :=
   (Real.sqrt (((2.0 : Real) * target_joules) / (min (max (capacitance * ((1 : Real) - (Real.exp (((-2.0 : Real) * duration) / (impedance * capacitance))))) (1e-09 : Real)) (1 : Real))))
 
+-- source obligations for impedance_compensation_v0: {O1}
+--   O1 [d63d9b524053] -> PRESERVED (accounted)  theorem compensation_v0_increases_with_target_energy
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem compensation_v0_increases_with_target_energy (target_joules : Real) (capacitance : Real) (duration : Real) (impedance : Real)
     (h_target_joules : (((0 : Real) <= target_joules) ∧ (target_joules <= (360.0 : Real))))
     (h_capacitance : ((C_MIN <= capacitance) ∧ (capacitance <= C_MAX)))
@@ -111,6 +137,14 @@ theorem compensation_v0_increases_with_target_energy (target_joules : Real) (cap
     (h_clamp1 : (1e-09 : Real) ≤ (1 : Real)) :
     ((impedance_compensation_v0 target_joules capacitance duration impedance) >= (0 : Real)) := by
   unfold impedance_compensation_v0
+  try unfold C_MIN at *
+  try unfold C_MAX at *
+  try unfold R_MIN at *
+  try unfold R_MAX at *
+  try unfold V_MAX at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

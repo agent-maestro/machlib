@@ -24,12 +24,20 @@ axiom maxwell_boltzmann_density (prefactor : Real) (mass : Real) (speed : Real) 
 noncomputable def population_ratio (energy_difference : Real) (temperature : Real) : Real :=
   (Real.exp ((-energy_difference) / (KB * temperature)))
 
+-- source obligations for population_ratio: {O1, O2}
+--   O1 [f71231d4a427] -> PRESERVED (accounted)  theorem boltzmann_ratio_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [c9f11407eb15] -> PRESERVED (accounted)  theorem boltzmann_ratio_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem boltzmann_ratio_positive (energy_difference : Real) (temperature : Real)
     (h1 : (energy_difference >= (0 : Real)))
     (h2 : (temperature >= T_MIN))
     (h3 : (temperature <= T_MAX)) :
     (((population_ratio energy_difference temperature) >= (0 : Real))) ∧ (((population_ratio energy_difference temperature) <= (1 : Real))) := by
   unfold population_ratio
+  try unfold KB at *
+  try unfold T_MIN at *
+  try unfold T_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

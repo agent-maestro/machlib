@@ -23,6 +23,7 @@ noncomputable def AMP_MAX : Real := (16.0 : Real)
 noncomputable def carrier_phase_correct_i (i_in : Real) (q_in : Real) (cos_phi : Real) (sin_phi : Real) : Real :=
   ((i_in * cos_phi) + (q_in * sin_phi))
 
+-- obligations for carrier_phase_correct_i: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -39,6 +40,7 @@ theorem phase_correct_preserves_magnitude (i_in : Real) (q_in : Real) (cos_phi :
 noncomputable def carrier_phase_correct_q (i_in : Real) (q_in : Real) (cos_phi : Real) (sin_phi : Real) : Real :=
   (((-i_in) * sin_phi) + (q_in * cos_phi))
 
+-- obligations for carrier_phase_correct_q: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -55,6 +57,7 @@ theorem phase_correct_q_preserves_magnitude (i_in : Real) (q_in : Real) (cos_phi
 noncomputable def nearest_qam_amplitude (sample : Real) (max_amplitude : Real) : Real :=
   (min (max sample (-max_amplitude)) max_amplitude)
 
+-- obligations for nearest_qam_amplitude: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -71,6 +74,7 @@ theorem amplitude_clamp_in_range (sample : Real) (max_amplitude : Real)
 noncomputable def bit_llr (sample : Real) (boundary : Real) (sigma : Real) : Real :=
   (((2.0 : Real) * (sample - boundary)) / (sigma * sigma))
 
+-- obligations for bit_llr: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

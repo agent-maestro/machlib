@@ -23,6 +23,9 @@ axiom smooth_l1 (prediction : Real) (target : Real) : Real  -- helper (axiomatis
 noncomputable def huber_loss (prediction : Real) (target : Real) (delta : Real) : Real :=
   (((HALF * (min (max (abs (prediction - target)) (0 : Real)) delta)) * (min (max (abs (prediction - target)) (0 : Real)) delta)) + (delta * ((abs (prediction - target)) - (min (max (abs (prediction - target)) (0 : Real)) delta))))
 
+-- source obligations for huber_loss: {O1}
+--   O1 [7c3456aa7a90] -> PRESERVED (accounted)  theorem huber_loss_nonnegative
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem huber_loss_nonnegative (prediction : Real) (target : Real) (delta : Real)
     (h1 : ((abs prediction) < MAX_RESIDUAL))
     (h2 : ((abs target) < MAX_RESIDUAL))
@@ -31,6 +34,8 @@ theorem huber_loss_nonnegative (prediction : Real) (target : Real) (delta : Real
     (h_clamp1 : (0 : Real) ≤ delta) :
     ((huber_loss prediction target delta) >= (0 : Real)) := by
   unfold huber_loss
+  try unfold MAX_RESIDUAL at *
+  try unfold HALF at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -54,6 +59,7 @@ theorem huber_loss_nonnegative (prediction : Real) (target : Real) (delta : Real
 noncomputable def huber_grad (prediction : Real) (target : Real) (delta : Real) : Real :=
   (min (max (prediction - target) (-delta)) delta)
 
+-- obligations for huber_grad: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

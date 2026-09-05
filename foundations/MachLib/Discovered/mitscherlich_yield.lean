@@ -24,6 +24,11 @@ noncomputable def X_MAX : Real := (1000.0 : Real)
 noncomputable def yield_response (y_max : Real) (k_coefficient : Real) (input_applied : Real) (input_baseline : Real) : Real :=
   (y_max * (ONE - (Real.exp ((-k_coefficient) * (input_applied - input_baseline)))))
 
+-- source obligations for yield_response: {O1, O2}
+--   O1 [c910806e675c] -> PRESERVED (accounted)  theorem mitscherlich_yield_below_potential
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [490487abc05c] -> PRESERVED (accounted)  theorem mitscherlich_yield_below_potential
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem mitscherlich_yield_below_potential (y_max : Real) (k_coefficient : Real) (input_applied : Real) (input_baseline : Real)
     (h1 : (y_max >= (0 : Real)))
     (h2 : (y_max <= Y_MAX))
@@ -34,6 +39,11 @@ theorem mitscherlich_yield_below_potential (y_max : Real) (k_coefficient : Real)
     (h7 : (input_baseline >= (0 : Real))) :
     (((yield_response y_max k_coefficient input_applied input_baseline) >= (0 : Real))) ∧ (((yield_response y_max k_coefficient input_applied input_baseline) <= y_max)) := by
   unfold yield_response
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold Y_MAX at *
+  try unfold K_MAX at *
+  try unfold X_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -58,6 +68,9 @@ theorem mitscherlich_yield_below_potential (y_max : Real) (k_coefficient : Real)
 noncomputable def marginal_yield (y_max : Real) (k_coefficient : Real) (input_applied : Real) (input_baseline : Real) : Real :=
   ((y_max * k_coefficient) * (Real.exp ((-k_coefficient) * (input_applied - input_baseline))))
 
+-- source obligations for marginal_yield: {O1}
+--   O1 [12a0445c4eca] -> PRESERVED (accounted)  theorem mitscherlich_marginal_yield_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem mitscherlich_marginal_yield_nonneg (y_max : Real) (k_coefficient : Real) (input_applied : Real) (input_baseline : Real)
     (h1 : (y_max >= (0 : Real)))
     (h2 : (y_max <= Y_MAX))
@@ -68,6 +81,11 @@ theorem mitscherlich_marginal_yield_nonneg (y_max : Real) (k_coefficient : Real)
     (h7 : (input_baseline >= (0 : Real))) :
     ((marginal_yield y_max k_coefficient input_applied input_baseline) >= (0 : Real)) := by
   unfold marginal_yield
+  try unfold ZERO at *
+  try unfold ONE at *
+  try unfold Y_MAX at *
+  try unfold K_MAX at *
+  try unfold X_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

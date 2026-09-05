@@ -22,6 +22,9 @@ noncomputable def ONE_24 : Real := (0.041666666666666664 : Real)
 noncomputable def sabr_atm_vol (forward : Real) (alpha : Real) (beta : Real) (rho : Real) (nu : Real) (time_to_expiry : Real) : Real :=
   ((alpha / (forward ^ ((1 : Real) - beta))) * ((1 : Real) + ((((((ONE_24 * (((1 : Real) - beta) * ((1 : Real) - beta))) * (alpha / (forward ^ ((1 : Real) - beta)))) * (alpha / (forward ^ ((1 : Real) - beta)))) + ((((QUARTER * beta) * rho) * nu) * (alpha / (forward ^ ((1 : Real) - beta))))) + (((ONE_24 * ((2.0 : Real) - (((3.0 : Real) * rho) * rho))) * nu) * nu)) * time_to_expiry)))
 
+-- source obligations for sabr_atm_vol: {O1}
+--   O1 [874483145f3a] -> PRESERVED (accounted)  theorem sabr_atm_vol_positive
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem sabr_atm_vol_positive (forward : Real) (alpha : Real) (beta : Real) (rho : Real) (nu : Real) (time_to_expiry : Real)
     (h1 : (forward > (0 : Real)))
     (h2 : (alpha > (0 : Real)))
@@ -31,6 +34,9 @@ theorem sabr_atm_vol_positive (forward : Real) (alpha : Real) (beta : Real) (rho
     (h6 : (time_to_expiry >= (0 : Real))) :
     ((sabr_atm_vol forward alpha beta rho nu time_to_expiry) > (0 : Real)) := by
   unfold sabr_atm_vol
+  try unfold HALF at *
+  try unfold QUARTER at *
+  try unfold ONE_24 at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

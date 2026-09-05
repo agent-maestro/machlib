@@ -24,6 +24,9 @@ noncomputable def H_MAX : Real := (20.0 : Real)
 noncomputable def cusum_high_step (s_high_prev : Real) (sample : Real) (target : Real) (sigma : Real) (reference_k : Real) : Real :=
   (min (max ((s_high_prev + ((sample - target) / sigma)) - reference_k) (0 : Real)) VALUE_MAX)
 
+-- source obligations for cusum_high_step: {O1}
+--   O1 [02a8888cb3d1] -> PRESERVED (accounted)  theorem cusum_high_step_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cusum_high_step_nonneg (s_high_prev : Real) (sample : Real) (target : Real) (sigma : Real) (reference_k : Real)
     (h_s_high_prev : (((0 : Real) <= s_high_prev) ∧ (s_high_prev <= VALUE_MAX)))
     (h_sample : (-VALUE_MAX ≤ sample ∧ sample ≤ VALUE_MAX))
@@ -33,6 +36,11 @@ theorem cusum_high_step_nonneg (s_high_prev : Real) (sample : Real) (target : Re
     (h_clamp1 : (0 : Real) ≤ VALUE_MAX) :
     ((cusum_high_step s_high_prev sample target sigma reference_k) >= (0 : Real)) := by
   unfold cusum_high_step
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold VALUE_MAX at *
+  try unfold K_MAX at *
+  try unfold H_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -56,6 +64,9 @@ theorem cusum_high_step_nonneg (s_high_prev : Real) (sample : Real) (target : Re
 noncomputable def cusum_low_step (s_low_prev : Real) (sample : Real) (target : Real) (sigma : Real) (reference_k : Real) : Real :=
   (min (max ((s_low_prev - ((sample - target) / sigma)) - reference_k) (0 : Real)) VALUE_MAX)
 
+-- source obligations for cusum_low_step: {O1}
+--   O1 [49e18f44e15a] -> PRESERVED (accounted)  theorem cusum_low_step_nonneg
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cusum_low_step_nonneg (s_low_prev : Real) (sample : Real) (target : Real) (sigma : Real) (reference_k : Real)
     (h_s_low_prev : (((0 : Real) <= s_low_prev) ∧ (s_low_prev <= VALUE_MAX)))
     (h_sample : (-VALUE_MAX ≤ sample ∧ sample ≤ VALUE_MAX))
@@ -65,6 +76,11 @@ theorem cusum_low_step_nonneg (s_low_prev : Real) (sample : Real) (target : Real
     (h_clamp1 : (0 : Real) ≤ VALUE_MAX) :
     ((cusum_low_step s_low_prev sample target sigma reference_k) >= (0 : Real)) := by
   unfold cusum_low_step
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold VALUE_MAX at *
+  try unfold K_MAX at *
+  try unfold H_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -88,6 +104,11 @@ theorem cusum_low_step_nonneg (s_low_prev : Real) (sample : Real) (target : Real
 noncomputable def cusum_alarm (s_high : Real) (s_low : Real) (decision_h : Real) : Real :=
   (min (max (((min (max (s_high - decision_h) (0 : Real)) VALUE_MAX) + (min (max (s_low - decision_h) (0 : Real)) VALUE_MAX)) / (0.001 : Real)) (0 : Real)) (1 : Real))
 
+-- source obligations for cusum_alarm: {O1, O2}
+--   O1 [1e38e5016cd3] -> PRESERVED (accounted)  theorem cusum_alarm_zero_when_in_control
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
+--   O2 [99fce1524905] -> PRESERVED (accounted)  theorem cusum_alarm_zero_when_in_control
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem cusum_alarm_zero_when_in_control (s_high : Real) (s_low : Real) (decision_h : Real)
     (h_s_high : (((0 : Real) <= s_high) ∧ (s_high <= VALUE_MAX)))
     (h_s_low : (((0 : Real) <= s_low) ∧ (s_low <= VALUE_MAX)))
@@ -96,6 +117,11 @@ theorem cusum_alarm_zero_when_in_control (s_high : Real) (s_low : Real) (decisio
     (h_clamp2 : (0 : Real) ≤ (1 : Real)) :
     (((cusum_alarm s_high s_low decision_h) >= (0 : Real))) ∧ (((cusum_alarm s_high s_low decision_h) <= (1 : Real))) := by
   unfold cusum_alarm
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold VALUE_MAX at *
+  try unfold K_MAX at *
+  try unfold H_MAX at *
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -120,11 +146,19 @@ theorem cusum_alarm_zero_when_in_control (s_high : Real) (s_low : Real) (decisio
 noncomputable def arl_approx (decision_h : Real) (reference_k : Real) : Real :=
   ((decision_h * decision_h) / (((2.0 : Real) * reference_k) * reference_k))
 
+-- source obligations for arl_approx: {O1}
+--   O1 [d5f6100a5d39] -> PRESERVED (accounted)  theorem arl_increases_with_decision_interval
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem arl_increases_with_decision_interval (decision_h : Real) (reference_k : Real)
     (h_decision_h : (((0.001 : Real) <= decision_h) ∧ (decision_h <= H_MAX)))
     (h_reference_k : (((0.001 : Real) <= reference_k) ∧ (reference_k <= K_MAX))) :
     ((arl_approx decision_h reference_k) >= (0 : Real)) := by
   unfold arl_approx
+  try unfold SIGMA_MIN at *
+  try unfold SIGMA_MAX at *
+  try unfold VALUE_MAX at *
+  try unfold K_MAX at *
+  try unfold H_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

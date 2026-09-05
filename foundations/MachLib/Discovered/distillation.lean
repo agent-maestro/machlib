@@ -26,6 +26,9 @@ axiom raoult_vapour_fraction (liquid_mole_fraction : Real) (saturation_pressure 
 noncomputable def antoine_pressure (a_const : Real) (b_const : Real) (c_const : Real) (temperature : Real) : Real :=
   (exp10 (a_const - (b_const / (c_const + temperature))))
 
+-- source obligations for antoine_pressure: {O1}
+--   O1 [b008e4fafbed] -> PRESERVED (accounted)  theorem antoine_increases_with_temperature
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem antoine_increases_with_temperature (a_const : Real) (b_const : Real) (c_const : Real) (temperature : Real)
     (h1 : (temperature >= T_MIN))
     (h2 : (temperature <= T_MAX))
@@ -33,6 +36,9 @@ theorem antoine_increases_with_temperature (a_const : Real) (b_const : Real) (c_
     (h4 : ((c_const + temperature) ≠ (0 : Real))) :
     ((antoine_pressure a_const b_const c_const temperature) > (0 : Real)) := by
   unfold antoine_pressure
+  try unfold T_MIN at *
+  try unfold T_MAX at *
+  try unfold P_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

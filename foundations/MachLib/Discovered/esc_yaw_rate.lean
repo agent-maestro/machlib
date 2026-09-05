@@ -26,6 +26,7 @@ noncomputable def VCH_MAX : Real := (50.0 : Real)
 noncomputable def yaw_rate_reference (speed : Real) (steer_angle : Real) (wheelbase : Real) (char_speed : Real) : Real :=
   (((speed / wheelbase) * (Real.tan steer_angle)) / ((1 : Real) + ((speed * speed) / (char_speed * char_speed))))
 
+-- obligations for yaw_rate_reference: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -42,6 +43,7 @@ theorem yaw_rate_reference_increases_with_steer (speed : Real) (steer_angle : Re
 noncomputable def yaw_rate_error (measured : Real) (reference : Real) : Real :=
   (measured - reference)
 
+-- obligations for yaw_rate_error: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.
@@ -56,6 +58,7 @@ theorem yaw_error_zero_at_reference_match (measured : Real) (reference : Real)
 noncomputable def sideslip_rate (lateral_accel : Real) (yaw_rate : Real) (speed : Real) : Real :=
   ((lateral_accel / speed) - yaw_rate)
 
+-- obligations for sideslip_rate: none declared (this artifact proves well-typedness only)
 -- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
 -- refinement, so this theorem is vacuously `True` (proves only
 -- well-typedness). Exclude from any close-rate / verified count.

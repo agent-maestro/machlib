@@ -25,11 +25,16 @@ axiom lorentzian_area_normalised (frequency : Real) (centre : Real) (half_width 
 noncomputable def lorentzian_density (frequency : Real) (centre : Real) (half_width : Real) : Real :=
   (half_width / (PI * (((frequency - centre) * (frequency - centre)) + (half_width * half_width))))
 
+-- source obligations for lorentzian_density: {O1}
+--   O1 [2a79bfac5840] -> PRESERVED (accounted)  theorem lorentzian_peak_at_centre
+--        build: unconditional -- the theorem STATEMENT is in the artifact unconditionally; whether it is PROVED is a separate axis -- this checker rejects an undischarged theorem unless cheating is explicitly enabled
 theorem lorentzian_peak_at_centre (frequency : Real) (centre : Real) (half_width : Real)
     (h1 : (half_width > (0 : Real)))
     (h2 : (half_width <= GAMMA_MAX)) :
     ((lorentzian_density frequency centre half_width) > (0 : Real)) := by
   unfold lorentzian_density
+  try unfold PI at *
+  try unfold GAMMA_MAX at *
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
