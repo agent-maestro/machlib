@@ -949,5 +949,147 @@ theorem depth3ApproachBelowEml_identity_shallow_right (B : EMLTree) (hB : B.dept
   have hlt' : exp x - log (B.eval x) < k := hlt
   exact absurd (lt_of_lt_of_le hlt' hnode) (lt_irrefl_ax _)
 
+/-! ### Closing the residue: `A = var`, `B` of depth 2
+
+With `A = var` the node is `exp x − log (B x)`, so the hypothesis `node < k` says exactly
+`B x > exp (exp x − k)` — a **moving, doubly exponential** target. Enumerating `B` shows only one
+shape can ever exceed it; the rest are vacuous, and the lemma below is the workhorse that retires
+them. -/
+
+/-- **An upper bound at or below the target makes the identity branch vacuous.**
+
+If `B x ≤ exp (exp x − k)` on a ray then `log (B x) ≤ exp x − k`, so the node is at least `k` and the
+hypothesis `node < k` never fires. The non-positive stretch is handled by the totalisation rather
+than excluded: there `log (B x) = 0`, the node is `exp x`, and `exp x > x ≥ k` past `x = k`. -/
+theorem d3_identity_vacuous_of_upper (B : EMLTree) (k X : Real) (_hX : 1 ≤ X)
+    (hub : ∀ x : Real, X ≤ x → B.eval x ≤ exp (exp x - k)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (EMLTree.var.eval x) - log (B.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (EMLTree.var.eval x) - log (B.eval x)) := by
+  refine ⟨0, 1 + exp X + exp k, d2_ray_ge_one X k, ?_⟩
+  intro x hx hlt
+  have hxX : X ≤ x := le_trans (d2_ray_ge_fst X k) hx
+  have hxk : k ≤ x := le_trans (d2_ray_ge_snd X k) hx
+  have hlt' : exp x - log (B.eval x) < k := hlt
+  -- `log (B x) ≤ exp x − k`, whether or not `B x` is positive
+  have hlog : log (B.eval x) ≤ exp x - k := by
+    rcases lt_total 0 (B.eval x) with hpos | hzero | hneg
+    · have w := log_le_log hpos (hub x hxX)
+      rw [log_exp] at w; exact w
+    · -- `B x = 0`: totalised `log 0 = 0`, and `0 ≤ exp x − k` since `k ≤ x < exp x`
+      rw [← hzero, log_nonpos (le_refl 0)]
+      have hkx : k < exp x := lt_of_le_of_lt hxk (exp_grows_strictly_thm x)
+      have u := add_lt_add_left hkx (-k)
+      have e1 : -k + k = (0 : Real) := by mach_ring
+      have e2 : -k + exp x = exp x - k := by mach_mpoly [k, exp x]
+      rw [e1, e2] at u; exact le_of_lt u
+    · rw [log_nonpos (le_of_lt hneg)]
+      have hkx : k < exp x := lt_of_le_of_lt hxk (exp_grows_strictly_thm x)
+      have u := add_lt_add_left hkx (-k)
+      have e1 : -k + k = (0 : Real) := by mach_ring
+      have e2 : -k + exp x = exp x - k := by mach_mpoly [k, exp x]
+      rw [e1, e2] at u; exact le_of_lt u
+  -- so the node is at least `k`, contradicting the hypothesis
+  have hnode : k ≤ exp x - log (B.eval x) := by
+    have u := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit hlog)
+    have e1 : exp x + -(exp x - k) = k := by mach_mpoly [exp x, k]
+    have e2 : exp x + -log (B.eval x) = exp x - log (B.eval x) := by mach_ring
+    rw [e1, e2] at u; exact u
+  exact absurd (lt_of_lt_of_le hlt' hnode) (lt_irrefl_ax _)
+
+/-- Anything bounded by `exp x − k` is bounded by the target `exp (exp x − k)`, since `u < exp u`.
+The target is doubly exponential; almost every shape of `B` is not, and this is the bridge that
+says so once instead of five times. -/
+theorem d3_below_target_of_below_sub {B : EMLTree} {k X : Real}
+    (h : ∀ x : Real, X ≤ x → B.eval x ≤ exp x - k) :
+    ∀ x : Real, X ≤ x → B.eval x ≤ exp (exp x - k) :=
+  fun x hx => le_trans (h x hx) (le_of_lt (exp_grows_strictly_thm (exp x - k)))
+
+/-- **`B = const c` is vacuous.** A fixed value cannot outrun a doubly exponential target. -/
+theorem d3_identity_const_right (c k : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (EMLTree.var.eval x) - log ((EMLTree.const c).eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (EMLTree.var.eval x) - log ((EMLTree.const c).eval x)) := by
+  refine d3_identity_vacuous_of_upper (EMLTree.const c) k (1 + exp (c + k))
+    (d2_one_le_shift (c + k)) (d3_below_target_of_below_sub ?_)
+  intro x hx
+  -- `x ≥ c + k` and `x < exp x` give `c ≤ exp x − k`
+  have hxck : c + k ≤ x := le_trans (d2_le_shift (c + k)) hx
+  have hlt : c + k < exp x := lt_of_le_of_lt hxck (exp_grows_strictly_thm x)
+  show c ≤ exp x - k
+  have u := add_lt_add_left hlt (-k)
+  have e1 : -k + (c + k) = c := by mach_mpoly [c, k]
+  have e2 : -k + exp x = exp x - k := by mach_mpoly [k, exp x]
+  rw [e1, e2] at u
+  exact le_of_lt u
+
+/-- **`B = var` is vacuous.** `x` against `exp (exp x − k)`: the same gap, one shape up. -/
+theorem d3_identity_var_right (k : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (EMLTree.var.eval x) - log (EMLTree.var.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (EMLTree.var.eval x) - log (EMLTree.var.eval x)) := by
+  obtain ⟨T, hT⟩ := two_mul_add_le_exp k
+  refine d3_identity_vacuous_of_upper EMLTree.var k (1 + exp T)
+    (d2_one_le_shift T) (d3_below_target_of_below_sub ?_)
+  intro x hx
+  have hxT : T ≤ x := le_trans (d2_le_shift T) hx
+  have hx1 : (1 : Real) ≤ x := le_trans (d2_one_le_shift T) hx
+  show x ≤ exp x - k
+  -- `x + x + k ≤ exp x`, so `exp x − k ≥ x + x ≥ x`
+  have u := add_le_add_wit (hT x hxT) (le_refl (-k))
+  have e1 : x + x + k + -k = x + x := by mach_mpoly [x, k]
+  have e2 : exp x + -k = exp x - k := by mach_mpoly [x, k, exp x]
+  rw [e1, e2] at u
+  have hxx : x ≤ x + x := by
+    have w := add_le_add_wit (le_refl x) (le_trans (le_of_lt zero_lt_one_ax) hx1)
+    have e : x + 0 = x := by mach_ring
+    rw [e] at w; exact w
+  exact le_trans hxx u
+
+/-- **A constant upper bound on `B` makes the identity branch vacuous.** Generalises
+`d3_identity_const_right` from a literal constant to any eventually-bounded `B`. -/
+theorem d3_identity_vacuous_of_const_bound (B : EMLTree) (k c X : Real) (_hX : 1 ≤ X)
+    (hub : ∀ x : Real, X ≤ x → B.eval x ≤ c) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (EMLTree.var.eval x) - log (B.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (EMLTree.var.eval x) - log (B.eval x)) := by
+  refine d3_identity_vacuous_of_upper B k (1 + exp X + exp (c + k))
+    (d2_ray_ge_one X (c + k)) (d3_below_target_of_below_sub ?_)
+  intro x hx
+  have hxX : X ≤ x := le_trans (d2_ray_ge_fst X (c + k)) hx
+  have hxck : c + k ≤ x := le_trans (d2_ray_ge_snd X (c + k)) hx
+  have hlt : c + k < exp x := lt_of_le_of_lt hxck (exp_grows_strictly_thm x)
+  have hcx : c ≤ exp x - k := by
+    have u := add_lt_add_left hlt (-k)
+    have e1 : -k + (c + k) = c := by mach_mpoly [c, k]
+    have e2 : -k + exp x = exp x - k := by mach_mpoly [k, exp x]
+    rw [e1, e2] at u; exact le_of_lt u
+  exact le_trans (hub x hxX) hcx
+
+/-- **`B = eml b₁ b₂` with a BOUNDED left child is vacuous.** `exp (b₁ x) ≤ K` caps the node's
+right child at `K − Cl`, where `Cl` is the depth-1 logarithm's floor
+(`depth_le_one_log_lower_at_infinity`) — a constant, and constants lose to the target.
+
+Both inputs are depth-1 facts, which is the point: the residue is only hard where `b₁` reaches the
+doubly exponential scale, and a bounded `b₁` never does. -/
+theorem d3_identity_eml_bounded_left (b1 b2 : EMLTree) (_h1 : b1.depth ≤ 1) (h2 : b2.depth ≤ 1)
+    (k K : Real) (hK : ∀ x : Real, 1 ≤ x → exp (b1.eval x) ≤ K) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (EMLTree.var.eval x) - log ((EMLTree.eml b1 b2).eval x) < k →
+        exp (-C - exp (exp x)) ≤ k
+          - (exp (EMLTree.var.eval x) - log ((EMLTree.eml b1 b2).eval x)) := by
+  obtain ⟨Cl, X₀, hX₀, hCl⟩ := depth_le_one_log_lower_at_infinity b2 h2
+  refine d3_identity_vacuous_of_const_bound (EMLTree.eml b1 b2) k (K - Cl)
+    (1 + exp X₀ + exp 1) (d2_ray_ge_one X₀ 1) ?_
+  intro x hx
+  have hxX : X₀ ≤ x := le_trans (d2_ray_ge_fst X₀ 1) hx
+  have hx1 : (1 : Real) ≤ x := le_trans (d2_ray_ge_snd X₀ 1) hx
+  show exp (b1.eval x) - log (b2.eval x) ≤ K - Cl
+  have u := add_le_add_wit (hK x hx1) (neg_le_neg_wit (hCl x hxX))
+  have e1 : exp (b1.eval x) + -log (b2.eval x) = exp (b1.eval x) - log (b2.eval x) := by mach_ring
+  have e2 : K + -Cl = K - Cl := by mach_mpoly [K, Cl]
+  rw [e1, e2] at u
+  exact u
+
 
 end MachLib
