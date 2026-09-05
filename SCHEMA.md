@@ -1,8 +1,13 @@
 # MachLib record schema (v1.0.0)
 
+> **Scope, 2026-09-05.** This schema describes the JSON result cards under `corpus/eml/`. There is
+> no published dataset built on it and no submission API; the record-corpus programme that this
+> schema was written for was retired (see `PHILOSOPHY.md`). It is kept because the cards still use
+> it. The proofs themselves live in `foundations/MachLib/` and are checked by `lake build`, not by
+> anything here.
+
 > The full data specification. Every field documented. Copy-paste
-> examples below. This is the contract MachLib makes with anyone
-> consuming the dataset.
+> examples below.
 
 ## Top-level structure
 
@@ -128,7 +133,7 @@ the rule, not the exception. All entries have been kernel-verified.
 ]
 ```
 
-Sourced from real agent failures in the gym, not invented. Empty
+Sourced from real recorded proof attempts, not invented. Empty
 array if no failure data has been collected for this theorem.
 
 ## `tactic_trace` — what works and what doesn't

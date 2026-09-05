@@ -8,13 +8,8 @@ type Tile = {
 const TILES: Tile[] = [
   {
     name: "Forge",
-    tagline: "Math → silicon",
-    href: "https://monogateforge.com",
-  },
-  {
-    name: "CapCard",
-    tagline: "Agent capability cards",
-    href: "https://capcard.ai",
+    tagline: "The EML compiler; emits the proof obligations",
+    href: "https://github.com/agent-maestro/forge",
   },
   {
     name: "MachLib",
@@ -23,14 +18,19 @@ const TILES: Tile[] = [
     current: true,
   },
   {
-    name: "PETAL",
-    tagline: "Lean verification API",
-    href: "https://api.monogate.dev",
+    name: "monogate-lean",
+    tagline: "Witnesses every MachLib axiom in Mathlib",
+    href: "https://github.com/agent-maestro/monogate-lean",
+  },
+  {
+    name: "eml-stdlib",
+    tagline: "Kernels with @verify contracts checked here",
+    href: "https://github.com/agent-maestro/eml-stdlib",
   },
   {
     name: "1op",
-    tagline: "Equation playground",
-    href: "https://1op.io",
+    tagline: "Live verification status, rained into buckets",
+    href: "https://1op.io/research/machlib-pulse",
   },
 ];
 
@@ -38,13 +38,13 @@ export default function Ecosystem() {
   return (
     <section id="ecosystem">
       <div className="container">
-        <div className="eyebrow">// the monogate ecosystem</div>
-        <h2>Part of a larger stack.</h2>
+        <div className="eyebrow">// where it sits</div>
+        <h2>One link in a chain that has to hold end to end.</h2>
         <p className="section-lede">
-          MachLib is an EML-native, Forge-linked formal-library surface.
-          CapCard and PETAL integrations are gated and subject to separate
-          review. No PETAL upload or CapCard marketplace/public profile action
-          is implied by this site.
+          Forge compiles a kernel and emits its proof obligations into this
+          library; this library proves what it can and names what it cannot;
+          a sibling project checks this library&apos;s own axioms against
+          Mathlib. None of the three vouches for itself.
         </p>
 
         <div className="ecosystem">

@@ -1,65 +1,52 @@
 # Contributing to MachLib
 
-> One-page guide to submitting records. The longer guide with
-> examples and verification details is at
-> `docs/for-contributors/submission_guide.md`.
+MachLib accepts Lean 4 theorems and proofs about EML kernels, gates and audits that keep the
+existing ones honest, and reproduction evidence. Everything below runs from `foundations/`.
 
-## What we accept
+## Before you write a proof
 
-  - **New theorem-proof records** for any of the seven supported
-    domains (`eml`, `analysis`, `algebra`, `chemistry`,
-    `physics`, `finance`, `engineering`).
-  - **New proofs of existing theorems**, especially if they are
-    shorter than the current optimal, or use a proof style not
-    yet represented for that theorem.
-  - **Failure data** — annotated tactic-failure traces from agent
-    attempts, suitable for the `common_mistakes` field.
+1. **Grep for the identifier you are about to type.** Lemmas are filed under the module that first
+   needed them, not the family they belong to, and this project has re-proved existing theorems
+   verbatim more than once. `grep -rn "theorem name" MachLib/` costs seconds.
+2. **Read the tactic notes in [`CLAUDE.md`](CLAUDE.md).** There is no `ring`, `linarith`,
+   `by_contra` or `set` here. The normalisers are `mach_ring` and `mach_mpoly`, and each has
+   documented failure modes that look like success.
+3. **Do the mathematics on paper first**, and check a number numerically if there is one. Price
+   the discharges, not the reductions.
 
-## Submission steps
+## What a change must satisfy
 
-1. **Write the theorem** as a Lean 4 declaration importing only
-   `MachLib.*` (no Mathlib).
-2. **Prove it.** Multiple proofs are welcome.
-3. **Format the record** to match `SCHEMA.md`. The `machlib
-   format` CLI helper does most of the work; you fill in the
-   informal description, tags, and any failure data.
-4. **Self-verify** with `machlib verify <record.json>`. The CLI
-   runs schema validation and kernel re-verification on the
-   pinned toolchain.
-5. **Submit.** Either:
-   - Open a PR adding the JSON file under
-     `corpus/<domain>/lane<N>/<id>.json`, or
-   - POST to `https://api.machlib.org/submit` with the JSON body.
+- **Reachable.** A new module must be imported, transitively, from `MachLib.lean`. A module the
+  aggregator cannot reach is never built and never gated; `scripts/check_aggregator.sh` fails on
+  a new orphan.
+- **`sorryAx`-free.** `mach_ring` wraps its body in `try` and can leave a goal that Lean fills
+  with a synthetic `sorry`, so a green build is not evidence. Run `#print axioms` on anything you
+  care about; `tools/sorry_audit.lean` walks the whole environment.
+- **No new axiom without a model.** Every trusted axiom is pinned by `AxiomLedger.lean` and
+  witnessed in `monogate-lean`. Adding one means adding its Mathlib witness in the same change
+  and regenerating `AXIOM_MANIFEST.md`; gate 13 fails otherwise.
+- **Open questions are named, not hidden.** If a result is partial, state what it lacks as a
+  `def … : Prop`, consume it as a hypothesis, and add a row to the obligations ledger at the end of
+  `MachLib/EMLDepthTameness.lean` and its mirror in `CHANGELOG.md`. `tools/check_obligations.sh`
+  checks both directions.
+- **Counts are pasted, never remembered.** Any number in prose must be the output of a command;
+  `tools/prose_counts_check.py` fails on drift for the ones it tracks.
+- **All gates green** on a quiescent tree: `tools/check_all.sh`, exit code 0. It takes about
+  fifteen minutes and refuses to certify a tree that changed while it ran.
 
-## What happens after submission
+## Commit messages
 
-The verification pipeline runs the same kernel re-verification
-the CLI does, plus a duplicate check against the existing corpus.
-Successful submissions are merged. The `discovered_by` field is
-preserved as written; you receive credit in the metadata.
+The body of a commit is a letter to the next session. Say why, not what; name the trade-off you
+took and the one you rejected; record any quirk that cost you time; give the measured numbers,
+read from the gate output after it finished, never predicted. See the last hundred commits for
+the shape.
 
-## Quality gate
+## Other contributions
 
-Before merging we require:
-
-  - [x] `verified: true` reflects a green kernel run on CI's
-        pinned Lean toolchain.
-  - [x] Every field in `SCHEMA.md` is present (or `null` where
-        the schema permits).
-  - [x] No duplicate of an existing record (by `theorem.id` or by
-        identical formal statement modulo alpha-renaming).
-  - [x] If the record carries `chain_order`, the value is
-        reproducible from `eml-cost analyze` on the formal source.
-
-## Licensing
-
-By submitting a record you agree to license it under
-[CC BY 4.0](LICENSE). You retain authorship credit via
-`metadata.discovered_by`.
-
-## Code of conduct
-
-Contributions are evaluated on the merits of the record.
-Identity, affiliation, and provenance (human or agent) are
-recorded in metadata but do not affect merging decisions. Bug
-reports and corrections are merged on the same basis.
+- **Result cards** under `corpus/eml/` — a one-page card naming the theorem, its statement, its
+  axiom footprint, and the command that checks it.
+- **Reproduction evidence** under `reproduction/` — the package format is documented in
+  `reproduction/rb_ekf/README.md`; a reproduction claim that withholds its evidence is not one.
+- **Bug reports against claims.** If `foundations/docs/what_is_proven.md` says something you
+  cannot reproduce in a few commands, that is a defect in the document. Open an issue naming the
+  claim and the command.

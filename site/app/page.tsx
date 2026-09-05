@@ -1,11 +1,9 @@
 import Hero from "@/components/Hero";
 import Numbers from "@/components/Numbers";
-import FullStackFlow from "@/components/FullStackFlow";
-import WhyMachLib from "@/components/WhyMachLib";
-import RecordViewer from "@/components/RecordViewer";
-import Engines from "@/components/Engines";
-import Philosophy from "@/components/Philosophy";
-import GetStarted from "@/components/GetStarted";
+import Lanes from "@/components/Lanes";
+import TrustBase from "@/components/TrustBase";
+import CheckIt from "@/components/CheckIt";
+import NotClaimed from "@/components/NotClaimed";
 import Ecosystem from "@/components/Ecosystem";
 import Footer from "@/components/Footer";
 
@@ -15,12 +13,10 @@ export default function Page() {
       <main>
         <Hero />
         <Numbers />
-        <FullStackFlow />
-        <WhyMachLib />
-        <RecordViewer />
-        <Engines />
-        <Philosophy />
-        <GetStarted />
+        <Lanes />
+        <TrustBase />
+        <CheckIt />
+        <NotClaimed />
         <Ecosystem />
       </main>
       <Footer />

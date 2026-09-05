@@ -1,141 +1,152 @@
-# MachLib — for machines, by machines
+# MachLib
 
-> **Branch note.** `toolchain-bump` is a **permanent record branch**, not a feature branch awaiting
-> merge: it holds the *process* of the v4.14.0 → v4.32.2 migration — 18 versions of kernel drift, five
-> recorded amendments, and the corrections the record kept rather than amended away. The *outcome*
-> lives on `master`, and the accountability page cites the frozen tag
-> `toolchain-bump/v4.32.2-record`, never a branch head. **It is not merged, and that is the decision,
-> not a backlog item.**
+A Mathlib-free Lean 4 library that proves things about **EML kernels** — the small
+`exp`/`log` expression language that [Forge](https://github.com/agent-maestro/forge) compiles
+to C, GPU code and RTL — so that claims about compiled numerics rest on machine-checked theorems.
+It is a compact verification layer with its own axiomatised reals, not a Mathlib replacement
+and not a general analysis library.
 
-[![cold build](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/agent-maestro/machlib/master/.github/build-time.json)](.github/workflows/build-time.yml)
+**Start here:** [`foundations/docs/what_is_proven.md`](foundations/docs/what_is_proven.md) — what
+is proven, what it rests on, and what is open, each claim paired with the command that checks it.
 
-A machine-native Lean/EML library with zero Mathlib dependency in the current
-public default tree and release target. MachLib is Monogate's compact Lean
-check target: a small verification layer for EML/Forge artifacts, not a Mathlib
-replacement. Records may include verification metadata and
-Lean-check status; verification status is recorded per release snapshot.
-
-**Start here:** [`foundations/docs/what_is_proven.md`](foundations/docs/what_is_proven.md)
-— what is proven, what it rests on, and what is open, with the exact commands to
-check each claim yourself.
-
-**The forward-error certifier:** [`foundations/docs/forward_error_certifier.md`](foundations/docs/forward_error_certifier.md)
-— one fold (`gexpr_sound`) bounds the floating-point forward error of any kernel over
-the operator basis `{+, ×, neg, exp, sin, cos, ÷}`, reaches across precisions
-(cross-target) and over iterations (trajectory), and is bound to the real kernels Forge
-compiles via `tree_hash` (456/517 of eml-stdlib measured in-basis).
-
-## Install
-
-Package installation status is release-specific. Until a reviewed package
-release is published, use the repository and release manifests as the source of
-truth.
-
-## Try it
-
-Dataset access is pending/private-gated until a reviewed public release is
-approved. Counts and verification status are published per release snapshot.
-Every release claiming zero Mathlib dependency must pass
-`tools/check_zero_mathlib_dependency.py`.
-
-## What's here
+## What is here
 
 | | |
 |---|---|
-| `foundations/` | Lean 4 foundations; zero Mathlib dependency in the current release target |
-| `corpus/` | Machine-readable records with metadata, proof traces, and per-record status |
-| `gym/` | Gymnasium-compatible training environment, 54-tactic vocabulary |
-| `tools/` | Generator, verifier, ranker, exporter, CLI |
-| `api/` | Optional local interface surfaces, subject to separate review |
-| `docs/` | Audience-organised guides + reference |
+| [`foundations/MachLib/`](foundations/MachLib) | the corpus, aggregated by `foundations/MachLib.lean` |
+| [`foundations/docs/`](foundations/docs) | the claim inventory, the certifier and safety front doors, method notes |
+| [`foundations/tools/check_all.sh`](foundations/tools/check_all.sh) | every gate and audit in one runner; `rc = 0` iff all green |
+| [`foundations/AXIOM_MANIFEST.md`](foundations/AXIOM_MANIFEST.md) | generated: every trusted axiom and the Mathlib witness that models it |
+| [`reproduction/`](reproduction) | the range-bearing EKF evidence package an outside reproducer can walk, with a weekly CI walk |
+| [`corpus/eml/`](corpus/eml) | one-page result cards for headline theorems |
+| [`site/`](site) | machlib.org, a static export |
+| [`tools/status/`](tools/status) | the status pipeline that publishes `status.json` to the `status-data` branch |
+| [`EmlGermApproachResearch.md`](EmlGermApproachResearch.md) | the live research note on the one conjecture the depth ladder still rests on |
 
-## Featured artifacts
+The May 2026 product and marketplace drafts that used to live at the root (readiness manifests,
+capability-card drafts, a training gym, evidence reels, reports) were retired on 2026-09-05. They
+are reachable in full at the tag `attic/product-wave-2026-05`; nothing in the live tree depends on
+them. `toolchain-bump` is a permanent record branch of the v4.14.0 → v4.32.2 migration, cited by
+the frozen tag `toolchain-bump/v4.32.2-record`; it is not a feature branch awaiting merge.
 
-`foundations/` has two pillars, both `sorryAx`-free and Mathlib-free. The
-reader's guide to exactly what is and isn't proven — every claim paired with the
-command to check it — is
-[`foundations/docs/what_is_proven.md`](foundations/docs/what_is_proven.md).
+## Two lanes
 
-**1. Verified numerics, bits to trajectory** — a floating-point/fixed-point
-verification layer for Forge-emitted kernels, with an end-to-end capstone (a PID
-control loop carried from its bit-level netlist to a finite closed-loop trajectory
-bound) and a machine-checked **consistency proof** for its core.
+**1. Verified numerics, from bits toward trajectories.** A floating-point and fixed-point
+verification layer for the kernels Forge emits: forward and backward error, condition numbers,
+interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loop safety.
 
-**2. A Khovanskii zero bound** — **proven outright** for polynomial-in-(x, eˣ) and,
-as of commit `dda2a58`, for **depth-2 double-exponential chains** (x, eˣ, e^{eˣ}): there
-the reducibility witness is *constructed*, not assumed, so that bound is **unconditional**
-and free of the classical-Khovanskii axiom (`chain2_khovanskii_bound_unconditional`,
-`#print axioms`-verified — it rests only on the honest Rolle corollary). For **general**
-triangular Pfaffian chains the bound is still a constructive **reduction** from a *supplied*
-reducibility witness (via the same Rolle corollary — no classical-Khovanskii axiom), and the
-**arbitrary-depth** case remains **cited**: the legacy `zero_count_bound_classical` axiom
-still stands for general Pfaffian functions, and depth-3+ would mirror the depth-2 arc with a
-deeper nested measure. Forge-emitted safety-critical kernel proofs sit on top. Honest about the
-foundation: these are proven modulo MachLib's axiomatized analytic base (Rolle
-zero-counting corollary, `HasDerivAt` rules, `exp_pos`, Real arithmetic and order); in
-mathlib every one of those is a theorem, and grounding the base there is open work. The
-featured Khovanskii results and all the safety-critical applications are **constructive**
-— they depend on **no** "classical Khovanskii" axiom (verify with `#print axioms`). The
-one axiom that *is* Khovanskii's classical theorem (`zero_count_bound_classical`, the
-1991 general-Pfaffian bound) is confined to a **legacy** general-`PfaffianFunction`
-development that nothing featured uses — and it is named as a *mathematical assumption*,
-separate from the foundational substrate, in
-[`what_is_proven.md` §4(c)](foundations/docs/what_is_proven.md).
+- `fxaffine_traj_tracks_exact` (`FixedPointRealBridge`) — the bit-level datapath of the affine
+  plant kernel tracks the exact real trajectory within `ulp · geom c n`, with the per-step error
+  *derived* from the bits. This is the end-to-end result. **The same composition for the PID
+  controller path (`fxpid`) is not yet proved**; `pid_trajectory_from_bits` and
+  `fxpid_real_trunc_lt_3ulp` are its two halves and the bridge between them is prose. Do not cite
+  the capstone as an end-to-end result.
+- `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
+  within their forward-error bounds.
+- `kalman_update_1d_fwd_error` (`KalmanUpdateFixedPoint`) — a proven Q16.16 forward-error bound
+  for the scalar Kalman update that was run on an Arty A7 and is the datapath of chip 2.
+- `first_order_clamp_envelope`, `nonlinear_drift_clamp_safe` (`ClosedLoopSafety`) — a saturating
+  guard keeps the plant state inside a safe envelope for all time, under bounded disturbance.
+- `intModel` (`CoreModel`) — the flagship closure's axioms have an external ℤ-model, so those
+  results are not vacuous; a gate fails if the model ever becomes circular.
 
-- `foundations/MachLib/PIDCapstone.lean` — `pid_trajectory_from_bits`: a PID
-  control kernel proved from a bit-level netlist (the per-step round-off ε derived
-  from the bits) all the way to a finite trajectory bound. The discrete-datapath
-  claim and the analytic closed-loop claim are the *same* checked fact.
-- `foundations/MachLib/CoreModel.lean` — the flagship results' axiom closure is
-  proven consistent by an external ℤ-model (`intModel` depends on no MachLib
-  axiom), CI-gated. The answer to "are these results vacuous?".
-- `foundations/MachLib/FPModel.lean` — cross-target equivalence: two evaluations
-  of the same exact value (e.g. Rust f64 vs WGSL f32) agree within their
-  forward-error bounds (`cross_target`).
-- `foundations/MachLib/SingleExpKhovanskii.lean` — three resolution paths
-  (`expPoly_khovanskii_bound`, `expPoly_auto_bound_with_propagation_aux`,
-  `expPoly_ode_no_zeros`).
-- `foundations/MachLib/KhovanskiiReduction.lean` — `khovanskii_bound_full`
-  for general triangular Pfaffian chains, parametric in a reduction witness.
-- `foundations/MachLib/ChainExp2NoZeros.lean` — `chain2_khovanskii_bound_unconditional`:
-  the depth-2 (double-exponential) bound with the witness *constructed*, so it is
-  unconditional and free of `zero_count_bound_classical` (the capstone of the
-  `ChainExp2*` descent: chain-aware nested measure + polynomial-multiplier Rolle
-  transfer + integrating-factor vehicle argument).
-- `foundations/MachLib/Applications/ButlerVolmerKhovanskii.lean` —
-  current = 0 ↔ overpotential = 0 for the Butler-Volmer electrode-kinetics
-  kernel (downstream: BMS, fuel cells, corrosion). Replaces a `sorry` in
-  `MachLib/Discovered/butler_volmer.lean`.
-- `foundations/MachLib/Applications/PlasmaConcentrationNonneg.lean` —
-  non-negativity of the two-compartment pharmacokinetic plasma kernel
-  (downstream: TCI anaesthesia, ICU monitoring; IEC 62304 Class C).
-- `foundations/MachLib/Applications/DischargeVoltageSafety.lean` —
-  sign preservation for the biphasic-truncated-exponential defibrillator
-  discharge kernel (downstream: AED, ICD; IEC 62304 Class C).
-- `foundations/MachLib/Applications/SpringCriticallyDamped.lean` —
-  Khovanskii-localised positivity of the critically-damped harmonic spring
-  (downstream: game animation, character controllers, UI motion).
-- `foundations/AxiomAudit.lean` — reproducible `#print axioms` over the
-  headline theorems. Run via `lake env lean AxiomAudit.lean`.
-- `foundations/KhovanskiiExamples.lean` — three worked applications.
+The forward-error certifier that Forge binds to real kernels by `tree_hash` is documented in
+[`foundations/docs/forward_error_certifier.md`](foundations/docs/forward_error_certifier.md).
 
-See [CHANGELOG.md](CHANGELOG.md) for the per-release entry.
+**2. The EML language itself.** What finite `exp`/`log` depth can and cannot express, and how
+tame the expressible functions are. Everything below is `sorryAx`-free and uses no classical
+Khovanskii axiom; verify with `#print axioms`.
 
-## Why MachLib (not Mathlib)
+- `chain2_khovanskii_bound_unconditional`, `chain2_khovanskii_bound_explicit` — a Khovanskii zero
+  bound for depth-2 double-exponential chains `(x, eˣ, e^{eˣ})`, with the reducibility witness
+  *constructed*, so the bound is free of the classical-Khovanskii axiom, and an explicit numeric
+  form usable as a tool (`khovBound`).
+- `inv_x_mem_EML`, `invX4_depth_optimal` — the reciprocal is an EML tree on `x > 0`, and depth 4
+  is optimal, certified by a lower-bound theorem rather than a search.
+- `x_plus_neg_c_depth_exact_four` — translation by a constant costs depth exactly 4.
+- `logQueryLowerBound_holds`, `sign_query_cost_bounds_tight` — the query-complexity lane:
+  `log` is not a rational germ on any interval, and `1 ≤ q_F(sign) ≤ 12`.
+- `depth_le_three_gap_below_refuted`, `depth3ApproachBelow_holds` — the depth-3 constant-gap
+  statement is false, and its decaying-floor replacement is proved: a depth-≤3 tree that dips below
+  a constant does so by at least `exp (−C − exp (exp x))`.
 
-Mathlib is the cathedral, by humans, for humans.
-MachLib is the training gym, for machines, by machines.
-You don't train for a marathon inside a cathedral.
+The general-depth Khovanskii bound is still **cited**, not proved: `zero_count_bound_classical`
+stands as a named mathematical assumption, confined to a legacy development that no featured
+result uses. The depth ladder above depth 3 rests on one open conjecture; read
+[`EmlGermApproachResearch.md`](EmlGermApproachResearch.md) before touching it.
 
-See [PHILOSOPHY.md](PHILOSOPHY.md) for the full case.
+## What it rests on
+
+MachLib is Mathlib-free by construction, so nothing inside it can show its axioms are
+satisfiable. That check lives in the sibling project
+[`monogate-lean`](https://github.com/agent-maestro/monogate-lean), which imports both Mathlib and
+MachLib and, for every trusted axiom, verifies that a Mathlib term inhabits the axiom's interpreted
+type. The honest headline is **zero unmodeled axioms**, never "zero axioms":
+
+| class | count | meaning |
+|---|---|---|
+| witnessed | 112 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| mapped | 12 | carrier or function symbol, interpreted rather than asserted |
+| standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
+| float-bridge | 22 | IEEE-754 facts with no model in ℝ, validated by measurement |
+
+The 22 float-bridge axioms are a different kind of trust and are not averaged in; a hardware
+certificate rests on exactly those, and a reader of one should read that block of the manifest
+first. Gate 13 fails if the witness project stops running, because it did once, silently, for
+33 days.
+
+## How to check it
+
+Everything runs from `foundations/`:
+
+```bash
+cd foundations
+lake build                 # about a minute warm
+tools/check_all.sh         # every gate and audit; prints every verdict; rc = 0 iff all green
+```
+
+The gates, in the order the runner prints them: build, aggregator reachability, the ℤ-model
+consistency check, the axiom ledger, the obligations ledger, the Forge `@verify` corpus compiles,
+Forge certificates, the soundness witness, MachSig signatures, the claim audit, the witness and
+hypothesis and absence audits, and the sorry audit — most with their own self-tests, each of which
+must be shown able to fail before its pass is read. `scripts/closerate.sh` is a measurement, not a
+gate: the Forge `@verify(lean)` corpus auto-closes **77.1 %** of its obligations
+(553 of 717, measured 2026-08-01 under Lean v4.32.2).
+
+## Numbers, measured
+
+Every count below is the output of a command, not a memory, and `tools/prose_counts_check.py`
+fails if the text drifts from the corpus. Measured 2026-09-05:
+
+| figure | value | source |
+|---|---|---|
+| theorems outside `Discovered/` | 7 568 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems in the Forge `@verify` corpus | 749 | the same command over `Discovered/` |
+| `.lean` files under `MachLib/` | 1 092 | `find MachLib -name '*.lean' \| wc -l` |
+| axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
+| trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
+| obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
+| modules reachable from the aggregator | 786 of 1 092 | `scripts/check_aggregator.sh` |
+
+## What this does not claim
+
+- No claim about physical silicon beyond what the reproduction package and the bench evidence in
+  `monogate-research` show; a theorem about a datapath is a theorem about the datapath.
+- No compiler-correctness claim for Forge: the certifier binds a proof to a kernel by hash, it
+  does not verify code generation.
+- The analytic base is axiomatised, not constructed; every axiom is listed and modeled, none is
+  proved here.
+- The research lane is the work of one author, kernel-checked and not yet externally reviewed.
+- Counts are snapshots; re-run the command before quoting one.
 
 ## Status
 
-Seed/transitional phase. Counts are published per release snapshot. The
-zero-Mathlib release gate now passes for both the current public default tree
-and release target. Historical legacy EML source was quarantined into a local
-out-of-repo backup and represented in-tree by a non-code note.
+Active, single-author, roughly twenty commits a day since April 2026. The verified-numerics lane
+has one external reproduction on record (`reproduction/rb_ekf`, two of five on the first attempt,
+which is why the package exists). The obligations ledger has four distinct open obligations; the
+prose about them is a copy and the ledger is the source. See [`CLAUDE.md`](CLAUDE.md) for the
+working notes a new session needs and [`CHANGELOG.md`](CHANGELOG.md) for the running narrative.
 
 ## License
 
-[CC BY 4.0](LICENSE) — open, citable, usable by anyone.
+[CC BY 4.0](LICENSE).

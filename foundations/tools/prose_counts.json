@@ -1,0 +1,129 @@
+{
+  "_comment": "Numbers in prose that must equal what the corpus measures. Each claim names a prose file (relative to the repo root), a regex whose capture group is the number as written, and a source. Sources are evaluated once against the live tree (shell commands run from foundations/; file patterns read a generated or measured artifact). A claim whose prose number differs from its source is DRIFT (exit 1). A source that cannot be evaluated is UNAVAILABLE (exit 2), never a pass. Thousands separators (space, thin space, comma) are ignored when comparing. To add a figure to a document: add the claim here in the same change, or the doctrine in CLAUDE.md ('Counts: the gate is the source, prose is a copy') is not enforced for it.",
+  "sources": {
+    "theorems_core": {
+      "kind": "shell",
+      "cmd": "find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
+    "theorems_discovered": {
+      "kind": "shell",
+      "cmd": "find MachLib/Discovered -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
+    "theorems_all": {
+      "kind": "shell",
+      "cmd": "find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
+    "lean_files": {
+      "kind": "shell",
+      "cmd": "find MachLib -name '*.lean' | wc -l",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
+    "lean_files_top": {
+      "kind": "shell",
+      "cmd": "find MachLib -maxdepth 1 -name '*.lean' | wc -l",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
+    "lean_files_sub": {
+      "kind": "shell",
+      "cmd": "find MachLib -mindepth 2 -name '*.lean' | wc -l",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
+    "lean_lines": {
+      "kind": "shell",
+      "cmd": "find MachLib -name '*.lean' -exec cat {} + | wc -l",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
+    "axioms_pinned": {
+      "kind": "shell",
+      "cmd": "lake env lean AxiomLedger.lean",
+      "extract": "(\\d+) axioms pinned"
+    },
+    "aggregator": {
+      "kind": "shell",
+      "cmd": "bash scripts/check_aggregator.sh",
+      "extract": "PASS: (\\d+) of (\\d+) modules reachable[^;]*; (\\d+) documented unreachable"
+    },
+    "ledger": {
+      "kind": "shell",
+      "cmd": "python3 tools/obligation_ledger_check.py",
+      "extract": "OBLIGATION-LEDGER OK [^0-9]*(\\d+) rows[\\s\\S]*?open rows: (\\d+)[\\s\\S]*?distinct open obligations: (\\d+)"
+    },
+    "hypothesis_entries": {
+      "kind": "shell",
+      "cmd": "python3 -c \"import json; print(len(json.load(open('tools/hypothesis_baseline.json'))['unproduced']))\"",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
+    "manifest_witnessed": { "kind": "file", "file": "foundations/AXIOM_MANIFEST.md", "pattern": "^\\| witnessed \\| (\\d+) \\|" },
+    "manifest_mapped":    { "kind": "file", "file": "foundations/AXIOM_MANIFEST.md", "pattern": "^\\| mapped \\| (\\d+) \\|" },
+    "manifest_standard":  { "kind": "file", "file": "foundations/AXIOM_MANIFEST.md", "pattern": "^\\| standard \\| (\\d+) \\|" },
+    "manifest_float":     { "kind": "file", "file": "foundations/AXIOM_MANIFEST.md", "pattern": "^\\| float-bridge \\| (\\d+) \\|" },
+    "manifest_trusted":   { "kind": "sum", "of": ["manifest_witnessed", "manifest_mapped", "manifest_standard", "manifest_float"] },
+    "closerate_pct":      { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_08_01.md", "pattern": "close-rate \\(of compiled\\): ([0-9.]+)%" },
+    "closerate_closed":   { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_08_01.md", "pattern": "close-rate \\(of compiled\\): [0-9.]+%\\s+\\((\\d+)/\\d+\\)" },
+    "closerate_compiled": { "kind": "file", "file": "foundations/docs/CLOSERATE_REMEASURE_2026_08_01.md", "pattern": "close-rate \\(of compiled\\): [0-9.]+%\\s+\\(\\d+/(\\d+)\\)" }
+  },
+  "claims": [
+    { "id": "readme.theorems_core",       "file": "README.md", "pattern": "theorems outside `Discovered/` \\| ([0-9 \\u202f]+) \\|", "source": "theorems_core" },
+    { "id": "readme.theorems_discovered", "file": "README.md", "pattern": "theorems in the Forge `@verify` corpus \\| ([0-9 \\u202f]+) \\|", "source": "theorems_discovered" },
+    { "id": "readme.lean_files",          "file": "README.md", "pattern": "`\\.lean` files under `MachLib/` \\| ([0-9 \\u202f]+) \\|", "source": "lean_files" },
+    { "id": "readme.axioms_pinned",       "file": "README.md", "pattern": "axioms pinned by the ledger \\| ([0-9 \\u202f]+) \\|", "source": "axioms_pinned" },
+    { "id": "readme.trusted",             "file": "README.md", "pattern": "trusted axioms, all modeled \\| ([0-9 \\u202f]+) \\|", "source": "manifest_trusted" },
+    { "id": "readme.witnessed",           "file": "README.md", "pattern": "^\\| witnessed \\| (\\d+) \\|", "source": "manifest_witnessed" },
+    { "id": "readme.mapped",              "file": "README.md", "pattern": "^\\| mapped \\| (\\d+) \\|", "source": "manifest_mapped" },
+    { "id": "readme.standard",            "file": "README.md", "pattern": "^\\| standard \\| (\\d+) \\|", "source": "manifest_standard" },
+    { "id": "readme.float_bridge",        "file": "README.md", "pattern": "^\\| float-bridge \\| (\\d+) \\|", "source": "manifest_float" },
+    { "id": "readme.float_bridge_prose",  "file": "README.md", "pattern": "The (\\d+) float-bridge axioms are a different kind of trust", "source": "manifest_float" },
+    { "id": "readme.ledger_rows",         "file": "README.md", "pattern": "obligations ledger \\| (\\d+) rows, \\d+ open rows, \\d+ distinct", "source": "ledger", "group": 1 },
+    { "id": "readme.ledger_open_rows",    "file": "README.md", "pattern": "obligations ledger \\| \\d+ rows, (\\d+) open rows, \\d+ distinct", "source": "ledger", "group": 2 },
+    { "id": "readme.ledger_distinct",     "file": "README.md", "pattern": "obligations ledger \\| \\d+ rows, \\d+ open rows, (\\d+) distinct", "source": "ledger", "group": 3 },
+    { "id": "readme.ledger_distinct_prose", "file": "README.md", "pattern": "The obligations ledger has (\\w+) distinct open obligations", "source": "ledger", "group": 3, "words": true },
+    { "id": "readme.reachable",           "file": "README.md", "pattern": "modules reachable from the aggregator \\| ([0-9 \\u202f]+) of [0-9 \\u202f]+ \\|", "source": "aggregator", "group": 1 },
+    { "id": "readme.modules_total",       "file": "README.md", "pattern": "modules reachable from the aggregator \\| [0-9 \\u202f]+ of ([0-9 \\u202f]+) \\|", "source": "aggregator", "group": 2 },
+    { "id": "readme.closerate_pct",       "file": "README.md", "pattern": "auto-closes \\*\\*([0-9.]+) %\\*\\*", "source": "closerate_pct" },
+    { "id": "readme.closerate_closed",    "file": "README.md", "pattern": "\\((\\d+) of \\d+, measured 2026-08-01", "source": "closerate_closed" },
+    { "id": "readme.closerate_compiled",  "file": "README.md", "pattern": "\\(\\d+ of (\\d+), measured 2026-08-01", "source": "closerate_compiled" },
+
+    { "id": "claude.lean_files",          "file": "CLAUDE.md", "pattern": "holds \\*\\*([0-9 \\u202f]+) `\\.lean` files\\*\\*", "source": "lean_files" },
+    { "id": "claude.lean_files_top",      "file": "CLAUDE.md", "pattern": "`\\.lean` files\\*\\* \\(([0-9 \\u202f]+) top-level", "source": "lean_files_top" },
+    { "id": "claude.lean_files_sub",      "file": "CLAUDE.md", "pattern": "top-level \\+ ([0-9 \\u202f]+) in subdirectories\\)", "source": "lean_files_sub" },
+    { "id": "claude.lean_lines",          "file": "CLAUDE.md", "pattern": "\\*\\*([0-9 \\u202f]+) lines\\*\\* / \\*\\*[0-9 \\u202f]+ theorems\\*\\*", "source": "lean_lines" },
+    { "id": "claude.theorems_core",       "file": "CLAUDE.md", "pattern": "\\*\\*[0-9 \\u202f]+ lines\\*\\* / \\*\\*([0-9 \\u202f]+) theorems\\*\\*", "source": "theorems_core" },
+    { "id": "claude.theorems_core_cmd",   "file": "CLAUDE.md", "pattern": "^  \\| paste -sd\\+ \\| bc\\s+# ([0-9 \\u202f]+)\\s*$", "source": "theorems_core" },
+    { "id": "claude.theorems_all_cmd",    "file": "CLAUDE.md", "pattern": "^find MachLib -name '\\*\\.lean' -exec grep -hcE '\\^ \\*theorem ' \\{\\} \\+ \\| paste -sd\\+ \\| bc\\s+# ([0-9 \\u202f]+)\\s*$", "source": "theorems_all" },
+    { "id": "claude.axioms_pinned",       "file": "CLAUDE.md", "pattern": "reports \\*\\*([0-9 \\u202f]+) axioms pinned\\*\\*", "source": "axioms_pinned" },
+    { "id": "claude.axioms_pinned_status","file": "CLAUDE.md", "pattern": "\\*\\*([0-9 \\u202f]+) axioms pinned — unchanged", "source": "axioms_pinned" },
+    { "id": "claude.reachable_gotcha",    "file": "CLAUDE.md", "pattern": "\\(\\*\\*([0-9 \\u202f]+) of [0-9 \\u202f]+ reachable\\*\\*\\)", "source": "aggregator", "group": 1 },
+    { "id": "claude.modules_total_gotcha","file": "CLAUDE.md", "pattern": "\\(\\*\\*[0-9 \\u202f]+ of ([0-9 \\u202f]+) reachable\\*\\*\\)", "source": "aggregator", "group": 2 },
+    { "id": "claude.reachable_status",    "file": "CLAUDE.md", "pattern": "\\(\\*\\*([0-9 \\u202f]+) of [0-9 \\u202f]+ modules reachable, \\d+ documented unreachable\\*\\*", "source": "aggregator", "group": 1 },
+    { "id": "claude.modules_total_status","file": "CLAUDE.md", "pattern": "\\(\\*\\*[0-9 \\u202f]+ of ([0-9 \\u202f]+) modules reachable, \\d+ documented unreachable\\*\\*", "source": "aggregator", "group": 2 },
+    { "id": "claude.documented_unreachable","file": "CLAUDE.md", "pattern": "modules reachable, (\\d+) documented unreachable\\*\\*", "source": "aggregator", "group": 3 },
+    { "id": "claude.ledger_rows",         "file": "CLAUDE.md", "pattern": "Obligations ledger: \\*\\*(\\d+) rows, \\d+ open rows, \\d+ distinct open\\s+obligations\\*\\*", "source": "ledger", "group": 1 },
+    { "id": "claude.ledger_open_rows",    "file": "CLAUDE.md", "pattern": "Obligations ledger: \\*\\*\\d+ rows, (\\d+) open rows, \\d+ distinct open\\s+obligations\\*\\*", "source": "ledger", "group": 2 },
+    { "id": "claude.ledger_distinct",     "file": "CLAUDE.md", "pattern": "Obligations ledger: \\*\\*\\d+ rows, \\d+ open rows, (\\d+) distinct open\\s+obligations\\*\\*", "source": "ledger", "group": 3 },
+    { "id": "claude.hypothesis_entries",  "file": "CLAUDE.md", "pattern": "`tools/hypothesis_baseline.json`, (\\d+) entries", "source": "hypothesis_entries" },
+    { "id": "claude.closerate_pct",       "file": "CLAUDE.md", "pattern": "close-rate,\\s+([0-9.]+)% at the last sweep", "source": "closerate_pct" },
+
+    { "id": "wip.axioms_pinned",          "file": "foundations/docs/what_is_proven.md", "pattern": "the ledger pins \\*\\*([0-9 \\u202f]+) axioms\\*\\*", "source": "axioms_pinned" },
+    { "id": "wip.trusted",                "file": "foundations/docs/what_is_proven.md", "pattern": "\\*\\*(\\d+)\\*\\* form the trusted footprint", "source": "manifest_trusted" },
+    { "id": "wip.witnessed",              "file": "foundations/docs/what_is_proven.md", "pattern": "(\\d+) witnessed by a kernel-checked Mathlib term", "source": "manifest_witnessed" },
+    { "id": "wip.mapped",                 "file": "foundations/docs/what_is_proven.md", "pattern": "(\\d+) interpreted carrier and function", "source": "manifest_mapped" },
+    { "id": "wip.standard",               "file": "foundations/docs/what_is_proven.md", "pattern": "(\\d+) standard, \\d+ IEEE-754", "source": "manifest_standard" },
+    { "id": "wip.float_bridge",           "file": "foundations/docs/what_is_proven.md", "pattern": "\\d+ standard, (\\d+) IEEE-754", "source": "manifest_float" },
+    { "id": "wip.trusted_d",              "file": "foundations/docs/what_is_proven.md", "pattern": "for each of the (\\d+) trusted axioms", "source": "manifest_trusted" },
+    { "id": "wip.float_bridge_d",         "file": "foundations/docs/what_is_proven.md", "pattern": "The (\\d+) float-bridge axioms are the exception", "source": "manifest_float" },
+
+    { "id": "site.theorems_core",         "file": "site/components/Numbers.tsx", "pattern": "value: \"([0-9 \\u202f]+)\", label: \"theorems, outside the Forge corpus\"", "source": "theorems_core" },
+    { "id": "site.trusted",               "file": "site/components/Numbers.tsx", "pattern": "value: \"([0-9 \\u202f]+)\", label: \"trusted axioms, every one modeled\"", "source": "manifest_trusted" },
+    { "id": "site.ledger_distinct",       "file": "site/components/Numbers.tsx", "pattern": "value: \"(\\d+)\", label: \"distinct open obligations\"", "source": "ledger", "group": 3 },
+    { "id": "site.closerate_pct",         "file": "site/components/Numbers.tsx", "pattern": "value: \"([0-9.]+) %\", label: \"of Forge @verify obligations auto-close\"", "source": "closerate_pct" },
+    { "id": "site.witnessed",             "file": "site/components/TrustBase.tsx", "pattern": "value: \"(\\d+)\", label: \"witnessed", "source": "manifest_witnessed" },
+    { "id": "site.mapped",                "file": "site/components/TrustBase.tsx", "pattern": "value: \"(\\d+)\", label: \"mapped", "source": "manifest_mapped" },
+    { "id": "site.standard",              "file": "site/components/TrustBase.tsx", "pattern": "value: \"(\\d+)\", label: \"standard", "source": "manifest_standard" },
+    { "id": "site.float_bridge",          "file": "site/components/TrustBase.tsx", "pattern": "value: \"(\\d+)\", label: \"float-bridge", "source": "manifest_float" },
+    { "id": "site.trusted_prose",         "file": "site/components/TrustBase.tsx", "pattern": "manifest listing all (\\d+) is generated", "source": "manifest_trusted" },
+    { "id": "site.float_bridge_prose",    "file": "site/components/TrustBase.tsx", "pattern": "The (\\d+) float-bridge axioms are a different kind of trust", "source": "manifest_float" }
+  ]
+}

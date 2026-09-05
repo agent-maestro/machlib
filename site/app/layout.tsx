@@ -5,34 +5,35 @@ const SITE_URL = "https://machlib.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "MachLib — For machines, by machines",
+  title: "MachLib — machine-checked theorems about compiled numerics",
   description:
-    "Machine-native formal-library corpus workbench with zero Mathlib dependency in the current public default tree and release target.",
+    "A Mathlib-free Lean 4 library that proves things about EML kernels, the exp/log expression language Forge compiles to C, GPU code and RTL. Every axiom listed and modeled; every claim paired with the command that checks it.",
   applicationName: "MachLib",
   authors: [{ name: "Mosa Creates LLC" }],
   keywords: [
     "MachLib",
     "Lean 4",
-    "formal mathematics",
-    "machine learning",
-    "theorem proving",
+    "formal verification",
+    "verified numerics",
+    "floating-point error",
+    "fixed-point",
+    "Khovanskii",
     "EML",
     "Monogate",
-    "agent-native",
   ],
   openGraph: {
     type: "website",
     url: SITE_URL,
-    title: "MachLib — For machines, by machines",
+    title: "MachLib — machine-checked theorems about compiled numerics",
     description:
-      "Machine-native formal-library corpus workbench with zero Mathlib dependency in the current public default tree and release target.",
+      "A Mathlib-free Lean 4 library that proves things about EML kernels. Every axiom listed and modeled; every claim paired with the command that checks it.",
     siteName: "MachLib",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MachLib — For machines, by machines",
+    title: "MachLib — machine-checked theorems about compiled numerics",
     description:
-      "Machine-native formal-library corpus workbench with zero Mathlib dependency in the current public default tree and release target.",
+      "A Mathlib-free Lean 4 library that proves things about EML kernels. Every axiom listed and modeled; every claim paired with the command that checks it.",
   },
   robots: { index: true, follow: true },
   icons: { icon: "/favicon.ico" },

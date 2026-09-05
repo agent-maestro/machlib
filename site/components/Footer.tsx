@@ -18,15 +18,21 @@ export default function Footer() {
               GitHub
             </a>
             <a
-              href="https://huggingface.co/datasets/Monogate/machlib"
+              href="https://github.com/agent-maestro/machlib/blob/master/foundations/docs/what_is_proven.md"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Hugging Face
+              What is proven
             </a>
-            <a href="#philosophy">Philosophy</a>
             <a
-              href="https://monogateforge.com"
+              href="https://github.com/agent-maestro/machlib/blob/master/foundations/AXIOM_MANIFEST.md"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Axiom manifest
+            </a>
+            <a
+              href="https://github.com/agent-maestro/forge"
               target="_blank"
               rel="noopener noreferrer"
             >

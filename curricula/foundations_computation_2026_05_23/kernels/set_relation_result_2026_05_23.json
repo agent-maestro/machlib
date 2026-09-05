@@ -1,7 +1,0 @@
-{
-  "bounded_only": true,
-  "kernel": "set_relation_kernel",
-  "reflexive": true,
-  "symmetric": true,
-  "transitive": true
-}

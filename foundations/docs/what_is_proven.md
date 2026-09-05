@@ -111,10 +111,16 @@ correct (see §6), and grounding of the analytic base in a construction of ℝ
 MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the
 things Mathlib would prove as theorems — the real-number field/order axioms, the
 definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
-model — are **axioms** here. As of 2026-06-27 the trusted base is **260 axioms**.
-But that one number lumps two very different kinds of axiom together, and the
-distinction is the whole point (tier list in **(c)**). Three things make the base
-honest rather than hand-wavy:
+model — are **axioms** here. As of 2026-09-05 the ledger pins **243 axioms**
+(`lake env lean AxiomLedger.lean`: 221 `MachLib.*` plus 22 `Certcom.*`), of which
+**149** form the trusted footprint of the headline theorems, and every one of those 149 is
+modeled: 112 witnessed by a kernel-checked Mathlib term, 12 interpreted carrier and function
+symbols, 3 standard, 22 IEEE-754 float-bridge facts validated by measurement — see
+[`AXIOM_MANIFEST.md`](../AXIOM_MANIFEST.md), which is generated, and **(d)** below. (This
+section said **260** from 2026-06-27 until 2026-09-05; that figure was a different count over a
+different tree, and it is the reason `tools/prose_counts_check.py` now exists.) But a single
+number lumps two very different kinds of axiom together, and the distinction is the whole point
+(tier list in **(c)**). Four things make the base honest rather than hand-wavy:
 
 **(a) The base is proven consistent, for the results that matter.**
 `#print axioms` proves a theorem has no `sorry`; it does *not* prove its axioms
@@ -150,7 +156,7 @@ of scope under the Mathlib-free doctrine. The full promotion list (which 32 axio
 each derivation) is tracked in the project's internal audit notes.
 
 **(c) Two tiers — foundational primitives vs mathematical assumptions.** A single
-count of 260 hides the axioms that actually matter. They split cleanly, and a reader
+count hides the axioms that actually matter. They split cleanly, and a reader
 is entitled to see which is which:
 
 - **Foundational primitives** (the overwhelming majority). The real-number field and
@@ -176,6 +182,18 @@ bound (`khovanskii_bound_full`) is a constructive **reduction** — given a redu
 witness it derives the bound from the Rolle corollary, with no classical-Khovanskii
 axiom. So the one deep assumption is isolated, named, and off the featured path. What is
 earned and what is cited never share a count.
+
+**(d) Every trusted axiom has a model, checked outside this library.** Nothing Mathlib-free
+can show its own axioms are satisfiable, so the check lives in the sibling project
+`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 149 trusted axioms,
+verifies in the kernel that a Mathlib term inhabits the axiom's *interpreted* type
+(`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The result is a certificate *about* MachLib, never a
+dependency *of* it. The 22 float-bridge axioms are the exception by nature — Mathlib has no
+IEEE-754 semantics — and they are kept in their own class rather than averaged in, because a
+hardware certificate rests on exactly those. The honest headline is therefore **zero unmodeled
+axioms**, never "zero axioms". Gate 13 (`tools/soundness_witness_audit.py`) fails if the witness
+project's toolchain drifts from this one, because the witness went dark for 33 days once while
+the ledger kept reporting "trusted".
 
 ---
 

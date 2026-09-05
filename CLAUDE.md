@@ -352,6 +352,16 @@ Corollary for the gates themselves: **a check that is silent on success is indis
 check that did not run.** Print the figure even when nothing is wrong — `check_obligations.sh` prints
 its footprint tally for exactly this reason.
 
+**Since 2026-09-05 this policy is enforced, not just stated.** `tools/prose_counts_check.py` reads
+`tools/prose_counts.json`, a registry of every tracked figure in `README.md`, this file and
+`what_is_proven.md` — each a regex over the prose plus the command or artifact that measures it —
+and fails the run on drift (`DRIFT`, exit 1) or on a source it cannot evaluate (`UNAVAILABLE`, exit
+2, never a pass). It is wired into `check_all.sh` with a three-canary selftest. **The discipline it
+imposes: when you put a number in one of those documents, register it in the same change**, or it
+is exactly as unchecked as before. The trigger was this very section: the file that carried the
+policy had sixteen files and eighty theorems of drift in its own architecture paragraph, and
+`what_is_proven.md` said "260 axioms" for ten weeks after the ledger said 243.
+
 ## Status
 
 Lean `v4.32.2`, branch `poly-euclid-spine`. Run everything with **`foundations/tools/check_all.sh`**

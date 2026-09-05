@@ -58,7 +58,7 @@ run() {
   # `tail -n 3` window silently dropped them. Cosmetic — SUMMARY decides pass/fail from the captured
   # rc, never from this text — but a comment that overstates what it does is how a gate's scope
   # drifts from its description.
-  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|check-[a-z]+\]|AxiomLedger" \
+  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|check-[a-z]+\]|AxiomLedger" \
     "$OUT/$name.log" | tail -n 2 || true
 }
 
@@ -104,6 +104,11 @@ else
   run "witness"      python3 tools/witness_audit.py
   run "hypothesis"   python3 tools/hypothesis_audit.py --self-test
   run "absence"      python3 tools/absence_audit.py --self-test
+  # Every tracked number in README / CLAUDE.md / what_is_proven.md must equal what the corpus
+  # measures (tools/prose_counts.json). The selftest stages doctored copies in a temp dir and
+  # never writes into the tree, so it is safe inside a fingerprinted run.
+  run "prose-counts" python3 tools/prose_counts_check.py
+  run "prose-counts-selftest" python3 tools/prose_counts_check.py --self-test
   run "sorry"        lake env lean tools/sorry_audit.lean
 fi
 

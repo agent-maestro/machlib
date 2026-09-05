@@ -1,119 +1,83 @@
-# Philosophy — for machines, by machines
+# Philosophy
 
-## The case for machine-native math
+## What this file used to say, and why it changed
 
-Mathlib is the standard formal-math library for the Lean ecosystem.
-It is the result of a decade of careful work by hundreds of human
-mathematicians. It is also organised the way mathematicians think
-about mathematics: by area (analysis, algebra, topology), by level
-of abstraction (basic, advanced, frontier), by aesthetic conventions
-(short proofs over long, named lemmas over inline derivations).
+Until 2026-09-05 this file made the case for MachLib as a *training gym for machines*: a
+machine-shaped corpus of theorem records with multiple proofs per theorem, tactic traces with
+failures, difficulty labels calibrated from agent attempts, and a schema so other domains could
+publish interoperable corpora. The analogy was ImageNet.
 
-Those organising principles are correct for humans. They are wrong
-for machines.
+That thesis did not survive contact with the work. The record corpus stalled at a few hundred
+entries, the gym environment was last touched in May 2026, and every session since has gone into
+proving theorems and building gates. Rather than keep a philosophy the repository no longer
+practises, this file now states the one it does. The old text is preserved at the tag
+`attic/product-wave-2026-05`.
 
-A machine learning to prove theorems does not need every analytic
-result presented as a polished pearl. It needs:
+One piece of the old thesis did come true, in a different shape. The machine-shaped corpus exists:
+it is `foundations/MachLib/Discovered/`, the 749 proof obligations that Forge's `@verify(lean)`
+annotations emit from real kernels, each one a theorem a machine wrote for a machine to close.
+Its measured close rate is the training signal the gym was meant to produce, and its failure
+classes are the curriculum. Nobody had to design a schema for that; the compiler did it.
 
-  - **Multiple proofs per theorem**, ranked by cost. So it can
-    learn that a theorem has a 2-tactic proof, a 5-tactic proof,
-    and a 12-tactic proof — and that the 2-tactic proof was found
-    by a human, the 5-tactic proof was found by an agent, and the
-    12-tactic proof is what a beginner produces.
-  - **Tactic traces with failures**. A successful proof tells the
-    agent what works. A failed-and-corrected attempt tells it what
-    doesn't. Mathlib's git history has both, but it isn't curated
-    that way; you'd have to scrape commit messages and PR review
-    threads.
-  - **Difficulty calibration from agent attempts**. "Beginner" and
-    "expert" need to be measured against a population of provers.
-  - **Structural metadata**. Chain order, cost class, eml depth,
-    drift risk. Mathlib's lemmas don't carry these annotations
-    because human readers don't need them; an agent picking
-    representations does.
-  - **A schema**. So that other domains can publish corpora that
-    interoperate.
+## Mathlib-free, by construction, and what that costs
 
-Adding any of those things to Mathlib would change Mathlib for its
-existing audience. The right move is a separate library.
+`import Mathlib` is the right choice for almost every Lean project. MachLib does not take it, for
+one reason that still holds: this library's job is to be the check target of a compiler that runs
+on machines where a forty-minute cold build of Mathlib is not acceptable, and whose emitted
+obligations must compile in isolation, thousands of times, on every change. The whole foundation
+builds in about a minute.
 
-## The ImageNet analogy
+The cost is explicit and it is the most important sentence in this file. Everything Mathlib
+would prove as a theorem — the ordered field of reals, the definitions and derivatives of `exp`,
+`log`, `sin`, `cos`, the floating-point model — is an **axiom** here. A library built on axioms
+can be vacuous without any `sorry` appearing anywhere, and `#print axioms` cannot tell you.
 
-Before ImageNet there were dozens of small, carefully-curated
-computer-vision datasets. Each was lovingly assembled, each was
-appropriate for the domain it served. None of them produced
-AlexNet. AlexNet required a different *kind* of dataset — one
-big enough that the failure modes of small-data training showed
-up, with labels consistent enough that scale paid off, and with
-a permissive license so the whole field could iterate on it.
+So the doctrine is not "zero axioms" but **zero unmodeled axioms**. Every trusted axiom is listed
+in a generated manifest, and a sibling project that imports both Mathlib and MachLib checks, in
+the kernel, that a Mathlib term inhabits each axiom's interpreted type. The 22 axioms about IEEE
+floats have no model in ℝ and are kept in their own class, validated by measurement, because a
+hardware certificate rests on exactly those and a reader should know it. A gate fails if the
+witness project stops running, because it did once, for 33 days, and nothing said so.
 
-ImageNet did not replace the small datasets. The small datasets
-remained correct for their domains. ImageNet was a different
-artefact, with a different goal.
+## The gate is the source; prose is a copy
 
-MachLib is to formal math what ImageNet was to vision: a
-machine-shaped corpus, organised for training, big enough that
-the failure modes of small-data training show up.
+Most of what went wrong in this project went wrong in prose. Counts were written from memory and
+were fiction. A theorem was proved with hypotheses nobody could satisfy and every gate stayed
+green. A ledger row said "open" for weeks after the obligation was closed. An absence claim ("this
+lemma does not exist here") stayed true in the text long after someone added the lemma.
 
-## Independence (zero Mathlib at v1.0)
+Each of those has a gate now, and the gates share one rule: **an instrument must be shown capable
+of both verdicts before either is read.** A check that cannot fail is not a check. So every gate
+carries a self-test with a specimen that must fire and a control that must stay silent, the runner
+proves it conducts a failure to its own exit code, and a number in a document is either the pasted
+output of a command or a defect.
 
-`import Mathlib.Analysis.SpecialFunctions.ExpDeriv` pulls in
-~500,000 lines of supporting code. The cold build of that import
-takes about 45 minutes. An agent cannot start proving anything
-until that build finishes.
+## Named obligations, not silent gaps
 
-EML — the smallest mathematical theory MachLib needs to be useful —
-needs about 0.7% of Mathlib:
+A partial result is committed by naming what it lacks. An open question becomes a `def` that a
+theorem may consume and nothing may conclude; a ledger tracks it in both directions, so a row that
+says open when the corpus has closed it fails the build, and a row that says discharged by a
+theorem that does not conclude it fails too. A conjecture can be refuted, and that is a third
+status, checked the same way. Reductions that go in a circle are detected and counted as one
+obligation, not zero.
 
-| Module | Lines |
-|---|---|
-| Real number basics | ~1,000 |
-| Exp and Ln | ~1,000 |
-| Trig (sin, cos) | ~800 |
-| EML core (universality) | ~600 |
-| **Total** | **~3,400** |
+The point is that the debt is legible. Anyone can read the ledger and know what this library is
+still assuming.
 
-Three thousand four hundred lines builds in seconds. The agent
-starts proving immediately. There are no breaking changes from
-upstream. Every lemma can carry MachLib's own annotations.
+## Paper before Lean
 
-This is the correct trade for the audience. A human reviewer
-opening MachLib expecting Mathlib's conventions would find it
-strange; an agent training on MachLib will not notice.
+The kernel checks proofs; it does not find them, and it will happily check a proof of the wrong
+statement. Every result here that cost more than a day was worked out on paper first, checked
+numerically where a number could be checked, and priced by opening the layer beneath the layer
+that looked cheap. Three of the project's worst weeks were spent on statements that turned out to
+be false, each time because the estimate measured the reduction and not the discharge.
+
+The corollary is that a refutation is a result. Two of the depth-3 statements this library needed
+were false, and the witnesses that refute them are theorems too.
 
 ## Relationship to Mathlib
 
-Complementary, not competing. Same Lean kernel. Same mathematical
-results. Different design goals. Different audience.
-
-  - **Mathlib is the cathedral.** It is where formal mathematics
-    happens at the frontier. Researchers contribute. Proofs are
-    polished. The library reflects the state of formal math.
-  - **MachLib is the training gym.** It is where AI agents learn
-    to prove. Records are dense. Multiple proofs per theorem.
-    The library reflects what a curriculum-shaped corpus needs.
-
-Some researchers may use both. Some agents may train on both. The
-two libraries do not need to know about each other.
-
-We expect the long-run shape to be: human mathematicians extend
-Mathlib; AI agents extend MachLib; periodically, a discovery in
-one moves into the other. The Lean kernel is the lingua franca.
-
-## Honest about what we don't have
-
-  - Earlier seed phases imported Mathlib for exp / ln / trig. Current
-    release-target claims must pass the zero-Mathlib gate; historical
-    references remain as migration context, not as active dependency claims.
-  - The corpus is 256 records, not 100K. We are upfront about
-    this; the roadmap shows the path from 256 → 1K → 10K → 100K.
-  - The chain-order metadata depends on Pfaffian theory not yet
-    formalised in Mathlib (the Khovanskii zero-count gap). Some
-    structural claims sit in the corpus as conjectures with
-    empirical support, not as machine-checked theorems. We mark
-    them clearly.
-  - Difficulty calibration starts at "beginner / intermediate /
-    expert" labels assigned by the seed authors. As agents log
-    attempts in the gym, those labels get re-fitted from data.
-
-The library will improve. We tell you what's done and what isn't.
+Complementary, and one-directional. Mathlib is where the mathematics is; MachLib borrows its
+truth through the witness project and gives nothing back except, occasionally, a question about
+what a small `exp`/`log` grammar can express. If Mathlib ever gains a Khovanskii zero bound, the
+one deep classical axiom still cited here should be replaced by a witness the same day.
