@@ -12974,6 +12974,7 @@ in commit archaeology:
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 | `RatGermTrichotomy` | **discharged** | `ratGermTrichotomy_holds` (`PevLeading`) |
 | `OneQueryLevelSet` | **open** | — (the level-1 analogue of `zero_query_level_set`; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy`) |
+| `Depth3ApproachBelow` | **discharged** | `depth3ApproachBelow_holds`, through `depth3ApproachBelowEml_holds` — the decaying-floor replacement for the refuted `depth_le_three_gap_below`; the bounded-left window closed by `d3b_sep` (rate separation at first order) |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
 the first attempt returned consumers rather than dischargers, which is exactly the error the ledger

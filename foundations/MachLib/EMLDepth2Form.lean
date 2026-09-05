@@ -838,7 +838,9 @@ def Depth3ApproachBelow : Prop :=
 /-- **The residue: the `eml` constructor.** Both children have depth ≤ 2 and the target
 `exp (A x) − k` *moves with `x`*, which is what makes this the hard case — the same moving-target
 difficulty that made `ExpExpGapBelow` an arc at depth 3, and the reason
-`depth_le_two_approach_constant` (a *constant* target) does not apply directly. -/
+`depth_le_two_approach_constant` (a *constant* target) does not apply directly.
+
+**Discharged**: `depth3ApproachBelowEml_holds`, at the end of this file. -/
 def Depth3ApproachBelowEml : Prop :=
   ∀ A B : EMLTree, A.depth ≤ 2 → B.depth ≤ 2 → ∀ k : Real, ∃ C X₀ : Real, 1 ≤ X₀ ∧
     ∀ x : Real, X₀ ≤ x → exp (A.eval x) - log (B.eval x) < k →
@@ -1776,10 +1778,21 @@ theorem d3_identity_eml_expd_left_eq (b1 b2 : EMLTree) (h2 : b2.depth ≤ 1) (k 
     rw [e1, e2] at u
     exact u
 
-/-! ### Route map for the one remaining branch: `A = eml a₁ a₂`, bounded
+/-! ### Route map for the last branch: `A = eml a₁ a₂`, bounded — written BEFORE it was closed
 
-**Four of the five branches of `Depth3ApproachBelowEml` are closed.** What remains is `A` bounded and
-compound. Sized here rather than guessed, because this file has twice paid for the opposite.
+**Kept as written, because the estimate is the record.** This section sized the branch before anyone
+started it; the branch is now closed (`d3b_bounded_left`, and `depth3ApproachBelowEml_holds` at the
+end of the file). What it got right: the difficulty *was* a rate-separation lemma that did not
+exist, and it *is* the difference of two quantities each tending to its own limit. What it got
+wrong, and usefully: the separation is never delicate. Both excesses are `Θ(1/x)` with explicit
+leading coefficients, and a first-order tie is decided by `log (1 + y) ≤ y` against
+`exp v − 1 ≥ v` — *against* the hypothesis firing. So the "next-order residue" this note reaches
+for never has to be estimated. The actual size was ~1 300 lines, about what was priced, but spent on
+profiles and cells rather than on analysis.
+
+**Four of the five branches of `Depth3ApproachBelowEml` were closed** when this was written. What
+remained was `A` bounded and compound. Sized here rather than guessed, because this file had twice
+paid for the opposite.
 
 *Narrower than it looks.* For `exp (A x)` to be bounded, `exp (a₁ x)` must be bounded above, which
 kills three of the five `Depth1Form` shapes outright — only `a₁ x = α` and `a₁ x = c − log x` survive,
@@ -2029,5 +2042,1327 @@ theorem d3_bounded_left_large_right (A B : EMLTree) (k K X : Real) (hX : 1 ≤ X
     rw [e3, e4] at v; exact v
   exact le_trans hfl hgap
 
+
+/-! ## The bounded-left window, closed
+
+Everything below is the last branch of `Depth3ApproachBelowEml` — `A = eml a₁ a₂` with `exp (A x)`
+bounded — followed by the assembly of all five branches into `depth3ApproachBelowEml_holds`.
+
+**The plan, in one paragraph.** Write `s = exp (−log x)`, which is `1/x` on the ray. A depth-≤2 left
+child with bounded exponential is, on a ray, one of three *profiles*: `exp (A x) = P·exp (a s)`
+(tending to `P` from above, polynomially), `exp (A x) = P·exp (a s)·s` (tending to `0` like `1/x`),
+or `exp (A x) ≤ P·exp (−x)` (tending to `0` faster than any power) — `d3b_left_profile`. A
+depth-≤2 right child has `log (B x)` eventually constant, eventually `Λ + log (1 + b s)` (tending
+to `Λ` from above, polynomially), tending to `−∞`, or tending to `+∞` — `d3b_right_profile`. The
+gap `k − exp (A x) + log (B x)` then has a limit; when the limit is positive a constant floor
+serves, when negative the hypothesis stops firing, and when it is **zero** the gap is the
+difference of two excesses, `log (1 + b s) − (exp (A x) − P)`. Both excesses are `Θ(s)` with
+explicit leading coefficients, `b` and `Q`, and the whole difficulty is one lemma: `d3b_sep`. If
+`Q < b` the gap is at least `(b − Q)(1 − e⁻¹)·s` for small `s`, which dominates the floor because
+`log x ≤ exp (exp x)`; if `b ≤ Q` the gap is `≤ 0` because `log (1 + y) ≤ y` while
+`exp (v) − 1 ≥ v` — a tie at first order is decided by concavity against convexity, and it is
+decided *against* the hypothesis firing. So no cell is ever close: the separation the route map
+below asked for is `(b − Q)/x` or nothing.
+
+The cells are stated over abstract functions `E`, `L` (`d3b_cell_*`) so the tree never has to be
+unfolded inside the arithmetic; the profiles are the only place the tree is opened. -/
+
+/-! ### Batch 1: pure-real helpers -/
+
+private theorem d3b_one_le_shift (a : Real) : (1 : Real) ≤ 1 + exp a := by
+  have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos a))
+  have e : (1 : Real) + 0 = 1 := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d3b_le_shift (a : Real) : a ≤ 1 + exp a := by
+  have h := le_of_lt (exp_grows_strictly_thm a)
+  have u := add_le_add_wit (le_of_lt zero_lt_one_ax) h
+  have e : (0 : Real) + a = a := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d3b_exp_le_shift (a : Real) : exp a ≤ 1 + exp a := by
+  have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp a))
+  have e : (0 : Real) + exp a = exp a := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d3b_ray_ge_one (a b : Real) : (1 : Real) ≤ 1 + exp a + exp b := by
+  have u := add_le_add_wit (d3b_one_le_shift a) (le_of_lt (exp_pos b))
+  have e : (1 : Real) + 0 = 1 := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d3b_ray_ge_fst (a b : Real) : a ≤ 1 + exp a + exp b := by
+  have u := add_le_add_wit (d3b_le_shift a) (le_of_lt (exp_pos b))
+  have e : a + 0 = a := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d3b_ray_ge_snd (a b : Real) : b ≤ 1 + exp a + exp b := by
+  have u := add_le_add_wit (le_trans (le_of_lt zero_lt_one_ax) (d3b_one_le_shift a))
+    (le_of_lt (exp_grows_strictly_thm b))
+  have e : (0 : Real) + b = b := by mach_ring
+  rw [e] at u; exact u
+
+private theorem d3b_neg_one_lt_zero : (-1 : Real) < 0 := by
+  have w := add_lt_add_left zero_lt_one_ax (-(1 : Real))
+  have f1 : -(1 : Real) + 0 = -1 := by mach_ring
+  have f2 : -(1 : Real) + 1 = 0 := by mach_ring
+  rw [f1, f2] at w; exact w
+
+private theorem d3b_exp_neg_one_lt_one : exp (-1) < 1 := by
+  have w := exp_lt d3b_neg_one_lt_zero
+  rw [exp_zero] at w; exact w
+
+private theorem d3b_one_sub_exp_neg_one_pos : (0 : Real) < 1 - exp (-1) :=
+  sub_pos_of_lt d3b_exp_neg_one_lt_one
+
+private theorem d3b_log_nonneg_of_one_le (y : Real) (hy : 1 ≤ y) : (0 : Real) ≤ log y := by
+  have w := log_le_log zero_lt_one_ax hy
+  rw [log_one] at w; exact w
+
+private theorem d3b_one_le_exp (v : Real) (hv : 0 ≤ v) : (1 : Real) ≤ exp v := by
+  have h := one_add_le_exp v
+  have u := add_le_add_wit (le_refl (1 : Real)) hv
+  have e : (1 : Real) + 0 = 1 := by mach_ring
+  rw [e] at u
+  exact le_trans u h
+
+/-- `exp v − 1 ≤ v · exp v`: the tangent line at `−v`, multiplied through by `exp v`. -/
+private theorem d3b_exp_sub_one_le_mul (v : Real) : exp v - 1 ≤ v * exp v := by
+  have h := one_add_le_exp (-v)
+  have h2 := mul_le_mul_of_nonneg_left h (le_of_lt (exp_pos v))
+  have e1 : exp v * exp (-v) = 1 := by
+    have w := exp_neg_self_mul v
+    rw [mul_comm] at w; exact w
+  rw [e1] at h2
+  have u := add_le_add_wit h2 (le_refl (v * exp v - 1))
+  have e2 : exp v * (1 + -v) + (v * exp v - 1) = exp v - 1 := by mach_mpoly [exp v, v]
+  have e3 : (1 : Real) + (v * exp v - 1) = v * exp v := by mach_mpoly [v, exp v]
+  rw [e2, e3] at u; exact u
+
+/-- Quadratic upper bound on `[0, 1]`: `exp v − 1 ≤ v + v·(v·e)`. -/
+private theorem d3b_exp_sub_one_le_quad (v : Real) (h0 : 0 ≤ v) (h1 : v ≤ 1) :
+    exp v - 1 ≤ v + v * (v * exp 1) := by
+  have ha := d3b_exp_sub_one_le_mul v
+  have hb := exp_le_one_add_scaled h0 h1
+  have hc := mul_le_mul_of_nonneg_left hb h0
+  have e : v * (1 + v * exp 1) = v + v * (v * exp 1) := by mach_mpoly [v, exp 1]
+  rw [e] at hc
+  exact le_trans ha hc
+
+/-- Arithmetic core of the log lower bound, over plain variables. -/
+private theorem d3b_arith_log_core (y t : Real) (hy : 0 ≤ y) (ht1 : t ≤ 1)
+    (ht : t * (1 + y) = 1) : y - y * y ≤ 1 - t := by
+  have hA : (0 : Real) ≤ y * (1 - t) := mul_nonneg hy (sub_nonneg_of_le ht1)
+  have eB : y * (1 - t) = t + y - t * (1 + y) := by mach_mpoly [y, t]
+  rw [ht] at eB
+  rw [eB] at hA
+  have hA' : (0 : Real) ≤ y * (t + y - 1) := mul_nonneg hy hA
+  have eE : y * (t + y - 1) = y * t - (y - y * y) := by mach_mpoly [y, t]
+  rw [eE] at hA'
+  have hF : y - y * y ≤ y * t := le_of_sub_nonneg hA'
+  have eG : y * t = t + y * t - t := by mach_mpoly [y, t]
+  have eH : t * (1 + y) = t + y * t := by mach_mpoly [t, y]
+  rw [eH] at ht
+  rw [ht] at eG
+  rw [eG] at hF
+  exact hF
+
+/-- Lower bound for the logarithm: `y − y·y ≤ log (1 + y)` for `y ≥ 0`. -/
+private theorem d3b_log_one_add_ge (y : Real) (hy : 0 ≤ y) : y - y * y ≤ log (1 + y) := by
+  have h1y : (1 : Real) ≤ 1 + y := by
+    have u := add_le_add_wit (le_refl (1 : Real)) hy
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at u; exact u
+  have hpos : (0 : Real) < 1 + y := lt_of_lt_of_le zero_lt_one_ax h1y
+  have ht : exp (-log (1 + y)) * (1 + y) = 1 := by
+    have h := exp_neg_self_mul (log (1 + y))
+    rw [exp_log hpos] at h; exact h
+  have ht1 : exp (-log (1 + y)) ≤ 1 :=
+    exp_le_one_of_nonpos (neg_nonpos_of_nonneg (d3b_log_nonneg_of_one_le (1 + y) h1y))
+  have h1 := one_add_le_exp (-log (1 + y))
+  have h2 : 1 - exp (-log (1 + y)) ≤ log (1 + y) := by
+    have u := add_le_add_wit h1 (le_refl (log (1 + y) - exp (-log (1 + y))))
+    have e1 : 1 + -log (1 + y) + (log (1 + y) - exp (-log (1 + y)))
+        = 1 - exp (-log (1 + y)) := by mach_mpoly [log (1 + y), exp (-log (1 + y))]
+    have e2 : exp (-log (1 + y)) + (log (1 + y) - exp (-log (1 + y))) = log (1 + y) := by
+      mach_mpoly [log (1 + y), exp (-log (1 + y))]
+    rw [e1, e2] at u; exact u
+  exact le_trans (d3b_arith_log_core y (exp (-log (1 + y))) hy ht1 ht) h2
+
+/-- The floor never exceeds its constant. -/
+private theorem d3b_floor_le_const (C x : Real) : exp (-C - exp (exp x)) ≤ exp (-C) := by
+  have u := add_le_add_wit (le_refl (-C)) (neg_nonpos_of_nonneg (le_of_lt (exp_pos (exp x))))
+  have e1 : -C + -exp (exp x) = -C - exp (exp x) := by mach_ring
+  have e2 : -C + 0 = -C := by mach_ring
+  rw [e1, e2] at u
+  exact exp_monotone u
+
+/-- The floor is below `exp (−C) · exp (−log x)` on `x ≥ 1`, because `log x ≤ exp (exp x)`. -/
+private theorem d3b_floor_le_s (C x : Real) (hx : 1 ≤ x) :
+    exp (-C - exp (exp x)) ≤ exp (-C) * exp (-log x) := by
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+  have h1 : log x < x := by
+    have w := exp_grows_strictly_thm (log x)
+    rw [exp_log hxpos] at w; exact w
+  have hle : log x ≤ exp (exp x) :=
+    le_of_lt (lt_trans_ax h1 (lt_trans_ax (exp_grows_strictly_thm x)
+      (exp_grows_strictly_thm (exp x))))
+  have u := add_le_add_wit (le_refl (-C)) (neg_le_neg_wit hle)
+  have e1 : -C + -exp (exp x) = -C - exp (exp x) := by mach_ring
+  rw [e1] at u
+  have w := exp_monotone u
+  rw [exp_add] at w
+  exact w
+
+/-- `exp (−log x) ≤ σ` once `x ≥ exp (−log σ)`. -/
+private theorem d3b_s_le (σ : Real) (hσ : 0 < σ) (x : Real) (hx : exp (-log σ) ≤ x) :
+    exp (-log x) ≤ σ := by
+  have w := log_le_log (exp_pos _) hx
+  rw [log_exp] at w
+  have w2 := neg_le_neg_wit w
+  have e : - -log σ = log σ := by mach_ring
+  rw [e] at w2
+  have w3 := exp_monotone w2
+  rw [exp_log hσ] at w3; exact w3
+
+private theorem d3b_s_le_one (x : Real) (hx : 1 ≤ x) : exp (-log x) ≤ 1 :=
+  exp_le_one_of_nonpos (neg_nonpos_of_nonneg (d3b_log_nonneg_of_one_le x hx))
+
+/-- A non-negative multiple of a small quantity is small: `D·s ≤ η` for `s ≤ η·exp (−log (D+1))`. -/
+private theorem d3b_scale_small (D η : Real) (hD : 0 ≤ D) (hη : 0 < η) :
+    ∃ σ : Real, 0 < σ ∧ ∀ s : Real, 0 ≤ s → s ≤ σ → D * s ≤ η := by
+  refine ⟨η * exp (-log (D + 1)), mul_pos hη (exp_pos _), ?_⟩
+  intro s _ hsσ
+  have hD1 : (0 : Real) < D + 1 := add_pos_of_nonneg_pos hD zero_lt_one_ax
+  have h1 : D * s ≤ D * (η * exp (-log (D + 1))) := mul_le_mul_of_nonneg_left hsσ hD
+  have hle : D ≤ D + 1 := by
+    have u := add_le_add_wit (le_refl D) (le_of_lt zero_lt_one_ax)
+    have e : D + 0 = D := by mach_ring
+    rw [e] at u; exact u
+  have h2 : D * (η * exp (-log (D + 1))) ≤ (D + 1) * (η * exp (-log (D + 1))) :=
+    mul_le_mul_of_nonneg_right hle (le_of_lt (mul_pos hη (exp_pos _)))
+  have hk : (D + 1) * exp (-log (D + 1)) = 1 := by
+    have w := exp_neg_self_mul (log (D + 1))
+    rw [exp_log hD1, mul_comm] at w; exact w
+  have e : (D + 1) * (η * exp (-log (D + 1))) = η * ((D + 1) * exp (-log (D + 1))) := by
+    mach_mpoly [D, η, exp (-log (D + 1))]
+  rw [e, hk, mul_one_ax] at h2
+  exact le_trans h1 h2
+
+/-- `exp (−x) ≤ η · exp (−log x)²` on a ray, for every `η > 0`: `2 log x + M ≤ x` eventually. -/
+private theorem d3b_expneg_le_s_sq (η : Real) (hη : 0 < η) :
+    ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+      exp (-x) ≤ η * (exp (-log x) * exp (-log x)) := by
+  obtain ⟨T, hT⟩ := two_mul_add_le_exp (-log η)
+  refine ⟨1 + exp T, d3b_one_le_shift T, ?_⟩
+  intro x hx
+  have hx1 : (1 : Real) ≤ x := le_trans (d3b_one_le_shift T) hx
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  have hxT : exp T ≤ x := le_trans (d3b_exp_le_shift T) hx
+  have hlogT : T ≤ log x := by
+    have w := log_le_log (exp_pos T) hxT
+    rw [log_exp] at w; exact w
+  have h := hT (log x) hlogT
+  rw [exp_log hxpos] at h
+  have h2 : -x ≤ log η + (-log x + -log x) := by
+    have u := neg_le_neg_wit h
+    have e : -(log x + log x + -log η) = log η + (-log x + -log x) := by
+      mach_mpoly [log x, log η]
+    rw [e] at u; exact u
+  have h3 := exp_monotone h2
+  rw [exp_add, exp_add, exp_log hη] at h3
+  exact h3
+
+/-- **The rate-separation lemma.** If `E ≤ Q·s + R·s²` and `Q < b`, then
+`log (1 + b s) − E ≥ Δ'·s` for `s` small, with `Δ' = (b − Q)(1 − e⁻¹) > 0`. -/
+private theorem d3b_sep (b Q R : Real) (hQ : 0 ≤ Q) (hR : 0 ≤ R) (hQb : Q < b) :
+    ∃ Δ' σ : Real, 0 < Δ' ∧ 0 < σ ∧ ∀ s E : Real, 0 ≤ s → s ≤ σ →
+      E ≤ Q * s + R * (s * s) → Δ' * s ≤ log (1 + b * s) - E := by
+  have hΔ : (0 : Real) < b - Q := sub_pos_of_lt hQb
+  have hb0 : (0 : Real) ≤ b := le_trans hQ (le_of_lt hQb)
+  obtain ⟨σ, hσ, hσs⟩ := d3b_scale_small (b * b + R) ((b - Q) * exp (-1))
+    (add_nonneg (mul_nonneg hb0 hb0) hR) (mul_pos hΔ (exp_pos _))
+  refine ⟨(b - Q) * (1 - exp (-1)), σ, mul_pos hΔ d3b_one_sub_exp_neg_one_pos, hσ, ?_⟩
+  intro s E hs0 hsσ hE
+  have hbs : (0 : Real) ≤ b * s := mul_nonneg hb0 hs0
+  have hL := d3b_log_one_add_ge (b * s) hbs
+  have hsmall := hσs s hs0 hsσ
+  have h1 := add_le_add_wit hL (neg_le_neg_wit hE)
+  have e1 : b * s - b * s * (b * s) + -(Q * s + R * (s * s))
+      = s * ((b - Q) - (b * b + R) * s) := by mach_mpoly [b, s, Q, R]
+  have e2 : log (1 + b * s) + -E = log (1 + b * s) - E := by mach_ring
+  rw [e1, e2] at h1
+  have h2 : (b - Q) * (1 - exp (-1)) ≤ (b - Q) - (b * b + R) * s := by
+    have u := add_le_add_wit (le_refl (b - Q)) (neg_le_neg_wit hsmall)
+    have e3 : b - Q + -((b - Q) * exp (-1)) = (b - Q) * (1 - exp (-1)) := by
+      mach_mpoly [b, Q, exp (-1)]
+    have e4 : b - Q + -((b * b + R) * s) = (b - Q) - (b * b + R) * s := by
+      mach_mpoly [b, Q, R, s]
+    rw [e3, e4] at u; exact u
+  have h3 := mul_le_mul_of_nonneg_left h2 hs0
+  have e5 : s * ((b - Q) * (1 - exp (-1))) = (b - Q) * (1 - exp (-1)) * s := by
+    mach_mpoly [s, b, Q, exp (-1)]
+  rw [e5] at h3
+  exact le_trans h3 h1
+
+
+/-! ### Batch 2: ray combinators, the three closing moves, the depth-1 log trichotomy -/
+
+private theorem d3b_ray2 (a b : Real) : ∃ X : Real, 1 ≤ X ∧ a ≤ X ∧ b ≤ X :=
+  ⟨1 + exp a + exp b, d3b_ray_ge_one a b, d3b_ray_ge_fst a b, d3b_ray_ge_snd a b⟩
+
+private theorem d3b_ray3 (a b c : Real) : ∃ X : Real, 1 ≤ X ∧ a ≤ X ∧ b ≤ X ∧ c ≤ X := by
+  obtain ⟨Y, _, hYb, hYc⟩ := d3b_ray2 b c
+  obtain ⟨X, hX1, hXa, hXY⟩ := d3b_ray2 a Y
+  exact ⟨X, hX1, hXa, le_trans hYb hXY, le_trans hYc hXY⟩
+
+private theorem d3b_ray4 (a b c d : Real) :
+    ∃ X : Real, 1 ≤ X ∧ a ≤ X ∧ b ≤ X ∧ c ≤ X ∧ d ≤ X := by
+  obtain ⟨Y, _, hYb, hYc, hYd⟩ := d3b_ray3 b c d
+  obtain ⟨X, hX1, hXa, hXY⟩ := d3b_ray2 a Y
+  exact ⟨X, hX1, hXa, le_trans hYb hXY, le_trans hYc hXY, le_trans hYd hXY⟩
+
+private theorem d3b_ray5 (a b c d e : Real) :
+    ∃ X : Real, 1 ≤ X ∧ a ≤ X ∧ b ≤ X ∧ c ≤ X ∧ d ≤ X ∧ e ≤ X := by
+  obtain ⟨Y, _, hYb, hYc, hYd, hYe⟩ := d3b_ray4 b c d e
+  obtain ⟨X, hX1, hXa, hXY⟩ := d3b_ray2 a Y
+  exact ⟨X, hX1, hXa, le_trans hYb hXY, le_trans hYc hXY, le_trans hYd hXY, le_trans hYe hXY⟩
+
+/-- `exp (−x) ≤ η` once `x ≥ −log η`. -/
+private theorem d3b_expneg_le (η : Real) (hη : 0 < η) (x : Real) (hx : -log η ≤ x) :
+    exp (-x) ≤ η := by
+  have u := neg_le_neg_wit hx
+  have e : - -log η = log η := by mach_ring
+  rw [e] at u
+  have w := exp_monotone u
+  rw [exp_log hη] at w; exact w
+
+/-- **Closing move 1: a constant positive gap on a ray.** -/
+private theorem d3b_close_const (E L : Real → Real) (k γ X : Real) (hγ : 0 < γ) (hX : 1 ≤ X)
+    (h : ∀ x : Real, X ≤ x → γ ≤ k - (E x - L x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  refine ⟨-log γ, X, hX, ?_⟩
+  intro x hx _
+  have hf := d3b_floor_le_const (-log γ) x
+  have e : - -log γ = log γ := by mach_ring
+  rw [e]
+  rw [e, exp_log hγ] at hf
+  exact le_trans hf (h x hx)
+
+/-- **Closing move 2: a gap at least `Δ'·exp (−log x)` on a ray.** -/
+private theorem d3b_close_linear (E L : Real → Real) (k Δ' X : Real) (hΔ : 0 < Δ') (hX : 1 ≤ X)
+    (h : ∀ x : Real, X ≤ x → Δ' * exp (-log x) ≤ k - (E x - L x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  refine ⟨-log Δ', X, hX, ?_⟩
+  intro x hx _
+  have hf := d3b_floor_le_s (-log Δ') x (le_trans hX hx)
+  have e : - -log Δ' = log Δ' := by mach_ring
+  rw [e]
+  rw [e, exp_log hΔ] at hf
+  exact le_trans hf (h x hx)
+
+/-- **Closing move 3: the hypothesis never fires on a ray.** -/
+private theorem d3b_close_vacuous (E L : Real → Real) (k X : Real) (hX : 1 ≤ X)
+    (h : ∀ x : Real, X ≤ x → k ≤ E x - L x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  refine ⟨1, X, hX, ?_⟩
+  intro x hx hlt
+  exact absurd (lt_of_lt_of_le hlt (h x hx)) (lt_irrefl_ax _)
+
+/-- `x ≤ exp x − exp (x − 1)`: the exponential outruns its own lag by more than `x`. -/
+private theorem d3b_exp_sub_pred_ge (x : Real) : x ≤ exp x - exp (x - 1) := by
+  have e1 : x = x - 1 + 1 := by mach_mpoly [x]
+  have e2 : exp x = exp (x - 1) * exp 1 := by
+    have h : exp (x - 1 + 1) = exp (x - 1) * exp 1 := exp_add (x - 1) 1
+    rw [← e1] at h; exact h
+  have h2 : (1 : Real) + 1 ≤ exp 1 := one_add_le_exp 1
+  have h3 : (1 : Real) ≤ exp 1 - 1 := by
+    have u := add_le_add_wit h2 (le_refl (-(1 : Real)))
+    have f1 : (1 : Real) + 1 + -1 = 1 := by mach_ring
+    have f2 : exp 1 + -1 = exp 1 - 1 := by mach_ring
+    rw [f1, f2] at u; exact u
+  have h4 : exp (x - 1) * 1 ≤ exp (x - 1) * (exp 1 - 1) :=
+    mul_le_mul_of_nonneg_left h3 (le_of_lt (exp_pos _))
+  have h5 : 1 + (x - 1) ≤ exp (x - 1) := one_add_le_exp (x - 1)
+  have f3 : (1 : Real) + (x - 1) = x := by mach_mpoly [x]
+  rw [f3] at h5
+  rw [mul_one_ax] at h4
+  have f4 : exp (x - 1) * (exp 1 - 1) = exp (x - 1) * exp 1 - exp (x - 1) := by
+    mach_mpoly [exp (x - 1), exp 1]
+  rw [f4, ← e2] at h4
+  exact le_trans h5 h4
+
+/-- **A depth-≤1 logarithm is eventually constant, or the tree is the identity, or the
+logarithm is eventually at least `x − 1`.** The three behaviours the bounded-left window has to
+distinguish on the right child of the left child. -/
+private theorem d3b_depth_le_one_log_trichotomy (b : EMLTree) (hb : b.depth ≤ 1) :
+    (∃ Λ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → log (b.eval x) = Λ)
+    ∨ (∀ x : Real, 0 < x → b.eval x = x)
+    ∨ (∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → x - 1 ≤ log (b.eval x)) := by
+  rcases depth_le_one_form b hb with ⟨α, hb'⟩ | hb' | ⟨c, _, hb'⟩ | ⟨d, hb'⟩ | hb'
+  · -- constant
+    refine Or.inl ⟨log α, 1, le_refl 1, fun x hx => ?_⟩
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+    rw [hb' x hxpos]
+  · exact Or.inr (Or.inl hb')
+  · -- `c − log x` is eventually non-positive, so its totalised log is `0`
+    refine Or.inl ⟨0, 1 + exp c, d3b_one_le_shift c, fun x hx => ?_⟩
+    have hxc : exp c ≤ x := le_trans (d3b_exp_le_shift c) hx
+    have hx1 : (1 : Real) ≤ x := le_trans (d3b_one_le_shift c) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb' x hxpos]
+    have hlogx : c ≤ log x := by
+      have w := log_le_log (exp_pos c) hxc
+      rw [log_exp] at w; exact w
+    have hle : c - log x ≤ 0 := by
+      have u := add_le_add_wit hlogx (le_refl (-log x))
+      have e1 : c + -log x = c - log x := by mach_ring
+      have e2 : log x + -log x = (0 : Real) := by mach_ring
+      rw [e1, e2] at u; exact u
+    exact log_nonpos hle
+  · -- `exp x − d ≥ exp (x − 1)` once `x ≥ d`
+    refine Or.inr (Or.inr ⟨1 + exp d, d3b_one_le_shift d, fun x hx => ?_⟩)
+    have hxd : d ≤ x := le_trans (d3b_le_shift d) hx
+    have hx1 : (1 : Real) ≤ x := le_trans (d3b_one_le_shift d) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb' x hxpos]
+    have hge : exp (x - 1) ≤ exp x - d := by
+      have u := add_le_add_wit (d3b_exp_sub_pred_ge x) (le_refl (exp (x - 1) - x))
+      have e1 : x + (exp (x - 1) - x) = exp (x - 1) := by mach_mpoly [x, exp (x - 1)]
+      have e2 : exp x - exp (x - 1) + (exp (x - 1) - x) = exp x - x := by
+        mach_mpoly [exp x, exp (x - 1), x]
+      rw [e1, e2] at u
+      have v := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit hxd)
+      have e3 : exp x + -x = exp x - x := by mach_ring
+      have e4 : exp x + -d = exp x - d := by mach_ring
+      rw [e3, e4] at v
+      exact le_trans u v
+    have w := log_le_log (exp_pos _) hge
+    rw [log_exp] at w; exact w
+  · -- `exp x − log x ≥ exp (x − 1)` since `log x < x`
+    refine Or.inr (Or.inr ⟨1, le_refl 1, fun x hx => ?_⟩)
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+    rw [hb' x hxpos]
+    have hlx : log x < x := by
+      have w := exp_grows_strictly_thm (log x)
+      rw [exp_log hxpos] at w; exact w
+    have hge : exp (x - 1) ≤ exp x - log x := by
+      have u := add_le_add_wit (d3b_exp_sub_pred_ge x) (le_refl (exp (x - 1) - x))
+      have e1 : x + (exp (x - 1) - x) = exp (x - 1) := by mach_mpoly [x, exp (x - 1)]
+      have e2 : exp x - exp (x - 1) + (exp (x - 1) - x) = exp x - x := by
+        mach_mpoly [exp x, exp (x - 1), x]
+      rw [e1, e2] at u
+      have v := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit (le_of_lt hlx))
+      have e3 : exp x + -x = exp x - x := by mach_ring
+      have e4 : exp x + -log x = exp x - log x := by mach_ring
+      rw [e3, e4] at v
+      exact le_trans u v
+    have w := log_le_log (exp_pos _) hge
+    rw [log_exp] at w; exact w
+
+
+
+/-! ### Batch 3: the two profiles -/
+
+private theorem d3b_neg_zero : -(0 : Real) = 0 := by
+  have h : (0 : Real) + -0 = 0 := add_neg 0
+  rw [zero_add] at h; exact h
+
+private theorem d3b_sub_zero (a : Real) : a - 0 = a := by
+  rw [sub_def, d3b_neg_zero, add_zero]
+
+private theorem d3b_pos_of_neg_lt_zero {Λ : Real} (h : Λ < 0) : (0 : Real) < -Λ := by
+  have u := add_lt_add_left h (-Λ)
+  have e1 : -Λ + Λ = (0 : Real) := by mach_ring
+  have e2 : -Λ + 0 = -Λ := by mach_ring
+  rw [e1, e2] at u; exact u
+
+/-- **Profile of the left child.** Every depth-≤2 `A` falls into one of five shapes on a ray:
+`exp (A x) = P·exp (a·s)`, `exp (A x) = P·exp (a·s)·s`, `exp (A x) ≤ P·exp (−x)`, an argument
+margin over the identity, or the identity itself — where `s = exp (−log x)`. -/
+private theorem d3b_left_profile (A : EMLTree) (hA : A.depth ≤ 2) :
+    (∃ P a X : Real, 0 < P ∧ 0 ≤ a ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+        exp (A.eval x) = P * exp (a * exp (-log x)))
+    ∨ (∃ P a X : Real, 0 < P ∧ 0 ≤ a ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+        exp (A.eval x) = P * exp (a * exp (-log x)) * exp (-log x))
+    ∨ (∃ P X : Real, 0 < P ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x → exp (A.eval x) ≤ P * exp (-x))
+    ∨ (∀ M : Real, ∃ T : Real, 1 ≤ T ∧ ∀ x : Real, T ≤ x → x + M ≤ A.eval x)
+    ∨ A = EMLTree.var := by
+  cases A with
+  | const c =>
+      refine Or.inl ⟨exp c, 0, 1, exp_pos c, le_refl 0, le_refl 1, fun x _ => ?_⟩
+      show exp c = exp c * exp (0 * exp (-log x))
+      rw [zero_mul, exp_zero, mul_one_ax]
+  | var => exact Or.inr (Or.inr (Or.inr (Or.inr rfl)))
+  | eml a1 a2 =>
+      have h1 : a1.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hA
+        have := Nat.le_max_left a1.depth a2.depth; omega
+      have h2 : a2.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hA
+        have := Nat.le_max_right a1.depth a2.depth; omega
+      rcases depth_le_one_exp_bounded_or_grows a1 h1 with ⟨K, hK⟩ | ⟨T, hT⟩
+      · rcases depth_le_one_exp_bounded_forms a1 h1 K hK with ⟨α, hα⟩ | ⟨c, _, hcl⟩
+        · rcases d3b_depth_le_one_log_trichotomy a2 h2 with ⟨Λ, X, hX, hΛ⟩ | hid | ⟨X, hX, hfast⟩
+          · -- (α, Λ): a constant
+            refine Or.inl ⟨exp (exp α - Λ), 0, X, exp_pos _, le_refl 0, hX, fun x hx => ?_⟩
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX hx)
+            show exp (exp (a1.eval x) - log (a2.eval x)) = _
+            rw [hα x hxpos, hΛ x hx, zero_mul, exp_zero, mul_one_ax]
+          · -- (α, id): `P · s`
+            refine Or.inr (Or.inl ⟨exp (exp α), 0, 1, exp_pos _, le_refl 0, le_refl 1,
+              fun x hx => ?_⟩)
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+            show exp (exp (a1.eval x) - log (a2.eval x)) = _
+            rw [hα x hxpos, hid x hxpos, zero_mul, exp_zero, mul_one_ax, sub_def, exp_add]
+          · -- (α, fast): `≤ P · exp (−x)`
+            refine Or.inr (Or.inr (Or.inl ⟨exp (exp α + 1), X, exp_pos _, hX, fun x hx => ?_⟩))
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX hx)
+            show exp (exp (a1.eval x) - log (a2.eval x)) ≤ _
+            rw [hα x hxpos, ← exp_add]
+            refine exp_monotone ?_
+            have u := add_le_add_wit (le_refl (exp α)) (neg_le_neg_wit (hfast x hx))
+            have e1 : exp α + -log (a2.eval x) = exp α - log (a2.eval x) := by mach_ring
+            have e2 : exp α + -(x - 1) = exp α + 1 + -x := by mach_mpoly [exp α, x]
+            rw [e1, e2] at u; exact u
+        · rcases d3b_depth_le_one_log_trichotomy a2 h2 with ⟨Λ, X, hX, hΛ⟩ | hid | ⟨X, hX, hfast⟩
+          · -- (c − log x, Λ): `P · exp (a s)` with `P = exp (−Λ)`, `a = exp c`
+            refine Or.inl ⟨exp (-Λ), exp c, X, exp_pos _, le_of_lt (exp_pos c), hX,
+              fun x hx => ?_⟩
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX hx)
+            show exp (exp (a1.eval x) - log (a2.eval x)) = _
+            rw [hcl x hxpos, hΛ x hx, ← exp_add, sub_def c (log x), exp_add c (-log x)]
+            congr 1
+            mach_mpoly [exp c, exp (-log x), Λ]
+          · -- (c − log x, id): `exp (a s) · s`
+            refine Or.inr (Or.inl ⟨1, exp c, 1, zero_lt_one_ax, le_of_lt (exp_pos c), le_refl 1,
+              fun x hx => ?_⟩)
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+            show exp (exp (a1.eval x) - log (a2.eval x)) = _
+            rw [hcl x hxpos, hid x hxpos, one_mul_thm, ← exp_add, sub_def c (log x),
+              exp_add c (-log x)]
+            congr 1
+            mach_ring
+          · -- (c − log x, fast): `≤ P · exp (−x)` with `P = exp (exp c + 1)`
+            refine Or.inr (Or.inr (Or.inl ⟨exp (exp c + 1), X, exp_pos _, hX, fun x hx => ?_⟩))
+            have hx1 : (1 : Real) ≤ x := le_trans hX hx
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+            show exp (exp (a1.eval x) - log (a2.eval x)) ≤ _
+            rw [hcl x hxpos, ← exp_add]
+            refine exp_monotone ?_
+            have hs : exp (c - log x) ≤ exp c := by
+              refine exp_monotone ?_
+              have u := add_le_add_wit (le_refl c)
+                (neg_nonpos_of_nonneg (d3b_log_nonneg_of_one_le x hx1))
+              have e1 : c + -log x = c - log x := by mach_ring
+              have e2 : c + 0 = c := by mach_ring
+              rw [e1, e2] at u; exact u
+            have u := add_le_add_wit hs (neg_le_neg_wit (hfast x hx))
+            have e1 : exp (c - log x) + -log (a2.eval x) = exp (c - log x) - log (a2.eval x) := by
+              mach_ring
+            have e2 : exp c + -(x - 1) = exp c + 1 + -x := by mach_mpoly [exp c, x]
+            rw [e1, e2] at u; exact u
+      · -- growing left-left child: the node outgrows the identity by every margin
+        refine Or.inr (Or.inr (Or.inr (Or.inl ?_)))
+        intro M
+        obtain ⟨D, hD⟩ := depth_le_one_log_le_linear a2 h2
+        obtain ⟨T2, hT2⟩ := two_mul_add_le_exp (M + D)
+        refine ⟨1 + exp T + exp T2, d3b_ray_ge_one T T2, ?_⟩
+        intro x hx
+        have hx1 : (1 : Real) ≤ x := le_trans (d3b_ray_ge_one T T2) hx
+        have hxT : T ≤ x := le_trans (d3b_ray_ge_fst T T2) hx
+        have hxT2 : T2 ≤ x := le_trans (d3b_ray_ge_snd T T2) hx
+        show x + M ≤ exp (a1.eval x) - log (a2.eval x)
+        have v1 := add_le_add_wit (hT x hxT) (neg_le_neg_wit (hD x hx1))
+        have v2 := add_le_add_wit (hT2 x hxT2) (le_refl (-(x + D)))
+        have e1 : x + x + (M + D) + -(x + D) = x + M := by mach_mpoly [x, M, D]
+        have e2 : exp (a1.eval x) + -log (a2.eval x)
+            = exp (a1.eval x) - log (a2.eval x) := by mach_ring
+        rw [e1] at v2
+        rw [e2] at v1
+        exact le_trans v2 v1
+
+/-- **Profile of the right child.** Every depth-≤2 `B` has, on a ray, `log (B x)` constant, or
+`Λ + log (1 + b·s)` with `b > 0`, or tending to `−∞`, or tending to `+∞`. -/
+private theorem d3b_right_profile (B : EMLTree) (hB : B.depth ≤ 2) :
+    (∃ Λ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → log (B.eval x) = Λ)
+    ∨ (∃ Λ b X : Real, 0 < b ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+        log (B.eval x) = Λ + log (1 + b * exp (-log x)))
+    ∨ (∀ M : Real, ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → log (B.eval x) ≤ M)
+    ∨ (∀ M : Real, ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → M ≤ log (B.eval x)) := by
+  have hzero : ∀ (X : Real), 1 ≤ X → (∀ x : Real, X ≤ x → B.eval x ≤ 0) →
+      (∃ Λ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → log (B.eval x) = Λ) :=
+    fun X hX h => ⟨0, X, hX, fun x hx => log_nonpos (h x hx)⟩
+  cases B with
+  | const β => exact Or.inl ⟨log β, 1, le_refl 1, fun x _ => rfl⟩
+  | var =>
+      refine Or.inr (Or.inr (Or.inr ?_))
+      intro M
+      refine ⟨1 + exp M, d3b_one_le_shift M, fun x hx => ?_⟩
+      have hxM : exp M ≤ x := le_trans (d3b_exp_le_shift M) hx
+      show M ≤ log x
+      have w := log_le_log (exp_pos M) hxM
+      rw [log_exp] at w; exact w
+  | eml b1 b2 =>
+      have h1 : b1.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hB
+        have := Nat.le_max_left b1.depth b2.depth; omega
+      have h2 : b2.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hB
+        have := Nat.le_max_right b1.depth b2.depth; omega
+      rcases depth_le_one_exp_bounded_or_grows b1 h1 with ⟨K, hK⟩ | ⟨T, hT⟩
+      · rcases depth_le_one_exp_bounded_forms b1 h1 K hK with ⟨α, hα⟩ | ⟨c, _, hcl⟩
+        · rcases d3b_depth_le_one_log_trichotomy b2 h2 with ⟨Λ, X, hX, hΛ⟩ | hid | ⟨X, hX, hfast⟩
+          · -- (α, Λ): the value is a constant
+            refine Or.inl ⟨log (exp α - Λ), X, hX, fun x hx => ?_⟩
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX hx)
+            show log (exp (b1.eval x) - log (b2.eval x)) = _
+            rw [hα x hxpos, hΛ x hx]
+          · -- (α, id): `exp α − log x ≤ 0` once `log x ≥ exp α`
+            refine Or.inl (hzero (1 + exp (exp α)) (d3b_one_le_shift _) ?_)
+            intro x hx
+            have hxe : exp (exp α) ≤ x := le_trans (d3b_exp_le_shift _) hx
+            have hx1 : (1 : Real) ≤ x := le_trans (d3b_one_le_shift _) hx
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+            show exp (b1.eval x) - log (b2.eval x) ≤ 0
+            rw [hα x hxpos, hid x hxpos]
+            have hl : exp α ≤ log x := by
+              have w := log_le_log (exp_pos _) hxe
+              rw [log_exp] at w; exact w
+            have u := add_le_add_wit hl (le_refl (-log x))
+            have e1 : exp α + -log x = exp α - log x := by mach_ring
+            have e2 : log x + -log x = (0 : Real) := by mach_ring
+            rw [e1, e2] at u; exact u
+          · -- (α, fast): `exp α − log (b₂ x) ≤ exp α + 1 − x ≤ 0`
+            obtain ⟨Y, hY1, hYX, hYe⟩ := d3b_ray2 X (exp α + 1)
+            refine Or.inl (hzero Y hY1 ?_)
+            intro x hx
+            have hxX : X ≤ x := le_trans hYX hx
+            have hxe : exp α + 1 ≤ x := le_trans hYe hx
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hY1 hx)
+            show exp (b1.eval x) - log (b2.eval x) ≤ 0
+            rw [hα x hxpos]
+            have u := add_le_add_wit (le_refl (exp α)) (neg_le_neg_wit (hfast x hxX))
+            have v : exp α + -(x - 1) ≤ 0 := by
+              have w := add_le_add_wit hxe (le_refl (-x))
+              have f1 : exp α + 1 + -x = exp α + -(x - 1) := by mach_mpoly [exp α, x]
+              have f2 : x + -x = (0 : Real) := by mach_ring
+              rw [f1, f2] at w; exact w
+            have e1 : exp α + -log (b2.eval x) = exp α - log (b2.eval x) := by mach_ring
+            rw [e1] at u
+            exact le_trans u v
+        · rcases d3b_depth_le_one_log_trichotomy b2 h2 with ⟨Λ, X, hX, hΛ⟩ | hid | ⟨X, hX, hfast⟩
+          · -- (c − log x, Λ): the sign of `Λ` decides everything
+            rcases lt_total Λ 0 with hneg | hz | hpos
+            · -- `Λ < 0`: `B x = m + exp c · s` with `m = −Λ > 0` — the polynomial approach shape
+              have hm : (0 : Real) < -Λ := d3b_pos_of_neg_lt_zero hneg
+              refine Or.inr (Or.inl ⟨log (-Λ), exp c * exp (-log (-Λ)), X,
+                mul_pos (exp_pos _) (exp_pos _), hX, fun x hx => ?_⟩)
+              have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX hx)
+              show log (exp (b1.eval x) - log (b2.eval x)) = _
+              rw [hcl x hxpos, hΛ x hx]
+              have hk : -Λ * exp (-log (-Λ)) = 1 := by
+                have w := exp_neg_self_mul (log (-Λ))
+                rw [exp_log hm, mul_comm] at w; exact w
+              have e : exp (c - log x) - Λ
+                  = -Λ * (1 + exp c * exp (-log (-Λ)) * exp (-log x)) := by
+                rw [sub_def c (log x), exp_add c (-log x)]
+                have e2 : -Λ * (1 + exp c * exp (-log (-Λ)) * exp (-log x))
+                    = -Λ + (-Λ * exp (-log (-Λ))) * (exp c * exp (-log x)) := by
+                  mach_mpoly [Λ, exp c, exp (-log (-Λ)), exp (-log x)]
+                rw [e2, hk, one_mul_thm]
+                mach_mpoly [exp c, exp (-log x), Λ]
+              rw [e]
+              have hpos1 : (0 : Real) < 1 + exp c * exp (-log (-Λ)) * exp (-log x) :=
+                add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax)
+                  (mul_pos (mul_pos (exp_pos _) (exp_pos _)) (exp_pos _))
+              exact log_mul hm hpos1
+            · -- `Λ = 0`: `log (B x) = c − log x → −∞`
+              refine Or.inr (Or.inr (Or.inl ?_))
+              intro M
+              obtain ⟨Y, hY1, hYX, hYM⟩ := d3b_ray2 X (exp (c - M))
+              refine ⟨Y, hY1, fun x hx => ?_⟩
+              have hxX : X ≤ x := le_trans hYX hx
+              have hxM : exp (c - M) ≤ x := le_trans hYM hx
+              have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hY1 hx)
+              show log (exp (b1.eval x) - log (b2.eval x)) ≤ M
+              rw [hcl x hxpos, hΛ x hxX, hz, d3b_sub_zero, log_exp]
+              have hl : c - M ≤ log x := by
+                have w := log_le_log (exp_pos _) hxM
+                rw [log_exp] at w; exact w
+              have u := add_le_add_wit hl (le_refl (M - log x))
+              have e1 : c - M + (M - log x) = c - log x := by mach_mpoly [c, M, log x]
+              have e2 : log x + (M - log x) = M := by mach_mpoly [M, log x]
+              rw [e1, e2] at u; exact u
+            · -- `Λ > 0`: `exp (c − log x) ≤ Λ` once `log x ≥ c − log Λ`, so `B x ≤ 0`
+              obtain ⟨Y, hY1, hYX, hYL⟩ := d3b_ray2 X (exp (c - log Λ))
+              refine Or.inl (hzero Y hY1 ?_)
+              intro x hx
+              have hxX : X ≤ x := le_trans hYX hx
+              have hxL : exp (c - log Λ) ≤ x := le_trans hYL hx
+              have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hY1 hx)
+              show exp (b1.eval x) - log (b2.eval x) ≤ 0
+              rw [hcl x hxpos, hΛ x hxX]
+              have hlog : c - log Λ ≤ log x := by
+                have w := log_le_log (exp_pos _) hxL
+                rw [log_exp] at w; exact w
+              have harg : c - log x ≤ log Λ := by
+                have u := add_le_add_wit hlog (le_refl (log Λ - log x))
+                have e1 : c - log Λ + (log Λ - log x) = c - log x := by
+                  mach_mpoly [c, log Λ, log x]
+                have e2 : log x + (log Λ - log x) = log Λ := by mach_mpoly [log Λ, log x]
+                rw [e1, e2] at u; exact u
+              have w := exp_monotone harg
+              rw [exp_log hpos] at w
+              have u := add_le_add_wit w (le_refl (-Λ))
+              have e1 : exp (c - log x) + -Λ = exp (c - log x) - Λ := by mach_ring
+              have e2 : Λ + -Λ = (0 : Real) := by mach_ring
+              rw [e1, e2] at u; exact u
+          · -- (c − log x, id): `exp (c − log x) − log x ≤ exp c − log x ≤ 0`
+            refine Or.inl (hzero (1 + exp (exp c)) (d3b_one_le_shift _) ?_)
+            intro x hx
+            have hxe : exp (exp c) ≤ x := le_trans (d3b_exp_le_shift _) hx
+            have hx1 : (1 : Real) ≤ x := le_trans (d3b_one_le_shift _) hx
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+            show exp (b1.eval x) - log (b2.eval x) ≤ 0
+            rw [hcl x hxpos, hid x hxpos]
+            have hs : exp (c - log x) ≤ exp c := by
+              refine exp_monotone ?_
+              have u := add_le_add_wit (le_refl c)
+                (neg_nonpos_of_nonneg (d3b_log_nonneg_of_one_le x hx1))
+              have e1 : c + -log x = c - log x := by mach_ring
+              have e2 : c + 0 = c := by mach_ring
+              rw [e1, e2] at u; exact u
+            have hl : exp c ≤ log x := by
+              have w := log_le_log (exp_pos _) hxe
+              rw [log_exp] at w; exact w
+            have u := add_le_add_wit hs (neg_le_neg_wit hl)
+            have e1 : exp (c - log x) + -log x = exp (c - log x) - log x := by mach_ring
+            have e2 : exp c + -exp c = (0 : Real) := by mach_ring
+            rw [e1, e2] at u; exact u
+          · -- (c − log x, fast): `≤ exp c + 1 − x ≤ 0`
+            obtain ⟨Y, hY1, hYX, hYe⟩ := d3b_ray2 X (exp c + 1)
+            refine Or.inl (hzero Y hY1 ?_)
+            intro x hx
+            have hxX : X ≤ x := le_trans hYX hx
+            have hxe : exp c + 1 ≤ x := le_trans hYe hx
+            have hx1 : (1 : Real) ≤ x := le_trans hY1 hx
+            have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+            show exp (b1.eval x) - log (b2.eval x) ≤ 0
+            rw [hcl x hxpos]
+            have hs : exp (c - log x) ≤ exp c := by
+              refine exp_monotone ?_
+              have u := add_le_add_wit (le_refl c)
+                (neg_nonpos_of_nonneg (d3b_log_nonneg_of_one_le x hx1))
+              have e1 : c + -log x = c - log x := by mach_ring
+              have e2 : c + 0 = c := by mach_ring
+              rw [e1, e2] at u; exact u
+            have u := add_le_add_wit hs (neg_le_neg_wit (hfast x hxX))
+            have v : exp c + -(x - 1) ≤ 0 := by
+              have w := add_le_add_wit hxe (le_refl (-x))
+              have f1 : exp c + 1 + -x = exp c + -(x - 1) := by mach_mpoly [exp c, x]
+              have f2 : x + -x = (0 : Real) := by mach_ring
+              rw [f1, f2] at w; exact w
+            have e1 : exp (c - log x) + -log (b2.eval x) = exp (c - log x) - log (b2.eval x) := by
+              mach_ring
+            rw [e1] at u
+            exact le_trans u v
+      · -- growing left child: the value, hence its log, tends to `+∞`
+        refine Or.inr (Or.inr (Or.inr ?_))
+        intro M
+        obtain ⟨D, hD⟩ := depth_le_one_log_le_linear b2 h2
+        obtain ⟨T2, hT2⟩ := two_mul_add_le_exp (exp M + D)
+        refine ⟨1 + exp T + exp T2, d3b_ray_ge_one T T2, fun x hx => ?_⟩
+        have hx1 : (1 : Real) ≤ x := le_trans (d3b_ray_ge_one T T2) hx
+        have hxT : T ≤ x := le_trans (d3b_ray_ge_fst T T2) hx
+        have hxT2 : T2 ≤ x := le_trans (d3b_ray_ge_snd T T2) hx
+        have hnode : exp M ≤ exp (b1.eval x) - log (b2.eval x) := by
+          have v1 := add_le_add_wit (hT x hxT) (neg_le_neg_wit (hD x hx1))
+          have v2 := add_le_add_wit (hT2 x hxT2) (le_refl (-(x + D)))
+          have e1 : x + x + (exp M + D) + -(x + D) = exp M + x := by mach_mpoly [x, M, D, exp M]
+          have e2 : exp (b1.eval x) + -log (b2.eval x)
+              = exp (b1.eval x) - log (b2.eval x) := by mach_ring
+          rw [e1] at v2
+          rw [e2] at v1
+          have hMx : exp M ≤ exp M + x := by
+            have u := add_le_add_wit (le_refl (exp M))
+              (le_trans (le_of_lt zero_lt_one_ax) hx1)
+            have e : exp M + 0 = exp M := by mach_ring
+            rw [e] at u; exact u
+          exact le_trans hMx (le_trans v2 v1)
+        show M ≤ log (exp (b1.eval x) - log (b2.eval x))
+        have w := log_le_log (exp_pos M) hnode
+        rw [log_exp] at w; exact w
+
+
+/-! ### Batch 4: the generic cells, over abstract `E` and `L` -/
+
+/-- **Cell G1: the limit gap is positive.** `E ≤ P + D·s`, `L ≥ Λ`, and `P < k + Λ` give a
+constant positive gap `(k + Λ − P)(1 − e⁻¹)` once `D·s ≤ (k + Λ − P)·e⁻¹`. -/
+private theorem d3b_cell_pos_shift (E L : Real → Real) (k Λ P D X X' : Real) (_hX : 1 ≤ X)
+    (_hX' : 1 ≤ X') (hD : 0 ≤ D) (hPκ : P < k + Λ)
+    (hEup : ∀ x : Real, X ≤ x → E x ≤ P + D * exp (-log x))
+    (hLge : ∀ x : Real, X' ≤ x → Λ ≤ L x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  have hκP : (0 : Real) < k + Λ - P := sub_pos_of_lt hPκ
+  obtain ⟨σ, hσ, hσs⟩ := d3b_scale_small D ((k + Λ - P) * exp (-1)) hD (mul_pos hκP (exp_pos _))
+  obtain ⟨Y, hY1, hYX, hYX', hYσ⟩ := d3b_ray3 X X' (exp (-log σ))
+  refine d3b_close_const E L k ((k + Λ - P) * (1 - exp (-1))) Y
+    (mul_pos hκP d3b_one_sub_exp_neg_one_pos) hY1 ?_
+  intro x hx
+  have hs := hσs (exp (-log x)) (le_of_lt (exp_pos _)) (d3b_s_le σ hσ x (le_trans hYσ hx))
+  have hE' := le_trans (hEup x (le_trans hYX hx)) (add_le_add_wit (le_refl P) hs)
+  have hL' := hLge x (le_trans hYX' hx)
+  have u := add_le_add_wit (neg_le_neg_wit hE') hL'
+  have e1 : -(P + (k + Λ - P) * exp (-1)) + Λ = (k + Λ - P) * (1 - exp (-1)) - k := by
+    mach_mpoly [P, k, Λ, exp (-1)]
+  have e2 : -E x + L x = -(E x - L x) := by mach_ring
+  rw [e1, e2] at u
+  have v := add_le_add_wit u (le_refl k)
+  have e3 : (k + Λ - P) * (1 - exp (-1)) - k + k = (k + Λ - P) * (1 - exp (-1)) := by
+    mach_mpoly [k, Λ, P, exp (-1)]
+  have e4 : -(E x - L x) + k = k - (E x - L x) := by mach_mpoly [k, E x, L x]
+  rw [e3, e4] at v; exact v
+
+/-- **Cell G2: the limit gap is non-positive and nothing moves the wrong way.** `E ≥ P`,
+`L ≤ Λ`, `k + Λ ≤ P` — the hypothesis never fires. -/
+private theorem d3b_cell_vac_const (E L : Real → Real) (k Λ P X X' : Real) (_hX : 1 ≤ X)
+    (_hX' : 1 ≤ X') (hκ : k + Λ ≤ P)
+    (hElow : ∀ x : Real, X ≤ x → P ≤ E x) (hLle : ∀ x : Real, X' ≤ x → L x ≤ Λ) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  obtain ⟨Y, hY1, hYX, hYX'⟩ := d3b_ray2 X X'
+  refine d3b_close_vacuous E L k Y hY1 ?_
+  intro x hx
+  have u := add_le_add_wit (hElow x (le_trans hYX hx)) (neg_le_neg_wit (hLle x (le_trans hYX' hx)))
+  have v := add_le_add_wit hκ (le_refl (-Λ))
+  have e1 : k + Λ + -Λ = k := by mach_mpoly [k, Λ]
+  have e2 : E x + -L x = E x - L x := by mach_ring
+  rw [e1] at v
+  rw [e2] at u
+  exact le_trans v u
+
+/-- **Cell G3: the limit gap is negative and `L` exceeds its limit by at most `b·s`.** Vacuous
+once `b·s ≤ P − (k + Λ)`. -/
+private theorem d3b_cell_vac_lin (E L : Real → Real) (k Λ P b X X' : Real) (_hX : 1 ≤ X)
+    (_hX' : 1 ≤ X') (hb : 0 ≤ b) (hκ : k + Λ < P)
+    (hElow : ∀ x : Real, X ≤ x → P ≤ E x)
+    (hLle : ∀ x : Real, X' ≤ x → L x ≤ Λ + b * exp (-log x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  have hPκ : (0 : Real) < P - (k + Λ) := sub_pos_of_lt hκ
+  obtain ⟨σ, hσ, hσs⟩ := d3b_scale_small b (P - (k + Λ)) hb hPκ
+  obtain ⟨Y, hY1, hYX, hYX', hYσ⟩ := d3b_ray3 X X' (exp (-log σ))
+  refine d3b_close_vacuous E L k Y hY1 ?_
+  intro x hx
+  have hs := hσs (exp (-log x)) (le_of_lt (exp_pos _)) (d3b_s_le σ hσ x (le_trans hYσ hx))
+  have hL' := le_trans (hLle x (le_trans hYX' hx)) (add_le_add_wit (le_refl Λ) hs)
+  have u := add_le_add_wit (hElow x (le_trans hYX hx)) (neg_le_neg_wit hL')
+  have e1 : P + -(Λ + (P - (k + Λ))) = k := by mach_mpoly [P, Λ, k]
+  have e2 : E x + -L x = E x - L x := by mach_ring
+  rw [e1, e2] at u; exact u
+
+/-- **Cell G4: the tie, separated.** `k + Λ = P`, `E ≤ P + Q·s + R·s²`,
+`L = Λ + log (1 + b·s)` with `Q < b`: the gap is at least `Δ'·s`, by `d3b_sep`. -/
+private theorem d3b_cell_tie_sep (E L : Real → Real) (k Λ P Q R b X X' : Real) (_hX : 1 ≤ X)
+    (_hX' : 1 ≤ X') (hQ : 0 ≤ Q) (hR : 0 ≤ R) (hQb : Q < b) (hκ : k + Λ = P)
+    (hEup : ∀ x : Real, X ≤ x →
+      E x ≤ P + (Q * exp (-log x) + R * (exp (-log x) * exp (-log x))))
+    (hL : ∀ x : Real, X' ≤ x → L x = Λ + log (1 + b * exp (-log x))) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  obtain ⟨Δ', σ, hΔ, hσ, hsep⟩ := d3b_sep b Q R hQ hR hQb
+  obtain ⟨Y, hY1, hYX, hYX', hYσ⟩ := d3b_ray3 X X' (exp (-log σ))
+  refine d3b_close_linear E L k Δ' Y hΔ hY1 ?_
+  intro x hx
+  have hsσ := d3b_s_le σ hσ x (le_trans hYσ hx)
+  have hEP : E x - P ≤ Q * exp (-log x) + R * (exp (-log x) * exp (-log x)) := by
+    have u := add_le_add_wit (hEup x (le_trans hYX hx)) (le_refl (-P))
+    have e1 : P + (Q * exp (-log x) + R * (exp (-log x) * exp (-log x))) + -P
+        = Q * exp (-log x) + R * (exp (-log x) * exp (-log x)) := by
+      mach_mpoly [P, Q, R, exp (-log x)]
+    have e2 : E x + -P = E x - P := by mach_ring
+    rw [e1, e2] at u; exact u
+  have h := hsep (exp (-log x)) (E x - P) (le_of_lt (exp_pos _)) hsσ hEP
+  rw [hL x (le_trans hYX' hx)]
+  have hk : k = P - Λ := by
+    have e : k = k + Λ - Λ := by mach_mpoly [k, Λ]
+    rw [hκ] at e; exact e
+  rw [hk]
+  have e3 : P - Λ - (E x - (Λ + log (1 + b * exp (-log x))))
+      = log (1 + b * exp (-log x)) - (E x - P) := by
+    mach_mpoly [P, Λ, E x, log (1 + b * exp (-log x))]
+  rw [e3]; exact h
+
+/-- **Cell G5: the tie, vacuous.** `k + Λ = P`, `E ≥ P + Q·s`, `L ≤ Λ + b·s` with `b ≤ Q`:
+the node never drops below `k`. -/
+private theorem d3b_cell_tie_vac (E L : Real → Real) (k Λ P Q b X X' : Real) (_hX : 1 ≤ X)
+    (_hX' : 1 ≤ X') (hbQ : b ≤ Q) (hκ : k + Λ = P)
+    (hElow : ∀ x : Real, X ≤ x → P + Q * exp (-log x) ≤ E x)
+    (hLle : ∀ x : Real, X' ≤ x → L x ≤ Λ + b * exp (-log x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  obtain ⟨Y, hY1, hYX, hYX'⟩ := d3b_ray2 X X'
+  refine d3b_close_vacuous E L k Y hY1 ?_
+  intro x hx
+  have hs0 : (0 : Real) ≤ exp (-log x) := le_of_lt (exp_pos _)
+  have hQb' : (0 : Real) ≤ (Q - b) * exp (-log x) := mul_nonneg (sub_nonneg_of_le hbQ) hs0
+  have u := add_le_add_wit (hElow x (le_trans hYX hx)) (neg_le_neg_wit (hLle x (le_trans hYX' hx)))
+  have e1 : P + Q * exp (-log x) + -(Λ + b * exp (-log x))
+      = (P - Λ) + (Q - b) * exp (-log x) := by mach_mpoly [P, Q, Λ, b, exp (-log x)]
+  have e2 : E x + -L x = E x - L x := by mach_ring
+  rw [e1, e2] at u
+  have hk : k = P - Λ := by
+    have e : k = k + Λ - Λ := by mach_mpoly [k, Λ]
+    rw [hκ] at e; exact e
+  have v : P - Λ ≤ P - Λ + (Q - b) * exp (-log x) := by
+    have w := add_le_add_wit (le_refl (P - Λ)) hQb'
+    have e : P - Λ + 0 = P - Λ := by mach_ring
+    rw [e] at w; exact w
+  rw [hk]
+  exact le_trans v u
+
+/-! ### Batch 4b: the excess bounds of each profile -/
+
+/-- `exp v − 1 ≤ v + v·(v·exp a)` for `0 ≤ v ≤ a`. -/
+private theorem d3b_exp_sub_one_le_quad' (v a : Real) (h0 : 0 ≤ v) (hva : v ≤ a) :
+    exp v - 1 ≤ v + v * (v * exp a) := by
+  have ha := d3b_exp_sub_one_le_mul v
+  have hb : exp v ≤ 1 + v * exp v := by
+    have u := add_le_add_wit ha (le_refl (1 : Real))
+    have e1 : exp v - 1 + 1 = exp v := by mach_mpoly [exp v]
+    have e2 : v * exp v + 1 = 1 + v * exp v := by mach_mpoly [v, exp v]
+    rw [e1, e2] at u; exact u
+  have hc := mul_le_mul_of_nonneg_left hb h0
+  have hd : v * exp v ≤ v * exp a := mul_le_mul_of_nonneg_left (exp_monotone hva) h0
+  have he : v * (1 + v * exp v) ≤ v * (1 + v * exp a) :=
+    mul_le_mul_of_nonneg_left (add_le_add_wit (le_refl (1 : Real)) hd) h0
+  have e : v * (1 + v * exp a) = v + v * (v * exp a) := by mach_mpoly [v, exp a]
+  rw [e] at he
+  exact le_trans ha (le_trans hc he)
+
+/-- `exp v ≤ 1 + v·exp a` for `0 ≤ v ≤ a`. -/
+private theorem d3b_exp_le_one_add_lin (v a : Real) (h0 : 0 ≤ v) (hva : v ≤ a) :
+    exp v ≤ 1 + v * exp a := by
+  have ha := d3b_exp_sub_one_le_mul v
+  have hd : v * exp v ≤ v * exp a := mul_le_mul_of_nonneg_left (exp_monotone hva) h0
+  have u := add_le_add_wit (le_trans ha hd) (le_refl (1 : Real))
+  have e1 : exp v - 1 + 1 = exp v := by mach_mpoly [exp v]
+  have e2 : v * exp a + 1 = 1 + v * exp a := by mach_mpoly [v, exp a]
+  rw [e1, e2] at u; exact u
+
+private theorem d3b_as_le_a (a s : Real) (ha : 0 ≤ a) (hs1 : s ≤ 1) : a * s ≤ a := by
+  have h := mul_le_mul_of_nonneg_left hs1 ha
+  rw [mul_one_ax] at h; exact h
+
+private theorem d3b_ss_le_s (s : Real) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) : s * s ≤ s := by
+  have h := mul_le_mul_of_nonneg_left hs1 hs0
+  rw [mul_one_ax] at h; exact h
+
+/-- AP1 upper (quadratic): `P·exp (a s) ≤ P + (P a)·s + (P a a exp a)·s²`. -/
+private theorem d3b_ap1_upper (P a s : Real) (hP : 0 ≤ P) (ha : 0 ≤ a) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    P * exp (a * s) ≤ P + ((P * a) * s + (P * (a * (a * exp a))) * (s * s)) := by
+  have h := d3b_exp_sub_one_le_quad' (a * s) a (mul_nonneg ha hs0) (d3b_as_le_a a s ha hs1)
+  have h2 := mul_le_mul_of_nonneg_left h hP
+  have e1 : P * (exp (a * s) - 1) = P * exp (a * s) - P := by mach_mpoly [P, exp (a * s)]
+  have e2 : P * (a * s + a * s * (a * s * exp a))
+      = (P * a) * s + (P * (a * (a * exp a))) * (s * s) := by mach_mpoly [P, a, s, exp a]
+  rw [e1, e2] at h2
+  have u := add_le_add_wit h2 (le_refl P)
+  have e3 : P * exp (a * s) - P + P = P * exp (a * s) := by mach_mpoly [P, exp (a * s)]
+  have e4 : (P * a) * s + (P * (a * (a * exp a))) * (s * s) + P
+      = P + ((P * a) * s + (P * (a * (a * exp a))) * (s * s)) := by mach_mpoly [P, a, s, exp a]
+  rw [e3, e4] at u; exact u
+
+/-- AP1 lower: `P + (P a)·s ≤ P·exp (a s)`. -/
+private theorem d3b_ap1_lower (P a s : Real) (hP : 0 ≤ P) :
+    P + (P * a) * s ≤ P * exp (a * s) := by
+  have h := mul_le_mul_of_nonneg_left (one_add_le_exp (a * s)) hP
+  have e : P * (1 + a * s) = P + (P * a) * s := by mach_mpoly [P, a, s]
+  rw [e] at h; exact h
+
+/-- AP2 upper (quadratic): `P·exp (a s)·s ≤ P·s + (P a exp a)·s²`. -/
+private theorem d3b_ap2_upper (P a s : Real) (hP : 0 ≤ P) (ha : 0 ≤ a) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    P * exp (a * s) * s ≤ P * s + (P * (a * exp a)) * (s * s) := by
+  have h := d3b_exp_le_one_add_lin (a * s) a (mul_nonneg ha hs0) (d3b_as_le_a a s ha hs1)
+  have h2 := mul_le_mul_of_nonneg_left h (mul_nonneg hP hs0)
+  have e1 : P * s * exp (a * s) = P * exp (a * s) * s := by mach_mpoly [P, s, exp (a * s)]
+  have e2 : P * s * (1 + a * s * exp a) = P * s + (P * (a * exp a)) * (s * s) := by
+    mach_mpoly [P, s, a, exp a]
+  rw [e1, e2] at h2; exact h2
+
+/-- AP2 lower: `P·s ≤ P·exp (a s)·s`. -/
+private theorem d3b_ap2_lower (P a s : Real) (hP : 0 ≤ P) (ha : 0 ≤ a) (hs0 : 0 ≤ s) :
+    P * s ≤ P * exp (a * s) * s := by
+  have h1 : (1 : Real) ≤ exp (a * s) := d3b_one_le_exp (a * s) (mul_nonneg ha hs0)
+  have h := mul_le_mul_of_nonneg_left h1 (mul_nonneg hP hs0)
+  have e1 : P * s * 1 = P * s := mul_one_ax _
+  have e2 : P * s * exp (a * s) = P * exp (a * s) * s := by mach_mpoly [P, s, exp (a * s)]
+  rw [e1, e2] at h; exact h
+
+
+/-! ### Batch 5: the concrete cells, the window, the assembly -/
+
+/-- AP1 linear upper bound on a ray: `E ≤ P + (P a + P a a exp a)·s`. -/
+private theorem d3b_ap1_E_le_lin (E : Real → Real) (P a X : Real) (hP0 : 0 ≤ P) (ha : 0 ≤ a)
+    (hX : 1 ≤ X) (hE : ∀ x : Real, X ≤ x → E x = P * exp (a * exp (-log x))) :
+    ∀ x : Real, X ≤ x → E x ≤ P + (P * a + P * (a * (a * exp a))) * exp (-log x) := by
+  intro x hx
+  rw [hE x hx]
+  have hR : (0 : Real) ≤ P * (a * (a * exp a)) :=
+    mul_nonneg hP0 (mul_nonneg ha (mul_nonneg ha (le_of_lt (exp_pos a))))
+  have hx1 : (1 : Real) ≤ x := le_trans hX hx
+  have hs0 : (0 : Real) ≤ exp (-log x) := le_of_lt (exp_pos _)
+  have hs1 := d3b_s_le_one x hx1
+  have h := d3b_ap1_upper P a (exp (-log x)) hP0 ha hs0 hs1
+  have hss := mul_le_mul_of_nonneg_left (d3b_ss_le_s (exp (-log x)) hs0 hs1) hR
+  have u := add_le_add_wit (le_refl (P + (P * a) * exp (-log x))) hss
+  have e1 : P + (P * a) * exp (-log x) + P * (a * (a * exp a)) * (exp (-log x) * exp (-log x))
+      = P + ((P * a) * exp (-log x)
+        + (P * (a * (a * exp a))) * (exp (-log x) * exp (-log x))) := by
+    mach_mpoly [P, a, exp a, exp (-log x)]
+  have e2 : P + (P * a) * exp (-log x) + P * (a * (a * exp a)) * exp (-log x)
+      = P + (P * a + P * (a * (a * exp a))) * exp (-log x) := by
+    mach_mpoly [P, a, exp a, exp (-log x)]
+  rw [e1, e2] at u
+  exact le_trans h u
+
+/-- AP1 lower bound on a ray: `P ≤ E`. -/
+private theorem d3b_ap1_E_ge (E : Real → Real) (P a X : Real) (hP0 : 0 ≤ P) (ha : 0 ≤ a)
+    (hE : ∀ x : Real, X ≤ x → E x = P * exp (a * exp (-log x))) :
+    ∀ x : Real, X ≤ x → P ≤ E x := by
+  intro x hx
+  rw [hE x hx]
+  have hs0 : (0 : Real) ≤ exp (-log x) := le_of_lt (exp_pos _)
+  have h := d3b_ap1_lower P a (exp (-log x)) hP0
+  have hPP : P ≤ P + (P * a) * exp (-log x) := by
+    have u := add_le_add_wit (le_refl P) (mul_nonneg (mul_nonneg hP0 ha) hs0)
+    have e : P + 0 = P := by mach_ring
+    rw [e] at u; exact u
+  exact le_trans hPP h
+
+/-- (BP1, AP1): `E = P·exp (a s)`, `L = Λ`. -/
+private theorem d3b_cell_c_ap1 (E L : Real → Real) (k Λ P a X X' : Real) (hX : 1 ≤ X)
+    (hX' : 1 ≤ X') (hP : 0 < P) (ha : 0 ≤ a)
+    (hE : ∀ x : Real, X ≤ x → E x = P * exp (a * exp (-log x)))
+    (hL : ∀ x : Real, X' ≤ x → L x = Λ) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  have hP0 : (0 : Real) ≤ P := le_of_lt hP
+  have hR : (0 : Real) ≤ P * (a * (a * exp a)) :=
+    mul_nonneg hP0 (mul_nonneg ha (mul_nonneg ha (le_of_lt (exp_pos a))))
+  have hElow := d3b_ap1_E_ge E P a X hP0 ha hE
+  have hLle : ∀ x : Real, X' ≤ x → L x ≤ Λ := fun x hx => by rw [hL x hx]; exact le_refl _
+  have hLge : ∀ x : Real, X' ≤ x → Λ ≤ L x := fun x hx => by rw [hL x hx]; exact le_refl _
+  rcases lt_total P (k + Λ) with hlt | heq | hgt
+  · exact d3b_cell_pos_shift E L k Λ P (P * a + P * (a * (a * exp a))) X X' hX hX'
+      (add_nonneg (mul_nonneg hP0 ha) hR) hlt (d3b_ap1_E_le_lin E P a X hP0 ha hX hE) hLge
+  · exact d3b_cell_vac_const E L k Λ P X X' hX hX' (le_of_eq heq.symm) hElow hLle
+  · exact d3b_cell_vac_const E L k Λ P X X' hX hX' (le_of_lt hgt) hElow hLle
+
+/-- AP2 linear upper bound on a ray: `E ≤ 0 + (P exp a)·s`. -/
+private theorem d3b_ap2_E_le_lin (E : Real → Real) (P a X : Real) (hP0 : 0 ≤ P) (ha : 0 ≤ a)
+    (hX : 1 ≤ X) (hE : ∀ x : Real, X ≤ x → E x = P * exp (a * exp (-log x)) * exp (-log x)) :
+    ∀ x : Real, X ≤ x → E x ≤ 0 + (P * exp a) * exp (-log x) := by
+  intro x hx
+  rw [hE x hx, zero_add]
+  have hx1 : (1 : Real) ≤ x := le_trans hX hx
+  have hs0 : (0 : Real) ≤ exp (-log x) := le_of_lt (exp_pos _)
+  have hs1 := d3b_s_le_one x hx1
+  have h1 : exp (a * exp (-log x)) ≤ exp a := exp_monotone (d3b_as_le_a a _ ha hs1)
+  have h2 := mul_le_mul_of_nonneg_left h1 hP0
+  exact mul_le_mul_of_nonneg_right h2 hs0
+
+/-- (BP1, AP2): `E = P·exp (a s)·s`, `L = Λ`. -/
+private theorem d3b_cell_c_ap2 (E L : Real → Real) (k Λ P a X X' : Real) (hX : 1 ≤ X)
+    (hX' : 1 ≤ X') (hP : 0 < P) (ha : 0 ≤ a)
+    (hE : ∀ x : Real, X ≤ x → E x = P * exp (a * exp (-log x)) * exp (-log x))
+    (hL : ∀ x : Real, X' ≤ x → L x = Λ) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  have hP0 : (0 : Real) ≤ P := le_of_lt hP
+  have hElow : ∀ x : Real, X ≤ x → 0 ≤ E x := fun x hx => by
+    rw [hE x hx]
+    exact mul_nonneg (mul_nonneg hP0 (le_of_lt (exp_pos _))) (le_of_lt (exp_pos _))
+  have hLle : ∀ x : Real, X' ≤ x → L x ≤ Λ := fun x hx => by rw [hL x hx]; exact le_refl _
+  have hLge : ∀ x : Real, X' ≤ x → Λ ≤ L x := fun x hx => by rw [hL x hx]; exact le_refl _
+  rcases lt_total 0 (k + Λ) with hlt | heq | hgt
+  · exact d3b_cell_pos_shift E L k Λ 0 (P * exp a) X X' hX hX'
+      (mul_nonneg hP0 (le_of_lt (exp_pos a))) hlt (d3b_ap2_E_le_lin E P a X hP0 ha hX hE) hLge
+  · exact d3b_cell_vac_const E L k Λ 0 X X' hX hX' (le_of_eq heq.symm) hElow hLle
+  · exact d3b_cell_vac_const E L k Λ 0 X X' hX hX' (le_of_lt hgt) hElow hLle
+
+/-- AP3 bounds on a ray: `E ≤ 0 + P·s` and `E ≤ 0 + (0·s + P·s²)`, from `exp (−x) ≤ s²`. -/
+private theorem d3b_ap3_E_bounds (E : Real → Real) (P X : Real) (hP0 : 0 ≤ P) (_hX : 1 ≤ X)
+    (hE : ∀ x : Real, X ≤ x → E x ≤ P * exp (-x)) :
+    ∃ Z : Real, 1 ≤ Z ∧ (∀ x : Real, Z ≤ x → E x ≤ 0 + P * exp (-log x))
+      ∧ (∀ x : Real, Z ≤ x → E x ≤ 0 + (0 * exp (-log x) + P * (exp (-log x) * exp (-log x)))) := by
+  obtain ⟨Y, hY1, hYs⟩ := d3b_expneg_le_s_sq 1 zero_lt_one_ax
+  obtain ⟨Z, hZ1, hZX, hZY⟩ := d3b_ray2 X Y
+  refine ⟨Z, hZ1, ?_, ?_⟩
+  · intro x hx
+    rw [zero_add]
+    have hx1 : (1 : Real) ≤ x := le_trans hZ1 hx
+    have hs0 : (0 : Real) ≤ exp (-log x) := le_of_lt (exp_pos _)
+    have hs1 := d3b_s_le_one x hx1
+    have h1 := hYs x (le_trans hZY hx)
+    rw [one_mul_thm] at h1
+    have h2 := le_trans h1 (d3b_ss_le_s _ hs0 hs1)
+    exact le_trans (hE x (le_trans hZX hx)) (mul_le_mul_of_nonneg_left h2 hP0)
+  · intro x hx
+    rw [zero_mul, zero_add, zero_add]
+    have h1 := hYs x (le_trans hZY hx)
+    rw [one_mul_thm] at h1
+    exact le_trans (hE x (le_trans hZX hx)) (mul_le_mul_of_nonneg_left h1 hP0)
+
+/-- (BP1, AP3): `E ≤ P·exp (−x)`, `L = Λ`. -/
+private theorem d3b_cell_c_ap3 (E L : Real → Real) (k Λ P X X' : Real) (hX : 1 ≤ X)
+    (hX' : 1 ≤ X') (hP : 0 < P) (hEpos : ∀ x : Real, 0 < E x)
+    (hE : ∀ x : Real, X ≤ x → E x ≤ P * exp (-x))
+    (hL : ∀ x : Real, X' ≤ x → L x = Λ) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  have hP0 : (0 : Real) ≤ P := le_of_lt hP
+  have hLle : ∀ x : Real, X' ≤ x → L x ≤ Λ := fun x hx => by rw [hL x hx]; exact le_refl _
+  have hLge : ∀ x : Real, X' ≤ x → Λ ≤ L x := fun x hx => by rw [hL x hx]; exact le_refl _
+  obtain ⟨Z, hZ1, hlin, _⟩ := d3b_ap3_E_bounds E P X hP0 hX hE
+  rcases lt_total 0 (k + Λ) with hlt | heq | hgt
+  · exact d3b_cell_pos_shift E L k Λ 0 P Z X' hZ1 hX' hP0 hlt hlin hLge
+  · exact d3b_cell_vac_const E L k Λ 0 X X' hX hX' (le_of_eq heq.symm)
+      (fun x _ => le_of_lt (hEpos x)) hLle
+  · exact d3b_cell_vac_const E L k Λ 0 X X' hX hX' (le_of_lt hgt)
+      (fun x _ => le_of_lt (hEpos x)) hLle
+
+/-- BP2 facts: `Λ ≤ L` and `L ≤ Λ + b·s`. -/
+private theorem d3b_bp2_L_bounds (L : Real → Real) (Λ b X' : Real) (hb : 0 ≤ b)
+    (hL : ∀ x : Real, X' ≤ x → L x = Λ + log (1 + b * exp (-log x))) :
+    (∀ x : Real, X' ≤ x → Λ ≤ L x) ∧ (∀ x : Real, X' ≤ x → L x ≤ Λ + b * exp (-log x)) := by
+  have hbs : ∀ x : Real, (0 : Real) ≤ b * exp (-log x) :=
+    fun x => mul_nonneg hb (le_of_lt (exp_pos _))
+  refine ⟨?_, ?_⟩
+  · intro x hx
+    rw [hL x hx]
+    have h1 : (1 : Real) ≤ 1 + b * exp (-log x) := by
+      have u := add_le_add_wit (le_refl (1 : Real)) (hbs x)
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at u; exact u
+    have h := d3b_log_nonneg_of_one_le _ h1
+    have u := add_le_add_wit (le_refl Λ) h
+    have e : Λ + 0 = Λ := by mach_ring
+    rw [e] at u; exact u
+  · intro x hx
+    rw [hL x hx]
+    exact add_le_add_wit (le_refl Λ) (d3_log_one_add_le _ (hbs x))
+
+/-- (BP2, AP1): `E = P·exp (a s)`, `L = Λ + log (1 + b s)`. -/
+private theorem d3b_cell_l_ap1 (E L : Real → Real) (k Λ P a b X X' : Real) (hX : 1 ≤ X)
+    (hX' : 1 ≤ X') (hP : 0 < P) (ha : 0 ≤ a) (hb : 0 < b)
+    (hE : ∀ x : Real, X ≤ x → E x = P * exp (a * exp (-log x)))
+    (hL : ∀ x : Real, X' ≤ x → L x = Λ + log (1 + b * exp (-log x))) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  have hP0 : (0 : Real) ≤ P := le_of_lt hP
+  have hb0 : (0 : Real) ≤ b := le_of_lt hb
+  have hR : (0 : Real) ≤ P * (a * (a * exp a)) :=
+    mul_nonneg hP0 (mul_nonneg ha (mul_nonneg ha (le_of_lt (exp_pos a))))
+  obtain ⟨hLge, hLle⟩ := d3b_bp2_L_bounds L Λ b X' hb0 hL
+  have hElow := d3b_ap1_E_ge E P a X hP0 ha hE
+  have hElin : ∀ x : Real, X ≤ x → P + (P * a) * exp (-log x) ≤ E x := fun x hx => by
+    rw [hE x hx]; exact d3b_ap1_lower P a _ hP0
+  have hEquad : ∀ x : Real, X ≤ x → E x ≤ P + ((P * a) * exp (-log x)
+      + (P * (a * (a * exp a))) * (exp (-log x) * exp (-log x))) := fun x hx => by
+    rw [hE x hx]
+    exact d3b_ap1_upper P a _ hP0 ha (le_of_lt (exp_pos _)) (d3b_s_le_one x (le_trans hX hx))
+  rcases lt_total P (k + Λ) with hlt | heq | hgt
+  · exact d3b_cell_pos_shift E L k Λ P (P * a + P * (a * (a * exp a))) X X' hX hX'
+      (add_nonneg (mul_nonneg hP0 ha) hR) hlt (d3b_ap1_E_le_lin E P a X hP0 ha hX hE) hLge
+  · rcases lt_total (P * a) b with hQb | hQb | hQb
+    · exact d3b_cell_tie_sep E L k Λ P (P * a) (P * (a * (a * exp a))) b X X' hX hX'
+        (mul_nonneg hP0 ha) hR hQb heq.symm hEquad hL
+    · exact d3b_cell_tie_vac E L k Λ P (P * a) b X X' hX hX' (le_of_eq hQb.symm) heq.symm hElin hLle
+    · exact d3b_cell_tie_vac E L k Λ P (P * a) b X X' hX hX' (le_of_lt hQb) heq.symm hElin hLle
+  · exact d3b_cell_vac_lin E L k Λ P b X X' hX hX' hb0 hgt hElow hLle
+
+/-- (BP2, AP2): `E = P·exp (a s)·s`, `L = Λ + log (1 + b s)`. -/
+private theorem d3b_cell_l_ap2 (E L : Real → Real) (k Λ P a b X X' : Real) (hX : 1 ≤ X)
+    (hX' : 1 ≤ X') (hP : 0 < P) (ha : 0 ≤ a) (hb : 0 < b)
+    (hE : ∀ x : Real, X ≤ x → E x = P * exp (a * exp (-log x)) * exp (-log x))
+    (hL : ∀ x : Real, X' ≤ x → L x = Λ + log (1 + b * exp (-log x))) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  have hP0 : (0 : Real) ≤ P := le_of_lt hP
+  have hb0 : (0 : Real) ≤ b := le_of_lt hb
+  obtain ⟨hLge, hLle⟩ := d3b_bp2_L_bounds L Λ b X' hb0 hL
+  have hElow : ∀ x : Real, X ≤ x → 0 ≤ E x := fun x hx => by
+    rw [hE x hx]
+    exact mul_nonneg (mul_nonneg hP0 (le_of_lt (exp_pos _))) (le_of_lt (exp_pos _))
+  have hElin : ∀ x : Real, X ≤ x → 0 + P * exp (-log x) ≤ E x := fun x hx => by
+    rw [hE x hx, zero_add]; exact d3b_ap2_lower P a _ hP0 ha (le_of_lt (exp_pos _))
+  have hEquad : ∀ x : Real, X ≤ x → E x ≤ 0 + (P * exp (-log x)
+      + (P * (a * exp a)) * (exp (-log x) * exp (-log x))) := fun x hx => by
+    rw [hE x hx, zero_add]
+    exact d3b_ap2_upper P a _ hP0 ha (le_of_lt (exp_pos _)) (d3b_s_le_one x (le_trans hX hx))
+  rcases lt_total 0 (k + Λ) with hlt | heq | hgt
+  · exact d3b_cell_pos_shift E L k Λ 0 (P * exp a) X X' hX hX'
+      (mul_nonneg hP0 (le_of_lt (exp_pos a))) hlt (d3b_ap2_E_le_lin E P a X hP0 ha hX hE) hLge
+  · rcases lt_total P b with hPb | hPb | hPb
+    · exact d3b_cell_tie_sep E L k Λ 0 P (P * (a * exp a)) b X X' hX hX' hP0
+        (mul_nonneg hP0 (mul_nonneg ha (le_of_lt (exp_pos a)))) hPb heq.symm hEquad hL
+    · exact d3b_cell_tie_vac E L k Λ 0 P b X X' hX hX' (le_of_eq hPb.symm) heq.symm hElin hLle
+    · exact d3b_cell_tie_vac E L k Λ 0 P b X X' hX hX' (le_of_lt hPb) heq.symm hElin hLle
+  · exact d3b_cell_vac_lin E L k Λ 0 b X X' hX hX' hb0 hgt hElow hLle
+
+/-- (BP2, AP3): `E ≤ P·exp (−x)`, `L = Λ + log (1 + b s)`. -/
+private theorem d3b_cell_l_ap3 (E L : Real → Real) (k Λ P b X X' : Real) (hX : 1 ≤ X)
+    (hX' : 1 ≤ X') (hP : 0 < P) (hb : 0 < b) (hEpos : ∀ x : Real, 0 < E x)
+    (hE : ∀ x : Real, X ≤ x → E x ≤ P * exp (-x))
+    (hL : ∀ x : Real, X' ≤ x → L x = Λ + log (1 + b * exp (-log x))) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  have hP0 : (0 : Real) ≤ P := le_of_lt hP
+  have hb0 : (0 : Real) ≤ b := le_of_lt hb
+  obtain ⟨hLge, hLle⟩ := d3b_bp2_L_bounds L Λ b X' hb0 hL
+  obtain ⟨Z, hZ1, hlin, hquad⟩ := d3b_ap3_E_bounds E P X hP0 hX hE
+  rcases lt_total 0 (k + Λ) with hlt | heq | hgt
+  · exact d3b_cell_pos_shift E L k Λ 0 P Z X' hZ1 hX' hP0 hlt hlin hLge
+  · exact d3b_cell_tie_sep E L k Λ 0 0 P b Z X' hZ1 hX' (le_refl 0) hP0 hb heq.symm hquad hL
+  · exact d3b_cell_vac_lin E L k Λ 0 b X X' hX hX' hb0 hgt (fun x _ => le_of_lt (hEpos x)) hLle
+
+/-- (BP4): `L → +∞` against a bounded `E`: the gap is eventually at least `1`. -/
+private theorem d3b_cell_L_large (E L : Real → Real) (k K X : Real) (_hX : 1 ≤ X)
+    (hE : ∀ x : Real, X ≤ x → E x ≤ K)
+    (hL : ∀ M : Real, ∃ X' : Real, 1 ≤ X' ∧ ∀ x : Real, X' ≤ x → M ≤ L x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  obtain ⟨X', _, hL'⟩ := hL (K - k + 1)
+  obtain ⟨Y, hY1, hYX, hYX'⟩ := d3b_ray2 X X'
+  refine d3b_close_const E L k 1 Y zero_lt_one_ax hY1 ?_
+  intro x hx
+  have u := add_le_add_wit (neg_le_neg_wit (hE x (le_trans hYX hx))) (hL' x (le_trans hYX' hx))
+  have e1 : -K + (K - k + 1) = 1 - k := by mach_mpoly [K, k]
+  have e2 : -E x + L x = -(E x - L x) := by mach_ring
+  rw [e1, e2] at u
+  have v := add_le_add_wit u (le_refl k)
+  have e3 : 1 - k + k = (1 : Real) := by mach_mpoly [k]
+  have e4 : -(E x - L x) + k = k - (E x - L x) := by mach_mpoly [k, E x, L x]
+  rw [e3, e4] at v; exact v
+
+/-- (BP3): `L → −∞` against a positive `E`: vacuous. -/
+private theorem d3b_cell_L_small (E L : Real → Real) (k : Real)
+    (hE : ∀ x : Real, 0 < E x)
+    (hL : ∀ M : Real, ∃ X' : Real, 1 ≤ X' ∧ ∀ x : Real, X' ≤ x → L x ≤ M) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → E x - L x < k →
+      exp (-C - exp (exp x)) ≤ k - (E x - L x) := by
+  obtain ⟨X', hX'1, hL'⟩ := hL (-k)
+  refine d3b_close_vacuous E L k X' hX'1 ?_
+  intro x hx
+  have u := add_le_add_wit (le_of_lt (hE x)) (neg_le_neg_wit (hL' x hx))
+  have e1 : (0 : Real) + - -k = k := by mach_ring
+  have e2 : E x + -L x = E x - L x := by mach_ring
+  rw [e1, e2] at u; exact u
+
+/-- **The bounded-left window, closed.** With the left child in one of the three bounded
+profiles, every right-child profile lands in a cell above. -/
+private theorem d3b_bounded_left (A B : EMLTree) (hB : B.depth ≤ 2) (k : Real)
+    (hA : (∃ P a X : Real, 0 < P ∧ 0 ≤ a ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+            exp (A.eval x) = P * exp (a * exp (-log x)))
+        ∨ (∃ P a X : Real, 0 < P ∧ 0 ≤ a ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+            exp (A.eval x) = P * exp (a * exp (-log x)) * exp (-log x))
+        ∨ (∃ P X : Real, 0 < P ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+            exp (A.eval x) ≤ P * exp (-x))) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (A.eval x) - log (B.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (A.eval x) - log (B.eval x)) := by
+  have hEpos : ∀ x : Real, (0 : Real) < (fun x => exp (A.eval x)) x := fun x => exp_pos _
+  rcases d3b_right_profile B hB with ⟨Λ, X', hX', hL⟩ | ⟨Λ, b, X', hb, hX', hL⟩ | hL3 | hL4
+  · rcases hA with ⟨P, a, X, hP, ha, hX, hE⟩ | ⟨P, a, X, hP, ha, hX, hE⟩ | ⟨P, X, hP, hX, hE⟩
+    · exact d3b_cell_c_ap1 (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k Λ P a X X'
+        hX hX' hP ha hE hL
+    · exact d3b_cell_c_ap2 (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k Λ P a X X'
+        hX hX' hP ha hE hL
+    · exact d3b_cell_c_ap3 (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k Λ P X X'
+        hX hX' hP hEpos hE hL
+  · rcases hA with ⟨P, a, X, hP, ha, hX, hE⟩ | ⟨P, a, X, hP, ha, hX, hE⟩ | ⟨P, X, hP, hX, hE⟩
+    · exact d3b_cell_l_ap1 (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k Λ P a b X X'
+        hX hX' hP ha hb hE hL
+    · exact d3b_cell_l_ap2 (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k Λ P a b X X'
+        hX hX' hP ha hb hE hL
+    · exact d3b_cell_l_ap3 (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k Λ P b X X'
+        hX hX' hP hb hEpos hE hL
+  · exact d3b_cell_L_small (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k hEpos hL3
+  · rcases hA with ⟨P, a, X, hP, ha, hX, hE⟩ | ⟨P, a, X, hP, ha, hX, hE⟩ | ⟨P, X, hP, hX, hE⟩
+    · refine d3b_cell_L_large (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k (P * exp a)
+        X hX ?_ hL4
+      intro x hx
+      show exp (A.eval x) ≤ P * exp a
+      rw [hE x hx]
+      exact mul_le_mul_of_nonneg_left
+        (exp_monotone (d3b_as_le_a a _ ha (d3b_s_le_one x (le_trans hX hx)))) (le_of_lt hP)
+    · refine d3b_cell_L_large (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k (P * exp a)
+        X hX ?_ hL4
+      intro x hx
+      show exp (A.eval x) ≤ P * exp a
+      have h := d3b_ap2_E_le_lin (fun x => exp (A.eval x)) P a X (le_of_lt hP) ha hX hE x hx
+      rw [zero_add] at h
+      have h2 := mul_le_mul_of_nonneg_left (d3b_s_le_one x (le_trans hX hx))
+        (mul_nonneg (le_of_lt hP) (le_of_lt (exp_pos a)))
+      rw [mul_one_ax] at h2
+      exact le_trans h h2
+    · refine d3b_cell_L_large (fun x => exp (A.eval x)) (fun x => log (B.eval x)) k P X hX ?_ hL4
+      intro x hx
+      show exp (A.eval x) ≤ P
+      have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) (le_trans hX hx)
+      have h1 : exp (-x) ≤ 1 := exp_le_one_of_nonpos (neg_nonpos_of_nonneg hx0)
+      have h2 := mul_le_mul_of_nonneg_left h1 (le_of_lt hP)
+      rw [mul_one_ax] at h2
+      exact le_trans (hE x hx) h2
+
+/-- **The identity branch, assembled.** Every right child of depth ≤ 2 lands in one of the
+per-shape lemmas above. -/
+private theorem d3b_identity_branch (B : EMLTree) (hB : B.depth ≤ 2) (k : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (EMLTree.var.eval x) - log (B.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (EMLTree.var.eval x) - log (B.eval x)) := by
+  cases B with
+  | const c => exact d3_identity_const_right c k
+  | var => exact d3_identity_var_right k
+  | eml b1 b2 =>
+      have h1 : b1.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hB
+        have := Nat.le_max_left b1.depth b2.depth; omega
+      have h2 : b2.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hB
+        have := Nat.le_max_right b1.depth b2.depth; omega
+      rcases depth_le_one_form b1 h1 with ⟨α, hb⟩ | hb | ⟨c, _, hb⟩ | ⟨d, hb⟩ | hb
+      · exact d3_identity_eml_const_left b1 b2 h1 h2 k α hb
+      · exact d3_identity_eml_identity_left b1 b2 h2 k hb
+      · exact d3_identity_eml_declog_left b1 b2 h1 h2 k c hb
+      · rcases lt_total d k with hlt | heq | hgt
+        · exact d3_identity_eml_expd_left_lt b1 b2 h2 k d hlt hb
+        · subst heq
+          exact d3_identity_eml_expd_left_eq b1 b2 h2 _ hb
+        · exact d3_identity_eml_expd_left_gt b1 b2 h2 k d hgt hb
+      · exact d3_identity_eml_explog_left b1 b2 h2 k hb
+
+/-- **`Depth3ApproachBelowEml` holds.** The five branches: three bounded profiles of the left
+child go through the window, a diverging margin through `depth3ApproachBelowEml_margin_case`, and
+the identity through the assembled identity branch. -/
+theorem depth3ApproachBelowEml_holds : Depth3ApproachBelowEml := by
+  intro A B hA hB k
+  rcases d3b_left_profile A hA with h1 | h2 | h3 | hmargin | hvar
+  · exact d3b_bounded_left A B hB k (Or.inl h1)
+  · exact d3b_bounded_left A B hB k (Or.inr (Or.inl h2))
+  · exact d3b_bounded_left A B hB k (Or.inr (Or.inr h3))
+  · exact depth3ApproachBelowEml_margin_case A B hB k (exp_margin_of_arg_margin hmargin)
+  · subst hvar
+    exact d3b_identity_branch B hB k
+
+/-- **`Depth3ApproachBelow` holds**: every depth-≤3 tree that dips below `k` on a ray does so by
+at least `exp (−C − exp (exp x))`. -/
+theorem depth3ApproachBelow_holds : Depth3ApproachBelow :=
+  depth3ApproachBelow_of_eml depth3ApproachBelowEml_holds
 
 end MachLib

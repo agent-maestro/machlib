@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 076 `.lean` files** (760 top-level + 316 in subdirectories) /
-**239 670 lines** / **7 487 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 092 `.lean` files** (776 top-level + 316 in subdirectories) /
+**244 735 lines** / **7 568 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 487
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 236
+  | paste -sd+ | bc                                    # 7 568
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 317
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -197,7 +197,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**772 of 1078 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**786 of 1092 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -279,6 +279,14 @@ behind it is missing — registration is still a human act.
   `natCast N` (`NatCastArith`), **never** as `1+1+…`: `mach_mpoly`'s AC matching diverges on unary
   numerals — a degree-2 identity with constants near `1.4·10⁴` exhausted 4 000 000 heartbeats (20×
   the default) without progress. This is the operational form of "keep coefficients symbolic".
+- **A literal `-0` (or `0 * t`) makes `mach_mpoly` GRIND, not fail.** Instantiating an existential
+  constant at `0` produced `-(0 : Real) + -exp (exp x) = -0 - exp (exp x)`, and the normaliser did not
+  finish inside a ten-minute build (2026-09-04). Any other witness — `1` — compiles in seconds. The
+  tell is a build that *hangs*: `mach_mpoly` fails fast on goals it cannot close, so a long-running
+  one is a normalisation blow-up. When `0` is genuinely needed, rewrite with `zero_mul`/`zero_add`
+  (axioms) before any normaliser sees it.
+- **`pgrep -f "lake build"` / `pkill -f pattern` MATCH THE SHELL RUNNING THEM** and have killed the
+  session twice on one day (2026-09-04). Use `ps -eo pid,args | grep -F <pattern> | grep -v grep`.
 - **`forbid_axioms` in `claims.json` is a SUBSTRING match, not a name match.** It is what lets one
   entry forbid a family (`"analytic_"`), but it also means `analytic_finite_zeros` forbids
   **`analytic_finite_zeros_compact`** — and the compact one is the only one that exists as a
@@ -351,11 +359,23 @@ Lean `v4.32.2`, branch `poly-euclid-spine`. Run everything with **`foundations/t
 exit code). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**770 of 1 076 modules reachable, 12 documented unreachable** as of 2026-08-31); quote it from
+run (**786 of 1 092 modules reachable, 12 documented unreachable** as of 2026-09-05); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
-the entire depth/decay programme below. Obligations ledger: **22 rows, 7 open rows, 4 distinct open
+the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
+
+**`Depth3ApproachBelow` is DISCHARGED** (`depth3ApproachBelow_holds`, `MachLib/EMLDepth2Form.lean`,
+2026-09-05) — the decaying-floor replacement for the refuted `depth_le_three_gap_below`: a depth-≤3
+tree that dips below `k` on a ray does so by at least `exp (−C − exp (exp x))`. Footprint is the
+plain algebra/`exp` spine (`one_add_le_exp`, `exp_gt_one_plus_self`, `mul_pos`, …), no analytic
+axiom, `sorryAx` 0. The last branch — `A = eml a₁ a₂` bounded — was sized as needing a
+rate-separation lemma the corpus lacked; it does (`d3b_sep`), and it is one lemma: both excesses
+are `Θ(1/x)`, and a first-order tie is decided *against* the hypothesis by `log (1 + y) ≤ y` versus
+`exp v − 1 ≥ v`. Ledger row added (`Depth3ApproachBelow`, discharged); `Depth3ApproachBelowEml`
+removed from `tools/hypothesis_baseline.json` because it now has a producer. Read the module's
+route-map section before extending the depth ladder: it records what the estimate got right and
+wrong.
 
 **The `S > 0` branch was VACUOUS and is now repaired** (`a10b3b5b`, 2026-08-24). Two pole hypotheses
 were unsatisfiable for every `q`: `∀ r, DerivCoprime q r` (false at `r = 0`) and

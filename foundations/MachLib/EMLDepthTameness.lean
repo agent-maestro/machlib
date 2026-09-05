@@ -11368,6 +11368,7 @@ this sentence.) Their status, as of the last edit:
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 | `RatGermTrichotomy` | `EMLRationalGerm` | **discharged** | `ratGermTrichotomy_holds` (`PevLeading`) |
 | `OneQueryLevelSet` | `EMLOneQueryGlobal` | **open** | — (the level-1 analogue of `zero_query_level_set`; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy`) |
+| `Depth3ApproachBelow` | `EMLDepth2Form` | **discharged** | `depth3ApproachBelow_holds`, through `depth3ApproachBelowEml_holds` — the decaying-floor replacement for the refuted `depth_le_three_gap_below`; the bounded-left window closed by `d3b_sep` (rate separation at first order) |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of
 `exp a − log b` and how small it can be. The second is now a theorem, so what is left of that pair is
