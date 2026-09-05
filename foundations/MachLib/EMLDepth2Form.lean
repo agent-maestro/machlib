@@ -1331,5 +1331,82 @@ theorem d3_identity_eml_explog_left (b1 b2 : EMLTree) (h2 : b2.depth ≤ 1) (k :
   · rw [← hz, log_nonpos (le_refl 0)]; exact hnn
   · rw [log_nonpos (le_of_lt hneg)]; exact hnn
 
+/-! ### The live shape `b₁ x = exp x − d`, split on `d` against `k` -/
+
+/-- **`d > k` is still vacuous.** `exp (b₁ x) = exp (exp x − d)` reaches the target's scale but sits
+a constant factor `exp (k − d) < 1` below it, and the right child's perturbation decays.
+
+The bound is kept division-free by writing the perturbation as a single exponential:
+`exp (−Cl) · exp (−v) = exp (−Cl − v)`, so the requirement `exp (−Cl − v) ≤ d − k` becomes the
+linear threshold `v ≥ −Cl − log (d − k)`. -/
+theorem d3_identity_eml_expd_left_gt (b1 b2 : EMLTree) (h2 : b2.depth ≤ 1) (k d : Real)
+    (hdk : k < d) (hb1 : ∀ x : Real, 0 < x → b1.eval x = exp x - d) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (EMLTree.var.eval x) - log ((EMLTree.eml b1 b2).eval x) < k →
+        exp (-C - exp (exp x)) ≤ k
+          - (exp (EMLTree.var.eval x) - log ((EMLTree.eml b1 b2).eval x)) := by
+  obtain ⟨Cl, XL, hXL, hCl⟩ := depth_le_one_log_lower_at_infinity b2 h2
+  have hm : (0 : Real) ≤ exp (-Cl) := le_of_lt (exp_pos _)
+  have hdkpos : (0 : Real) < d - k := by
+    have u := add_lt_add_left hdk (-k)
+    have e1 : -k + k = (0 : Real) := by mach_ring
+    have e2 : -k + d = d - k := by mach_mpoly [k, d]
+    rw [e1, e2] at u; exact u
+  refine d3_identity_vacuous_of_log_upper (EMLTree.eml b1 b2) k
+    (1 + exp (1 + exp XL + exp (d + -Cl - log (d - k))) + exp k) (d2_ray_ge_one _ _) ?_
+  intro x hx
+  have hxR : 1 + exp XL + exp (d + -Cl - log (d - k)) ≤ x := le_trans (d2_ray_ge_fst _ _) hx
+  have hxk : k ≤ x := le_trans (d2_ray_ge_snd _ _) hx
+  have hxL : XL ≤ x := le_trans (d2_ray_ge_fst XL _) hxR
+  have hxT : d + -Cl - log (d - k) ≤ x := le_trans (d2_ray_ge_snd XL _) hxR
+  have hx1 : (1 : Real) ≤ x := le_trans (d2_ray_ge_one XL _) hxR
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  have hnn : (0 : Real) ≤ exp x - k := by
+    have hlt : k < exp x := lt_of_le_of_lt hxk (exp_grows_strictly_thm x)
+    have u := add_lt_add_left hlt (-k)
+    have e1 : -k + k = (0 : Real) := by mach_ring
+    have e2 : -k + exp x = exp x - k := by mach_mpoly [k, exp x]
+    rw [e1, e2] at u; exact le_of_lt u
+  -- `v = exp x − d` clears the threshold `−Cl − log (d − k)`
+  have hvT : -Cl - log (d - k) ≤ exp x - d := by
+    have hlt : d + -Cl - log (d - k) < exp x := lt_of_le_of_lt hxT (exp_grows_strictly_thm x)
+    have u := add_lt_add_left hlt (-d)
+    have e1 : -d + (d + -Cl - log (d - k)) = -Cl - log (d - k) := by
+      mach_mpoly [d, Cl, log (d - k)]
+    have e2 : -d + exp x = exp x - d := by mach_mpoly [d, exp x]
+    rw [e1, e2] at u; exact le_of_lt u
+  -- hence the perturbation is below `d − k`
+  have hpert : exp (-Cl) * exp (-(exp x - d)) ≤ d - k := by
+    have hcomb : exp (-Cl) * exp (-(exp x - d)) = exp (-Cl - (exp x - d)) := by
+      rw [← exp_add]
+      have e : -Cl + -(exp x - d) = -Cl - (exp x - d) := by mach_mpoly [Cl, exp x, d]
+      rw [e]
+    rw [hcomb]
+    have harg : -Cl - (exp x - d) ≤ log (d - k) := by
+      have u := add_le_add_wit (le_refl (-Cl)) (neg_le_neg_wit hvT)
+      have e1 : -Cl + -(exp x - d) = -Cl - (exp x - d) := by mach_mpoly [Cl, exp x, d]
+      have e2 : -Cl + -(-Cl - log (d - k)) = log (d - k) := by mach_mpoly [Cl, log (d - k)]
+      rw [e1, e2] at u; exact u
+    have w := exp_monotone harg
+    rw [exp_log hdkpos] at w
+    exact w
+  rcases lt_total 0 ((EMLTree.eml b1 b2).eval x) with hpos | hz | hneg
+  · have hBub : (EMLTree.eml b1 b2).eval x ≤ exp (exp x - d) + exp (-Cl) := by
+      show exp (b1.eval x) - log (b2.eval x) ≤ _
+      rw [hb1 x hxpos]
+      have hstep : -log (b2.eval x) ≤ exp (-Cl) :=
+        le_trans (neg_le_neg_wit (hCl x hxL)) (le_of_lt (exp_grows_strictly_thm (-Cl)))
+      have u := add_le_add_wit (le_refl (exp (exp x - d))) hstep
+      have e : exp (exp x - d) + -log (b2.eval x) = exp (exp x - d) - log (b2.eval x) := by mach_ring
+      rw [e] at u; exact u
+    have hchain := le_trans (log_le_log hpos hBub)
+      (d3_log_exp_add_le (exp x - d) (exp (-Cl)) hm)
+    have hfin : exp x - d + exp (-Cl) * exp (-(exp x - d)) ≤ exp x - k := by
+      have u := add_le_add_wit (le_refl (exp x - d)) hpert
+      have e : exp x - d + (d - k) = exp x - k := by mach_mpoly [exp x, d, k]
+      rw [e] at u; exact u
+    exact le_trans hchain hfin
+  · rw [← hz, log_nonpos (le_refl 0)]; exact hnn
+  · rw [log_nonpos (le_of_lt hneg)]; exact hnn
 
 end MachLib
