@@ -1776,6 +1776,43 @@ theorem d3_identity_eml_expd_left_eq (b1 b2 : EMLTree) (h2 : b2.depth ≤ 1) (k 
     rw [e1, e2] at u
     exact u
 
+/-! ### Route map for the one remaining branch: `A = eml a₁ a₂`, bounded
+
+**Four of the five branches of `Depth3ApproachBelowEml` are closed.** What remains is `A` bounded and
+compound. Sized here rather than guessed, because this file has twice paid for the opposite.
+
+*Narrower than it looks.* For `exp (A x)` to be bounded, `exp (a₁ x)` must be bounded above, which
+kills three of the five `Depth1Form` shapes outright — only `a₁ x = α` and `a₁ x = c − log x` survive,
+and in both `exp (a₁ x) ≤ P` for a constant `P`.
+
+*But the obvious reduction fails.* If `exp (A x) ≤ a` then the gap `k − exp (A x) + log (B x)`
+dominates the constant-case gap, yet our hypothesis `log (B x) > exp (A x) − k` is **weaker** than the
+constant case's `log (B x) > a − k`. They do not line up in either direction, so
+`d3_const_left_eml` cannot be reused as a bound.
+
+*Where the difficulty actually sits.* Splitting on `a₂` gives one easy family and one hard one:
+
+* `log (a₂ x) → ∞` (`a₂ ∈ {x, exp x − d, exp x − log x}`): then `exp (A x) → 0`, and the node is
+  `−log (B x)` plus a vanishing term. Fine unless `k + log (B x) → 0` too, and then **both** terms
+  vanish and the gap is their difference.
+* `log (a₂ x)` bounded: `exp (A x)` tends to a constant, and the node is that constant minus
+  `log (B x)` — the constant case *in the limit*, but only in the limit.
+
+Both hard sub-cases are the same shape: two quantities, each tending to a limit at its own rate, whose
+**difference** is the gap. That is a *separation* question — how close two EML-expressible values can
+come without coinciding — and this corpus has no lemma of that kind. `depth_le_two_approach_constant`
+bounds approach to a **fixed** constant; nothing bounds the approach of one moving value to another.
+
+*Estimate.* A nested enumeration (`a₁` × `a₂` × `B`) plus at least one new rate-separation lemma.
+Plausibly larger than the identity branch, which took ~700 lines. **Not** a transcription, and not
+something to start without deciding it is the best-posed target available — the same check that sent
+this arc here in the first place.
+
+*Evidence it is TRUE, so the target is worth the work.* The competing scales are `exp (−x)`-ish
+(single exponential) against a floor of `exp (−C − exp (exp x))` (triple). Even exact cancellation of
+leading terms leaves next-order terms at `exp (−2x)` or `x·exp (−x)`, still astronomically above the
+floor. Nothing here suggests a counterexample; the difficulty is machinery, not truth. -/
+
 /-! ### The bounded-left branch: `A = const c` -/
 
 /-- **`A = const c` closes via the depth-2 approach lemma.**
