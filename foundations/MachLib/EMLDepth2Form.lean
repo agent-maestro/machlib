@@ -1776,4 +1776,174 @@ theorem d3_identity_eml_expd_left_eq (b1 b2 : EMLTree) (h2 : b2.depth ≤ 1) (k 
     rw [e1, e2] at u
     exact u
 
+/-! ### The bounded-left branch: `A = const c` -/
+
+/-- **`A = const c` closes via the depth-2 approach lemma.**
+
+With a constant left child the target stops moving: the hypothesis `exp c − log (B x) < k` is
+`B x > exp (exp c − k)`, a **fixed** value. `depth_le_two_approach_constant` then supplies
+`exp (−C − x) ≤ B x − T` — a floor decaying only *singly* exponentially, against a *doubly*
+exponentially small requirement, so the margin is enormous.
+
+The non-positive branch is not an edge case to wave at: there the totalised `log (B x) = 0`, the node
+is `exp c`, and the hypothesis says `exp c < k`, leaving the constant gap `k − exp c`. -/
+theorem d3_const_left_eml (c : Real) (B : EMLTree) (hB : B.depth ≤ 2) (k : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp ((EMLTree.const c).eval x) - log (B.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k
+          - (exp ((EMLTree.const c).eval x) - log (B.eval x)) := by
+  obtain ⟨Capp, X₀, hX₀, happ⟩ := depth_le_two_approach_constant B hB (exp (exp c - k))
+  -- `C` must serve BOTH branches, and `exp t > t` gives a bound above two constants at once
+  refine ⟨exp (exp c - k + 1 + Capp) + exp (-log (k - exp c)),
+          1 + exp X₀ + exp 1, d2_ray_ge_one X₀ 1, ?_⟩
+  intro x hx hlt
+  have hxX : X₀ ≤ x := le_trans (d2_ray_ge_fst X₀ 1) hx
+  have hx1 : (1 : Real) ≤ x := le_trans (d2_ray_ge_one X₀ 1) hx
+  have hlt' : exp c - log (B.eval x) < k := hlt
+  have hloggt : exp c - k < log (B.eval x) := by
+    have u := add_lt_add_left hlt' (-exp c + log (B.eval x))
+    have e1 : -exp c + log (B.eval x) + (exp c - log (B.eval x)) = (0 : Real) := by
+      mach_mpoly [exp c, log (B.eval x)]
+    have e2 : -exp c + log (B.eval x) + k = k - exp c + log (B.eval x) := by
+      mach_mpoly [exp c, log (B.eval x), k]
+    rw [e1, e2] at u
+    have v := add_lt_add_left u (exp c - k)
+    have e3 : exp c - k + 0 = exp c - k := by mach_ring
+    have e4 : exp c - k + (k - exp c + log (B.eval x)) = log (B.eval x) := by
+      mach_mpoly [exp c, k, log (B.eval x)]
+    rw [e3, e4] at v; exact v
+  -- the two constants the floor must clear
+  have hC1 : exp c - k + 1 + Capp
+      ≤ exp (exp c - k + 1 + Capp) + exp (-log (k - exp c)) := by
+    have u := add_le_add_wit (le_of_lt (exp_grows_strictly_thm (exp c - k + 1 + Capp)))
+      (le_of_lt (exp_pos (-log (k - exp c))))
+    have e : exp c - k + 1 + Capp + 0 = exp c - k + 1 + Capp := by mach_ring
+    rw [e] at u; exact u
+  have hC2 : -log (k - exp c)
+      ≤ exp (exp c - k + 1 + Capp) + exp (-log (k - exp c)) := by
+    have u := add_le_add_wit (le_of_lt (exp_pos (exp c - k + 1 + Capp)))
+      (le_of_lt (exp_grows_strictly_thm (-log (k - exp c))))
+    have e : (0 : Real) + -log (k - exp c) = -log (k - exp c) := by mach_ring
+    rw [e] at u; exact u
+  show exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x))
+    ≤ k - (exp c - log (B.eval x))
+  -- both non-positive branches: totalised `log = 0`, node is `exp c`, gap is the constant `k − exp c`
+  have hzero_branch : log (B.eval x) = 0 →
+      exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x))
+        ≤ k - (exp c - log (B.eval x)) := by
+    intro hlz
+    rw [hlz] at hloggt ⊢
+    have hkc : (0 : Real) < k - exp c := by
+      have u := add_lt_add_left hloggt (k - exp c)
+      have e1 : k - exp c + (exp c - k) = (0 : Real) := by mach_mpoly [k, exp c]
+      have e2 : k - exp c + 0 = k - exp c := by mach_ring
+      rw [e1, e2] at u; exact u
+    have harg : -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x)
+        ≤ log (k - exp c) := by
+      have u := add_le_add_wit (neg_le_neg_wit hC2)
+        (neg_nonpos_of_nonneg (le_of_lt (exp_pos (exp x))))
+      have e1 : - -log (k - exp c) + 0 = log (k - exp c) := by mach_ring
+      have e2 : -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) + -exp (exp x)
+          = -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x) := by
+        mach_mpoly [exp (exp c - k + 1 + Capp), exp (-log (k - exp c)), exp (exp x)]
+      rw [e2, e1] at u; exact u
+    have w := exp_monotone harg
+    rw [exp_log hkc] at w
+    have e3 : k - (exp c - 0) = k - exp c := by mach_mpoly [k, exp c]
+    rw [e3]; exact w
+  rcases lt_total 0 (B.eval x) with hpos | hz | hneg
+  · -- `B x > 0`: the target is genuinely exceeded, so the approach lemma applies
+    have hTlt : exp (exp c - k) < B.eval x := by
+      have w := exp_lt hloggt
+      rw [exp_log hpos] at w; exact w
+    have hfloor := happ x hxX hTlt
+    have ht0 : (0 : Real) ≤ exp (-(exp (exp c - k + 1 + Capp)
+      + exp (-log (k - exp c))) - exp (exp x)) := le_of_lt (exp_pos _)
+    have hBIGpos : (0 : Real) < exp (exp c - k + 1 + Capp) + exp (-log (k - exp c)) := by
+      have u := add_lt_add_left (exp_pos (-log (k - exp c))) (exp (exp c - k + 1 + Capp))
+      have e : exp (exp c - k + 1 + Capp) + 0 = exp (exp c - k + 1 + Capp) := by mach_ring
+      rw [e] at u
+      exact lt_trans_ax (exp_pos _) u
+    have ht1 : exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x)) ≤ 1 := by
+      refine le_trans (exp_monotone ?_) (le_of_eq exp_zero)
+      have u := add_le_add_wit (neg_nonpos_of_nonneg (le_of_lt hBIGpos))
+        (neg_nonpos_of_nonneg (le_of_lt (exp_pos (exp x))))
+      have e1 : -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) + -exp (exp x) = -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x) := by
+        mach_mpoly [exp (exp c - k + 1 + Capp), exp (-log (k - exp c)), exp (exp x)]
+      have e2 : (0 : Real) + 0 = 0 := by mach_ring
+      rw [e1, e2] at u; exact u
+    -- `T·t·e ≤ exp (−Capp − x)`, the approach lemma's own floor
+    have hstep : exp (exp c - k)
+        * (exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x)) * exp 1)
+        ≤ exp (-Capp - x) := by
+      rw [← exp_add, ← exp_add]
+      refine exp_monotone ?_
+      have hxx : x ≤ exp (exp x) :=
+        le_of_lt (lt_trans_ax (exp_grows_strictly_thm x) (exp_grows_strictly_thm (exp x)))
+      have u := add_le_add_wit (neg_le_neg_wit hC1) (neg_le_neg_wit hxx)
+      have e1 : -(exp c - k + 1 + Capp) + -x
+          = -(exp c - k + 1 + Capp) - x := by mach_mpoly [exp c, k, Capp, x]
+      rw [e1] at u
+      have e2 : exp c - k + (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c)))
+          - exp (exp x) + 1)
+          = -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) + (exp c - k + 1)
+            - exp (exp x) := by
+        mach_mpoly [exp c, k, exp (exp c - k + 1 + Capp), exp (-log (k - exp c)), exp (exp x)]
+      rw [e2]
+      have hchain : -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) + (exp c - k + 1)
+          - exp (exp x) ≤ -Capp - x := by
+        have v := add_le_add_wit (neg_le_neg_wit hC1) (neg_le_neg_wit hxx)
+        have f1 : -(exp c - k + 1 + Capp) + -x = -(exp c - k + 1 + Capp) - x := by
+          mach_mpoly [exp c, k, Capp, x]
+        have f2 : -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) + -exp (exp x)
+            = -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x) := by
+          mach_mpoly [exp (exp c - k + 1 + Capp), exp (-log (k - exp c)), exp (exp x)]
+        rw [f1, f2] at v
+        have w2 := add_le_add_wit v (le_refl (exp c - k + 1))
+        have f3 : -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x)
+            + (exp c - k + 1)
+            = -(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) + (exp c - k + 1)
+              - exp (exp x) := by
+          mach_mpoly [exp (exp c - k + 1 + Capp), exp (-log (k - exp c)), exp (exp x), exp c, k]
+        have f4 : -(exp c - k + 1 + Capp) - x + (exp c - k + 1) = -Capp - x := by
+          mach_mpoly [exp c, k, Capp, x]
+        rw [f3, f4] at w2; exact w2
+      exact hchain
+    -- assemble: `B x ≥ T·exp t`, so `log (B x) ≥ (exp c − k) + t`
+    have hlift : exp (exp c - k
+        + exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x)))
+        ≤ B.eval x := by
+      have hsc := mul_le_mul_of_nonneg_left (exp_le_one_add_scaled ht0 ht1)
+        (le_of_lt (exp_pos (exp c - k)))
+      have e : exp (exp c - k) * (1
+          + exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x)) * exp 1)
+          = exp (exp c - k) + exp (exp c - k)
+            * (exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x))
+              * exp 1) := by
+        mach_mpoly [exp (exp c - k),
+          exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x)), exp 1]
+      rw [e] at hsc
+      have hb : exp (exp c - k) + exp (-Capp - x) ≤ B.eval x := by
+        have u := add_le_add_wit (le_refl (exp (exp c - k))) hfloor
+        have e2 : exp (exp c - k) + (B.eval x - exp (exp c - k)) = B.eval x := by
+          mach_mpoly [exp (exp c - k), B.eval x]
+        rw [e2] at u; exact u
+      have hmid := add_le_add_wit (le_refl (exp (exp c - k))) hstep
+      rw [← exp_add] at hsc
+      exact le_trans hsc (le_trans hmid hb)
+    have hlog := log_le_log (exp_pos _) hlift
+    rw [log_exp] at hlog
+    have u := add_le_add_wit hlog (le_refl (k - exp c))
+    have e1 : exp c - k
+        + exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x))
+        + (k - exp c)
+        = exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x)) := by
+      mach_mpoly [exp c, k,
+        exp (-(exp (exp c - k + 1 + Capp) + exp (-log (k - exp c))) - exp (exp x))]
+    have e2 : log (B.eval x) + (k - exp c) = k - (exp c - log (B.eval x)) := by
+      mach_mpoly [log (B.eval x), k, exp c]
+    rw [e1, e2] at u; exact u
+  · exact hzero_branch (by rw [← hz, log_nonpos (le_refl 0)])
+  · exact hzero_branch (log_nonpos (le_of_lt hneg))
+
 end MachLib
