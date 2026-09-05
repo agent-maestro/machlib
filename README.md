@@ -121,12 +121,12 @@ fails if the text drifts from the corpus. Measured 2026-09-05:
 | figure | value | source |
 |---|---|---|
 | theorems outside `Discovered/` | 7 570 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
-| theorems in the Forge `@verify` corpus | 749 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 093 | `find MachLib -name '*.lean' \| wc -l` |
+| theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
+| `.lean` files under `MachLib/` | 1 091 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 787 of 1 093 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 787 of 1 091 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

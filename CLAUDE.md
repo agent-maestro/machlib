@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 093 `.lean` files** (777 top-level + 316 in subdirectories) /
-**247 357 lines** / **7 570 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 091 `.lean` files** (777 top-level + 314 in subdirectories) /
+**246 968 lines** / **7 570 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -17,10 +17,10 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
   | paste -sd+ | bc                                    # 7 570
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 319
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 290
 ```
 
-The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
+The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
 method is right — the same figure was recorded independently when this was last measured.
 
 **Two revisions of this file have carried a theorem count nobody can reproduce**: `5 851` by an
@@ -28,7 +28,7 @@ unrecorded method, then `8 231`, which exceeds the largest number the corpus can
 file set (`8 097` as measured when it was caught, every `.lean` outside `.lake`). It is almost certainly the
 **unquoted-glob inflation** below. Do not restate a count without re-running the command above.
 
-**`MachLib/Discovered/` (294 files) is deliberately outside the aggregator**: each file is
+**`MachLib/Discovered/` (292 files) is deliberately outside the aggregator**: each file is
 self-contained and they cannot be imported together; it is the Forge `@verify(lean)` corpus and has
 its own harness, `scripts/closerate.sh`. The numeric
 substrate is **`MachLib.Real`**, an *axiomatised* real field (274 `axiom` declarations, every one
@@ -122,7 +122,7 @@ cd foundations
 lake build                                     # 764 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
-bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
+bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "243 axioms pinned; 57 headline footprints ⊆ trusted"
 python3 tools/claim_audit/claim_audit.py       # "all 485 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
@@ -197,7 +197,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**787 of 1093 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**787 of 1091 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -370,7 +370,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**787 of 1 093 modules reachable, 12 documented unreachable** as of 2026-09-05); quote it from
+run (**787 of 1 091 modules reachable, 12 documented unreachable** as of 2026-09-05); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open

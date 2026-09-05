@@ -57,9 +57,7 @@ DISC="MachLib/Discovered"
 #   vec3.lean:140       tactic `simp` failed with a nested error
 #   shadow_pcf.lean:78  (deterministic) timeout at `isDefEq`, 200000 heartbeats
 #   autopilot.lean:45   (deterministic) timeout at `isDefEq`, 200000 heartbeats
-KNOWN_BROKEN="MachLib/Discovered/mul_mat4.lean \
-MachLib/Discovered/vec3.lean \
-MachLib/Discovered/shadow_pcf.lean \
+KNOWN_BROKEN="MachLib/Discovered/shadow_pcf.lean \
 MachLib/Discovered/autopilot.lean"
 
 if [ ! -d "$DISC" ]; then

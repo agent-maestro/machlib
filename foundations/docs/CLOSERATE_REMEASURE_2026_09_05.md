@@ -1,8 +1,8 @@
 # The 164 residual `@verify` obligations, classified — and what actually blocks them
 
 **Measured 2026-09-05** by a per-obligation sweep of `MachLib/Discovered/` under Lean v4.32.2
-(`lake env lean` per file, one line per `declaration uses \`sorry\`` warning; 290 of 294 files
-compile, 4 do not, matching `scripts/closerate.sh`'s 553/717 = 77.1 % of 2026-08-01, re-run the same
+(`lake env lean` per file, one line per `declaration uses \`sorry\`` warning; 290 of 292 files
+compile, 2 do not, matching `scripts/closerate.sh`'s 553/717 = 77.1 % of 2026-08-01, re-run the same
 day with the identical figure).
 
 ## The data
@@ -79,8 +79,8 @@ refinement type `x : Real[lo, hi]` as ONE hypothesis `lo ≤ x ∧ x ≤ hi`, an
 look inside a conjunction, so the bound-transitivity arms never fired on them):
 
 ```
-files:     294  (290 compiled, 4 build-error)
-theorems:  749  (717 in compiled files, 32 in error files)
+files:     292  (290 compiled, 2 build-error)
+theorems:  720  (717 in compiled files, 3 in error files)
 CLOSED:    572
 sorry:     145
 close-rate (of compiled): 79.8%  (572/717)
@@ -91,7 +91,7 @@ close-rate (of compiled): 79.8%  (572/717)
 | closed | 553 | 553 | **572** |
 | residual `sorry` | 164 | 164 | **145** |
 | close rate of compiled | 77.1 % | 77.1 % | **79.8 %** |
-| build-error files | 4 | 4 | 4 (the same four) |
+| build-error files | 4 | 4 | 2 (see below) |
 
 **What was learned on the way, because it cost a run each.** (1) An unconditional
 `(mach_ring; done)` arm broke four previously-compiling files (`black_scholes`, `sabr`, `diffuse`,
@@ -122,5 +122,11 @@ next kernel with that shape, and those two files keep their sorries.
 - **Domain `a − b` inequalities** (Black–Scholes, energy balance): hand mathematics, ~10; a general
   engine would not supply them either.
 
-Two files, `mul_mat4.lean` and `vec3.lean`, have no `.eml` source any more and do not compile; they
-are generator output whose generator input is gone.
+`mul_mat4.lean` and `vec3.lean`, two of the four "stale" files every sweep since August reported,
+turned out to be **phantoms**: ignored, untracked leftovers that existed only on one machine and
+were never in the repository. CI's copy of the corpus never had them, which is why the
+`check_discovered_compiles` allowlist that named them failed in CI as stale on 2026-09-05. Deleted
+locally and dropped from the allowlist; the corpus is 292 files and the two files that genuinely
+do not compile, `shadow_pcf.lean` and `autopilot.lean`, both have `.eml` sources and are the
+emitter's to fix. The figures above are the re-run on the true corpus; the close rate over
+compiled files is unchanged by the deletion.
