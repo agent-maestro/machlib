@@ -20,6 +20,12 @@ const TILES: { value: string; label: string }[] = [
 // the JSON carries its own commit and timestamp and this page shows those,
 // never the fetch time. If the fetch fails or the shape is wrong, say so
 // loudly — never fall back to a remembered number.
+//
+// Only the feed's BUILD verdict and its core sorry count are shown. The feed
+// also carries a `sorries.discovered` figure, but that is a textual count of
+// `sorry` tokens in the Forge corpus — every emitted cascade ends in one as
+// its fallback — not the number of obligations that fail to close, which is
+// the harness-measured tile above. Printing both side by side would mislead.
 const STATUS_URL =
   "https://raw.githubusercontent.com/agent-maestro/machlib/status-data/status.json";
 
@@ -28,7 +34,6 @@ interface LiveStatus {
   generatedAt: string;
   buildPassed: boolean;
   coreSorries: number;
-  discoveredSorries: number;
 }
 
 function parseStatus(raw: unknown): LiveStatus | null {
@@ -42,8 +47,7 @@ function parseStatus(raw: unknown): LiveStatus | null {
     !build ||
     typeof build.lake_build_passed !== "boolean" ||
     !sorries ||
-    typeof sorries.core !== "number" ||
-    typeof sorries.discovered !== "number"
+    typeof sorries.core !== "number"
   ) {
     return null;
   }
@@ -52,7 +56,6 @@ function parseStatus(raw: unknown): LiveStatus | null {
     generatedAt: d.generated_at_utc,
     buildPassed: build.lake_build_passed,
     coreSorries: sorries.core,
-    discoveredSorries: sorries.discovered,
   };
 }
 
@@ -114,8 +117,7 @@ export default function Numbers() {
                 {live.buildPassed ? "lake build green" : "lake build RED"}
               </span>
               {" · "}
-              core sorries {live.coreSorries} · Forge-corpus sorries{" "}
-              {live.discoveredSorries}
+              core sorries {live.coreSorries}
             </>
           )}
         </p>
