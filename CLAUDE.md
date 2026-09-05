@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 092 `.lean` files** (776 top-level + 316 in subdirectories) /
-**244 735 lines** / **7 568 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 093 `.lean` files** (777 top-level + 316 in subdirectories) /
+**244 860 lines** / **7 570 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 568
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 317
+  | paste -sd+ | bc                                    # 7 570
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 319
 ```
 
 The two differ by **749**, which is `Discovered/`, and that 749 is the cross-derivation that says the
@@ -197,7 +197,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**786 of 1092 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**787 of 1093 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -364,16 +364,31 @@ policy had sixteen files and eighty theorems of drift in its own architecture pa
 
 ## Status
 
-Lean `v4.32.2`, branch `poly-euclid-spine`. Run everything with **`foundations/tools/check_all.sh`**
-(11 gates + harnesses, `rc = 0` iff all green; `--selftest` proves it conducts a failure to its own
-exit code). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
+Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on push since
+2026-09-05; the CI workflows and the site's links read `master`). Run everything with
+**`foundations/tools/check_all.sh`** (every gate and harness, `rc = 0` iff all green; `--selftest`
+proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**786 of 1 092 modules reachable, 12 documented unreachable** as of 2026-09-05); quote it from
+run (**787 of 1 093 modules reachable, 12 documented unreachable** as of 2026-09-05); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
+
+**The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,
+`MachLib/EMLDepth4ConstLeft.lean`, 2026-09-05): one of the four cells of `NodeDecayBound 3 3`, at
+depth-3 children and tower height 3. The other three cells are not, and `EMLDecayLadderStep`'s
+route map prices them at ~2 400 lines; `EmlGermApproachResearch.md` says the next move on the
+ladder is the falsification search, not another cell. The ledger did not move — a cell is not a
+rung.
+
+**The `fxpid` end-to-end join was SIZED on 2026-09-05 and is not a composition of existing
+pieces** — see `what_is_proven.md` §2. The bit-level model is unsigned (no subtraction, so no
+error signal and no negative feedback), there is no closed-loop object over bits, and every
+trajectory lemma is scalar first-order. Price: a signed fixed-point RTL layer with its own real
+bridge, then a closed-loop recurrence, then a first-order instance of `clamp_guarded_tracking`.
+Do not write a positive-feedback "join" inside the unsigned model; it would be true and hollow.
 
 **`Depth3ApproachBelow` is DISCHARGED** (`depth3ApproachBelow_holds`, `MachLib/EMLDepth2Form.lean`,
 2026-09-05) — the decaying-floor replacement for the refuted `depth_le_three_gap_below`: a depth-≤3

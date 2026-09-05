@@ -411,6 +411,13 @@ NodeDecayBound 3 3
 └── bounded_left
 ```
 
+**`const_left` is PROVED at depth-3 children (2026-09-05), from the decaying-floor replacement.**
+`Depth3ApproachBelow` (`depth3ApproachBelow_holds`, `EMLDepth2Form`) is the corrected input — the
+gap to a constant vanishes, but no faster than `exp (−C − exp (exp x))` — and
+`depth_four_decay_const_left_tower3` (`EMLDepth4ConstLeft`) spends it on this cell at tower height
+3, the height the rung asks for. One cell of four. The other three still stand as priced below;
+the ledger does not move, because a cell is not a rung.
+
 **THE `const_left` BRANCH IS NOT EXPENSIVE — IT IS IMPOSSIBLE (2026-09-03).**
 `depth_le_three_gap_below` is **false**, proved as `depth_le_three_gap_below_refuted`
 (`MachLib/EMLDepth2Form.lean`). The witness is

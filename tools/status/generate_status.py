@@ -248,8 +248,32 @@ def load_previous_status(path: Path | None) -> dict | None:
 
 
 def load_verify_audit(audit_json_path: Path) -> dict:
-    """Read the forge_verify_audit JSON ledger and pull out the summary."""
+    """Read the forge_verify_audit JSON ledger and pull out the summary.
+
+    An UNAVAILABLE audit is a first-class outcome, not a crash and not a zero. The workflow
+    writes `{"unavailable": true, "reason": ...}` when it could not clone forge (the repo is
+    private and the read token expires); the dashboard must then show "unavailable", never a
+    stale or fabricated count, and the rest of status.json (build, sorries, axioms) — which
+    needs nothing from forge — still publishes. The renderer refuses null totals loudly by
+    design (see monogate-net/evidence-status/machlib-status.js)."""
     data = json.loads(audit_json_path.read_text(encoding="utf-8"))
+    if data.get("unavailable"):
+        return {
+            "unavailable": True,
+            "reason": data.get("reason", "forge_verify_audit did not run"),
+            "total": None,
+            "strengthened": None,
+            "proven_from_mathlib": None,
+            "proven_mod_machlib_axioms": None,
+            "placeholder": None,
+            "open": None,
+            "discharged_pct": None,
+            "gap_pct": None,
+            "note": (
+                "The Forge @verify audit could not run in this refresh (see reason). "
+                "Every other field of this status.json is measured; this block is not."
+            ),
+        }
     summary = data.get("summary", {})
     total = summary.get("total", 0)
     strengthened = summary.get("strengthened", 0)

@@ -76,7 +76,15 @@ jobs:
       # fine-grained PAT with READ-ONLY Contents access to agent-maestro/forge
       # (and eml-stdlib), added as a repo Actions secret. eml-stdlib is public
       # today but uses the same token so it keeps working if it ever goes private.
+      # Both clones are allowed to FAIL without failing the refresh. The token expired once
+      # (2026-09-05: "Bad credentials" at this step) and the whole dashboard went dark, including
+      # the build and sorry figures that need nothing from forge. A failed clone now yields a
+      # status.json whose verify_audit block says UNAVAILABLE with the reason — the renderer shows
+      # that loudly — while every other field stays measured. UNAVAILABLE is not a pass, and it is
+      # not a reason to hide the rest.
       - name: Clone forge
+        id: clone_forge
+        continue-on-error: true
         uses: actions/checkout@v4
         with:
           repository: agent-maestro/forge
@@ -85,6 +93,8 @@ jobs:
           token: ${{ secrets.FORGE_RO_TOKEN }}
 
       - name: Clone eml-stdlib
+        id: clone_stdlib
+        continue-on-error: true
         uses: actions/checkout@v4
         with:
           repository: agent-maestro/eml-stdlib
@@ -130,7 +140,22 @@ jobs:
           lake env lean AxiomAudit.lean > axiom_audit.txt 2>&1 || true
           head -60 axiom_audit.txt || true
 
+      - name: Mark the Forge audit UNAVAILABLE when a clone failed
+        if: steps.clone_forge.outcome != 'success' || steps.clone_stdlib.outcome != 'success'
+        run: |
+          python3 - <<'PY'
+          import json
+          json.dump({
+            "unavailable": True,
+            "reason": "clone of agent-maestro/forge or eml-stdlib failed in CI "
+                      "(forge: ${{ steps.clone_forge.outcome }}, eml-stdlib: ${{ steps.clone_stdlib.outcome }}); "
+                      "usually an expired FORGE_RO_TOKEN secret",
+          }, open("verify_audit.json", "w"), indent=2)
+          PY
+          echo "verify_audit.json written as UNAVAILABLE"
+
       - name: Run forge_verify_audit
+        if: steps.clone_forge.outcome == 'success' && steps.clone_stdlib.outcome == 'success'
         run: |
           python3 machlib/tools/status/forge_verify_audit.py \
             --forge-root forge \

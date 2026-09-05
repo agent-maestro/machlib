@@ -470,6 +470,7 @@ import MachLib.EMLHeightVsDepth
 import MachLib.EMLDepth3Rung
 import MachLib.EMLDecayLadderStep
 import MachLib.EMLValueGap
+import MachLib.EMLDepth4ConstLeft
 import MachLib.GermRelation
 import MachLib.GermDeriv
 import MachLib.GermDerivEntry

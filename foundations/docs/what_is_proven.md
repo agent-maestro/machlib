@@ -83,6 +83,31 @@ controller output to plant state. `pid_trajectory_from_bits` is untouched by thi
 work and still quantifies `ε` universally; do not cite *it* as the end-to-end
 result. Cite `fxaffine_traj_tracks_exact`.
 
+**Sized on 2026-09-05, by reading signatures rather than the route map. It is not a
+composition of existing pieces.** Four objects are missing, and the first one blocks the
+other three:
+
+1. **The bit-level model is unsigned.** `MachLib.RTL` has `add`, `mul`, `fxmul`, `fxaffine`,
+   `fxpid` over `List Bool` decoded by `toNat`; there is no subtraction, negation, or
+   two's-complement anywhere, so `qval bs ≥ 0` always. A PID error signal `e = r − y` and a
+   negative control output are **not representable** in the datapath the join is about.
+   Negative feedback cannot be written in this model, so no stabilising closed loop can be.
+2. **No closed-loop object over bits.** `fxTraj` hard-codes a constant `d`; nothing feeds
+   `fxpid`'s output into `fxaffine`'s input, and `fxpid`'s `e`, `i`, `d` are free inputs with
+   no accumulator recurrence and no anti-windup bound (`FixedPointSat.satW` exists and is used
+   nowhere).
+3. **No `qval`-scale step lemma for `fxpid`.** `fxpid_real_trunc_lt_3ulp` is at product scale;
+   the analogue of `fxaffine_step_error` does not exist. This one is small.
+4. **Every trajectory lemma is scalar and first-order.** A loop with an integrator is not, and
+   `clamp_guarded_tracking` (`CompiledClosedLoop`), the one lemma with a controller in the loop,
+   needs a Lipschitz bound of the control law in the state that no lemma supplies for the PID
+   law.
+
+The honest price is a signed fixed-point RTL layer with its own real bridge, a closed-loop
+recurrence over bits, and a first-order (proportional, or saturated-integral) instance of the
+tracking theorem — several sessions, mostly in (1). A "join" built inside the unsigned model
+(positive feedback only) would be true and hollow, and is deliberately not written.
+
 ---
 
 ## 3. The verified-numerics spine
