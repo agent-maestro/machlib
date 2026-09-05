@@ -1983,4 +1983,51 @@ theorem d3_const_left_eml (c : Real) (B : EMLTree) (hB : B.depth ≤ 2) (k : Rea
   · exact hzero_branch (by rw [← hz, log_nonpos (le_refl 0)])
   · exact hzero_branch (log_nonpos (le_of_lt hneg))
 
+/-- **The bounded-left branch splits, and the large-`B` half is immediate.**
+
+If `exp (A x) ≤ K` and `log (B x)` eventually clears `K − k + 1`, the gap is at least `1` — no
+cancellation analysis required, because the two bounds simply do not overlap. The floor
+`exp (−0 − exp (exp x))` is below `1` for every `x`, since `exp (exp x) > 0`.
+
+This is worth stating separately because it isolates the *actual* residue: the bounded-left branch is
+hard only when `log (B x)` is **also** bounded, so that `exp (A x)` and `log (B x)` are two bounded
+quantities whose difference must be separated from `k`. Everything outside that window is arithmetic.
+-/
+theorem d3_bounded_left_large_right (A B : EMLTree) (k K X : Real) (hX : 1 ≤ X)
+    (hK : ∀ x : Real, X ≤ x → exp (A.eval x) ≤ K)
+    (hBig : ∀ x : Real, X ≤ x → K - k + 1 ≤ log (B.eval x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (A.eval x) - log (B.eval x) < k →
+        exp (-C - exp (exp x)) ≤ k - (exp (A.eval x) - log (B.eval x)) := by
+  -- `C = 1` rather than `0`: a literal `-0` in the floor makes the normaliser grind for nothing
+  refine ⟨1, X, hX, ?_⟩
+  intro x hx _
+  have hfl : exp (-1 - exp (exp x)) ≤ 1 := by
+    refine le_trans (exp_monotone ?_) (le_of_eq exp_zero)
+    have hneg : (-1 : Real) < 0 := by
+      have w := add_lt_add_left zero_lt_one_ax (-(1 : Real))
+      have f1 : -(1 : Real) + 0 = -1 := by mach_ring
+      have f2 : -(1 : Real) + 1 = 0 := by mach_ring
+      rw [f1, f2] at w; exact w
+    have u := add_le_add_wit (le_of_lt hneg)
+      (neg_nonpos_of_nonneg (le_of_lt (exp_pos (exp x))))
+    have e1 : -1 + -exp (exp x) = -1 - exp (exp x) := by mach_ring
+    have e2 : (0 : Real) + 0 = 0 := by mach_ring
+    rw [e1, e2] at u; exact u
+  -- and the gap is at least `1`, because the two bounds do not overlap
+  have hgap : (1 : Real) ≤ k - (exp (A.eval x) - log (B.eval x)) := by
+    have u := add_le_add_wit (neg_le_neg_wit (hK x hx)) (hBig x hx)
+    have e1 : -K + (K - k + 1) = 1 - k := by mach_mpoly [K, k]
+    have e2 : -exp (A.eval x) + log (B.eval x)
+        = -(exp (A.eval x) - log (B.eval x)) := by mach_ring
+    rw [e1, e2] at u
+    have v := add_le_add_wit u (le_refl k)
+    have e3 : 1 - k + k = (1 : Real) := by mach_mpoly [k]
+    have e4 : -(exp (A.eval x) - log (B.eval x)) + k
+        = k - (exp (A.eval x) - log (B.eval x)) := by
+      mach_mpoly [k, exp (A.eval x), log (B.eval x)]
+    rw [e3, e4] at v; exact v
+  exact le_trans hfl hgap
+
+
 end MachLib
