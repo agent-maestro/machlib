@@ -1409,4 +1409,164 @@ theorem d3_identity_eml_expd_left_gt (b1 b2 : EMLTree) (h2 : b2.depth ≤ 1) (k 
   · rw [← hz, log_nonpos (le_refl 0)]; exact hnn
   · rw [log_nonpos (le_of_lt hneg)]; exact hnn
 
+/-- **`d < k`: the gap tends to the constant `k − d`, so the decaying floor is dwarfed.**
+
+The node's right child is `exp (exp x − d)` against a target `exp (exp x − k)` that is a constant
+factor `exp (d − k) < 1` *smaller*, so the gap does not vanish at all — it tends to `k − d`.
+
+Two devices keep this division-free in a base where division is totalised. The offset is
+`ε = (k − d)·exp (−1)`, which is below `(k − d)/2` because `e⁻¹ < ½`, so `ε < k − d` with no halving.
+And the product threshold `exp (v − ε)·ρ ≥ x + D` (with `ρ = exp ε − 1 > 0`) is discharged through
+logs: it is `(v − ε) + log ρ ≥ log (x + D)`, and `log u < u` reduces that to a linear inequality that
+`two_mul_add_le_exp` supplies. -/
+theorem d3_identity_eml_expd_left_lt (b1 b2 : EMLTree) (h2 : b2.depth ≤ 1) (k d : Real)
+    (hdk : d < k) (hb1 : ∀ x : Real, 0 < x → b1.eval x = exp x - d) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (EMLTree.var.eval x) - log ((EMLTree.eml b1 b2).eval x) < k →
+        exp (-C - exp (exp x)) ≤ k
+          - (exp (EMLTree.var.eval x) - log ((EMLTree.eml b1 b2).eval x)) := by
+  obtain ⟨D, hD⟩ := depth_le_one_log_le_linear b2 h2
+  have hg : (0 : Real) < k - d := by
+    have u := add_lt_add_left hdk (-d)
+    have e1 : -d + d = (0 : Real) := by mach_ring
+    have e2 : -d + k = k - d := by mach_mpoly [d, k]
+    rw [e1, e2] at u; exact u
+  have hexp1 : exp (-1 : Real) < 1 := by
+    have hneg : (-1 : Real) < 0 := by
+      have w := add_lt_add_left zero_lt_one_ax (-(1 : Real))
+      have f1 : -(1 : Real) + 0 = -1 := by mach_ring
+      have f2 : -(1 : Real) + 1 = 0 := by mach_ring
+      rw [f1, f2] at w; exact w
+    have h := exp_lt hneg
+    rw [exp_zero] at h; exact h
+  have h1me : (0 : Real) < 1 - exp (-1 : Real) := by
+    have u := add_lt_add_left hexp1 (-exp (-1 : Real))
+    have e1 : -exp (-1 : Real) + exp (-1 : Real) = (0 : Real) := by mach_ring
+    have e2 : -exp (-1 : Real) + 1 = 1 - exp (-1 : Real) := by mach_mpoly [exp (-1 : Real)]
+    rw [e1, e2] at u; exact u
+  have heps : (0 : Real) < (k - d) * exp (-1 : Real) := mul_pos hg (exp_pos _)
+  -- `ε < k − d`, from `0 < (k−d)·(1 − e⁻¹)`; no halving, because `e⁻¹ < ½`
+  have hgap0 : (0 : Real) < k - d - (k - d) * exp (-1 : Real) := by
+    have hp := mul_pos hg h1me
+    have e : (k - d) * (1 - exp (-1 : Real)) = k - d - (k - d) * exp (-1 : Real) := by
+      mach_mpoly [k, d, exp (-1 : Real)]
+    rw [e] at hp; exact hp
+  have hrho : (0 : Real) < exp ((k - d) * exp (-1 : Real)) - 1 := by
+    have h := exp_lt heps
+    rw [exp_zero] at h
+    have u := add_lt_add_left h (-(1 : Real))
+    have e1 : -(1 : Real) + 1 = (0 : Real) := by mach_ring
+    have e2 : -(1 : Real) + exp ((k - d) * exp (-1 : Real))
+        = exp ((k - d) * exp (-1 : Real)) - 1 := by
+      mach_mpoly [exp ((k - d) * exp (-1 : Real))]
+    rw [e1, e2] at u; exact u
+  obtain ⟨T, hT⟩ := two_mul_add_le_exp
+    (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1))
+  refine ⟨-log (k - d - (k - d) * exp (-1 : Real)),
+          1 + exp T + exp (-D + 1), d2_ray_ge_one T (-D + 1), ?_⟩
+  intro x hx hlt
+  have hxT : T ≤ x := le_trans (d2_ray_ge_fst T (-D + 1)) hx
+  have hxD1 : -D + 1 ≤ x := le_trans (d2_ray_ge_snd T (-D + 1)) hx
+  have hx1 : (1 : Real) ≤ x := le_trans (d2_ray_ge_one T (-D + 1)) hx
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  have hxD : (0 : Real) < x + D := by
+    have u := add_le_add_wit hxD1 (le_refl D)
+    have e1 : -D + 1 + D = (1 : Real) := by mach_mpoly [D]
+    rw [e1] at u
+    exact lt_of_lt_of_le zero_lt_one_ax u
+  -- the product threshold, discharged through logs: `(v − ε) + log ρ ≥ log (x + D)`
+  have hlin : x + D ≤ exp x - d - (k - d) * exp (-1 : Real) + log (exp ((k - d) * exp (-1 : Real)) - 1) := by
+    have hbig := hT x hxT
+    have hxx : x ≤ x + x := by
+      have w := add_le_add_wit (le_refl x) (le_of_lt hxpos)
+      have e : x + 0 = x := by mach_ring
+      rw [e] at w; exact w
+    have u := add_le_add_wit hxx (le_refl (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)))
+    have e2 : x + x + (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1))
+        = x + x + (D + d + (k - d) * exp (-1 : Real)) - log (exp ((k - d) * exp (-1 : Real)) - 1) := by
+      mach_mpoly [x, D, d, (k - d) * exp (-1 : Real), log (exp ((k - d) * exp (-1 : Real)) - 1)]
+    rw [e2] at hbig
+    have hchain : x + (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1))
+        ≤ exp x - (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) + (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) := by
+      have w := le_trans u (le_trans (le_of_eq (by
+        mach_mpoly [x, D, d, (k - d) * exp (-1 : Real), log (exp ((k - d) * exp (-1 : Real)) - 1)])) hbig)
+      have e3 : exp x - (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) + (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) = exp x := by
+        mach_mpoly [exp x, D, d, (k - d) * exp (-1 : Real), log (exp ((k - d) * exp (-1 : Real)) - 1)]
+      rw [e3]; exact w
+    have e4 : exp x - (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) + (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) = exp x := by
+      mach_mpoly [exp x, D, d, (k - d) * exp (-1 : Real), log (exp ((k - d) * exp (-1 : Real)) - 1)]
+    rw [e4] at hchain
+    have e5 : x + (D + d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) = x + D + (d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) := by
+      mach_mpoly [x, D, d, (k - d) * exp (-1 : Real), log (exp ((k - d) * exp (-1 : Real)) - 1)]
+    rw [e5] at hchain
+    have v := add_le_add_wit hchain (le_refl (-(d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1))))
+    have e6 : x + D + (d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) + -(d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1)) = x + D := by
+      mach_mpoly [x, D, d, (k - d) * exp (-1 : Real), log (exp ((k - d) * exp (-1 : Real)) - 1)]
+    have e7 : exp x + -(d + (k - d) * exp (-1 : Real) - log (exp ((k - d) * exp (-1 : Real)) - 1))
+        = exp x - d - (k - d) * exp (-1 : Real) + log (exp ((k - d) * exp (-1 : Real)) - 1) := by
+      mach_mpoly [exp x, d, (k - d) * exp (-1 : Real), log (exp ((k - d) * exp (-1 : Real)) - 1)]
+    rw [e6, e7] at v; exact v
+  -- exponentiate: `x + D ≤ exp (v − ε)·ρ`
+  have hprod : x + D ≤ exp (exp x - d - (k - d) * exp (-1 : Real)) * (exp ((k - d) * exp (-1 : Real)) - 1) := by
+    have hlogx : log (x + D) < x + D := by
+      have w := exp_grows_strictly_thm (log (x + D))
+      rw [exp_log hxD] at w; exact w
+    have hstep : log (x + D) ≤ exp x - d - (k - d) * exp (-1 : Real) + log (exp ((k - d) * exp (-1 : Real)) - 1) :=
+      le_trans (le_of_lt hlogx) hlin
+    have w := exp_monotone hstep
+    rw [exp_log hxD] at w
+    have hsplit : exp (exp x - d - (k - d) * exp (-1 : Real) + log (exp ((k - d) * exp (-1 : Real)) - 1))
+        = exp (exp x - d - (k - d) * exp (-1 : Real)) * (exp ((k - d) * exp (-1 : Real)) - 1) := by
+      rw [exp_add, exp_log hrho]
+    rw [hsplit] at w; exact w
+  -- `exp v − exp (v − ε) = exp (v − ε)·ρ`, so the right child cannot eat the margin
+  have hsub : exp (exp x - d) - exp (exp x - d - (k - d) * exp (-1 : Real))
+      = exp (exp x - d - (k - d) * exp (-1 : Real)) * (exp ((k - d) * exp (-1 : Real)) - 1) := by
+    have hcomb : exp (exp x - d) = exp (exp x - d - (k - d) * exp (-1 : Real)) * exp ((k - d) * exp (-1 : Real)) := by
+      rw [← exp_add]
+      have e : exp x - d - (k - d) * exp (-1 : Real) + (k - d) * exp (-1 : Real) = exp x - d := by
+        mach_mpoly [exp x, d, (k - d) * exp (-1 : Real)]
+      rw [e]
+    rw [hcomb]
+    mach_mpoly [exp (exp x - d - (k - d) * exp (-1 : Real)), exp ((k - d) * exp (-1 : Real))]
+  have hBlow : exp (exp x - d - (k - d) * exp (-1 : Real)) ≤ (EMLTree.eml b1 b2).eval x := by
+    show _ ≤ exp (b1.eval x) - log (b2.eval x)
+    rw [hb1 x hxpos]
+    have hw : log (b2.eval x) ≤ x + D := hD x hx1
+    have u := add_le_add_wit (le_refl (exp (exp x - d))) (neg_le_neg_wit
+      (le_trans hw (le_trans hprod (le_of_eq hsub.symm))))
+    have e1 : exp (exp x - d) + -(exp (exp x - d) - exp (exp x - d - (k - d) * exp (-1 : Real)))
+        = exp (exp x - d - (k - d) * exp (-1 : Real)) := by
+      mach_mpoly [exp (exp x - d), exp (exp x - d - (k - d) * exp (-1 : Real))]
+    have e2 : exp (exp x - d) + -log (b2.eval x) = exp (exp x - d) - log (b2.eval x) := by
+      mach_ring
+    rw [e1, e2] at u; exact u
+  -- so `log (B x) ≥ v − ε`, and the gap is at least the constant `k − d − ε`
+  have hlogB : exp x - d - (k - d) * exp (-1 : Real) ≤ log ((EMLTree.eml b1 b2).eval x) := by
+    have w := log_le_log (exp_pos _) hBlow
+    rw [log_exp] at w; exact w
+  have hgapc : k - d - (k - d) * exp (-1 : Real)
+      ≤ k - (exp (EMLTree.var.eval x) - log ((EMLTree.eml b1 b2).eval x)) := by
+    show _ ≤ k - (exp x - log ((EMLTree.eml b1 b2).eval x))
+    have u := add_le_add_wit (le_refl (k - exp x)) hlogB
+    have e1 : k - exp x + (exp x - d - (k - d) * exp (-1 : Real)) = k - d - (k - d) * exp (-1 : Real) := by
+      mach_mpoly [k, exp x, d, (k - d) * exp (-1 : Real)]
+    have e2 : k - exp x + log ((EMLTree.eml b1 b2).eval x)
+        = k - (exp x - log ((EMLTree.eml b1 b2).eval x)) := by
+      mach_mpoly [k, exp x, log ((EMLTree.eml b1 b2).eval x)]
+    rw [e1, e2] at u; exact u
+  -- the floor is below that constant, since `exp (exp x) > 0`
+  have hfloor : exp (- -log (k - d - (k - d) * exp (-1 : Real)) - exp (exp x)) ≤ k - d - (k - d) * exp (-1 : Real) := by
+    have harg : - -log (k - d - (k - d) * exp (-1 : Real)) - exp (exp x) ≤ log (k - d - (k - d) * exp (-1 : Real)) := by
+      have u := add_le_add_wit (le_refl (log (k - d - (k - d) * exp (-1 : Real))))
+        (neg_nonpos_of_nonneg (le_of_lt (exp_pos (exp x))))
+      have e1 : log (k - d - (k - d) * exp (-1 : Real)) + -exp (exp x)
+          = - -log (k - d - (k - d) * exp (-1 : Real)) - exp (exp x) := by
+        mach_mpoly [log (k - d - (k - d) * exp (-1 : Real)), exp (exp x)]
+      have e2 : log (k - d - (k - d) * exp (-1 : Real)) + 0 = log (k - d - (k - d) * exp (-1 : Real)) := by mach_ring
+      rw [e1, e2] at u; exact u
+    have w := exp_monotone harg
+    rw [exp_log hgap0] at w; exact w
+  exact le_trans hfloor hgapc
+
 end MachLib
