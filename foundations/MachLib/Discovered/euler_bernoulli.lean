@@ -63,6 +63,7 @@ theorem ssb_center_load_deflection_nonneg (point_load : Real) (span_length : Rea
   try unfold I_MAX at *
   try unfold C_MAX at *
   try unfold M_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -115,6 +116,7 @@ theorem ssb_udl_deflection_nonneg (distributed_load : Real) (span_length : Real)
   try unfold I_MAX at *
   try unfold C_MAX at *
   try unfold M_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -167,6 +169,7 @@ theorem cantilever_end_load_deflection_nonneg (point_load : Real) (span_length :
   try unfold I_MAX at *
   try unfold C_MAX at *
   try unfold M_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

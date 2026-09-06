@@ -47,6 +47,7 @@ theorem infusion_pid_within_pump_limit (error : Real) (integral : Real) (derivat
   try unfold KI_MAX at *
   try unfold KD_MAX at *
   try unfold ERR_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

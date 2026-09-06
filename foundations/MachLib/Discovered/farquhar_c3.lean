@@ -58,6 +58,7 @@ theorem farquhar_ac_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Re
   try unfold J_MAX at *
   try unfold RD_MAX at *
   try unfold GAMMA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -105,6 +106,7 @@ theorem farquhar_aj_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Re
   try unfold J_MAX at *
   try unfold RD_MAX at *
   try unfold GAMMA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

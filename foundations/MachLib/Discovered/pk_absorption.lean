@@ -47,6 +47,7 @@ theorem po_absorption_rises_then_decays (dose : Real) (bioavailability : Real) (
   try unfold RATE_MAX at *
   try unfold V_MIN at *
   try unfold V_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

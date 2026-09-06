@@ -39,6 +39,7 @@ theorem range_nonneg (sat_x : Real) (sat_y : Real) (sat_z : Real) (user_x : Real
   try unfold C_LIGHT at *
   try unfold CLOCK_MAX at *
   try unfold RANGE_MIN at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -97,6 +98,7 @@ theorem los_component_in_unit_interval (sat_x : Real) (user_x : Real) (geometric
   try unfold C_LIGHT at *
   try unfold CLOCK_MAX at *
   try unfold RANGE_MIN at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

@@ -9,6 +9,11 @@ and not a general analysis library.
 **Start here:** [`foundations/docs/what_is_proven.md`](foundations/docs/what_is_proven.md) — what
 is proven, what it rests on, and what is open, each claim paired with the command that checks it.
 
+**Coming from mathematics rather than from compilers?**
+[`foundations/docs/eml_depth_problems.md`](foundations/docs/eml_depth_problems.md) states the
+object and the four open questions from scratch in twenty minutes, with no dependency on anything
+else here.
+
 ## What is here
 
 | | |
@@ -110,8 +115,8 @@ consistency check, the axiom ledger, the obligations ledger, the Forge `@verify`
 Forge certificates, the soundness witness, MachSig signatures, the claim audit, the witness and
 hypothesis and absence audits, and the sorry audit — most with their own self-tests, each of which
 must be shown able to fail before its pass is read. `scripts/closerate.sh` is a measurement, not a
-gate: the Forge `@verify(lean)` corpus auto-closes **79.8 %** of its obligations
-(572 of 717, measured 2026-09-05 under Lean v4.32.2).
+gate: the Forge `@verify(lean)` corpus auto-closes **79.9 %** of its obligations
+(573 of 717, measured 2026-09-05 under Lean v4.32.2).
 
 ## Numbers, measured
 

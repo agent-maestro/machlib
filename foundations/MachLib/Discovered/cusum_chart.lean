@@ -41,6 +41,7 @@ theorem cusum_high_step_nonneg (s_high_prev : Real) (sample : Real) (target : Re
   try unfold VALUE_MAX at *
   try unfold K_MAX at *
   try unfold H_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -81,6 +82,7 @@ theorem cusum_low_step_nonneg (s_low_prev : Real) (sample : Real) (target : Real
   try unfold VALUE_MAX at *
   try unfold K_MAX at *
   try unfold H_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -122,6 +124,7 @@ theorem cusum_alarm_zero_when_in_control (s_high : Real) (s_low : Real) (decisio
   try unfold VALUE_MAX at *
   try unfold K_MAX at *
   try unfold H_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -159,6 +162,7 @@ theorem arl_increases_with_decision_interval (decision_h : Real) (reference_k : 
   try unfold VALUE_MAX at *
   try unfold K_MAX at *
   try unfold H_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -42,6 +42,7 @@ theorem dose_response_saturating (e_max : Real) (concentration : Real) (ec50 : R
   try unfold C_MAX at *
   try unfold N_MAX at *
   try unfold EC50_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

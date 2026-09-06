@@ -51,6 +51,7 @@ theorem do_saturation_positive (temperature_k : Real)
   try unfold T_MAX at *
   try unfold SAL_MAX at *
   try unfold DO_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -96,6 +97,7 @@ theorem do_salinity_correction_below_one (salinity_psu : Real)
   try unfold T_MAX at *
   try unfold SAL_MAX at *
   try unfold DO_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -145,6 +147,7 @@ theorem do_apparent_in_unit_interval (do_observed : Real) (do_at_equilibrium : R
   try unfold T_MAX at *
   try unfold SAL_MAX at *
   try unfold DO_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

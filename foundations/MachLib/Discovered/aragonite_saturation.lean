@@ -49,6 +49,7 @@ theorem aragonite_saturation_nonneg (calcium_concentration : Real) (carbonate_co
   try unfold KSP_MAX at *
   try unfold KSP_MIN at *
   try unfold ION_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -93,6 +94,7 @@ theorem vant_hoff_temperature_correction_positive (ksp_reference : Real) (delta_
   try unfold KSP_MAX at *
   try unfold KSP_MIN at *
   try unfold ION_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

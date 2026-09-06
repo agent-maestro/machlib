@@ -35,6 +35,7 @@ theorem bce_loss_nonnegative (prediction : Real) (target : Real)
   unfold bce_loss
   try unfold MAX_LOGIT at *
   try unfold EPS at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -70,6 +71,7 @@ theorem bce_with_logits_equals_bce (logit : Real) (target : Real)
   unfold bce_with_logits
   try unfold MAX_LOGIT at *
   try unfold EPS at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

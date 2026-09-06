@@ -59,6 +59,7 @@ theorem phase_duty_in_unit_interval (v_phase_ref : Real) (v_common_mode : Real) 
   try unfold VOLTAGE_MAX at *
   try unfold HALF at *
   try unfold M_LIN_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -94,6 +95,7 @@ theorem modulation_index_nonneg (v_ref_magnitude : Real) (v_dc : Real)
   try unfold VOLTAGE_MAX at *
   try unfold HALF at *
   try unfold M_LIN_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

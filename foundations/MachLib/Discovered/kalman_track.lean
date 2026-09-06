@@ -59,6 +59,7 @@ theorem track_gain_in_unit_interval (p_pred : Real) (r_meas : Real)
     (h2 : (r_meas > (0 : Real))) :
     (((kalman_gain p_pred r_meas) >= (0 : Real))) ∧ (((kalman_gain p_pred r_meas) <= (1 : Real))) := by
   unfold kalman_gain
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

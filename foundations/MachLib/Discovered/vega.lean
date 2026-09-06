@@ -39,6 +39,7 @@ theorem bs_vega_non_negative (spot : Real) (strike : Real) (rate : Real) (vol : 
   try unfold HALF at *
   try unfold SQRT_2_PI_INV at *
   try unfold TINY_T at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

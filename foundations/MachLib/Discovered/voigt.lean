@@ -34,6 +34,7 @@ theorem voigt_peak_at_centre (frequency : Real) (centre : Real) (fwhm_combined :
   unfold pseudo_voigt
   try unfold PI at *
   try unfold SQRT_2PI at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

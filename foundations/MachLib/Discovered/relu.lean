@@ -34,6 +34,7 @@ theorem relu_nonnegative (x : Real)
   unfold relu
   try unfold RELU_UPPER at *
   try unfold ALPHA_LEAKY at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -85,6 +86,7 @@ theorem relu6_bounded (x : Real)
   unfold relu6
   try unfold RELU_UPPER at *
   try unfold ALPHA_LEAKY at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

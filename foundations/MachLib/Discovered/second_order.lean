@@ -43,6 +43,7 @@ theorem second_order_decay_monotone (initial_concentration : Real) (rate_constan
   try unfold T_MAX at *
   try unfold K_MAX at *
   try unfold C0_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

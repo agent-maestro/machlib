@@ -40,6 +40,7 @@ theorem beer_lambert_linear_in_concentration (molar_absorptivity : Real) (path_l
   try unfold A_MAX at *
   try unfold C_MAX at *
   try unfold L_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -76,6 +77,7 @@ theorem transmittance_in_unit_interval (absorbance_value : Real)
   try unfold A_MAX at *
   try unfold C_MAX at *
   try unfold L_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

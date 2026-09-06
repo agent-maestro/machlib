@@ -35,6 +35,7 @@ theorem magnitude_squared_nonneg (real_part : Real) (imag_part : Real)
   try unfold POWER_MIN at *
   try unfold POWER_MAX at *
   try unfold LN10_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -93,6 +94,7 @@ theorem spectrum_detect_zero_below_threshold (power : Real) (noise_floor : Real)
   try unfold POWER_MIN at *
   try unfold POWER_MAX at *
   try unfold LN10_INV at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

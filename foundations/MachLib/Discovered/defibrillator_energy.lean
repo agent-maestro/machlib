@@ -62,6 +62,7 @@ theorem phase1_energy_nonneg (initial_voltage : Real) (final_voltage : Real) (ca
   try unfold T_MIN at *
   try unfold T_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -103,6 +104,7 @@ theorem biphasic_total_energy_nonneg (initial_voltage : Real) (end_voltage : Rea
   try unfold T_MIN at *
   try unfold T_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -145,6 +147,7 @@ theorem compensation_v0_increases_with_target_energy (target_joules : Real) (cap
   try unfold T_MIN at *
   try unfold T_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

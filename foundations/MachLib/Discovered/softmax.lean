@@ -32,6 +32,7 @@ theorem softmax_numerator_bounded_by_one (logit : Real) (max_logit : Real)
     (((softmax_shift_exp logit max_logit) >= (0 : Real))) ∧ (((softmax_shift_exp logit max_logit) <= (1 : Real))) := by
   unfold softmax_shift_exp
   try unfold SOFTMAX_X_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -68,6 +69,7 @@ theorem softmax_value_in_unit_interval (numer : Real) (denom_sum : Real)
     (((softmax_normalize numer denom_sum) >= (0 : Real))) ∧ (((softmax_normalize numer denom_sum) <= (1 : Real))) := by
   unfold softmax_normalize
   try unfold SOFTMAX_X_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -103,6 +105,7 @@ theorem softmax_two_equals_sigmoid_diff (a : Real) (b : Real)
     (((softmax_two_logit a b) >= (0 : Real))) ∧ (((softmax_two_logit a b) <= (1 : Real))) := by
   unfold softmax_two_logit
   try unfold SOFTMAX_X_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

@@ -49,6 +49,7 @@ theorem plc_actuator_command_safe (setpoint : Real) (measured : Real) (integral 
   try unfold ACTUATOR_MIN at *
   try unfold ACTUATOR_MAX at *
   try unfold U_LIMIT at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

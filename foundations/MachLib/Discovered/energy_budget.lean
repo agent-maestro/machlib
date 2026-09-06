@@ -45,6 +45,7 @@ theorem equilibrium_temperature_decreasing_in_albedo (solar_flux : Real) (albedo
   try unfold ALBEDO_MAX at *
   try unfold EPS_MIN at *
   try unfold EPS_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

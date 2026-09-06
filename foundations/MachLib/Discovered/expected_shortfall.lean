@@ -60,6 +60,7 @@ theorem mc_es_zero_at_zero_count (tail_loss_sum : Real) (tail_count : Real)
   try unfold ALPHA_MAX at *
   try unfold PHI_MAX at *
   try unfold HORIZON_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

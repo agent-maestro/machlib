@@ -72,6 +72,7 @@ theorem los_angle_well_defined (rel_x : Real) (rel_y : Real)
   try unfold N_MAX at *
   try unfold V_MAX at *
   try unfold SIGMA_DOT_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

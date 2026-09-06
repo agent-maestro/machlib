@@ -44,6 +44,7 @@ theorem mitscherlich_yield_below_potential (y_max : Real) (k_coefficient : Real)
   try unfold Y_MAX at *
   try unfold K_MAX at *
   try unfold X_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -86,6 +87,7 @@ theorem mitscherlich_marginal_yield_nonneg (y_max : Real) (k_coefficient : Real)
   try unfold Y_MAX at *
   try unfold K_MAX at *
   try unfold X_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

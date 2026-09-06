@@ -45,6 +45,7 @@ theorem ggx_distribution_nonneg (n_dot_h_clamped : Real) (alpha : Real)
   try unfold TINY at *
   try unfold ALPHA_MIN at *
   try unfold ALPHA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -88,6 +89,7 @@ theorem schlick_fresnel_in_unit_interval_when_f0_is (v_dot_h_clamped : Real) (f0
   try unfold TINY at *
   try unfold ALPHA_MIN at *
   try unfold ALPHA_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -134,6 +136,7 @@ theorem smith_schlick_geometry_in_unit_interval (n_dot_l_clamped : Real) (n_dot_
   try unfold TINY at *
   try unfold ALPHA_MIN at *
   try unfold ALPHA_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -181,6 +184,7 @@ theorem cook_torrance_specular_nonneg (distribution : Real) (fresnel : Real) (ge
   try unfold TINY at *
   try unfold ALPHA_MIN at *
   try unfold ALPHA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -37,6 +37,7 @@ theorem diffusion_kernel_normalised (source_strength : Real) (position : Real) (
   try unfold PI at *
   try unfold D_MAX at *
   try unfold T_MIN at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

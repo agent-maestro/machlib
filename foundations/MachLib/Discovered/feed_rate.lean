@@ -52,6 +52,7 @@ theorem cnc_feed_proportional_to_rpm (num_teeth : Real) (feed_per_tooth : Real) 
   try unfold FZ_MAX at *
   try unfold SCUT_MIN at *
   try unfold SCUT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -94,6 +95,7 @@ theorem rpm_inversely_proportional_to_diameter (cutting_speed : Real) (diameter 
   try unfold FZ_MAX at *
   try unfold SCUT_MIN at *
   try unfold SCUT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -137,6 +139,7 @@ theorem mrr_nonneg (feed_mm_per_min : Real) (radial_engagement : Real) (axial_de
   try unfold FZ_MAX at *
   try unfold SCUT_MIN at *
   try unfold SCUT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

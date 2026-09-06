@@ -55,6 +55,7 @@ theorem received_power_decreases_with_distance (p_tx : Real) (g_tx : Real) (g_rx
   try unfold C_LIGHT at *
   try unfold FOUR_PI at *
   try unfold LN10_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -98,6 +99,7 @@ theorem fspl_db_increases_with_log_distance (distance_km : Real) (frequency_mhz 
   try unfold C_LIGHT at *
   try unfold FOUR_PI at *
   try unfold LN10_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

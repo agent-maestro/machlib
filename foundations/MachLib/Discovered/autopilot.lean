@@ -49,6 +49,7 @@ theorem autopilot_command_within_limits (pitch_setpoint : Real) (pitch_measured 
   try unfold ELEVATOR_MIN at *
   try unfold ELEVATOR_MAX at *
   try unfold GRAVITY_GAIN at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

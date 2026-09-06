@@ -43,6 +43,7 @@ theorem vpd_positive (temp_c : Real) (humidity_pct : Real)
   try unfold TETENS_REF at *
   try unfold T_MIN_C at *
   try unfold T_MAX_C at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

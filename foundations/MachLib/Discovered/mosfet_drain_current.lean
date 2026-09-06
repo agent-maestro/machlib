@@ -50,6 +50,7 @@ theorem saturation_current_quadratic_in_vgs_minus_vth (transconductance_k : Real
   try unfold V_MAX at *
   try unfold LAMBDA_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -95,6 +96,7 @@ theorem triode_current_linear_in_vds_at_low_vds (transconductance_k : Real) (vgs
   try unfold V_MAX at *
   try unfold LAMBDA_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -143,6 +145,7 @@ theorem branchless_matches_per_region (transconductance_k : Real) (vgs : Real) (
   try unfold V_MAX at *
   try unfold LAMBDA_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

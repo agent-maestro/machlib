@@ -37,6 +37,7 @@ theorem schrodinger_step_amplitude_bounded (psi_real : Real) (psi_imag_left : Re
   try unfold DT at *
   try unfold DX_SQ_INV at *
   try unfold HALF_DT at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

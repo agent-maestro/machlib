@@ -50,6 +50,7 @@ theorem rho_call_nonneg (spot : Real) (strike : Real) (rate : Real) (vol : Real)
   try unfold T_MAX at *
   try unfold STRIKE_MAX at *
   try unfold RATE_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -92,6 +93,7 @@ theorem rho_put_nonpos (spot : Real) (strike : Real) (rate : Real) (vol : Real) 
   try unfold T_MAX at *
   try unfold STRIKE_MAX at *
   try unfold RATE_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

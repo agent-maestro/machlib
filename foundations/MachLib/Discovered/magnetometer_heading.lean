@@ -71,6 +71,7 @@ theorem heading_zero_due_north (mag_x_h : Real) (mag_y_h : Real)
   try unfold MAG_COMPONENT_MAX at *
   try unfold ANGLE_MAX at *
   try unfold PITCH_ROLL_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

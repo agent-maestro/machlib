@@ -39,6 +39,7 @@ theorem demosaic_g_at_r_in_pixel_range (g_north : Real) (g_south : Real) (g_east
   unfold demosaic_green_at_red
   try unfold PIX_MIN at *
   try unfold PIX_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -77,6 +78,7 @@ theorem demosaic_r_at_g_in_pixel_range (r_left : Real) (r_right : Real)
   unfold demosaic_red_at_green_horiz
   try unfold PIX_MIN at *
   try unfold PIX_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -119,6 +121,7 @@ theorem demosaic_b_at_r_in_pixel_range (b_nw : Real) (b_ne : Real) (b_sw : Real)
   unfold demosaic_blue_at_red
   try unfold PIX_MIN at *
   try unfold PIX_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -156,6 +159,7 @@ theorem white_balance_scales_channel (pixel : Real) (gain : Real)
   unfold white_balance_channel
   try unfold PIX_MIN at *
   try unfold PIX_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

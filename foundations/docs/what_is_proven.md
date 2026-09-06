@@ -9,6 +9,11 @@ Scope note: this covers the **verified-numerics** core and the **axiom base**.
 Other lanes (the Khovanskii zero bound, the larger frontier explorations) are
 summarised honestly at the end with their asterisks named, not hidden.
 
+A reader who cares about the *mathematics* of the EML class rather than about
+compiled numerics should read `eml_depth_problems.md` instead: it defines the
+object from scratch and states the four open questions in a form an outside
+mathematician can attack or dismiss without reading anything else here.
+
 ---
 
 ## 1. What this is

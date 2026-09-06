@@ -41,6 +41,7 @@ theorem michaelis_menten_saturating (vmax : Real) (substrate : Real) (km : Real)
   unfold velocity
   try unfold S_MAX at *
   try unfold VMAX_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

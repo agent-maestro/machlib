@@ -83,6 +83,7 @@ theorem gain_amp_unity_at_zero_db (gain_db : Real)
   try unfold GAIN_DB_MIN at *
   try unfold GAIN_DB_MAX at *
   try unfold TWO_PI at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

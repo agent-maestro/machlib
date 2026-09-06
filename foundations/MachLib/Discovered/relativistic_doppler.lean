@@ -37,6 +37,7 @@ theorem doppler_recession_factor_below_one (beta : Real)
   try unfold C_LIGHT at *
   try unfold BETA_MAX at *
   try unfold F_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -73,6 +74,7 @@ theorem doppler_approach_factor_above_one (beta : Real)
   try unfold C_LIGHT at *
   try unfold BETA_MAX at *
   try unfold F_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -110,6 +112,7 @@ theorem doppler_observed_frequency_positive (source_frequency : Real) (doppler_r
   try unfold C_LIGHT at *
   try unfold BETA_MAX at *
   try unfold F_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -145,6 +148,7 @@ theorem lorentz_factor_at_least_one (beta : Real)
   try unfold C_LIGHT at *
   try unfold BETA_MAX at *
   try unfold F_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -182,6 +186,7 @@ theorem beta_in_unit_interval_for_subluminal_v (velocity_m_per_s : Real)
   try unfold C_LIGHT at *
   try unfold BETA_MAX at *
   try unfold F_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

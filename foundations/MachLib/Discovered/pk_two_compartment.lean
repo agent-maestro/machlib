@@ -38,6 +38,7 @@ theorem plasma_concentration_nonneg (coef_a : Real) (rate_alpha : Real) (coef_b 
   try unfold RATE_MIN at *
   try unfold RATE_MAX at *
   try unfold COEF_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -75,6 +76,7 @@ theorem auc_inf_finite_for_positive_rates (coef_a : Real) (rate_alpha : Real) (c
   try unfold RATE_MIN at *
   try unfold RATE_MAX at *
   try unfold COEF_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -113,6 +115,7 @@ theorem effect_site_tracks_central_compartment (ce_prev : Real) (central_c : Rea
   try unfold RATE_MIN at *
   try unfold RATE_MAX at *
   try unfold COEF_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

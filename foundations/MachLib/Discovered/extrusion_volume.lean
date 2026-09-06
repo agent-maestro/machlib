@@ -51,6 +51,7 @@ theorem extrusion_volume_nonneg (layer_height : Real) (line_width : Real) (lengt
   try unfold L_MAX at *
   try unfold DF_MIN at *
   try unfold DF_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -97,6 +98,7 @@ theorem filament_feed_proportional_to_volume (layer_height : Real) (line_width :
   try unfold L_MAX at *
   try unfold DF_MIN at *
   try unfold DF_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

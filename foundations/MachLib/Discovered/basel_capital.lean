@@ -54,6 +54,7 @@ theorem stressed_unstressed_pythagorean (capital_unstressed : Real) (capital_str
   try unfold RHO_MAX at *
   try unfold MC_MIN at *
   try unfold MC_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -105,6 +106,7 @@ theorem risk_finalize_nonneg (accumulated_sum : Real)
   try unfold RHO_MAX at *
   try unfold MC_MIN at *
   try unfold MC_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

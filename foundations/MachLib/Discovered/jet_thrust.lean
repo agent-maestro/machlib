@@ -77,6 +77,7 @@ theorem isp_inverse_proportional_to_mass_flow (thrust : Real) (mass_flow : Real)
   try unfold P_MAX at *
   try unfold AREA_MIN at *
   try unfold AREA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

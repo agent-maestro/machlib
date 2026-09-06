@@ -43,6 +43,7 @@ theorem aqi_within_band_bounds (concentration : Real) (c_low : Real) (c_high : R
   try unfold AQI_MAX at *
   try unfold TINY at *
   try unfold C_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -87,6 +88,7 @@ theorem aqi_composite_above_each_input (aqi_pm25 : Real) (aqi_ozone : Real) (aqi
   try unfold AQI_MAX at *
   try unfold TINY at *
   try unfold C_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

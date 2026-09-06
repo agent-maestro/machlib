@@ -37,6 +37,7 @@ theorem bet_diverges_at_p0 (relative_pressure : Real) (bet_constant : Real)
   try unfold C_MAX at *
   try unfold X_MIN at *
   try unfold X_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

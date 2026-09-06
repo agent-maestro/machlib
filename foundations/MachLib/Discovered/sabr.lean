@@ -37,6 +37,7 @@ theorem sabr_atm_vol_positive (forward : Real) (alpha : Real) (beta : Real) (rho
   try unfold HALF at *
   try unfold QUARTER at *
   try unfold ONE_24 at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

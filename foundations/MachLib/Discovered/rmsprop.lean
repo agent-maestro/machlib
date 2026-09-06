@@ -42,6 +42,7 @@ theorem rmsprop_v_nonneg (prev_v : Real) (gradient : Real) (rho : Real)
   try unfold VAL_MAX at *
   try unfold EPS_MIN at *
   try unfold EPS_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

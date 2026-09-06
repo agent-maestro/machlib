@@ -41,6 +41,7 @@ theorem carbon_intensity_nonneg (mass_co2_eq : Real) (energy_delivered : Real)
   try unfold MASS_MAX at *
   try unfold INTENSITY_MAX at *
   try unfold USAGE_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -80,6 +81,7 @@ theorem carbon_source_contribution_nonneg (usage : Real) (source_intensity : Rea
   try unfold MASS_MAX at *
   try unfold INTENSITY_MAX at *
   try unfold USAGE_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -125,6 +127,7 @@ theorem carbon_total_above_each_source (scope1 : Real) (scope2 : Real) (scope3 :
   try unfold MASS_MAX at *
   try unfold INTENSITY_MAX at *
   try unfold USAGE_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

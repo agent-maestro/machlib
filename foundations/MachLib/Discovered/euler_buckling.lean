@@ -65,6 +65,7 @@ theorem euler_critical_load_nonneg (modulus : Real) (second_moment : Real) (effe
   try unfold SLENDERNESS_MAX at *
   try unfold SY_MIN at *
   try unfold SY_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -118,6 +119,7 @@ theorem slenderness_ratio_nonneg (effective_length_factor : Real) (unsupported_l
   try unfold SLENDERNESS_MAX at *
   try unfold SY_MIN at *
   try unfold SY_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -172,6 +174,7 @@ theorem johnson_short_column_below_yield (yield_strength : Real) (slenderness : 
   try unfold SLENDERNESS_MAX at *
   try unfold SY_MIN at *
   try unfold SY_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

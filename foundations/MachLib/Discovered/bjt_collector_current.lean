@@ -85,6 +85,7 @@ theorem transconductance_proportional_to_ic (collector_current : Real) (thermal_
   try unfold VBE_MAX at *
   try unfold VA_MIN at *
   try unfold VA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

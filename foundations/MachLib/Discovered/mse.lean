@@ -35,6 +35,7 @@ theorem mse_loss_nonnegative (prediction : Real) (target : Real)
   unfold mse_loss
   try unfold MAX_RESIDUAL at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

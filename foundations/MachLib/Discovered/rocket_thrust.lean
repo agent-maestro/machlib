@@ -39,6 +39,7 @@ theorem tsiolkovsky_dv_monotone_in_mass_ratio (exhaust_velocity : Real) (initial
   try unfold MASS_MIN at *
   try unfold MASS_MAX at *
   try unfold ISP_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -95,6 +96,7 @@ theorem rocket_isp_inverse_proportional_to_mass_flow (thrust : Real) (mass_flow 
   try unfold MASS_MIN at *
   try unfold MASS_MAX at *
   try unfold ISP_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

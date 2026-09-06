@@ -47,6 +47,7 @@ theorem slip_in_unit_interval_under_braking (vehicle_speed : Real) (wheel_omega 
   try unfold R_MAX at *
   try unfold SLIP_TARGET at *
   try unfold SLIP_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

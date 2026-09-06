@@ -59,6 +59,7 @@ theorem terzaghi_bearing_nonneg_under_pos_inputs (cohesion : Real) (n_c : Real) 
   try unfold N_MAX at *
   try unfold FS_MIN at *
   try unfold FS_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -104,6 +105,7 @@ theorem allowable_bearing_below_ultimate (ultimate_pressure : Real) (factor_of_s
   try unfold N_MAX at *
   try unfold FS_MIN at *
   try unfold FS_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

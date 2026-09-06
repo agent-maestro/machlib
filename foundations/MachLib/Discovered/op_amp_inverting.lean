@@ -90,6 +90,7 @@ theorem bandwidth_decreases_with_gain (gbw : Real) (r_feedback : Real) (r_input 
   try unfold FREQ_MAX at *
   try unfold GBW_MIN at *
   try unfold GBW_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -134,6 +135,7 @@ theorem magnitude_rolloff_minus3db_at_bw (g_dc_magnitude : Real) (frequency : Re
   try unfold FREQ_MAX at *
   try unfold GBW_MIN at *
   try unfold GBW_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

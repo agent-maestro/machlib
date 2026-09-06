@@ -33,6 +33,7 @@ theorem supersaturation_zero_at_solubility (concentration : Real) (saturation_co
   try unfold C_MAX at *
   try unfold KG_MAX at *
   try unfold G_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -86,6 +87,7 @@ theorem growth_rate_nonneg_above_solubility (growth_constant : Real) (concentrat
   try unfold C_MAX at *
   try unfold KG_MAX at *
   try unfold G_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

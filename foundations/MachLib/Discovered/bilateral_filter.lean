@@ -46,6 +46,7 @@ theorem bilateral_weight_in_unit_interval (dx : Real) (dy : Real) (di : Real) (s
   try unfold SIGMA_MIN at *
   try unfold SIGMA_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -87,6 +88,7 @@ theorem spatial_gaussian_weight_in_unit_interval (dx : Real) (dy : Real) (sigma 
   try unfold SIGMA_MIN at *
   try unfold SIGMA_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

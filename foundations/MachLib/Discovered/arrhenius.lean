@@ -40,6 +40,7 @@ theorem arrhenius_monotone_in_temperature (pre_exp_factor : Real) (activation_en
   try unfold T_MIN at *
   try unfold T_MAX at *
   try unfold EA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -54,6 +54,7 @@ theorem equilibrium_constant_positive (delta_g_value : Real) (temperature : Real
   try unfold T_MIN at *
   try unfold T_MAX at *
   try unfold DG_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

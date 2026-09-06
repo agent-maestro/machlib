@@ -41,6 +41,7 @@ theorem two_compartment_alpha_dominates_early (a_coeff : Real) (alpha_rate : Rea
   unfold plasma_concentration
   try unfold T_MAX at *
   try unfold RATE_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

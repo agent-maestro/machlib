@@ -55,6 +55,7 @@ theorem monostatic_falls_with_r4 (p_tx : Real) (gain : Real) (wavelength : Real)
   try unfold LAMBDA_MIN at *
   try unfold LAMBDA_MAX at *
   try unfold LN10_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -108,6 +109,7 @@ theorem bistatic_falls_with_rt2_rr2 (p_tx : Real) (g_tx : Real) (g_rx : Real) (w
   try unfold LAMBDA_MIN at *
   try unfold LAMBDA_MAX at *
   try unfold LN10_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -157,6 +159,7 @@ theorem max_range_increases_with_pt_pow_quarter (p_tx : Real) (gain : Real) (wav
   try unfold LAMBDA_MIN at *
   try unfold LAMBDA_MAX at *
   try unfold LN10_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

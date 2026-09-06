@@ -41,6 +41,7 @@ theorem mppt_voltage_command_safe (voltage_now : Real) (power_now : Real) (power
   try unfold V_MAX at *
   try unfold POWER_MIN at *
   try unfold POWER_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

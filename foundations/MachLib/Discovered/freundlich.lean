@@ -39,6 +39,7 @@ theorem freundlich_monotone_in_concentration (freundlich_k : Real) (concentratio
   try unfold K_MAX at *
   try unfold N_MAX at *
   try unfold C_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

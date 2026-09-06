@@ -37,6 +37,7 @@ theorem ias_monotone_in_dynamic_pressure (dynamic_pressure : Real)
   try unfold RHO_MAX at *
   try unfold Q_MIN at *
   try unfold Q_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -75,6 +76,7 @@ theorem tas_equals_ias_at_sea_level (ias : Real) (local_density : Real)
   try unfold RHO_MAX at *
   try unfold Q_MIN at *
   try unfold Q_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

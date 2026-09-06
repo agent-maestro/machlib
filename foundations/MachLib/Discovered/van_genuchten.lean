@@ -47,6 +47,7 @@ theorem vg_effective_saturation_in_unit_interval (psi : Real) (alpha : Real) (n_
   try unfold N_MIN at *
   try unfold N_MAX at *
   try unfold THETA_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -92,6 +93,7 @@ theorem vg_theta_within_residual_saturated_band (theta_residual : Real) (theta_s
   try unfold N_MIN at *
   try unfold N_MAX at *
   try unfold THETA_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

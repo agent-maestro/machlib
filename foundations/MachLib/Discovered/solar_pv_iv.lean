@@ -80,6 +80,7 @@ theorem photocurrent_proportional_to_irradiance (irradiance : Real) (iph_ref : R
   try unfold T_MAX at *
   try unfold G_MAX at *
   try unfold G_REF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -128,6 +129,7 @@ theorem voc_increases_with_photocurrent (photocurrent : Real) (saturation_curren
   try unfold T_MAX at *
   try unfold G_MAX at *
   try unfold G_REF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

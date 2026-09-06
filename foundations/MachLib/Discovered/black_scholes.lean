@@ -43,6 +43,7 @@ theorem black_scholes_call_no_arb (spot : Real) (strike : Real) (rate : Real) (v
   try unfold GELU_C3 at *
   try unfold HALF at *
   try unfold TINY_T at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -80,6 +81,7 @@ theorem black_scholes_put_via_parity (spot : Real) (strike : Real) (rate : Real)
   try unfold GELU_C3 at *
   try unfold HALF at *
   try unfold TINY_T at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

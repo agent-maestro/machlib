@@ -43,6 +43,7 @@ theorem planck_radiance_increases_with_temperature (wavelength_m : Real) (temper
   try unfold LAMBDA_MAX at *
   try unfold T_MIN at *
   try unfold T_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -81,6 +82,7 @@ theorem wien_constant_inversely_proportional_to_T (temperature_k : Real)
   try unfold LAMBDA_MAX at *
   try unfold T_MIN at *
   try unfold T_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -121,6 +123,7 @@ theorem rayleigh_jeans_underestimates_at_short_wavelength (wavelength_m : Real) 
   try unfold LAMBDA_MAX at *
   try unfold T_MIN at *
   try unfold T_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

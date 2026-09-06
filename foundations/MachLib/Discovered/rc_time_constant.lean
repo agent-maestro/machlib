@@ -81,6 +81,7 @@ theorem cutoff_freq_inverse_to_rc (resistance : Real) (capacitance : Real)
   try unfold C_MAX at *
   try unfold V_MAX at *
   try unfold T_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -122,6 +123,7 @@ theorem time_to_threshold_increases_with_target (target_fraction : Real) (resist
   try unfold C_MAX at *
   try unfold V_MAX at *
   try unfold T_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

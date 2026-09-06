@@ -43,6 +43,7 @@ theorem particle_weight_nonnegative (prior_weight : Real) (observation : Real) (
   try unfold SIGMA_MAX at *
   try unfold Z_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

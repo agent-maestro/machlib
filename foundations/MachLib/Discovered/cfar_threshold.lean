@@ -28,6 +28,7 @@ theorem cfar_threshold_non_negative (window_mean : Real) (scale : Real)
     (h2 : (scale > (0 : Real))) :
     ((cfar_threshold window_mean scale) >= (0 : Real)) := by
   unfold cfar_threshold
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -41,6 +41,7 @@ theorem reverb_envelope_decreases_with_time (time_s : Real) (rt60 : Real)
   try unfold RT60_MAX at *
   try unfold T_MAX at *
   try unfold LN_1000 at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -83,6 +84,7 @@ theorem schroeder_gain_in_unit_interval (target_decay : Real) (n_samples : Real)
   try unfold RT60_MAX at *
   try unfold T_MAX at *
   try unfold LN_1000 at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

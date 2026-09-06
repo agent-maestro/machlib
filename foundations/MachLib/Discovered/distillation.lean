@@ -39,6 +39,7 @@ theorem antoine_increases_with_temperature (a_const : Real) (b_const : Real) (c_
   try unfold T_MIN at *
   try unfold T_MAX at *
   try unfold P_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

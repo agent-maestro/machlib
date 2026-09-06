@@ -44,6 +44,7 @@ theorem tool_life_decreases_with_speed (cutting_speed : Real) (taylor_n : Real) 
   try unfold N_MAX at *
   try unfold C_MIN at *
   try unfold C_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -84,6 +85,7 @@ theorem max_speed_decreases_with_target_life (target_life_minutes : Real) (taylo
   try unfold N_MAX at *
   try unfold C_MIN at *
   try unfold C_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -128,6 +130,7 @@ theorem extended_taylor_consistent_with_classical (cutting_speed : Real) (feed_r
   try unfold N_MAX at *
   try unfold C_MIN at *
   try unfold C_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

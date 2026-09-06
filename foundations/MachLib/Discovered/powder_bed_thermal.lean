@@ -58,6 +58,7 @@ theorem rosenthal_decreases_with_radius (laser_power : Real) (conductivity : Rea
   try unfold R_MIN at *
   try unfold R_MAX at *
   try unfold TWO_PI at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -106,6 +107,7 @@ theorem energy_density_inverse_to_velocity (laser_power : Real) (scan_velocity :
   try unfold R_MIN at *
   try unfold R_MAX at *
   try unfold TWO_PI at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -152,6 +154,7 @@ theorem cooling_rate_proportional_to_speed_squared (scan_velocity : Real) (delta
   try unfold R_MIN at *
   try unfold R_MAX at *
   try unfold TWO_PI at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

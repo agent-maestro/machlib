@@ -68,6 +68,7 @@ theorem cp_length_proportional_to_delay_spread (delay_spread_s : Real) (sample_r
   try unfold N_MAX at *
   try unfold FS_MAX at *
   try unfold SPREAD_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

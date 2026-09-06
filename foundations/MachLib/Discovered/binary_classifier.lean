@@ -41,6 +41,7 @@ theorem binary_classifier_probability_bounded (x1 : Real) (x2 : Real)
   try unfold W1 at *
   try unfold W2 at *
   try unfold BIAS at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

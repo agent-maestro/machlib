@@ -37,6 +37,7 @@ theorem saturation_pressure_monotone_in_temperature (temperature_c : Real)
   try unfold PS_REF at *
   try unfold A_MAGNUS at *
   try unfold B_MAGNUS at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -76,6 +77,7 @@ theorem relative_humidity_in_unit_interval_magnus (vapor_pressure : Real) (satur
   try unfold PS_REF at *
   try unfold A_MAGNUS at *
   try unfold B_MAGNUS at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -131,6 +133,7 @@ theorem specific_humidity_increases_with_vapor (vapor_pressure : Real) (atmosphe
   try unfold PS_REF at *
   try unfold A_MAGNUS at *
   try unfold B_MAGNUS at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

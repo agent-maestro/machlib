@@ -29,6 +29,7 @@ theorem biquad_step_bounded_under_normalized_coeffs (x : Real) (x1 : Real) (x2 :
     (h5 : ((abs y2) <= (4.0 : Real))) :
     ((abs (biquad_lowpass_step x x1 x2 y1 y2 b0 b1 b2 a1 a2)) <= (8.0 : Real)) := by
   unfold biquad_lowpass_step
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

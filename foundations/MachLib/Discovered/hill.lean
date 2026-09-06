@@ -40,6 +40,7 @@ theorem hill_monotone_in_substrate (vmax : Real) (substrate : Real) (half_satura
   unfold hill_velocity
   try unfold S_MAX at *
   try unfold N_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

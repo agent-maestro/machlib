@@ -77,6 +77,7 @@ theorem speed_command_within_set_max (ego_speed : Real) (distance_error : Real) 
   try unfold D_MAX at *
   try unfold KP_MAX at *
   try unfold ACC_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

@@ -39,6 +39,7 @@ theorem stefan_boltzmann_monotone_in_T (emissivity : Real) (temperature_k : Real
   try unfold T_MAX at *
   try unfold EPS_MIN at *
   try unfold EPS_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -94,6 +95,7 @@ theorem wien_inversely_proportional_to_T (temperature_k : Real)
   try unfold T_MAX at *
   try unfold EPS_MIN at *
   try unfold EPS_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -51,6 +51,7 @@ theorem shadow_pcf4_in_unit_interval (query_depth : Real) (sample0 : Real) (samp
   try unfold NINTH at *
   try unfold BIAS_MAX at *
   try unfold DEPTH_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -93,6 +94,7 @@ theorem shadow_pcf9_in_unit_interval (query_depth : Real) (s0 : Real) (s1 : Real
   try unfold NINTH at *
   try unfold BIAS_MAX at *
   try unfold DEPTH_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

@@ -79,6 +79,7 @@ theorem improvement_factor_nonneg (clutter_in_power : Real) (clutter_out_power :
     ((improvement_factor clutter_in_power clutter_out_power) >= (0 : Real)) := by
   unfold improvement_factor
   try unfold SAMPLE_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

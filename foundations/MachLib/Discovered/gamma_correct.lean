@@ -29,6 +29,7 @@ theorem gamma_correct_monotone_in_x (x : Real) (gamma : Real)
     (h3 : (gamma > (0 : Real))) :
     ((gamma_correct x gamma) >= (0 : Real)) := by
   unfold gamma_correct
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

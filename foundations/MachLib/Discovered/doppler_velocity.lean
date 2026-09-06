@@ -73,6 +73,7 @@ theorem unambiguous_velocity_proportional_to_prf (pulse_repetition_freq : Real) 
   try unfold FREQ_MAX at *
   try unfold PRF_MIN at *
   try unfold PRF_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -114,6 +115,7 @@ theorem velocity_resolution_inverse_to_dwell (n_pulses : Real) (pulse_repetition
   try unfold FREQ_MAX at *
   try unfold PRF_MIN at *
   try unfold PRF_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

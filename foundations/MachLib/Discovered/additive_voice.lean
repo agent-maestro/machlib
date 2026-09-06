@@ -45,6 +45,7 @@ theorem additive_voice_amplitude_bounded (t : Real) (freq : Real)
   try unfold PARTIAL_2 at *
   try unfold PARTIAL_3 at *
   try unfold PARTIAL_4 at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -61,6 +61,7 @@ theorem tgo_inverse_proportional_to_closing (range_m : Real) (closing_speed : Re
   try unfold TGO_MAX at *
   try unfold T_CONST_MIN at *
   try unfold T_CONST_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

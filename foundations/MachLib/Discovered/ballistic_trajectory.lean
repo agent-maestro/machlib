@@ -101,6 +101,7 @@ theorem vacuum_range_max_at_45deg (muzzle_velocity : Real) (elevation_angle : Re
   try unfold VEL_MAX at *
   try unfold KD_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

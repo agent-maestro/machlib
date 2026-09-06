@@ -41,6 +41,7 @@ theorem initial_bearing_in_atan2_range (lat1 : Real) (lon1 : Real) (lat2 : Real)
   try unfold PI_HALF at *
   try unfold PI at *
   try unfold TWO_PI at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

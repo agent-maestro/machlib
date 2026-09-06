@@ -35,6 +35,7 @@ theorem lorentzian_peak_at_centre (frequency : Real) (centre : Real) (half_width
   unfold lorentzian_density
   try unfold PI at *
   try unfold GAMMA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

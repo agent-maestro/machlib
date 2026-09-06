@@ -35,6 +35,7 @@ theorem cva_cell_non_negative (expected_exposure : Real) (cum_hazard_prev : Real
     ((cva_cell expected_exposure cum_hazard_prev cum_hazard_now rate time_to_t lgd) >= (0 : Real)) := by
   unfold cva_cell
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

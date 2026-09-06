@@ -49,6 +49,7 @@ theorem competitive_decreases_with_inhibitor (vmax : Real) (substrate : Real) (k
   try unfold I_MAX at *
   try unfold KI_MIN at *
   try unfold KI_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -95,6 +96,7 @@ theorem noncompetitive_lowers_vmax_only (vmax : Real) (substrate : Real) (km : R
   try unfold I_MAX at *
   try unfold KI_MIN at *
   try unfold KI_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -141,6 +143,7 @@ theorem uncompetitive_scales_both (vmax : Real) (substrate : Real) (km : Real) (
   try unfold I_MAX at *
   try unfold KI_MIN at *
   try unfold KI_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -183,6 +186,7 @@ theorem ic50_grows_with_substrate (ki : Real) (substrate : Real) (km : Real)
   try unfold I_MAX at *
   try unfold KI_MIN at *
   try unfold KI_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

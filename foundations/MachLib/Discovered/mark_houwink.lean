@@ -39,6 +39,7 @@ theorem mark_houwink_monotone_in_m (k_param : Real) (a_exponent : Real) (molecul
   try unfold M_MAX at *
   try unfold K_MAX at *
   try unfold A_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -45,6 +45,7 @@ theorem infusion_motor_command_safe (prescribed_rate : Real) (measured_rate : Re
   try unfold RATE_MAX at *
   try unfold MOTOR_MIN at *
   try unfold MOTOR_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

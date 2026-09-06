@@ -49,6 +49,7 @@ theorem abrams_strength_decreases_with_wc (a_intercept : Real) (k_decay : Real) 
   try unfold M_MAX at *
   try unfold T_MIN_C at *
   try unfold T_DATUM at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -110,6 +111,7 @@ theorem aci_age_strength_factor_in_unit_interval (age_days : Real) (alpha : Real
   try unfold M_MAX at *
   try unfold T_MIN_C at *
   try unfold T_DATUM at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

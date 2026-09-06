@@ -32,6 +32,7 @@ theorem parametric_var_monotone_in_sigma (mean_return : Real) (stdev_return : Re
     ((parametric_var mean_return stdev_return horizon_days inv_cdf) > (0 : Real)) := by
   unfold parametric_var
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

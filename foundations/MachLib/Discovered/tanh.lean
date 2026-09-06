@@ -30,6 +30,7 @@ theorem tanh_monotone_in_x (x : Real)
     (((tanh_activation x) >= (-(1 : Real)))) ∧ (((tanh_activation x) <= (1 : Real))) := by
   unfold tanh_activation
   try unfold TANH_X_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -64,6 +65,7 @@ theorem tanh_from_sigmoid_equals_canonical (x : Real)
     (((tanh_from_sigmoid x) >= (-(1 : Real)))) ∧ (((tanh_from_sigmoid x) <= (1 : Real))) := by
   unfold tanh_from_sigmoid
   try unfold TANH_X_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -98,6 +100,7 @@ theorem hard_tanh_bounded (x : Real)
     (((hard_tanh x) >= (-(1 : Real)))) ∧ (((hard_tanh x) <= (1 : Real))) := by
   unfold hard_tanh
   try unfold TANH_X_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

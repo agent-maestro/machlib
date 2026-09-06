@@ -37,6 +37,7 @@ theorem ttc_positive_when_closing (range_m : Real) (range_rate : Real)
   try unfold ACCEL_MAX at *
   try unfold TTC_MAX at *
   try unfold EPS at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -91,6 +92,7 @@ theorem stopping_distance_quadratic_in_speed (speed : Real) (deceleration : Real
   try unfold ACCEL_MAX at *
   try unfold TTC_MAX at *
   try unfold EPS at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

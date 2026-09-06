@@ -31,6 +31,7 @@ theorem ins_attitude_update_bounded (attitude : Real) (rate_gyro : Real)
   unfold attitude_step
   try unfold dt at *
   try unfold ATT_LIMIT at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

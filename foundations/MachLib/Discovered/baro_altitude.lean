@@ -58,6 +58,7 @@ theorem altitude_to_pressure_inverse (altitude : Real)
   try unfold T0_OVER_L at *
   try unfold P_MIN at *
   try unfold P_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

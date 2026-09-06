@@ -40,6 +40,7 @@ theorem q8_quantize_in_range (x : Real) (scale : Real)
   try unfold Q8_MIN at *
   try unfold SCALE_MIN at *
   try unfold SCALE_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -81,6 +82,7 @@ theorem q8_quantize_asym_in_range (x : Real) (scale : Real) (zero_point : Real)
   try unfold Q8_MIN at *
   try unfold SCALE_MIN at *
   try unfold SCALE_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

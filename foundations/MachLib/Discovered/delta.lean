@@ -43,6 +43,7 @@ theorem bs_call_delta_in_zero_one (spot : Real) (strike : Real) (rate : Real) (v
   try unfold GELU_C3 at *
   try unfold HALF at *
   try unfold TINY_T at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -83,6 +84,7 @@ theorem bs_put_delta_in_minus_one_zero (spot : Real) (strike : Real) (rate : Rea
   try unfold GELU_C3 at *
   try unfold HALF at *
   try unfold TINY_T at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

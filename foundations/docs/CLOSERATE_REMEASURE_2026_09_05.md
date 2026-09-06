@@ -81,10 +81,19 @@ look inside a conjunction, so the bound-transitivity arms never fired on them):
 ```
 files:     292  (290 compiled, 2 build-error)
 theorems:  720  (717 in compiled files, 3 in error files)
-CLOSED:    572
-sorry:     145
-close-rate (of compiled): 79.8%  (572/717)
+CLOSED:    573
+sorry:     144
+close-rate (of compiled): 79.9%  (573/717)
 ```
+
+The last obligation of those came from a third emitter change, made after this document's first
+draft and measured on its own: `try mach_split_hyps` is now emitted **before the whole cascade**,
+not only inside `mach_sign`. Every `convex_comb*` arm and `lo_le_clamp`'s discharge their side
+goals with a bare `assumption`, which cannot see inside the conjunction a refinement type
+`x : Real[lo, hi]` is emitted as — so a convex blend in a band failed for a reason that had
+nothing to do with convexity. **It closed one obligation.** The shape-count had suggested six;
+the other five turned out to differ in ways the arm does not match. Recorded because the
+prediction was wrong and the measurement is the record.
 
 | | 2026-08-01 | 2026-09-05 (before) | 2026-09-05 (after) |
 |---|---|---|---|

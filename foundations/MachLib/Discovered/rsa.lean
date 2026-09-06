@@ -35,6 +35,7 @@ theorem rsa_modexp_correct (base : Real) (exp : Real) (modulus : Real)
   unfold modexp_montgomery
   try unfold KEY_BITS at *
   try unfold E_DEFAULT at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

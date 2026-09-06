@@ -43,6 +43,7 @@ theorem capacity_zero_at_zero_snr (bandwidth_hz : Real) (snr_linear : Real)
   try unfold SNR_DB_MIN at *
   try unfold SNR_DB_MAX at *
   try unfold LN2_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -83,6 +84,7 @@ theorem capacity_db_consistent_with_linear (bandwidth_hz : Real) (snr_db : Real)
   try unfold SNR_DB_MIN at *
   try unfold SNR_DB_MAX at *
   try unfold LN2_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -121,6 +123,7 @@ theorem spectral_efficiency_equals_log2_of_one_plus_snr (snr_linear : Real)
   try unfold SNR_DB_MIN at *
   try unfold SNR_DB_MAX at *
   try unfold LN2_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -161,6 +164,7 @@ theorem high_snr_asymptotic_capacity (bandwidth_hz : Real) (snr_linear : Real)
   try unfold SNR_DB_MIN at *
   try unfold SNR_DB_MAX at *
   try unfold LN2_INV at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

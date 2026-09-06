@@ -45,6 +45,7 @@ theorem autothrottle_within_unit_interval (speed_target : Real) (speed_meas : Re
   try unfold I_LIMIT_MAX at *
   try unfold THROTTLE_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

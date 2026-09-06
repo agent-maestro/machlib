@@ -39,6 +39,7 @@ theorem binomial_up_factor_strictly_above_one (vol : Real) (dt : Real)
   try unfold VOL_MAX at *
   try unfold DT_MIN at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -78,6 +79,7 @@ theorem binomial_down_factor_below_one (vol : Real) (dt : Real)
   try unfold VOL_MAX at *
   try unfold DT_MIN at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -120,6 +122,7 @@ theorem risk_neutral_prob_in_unit_interval (rate : Real) (vol : Real) (dt : Real
   try unfold VOL_MAX at *
   try unfold DT_MIN at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -160,6 +163,7 @@ theorem binomial_step_back_convex_combination (rate : Real) (dt : Real) (p : Rea
   try unfold VOL_MAX at *
   try unfold DT_MIN at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

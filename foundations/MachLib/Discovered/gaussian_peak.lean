@@ -35,6 +35,7 @@ theorem gaussian_peak_at_centre (frequency : Real) (centre : Real) (sigma : Real
   unfold gaussian_density
   try unfold SQRT_2PI at *
   try unfold SIGMA_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

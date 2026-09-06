@@ -62,6 +62,7 @@ theorem scheduled_gain_increases_with_dynamic_pressure (base_gain : Real) (mach 
   try unfold A_M_MAX at *
   try unfold A_H_MAX at *
   try unfold ELEV_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

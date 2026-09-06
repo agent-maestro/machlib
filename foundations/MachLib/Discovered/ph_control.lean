@@ -52,6 +52,7 @@ theorem proton_concentration_positive (ph_value : Real)
   try unfold PH_MAX at *
   try unfold C_MIN at *
   try unfold C_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

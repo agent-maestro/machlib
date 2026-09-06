@@ -41,6 +41,7 @@ theorem cottrell_decays_with_time (n_electrons : Real) (electrode_area : Real) (
   try unfold PI at *
   try unfold T_MIN at *
   try unfold T_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

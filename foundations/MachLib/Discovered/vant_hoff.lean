@@ -42,6 +42,7 @@ theorem vant_hoff_predict_k (k1 : Real) (delta_h : Real) (t1 : Real) (t2 : Real)
   try unfold T_MIN at *
   try unfold T_MAX at *
   try unfold DH_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

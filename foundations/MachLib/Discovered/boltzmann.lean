@@ -38,6 +38,7 @@ theorem boltzmann_ratio_positive (energy_difference : Real) (temperature : Real)
   try unfold KB at *
   try unfold T_MIN at *
   try unfold T_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

@@ -39,6 +39,7 @@ theorem langmuir_saturating (langmuir_constant : Real) (pressure : Real)
   unfold coverage
   try unfold K_MAX at *
   try unfold P_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

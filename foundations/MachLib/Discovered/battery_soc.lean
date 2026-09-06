@@ -48,6 +48,7 @@ theorem soc_coulomb_count_decreases_under_discharge (soc_prev : Real) (current_a
   try unfold V_MIN at *
   try unfold V_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -89,6 +90,7 @@ theorem ocv_curve_monotone_in_soc (soc : Real)
   try unfold V_MIN at *
   try unfold V_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -132,6 +134,7 @@ theorem mixed_soc_blends_estimators (soc_coulomb : Real) (soc_from_ocv : Real) (
   try unfold V_MIN at *
   try unfold V_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

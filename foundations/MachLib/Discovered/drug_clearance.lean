@@ -46,6 +46,7 @@ theorem clearance_proportional_to_dose (dose : Real) (bioavailability : Real) (a
   try unfold WT_MIN at *
   try unfold WT_MAX at *
   try unfold SCR_MIN at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -87,6 +88,7 @@ theorem cockcroft_gault_decreases_with_age (age_years : Real) (weight_kg : Real)
   try unfold WT_MIN at *
   try unfold WT_MAX at *
   try unfold SCR_MIN at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

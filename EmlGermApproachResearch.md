@@ -159,6 +159,66 @@ experiment and it does not exist yet. Design:
 * **A failed search proves nothing.** This corpus has a 12 208-sample grid that missed a
   transcendental witness. Record what the search *cannot* find, as those did.
 
+### ▸ RUN, 2026-09-05 — `foundations/tools/germ_approach_search.py`
+
+**No counterexample. The required height is bounded at fixed depth, and the bound is roughly
+`depth − 2`.**
+
+```
+depth ≤ 2, constants {0,1} / {0,1,5} / {0,1,50} / {0,1,1000}
+    223 248 pairs measured        required height: 0 for every one
+depth ≤ 3, constants {0,1}, 6 000 pairs sampled at random from 21 612 trees
+      2 978 pairs measured        required height: 0 (2 975), 1 (3)
+positive controls                 height 1 at depth 3, height 3 at depth 4 — both FIRE
+```
+
+The metric: on the ray, `g(x) = exp(A x) − C(x) > 0`, `h(x) = −log g(x)`, and the required height
+is the number of times `log` must be applied to `h(x)` before it falls to `x`. Read **in the
+tail**, because the conjecture may start late.
+
+**The result is only worth its instrument, and this instrument took four corrections to build.
+Each one would have produced a confident wrong answer.**
+
+1. **The height was maximised over the whole ray.** A *constant* gap — `exp(0) − log(exp 50)` is
+   the constant `exp(−49)` — sits below the floor at `x = 2` and astronomically above it at
+   `x = 10⁶`. Maximising reported height 2 for pairs that need 0. The conjecture says
+   `∃X₁ ≥ X₀`, so the tail is the only part that counts.
+2. **Values past the working range were returned as "no sample".** Every pair whose left side
+   reaches the doubly-exponential regime therefore lost its tail and was scored on the *foot* of
+   the ray — a truncation read as asymptotics, which is trap two of this section wearing a new
+   hat. Fixed with a sentinel for "positively enormous" and a guard that refuses to score a pair
+   whose far end produced nothing (`tail-unmeasured`, 13 000 of 163 000 at depth 2).
+3. **The precision guard was absolute** (`|gap| < 10⁻⁹⁰ ⇒ undecided`). But the trap this guard
+   exists for is *cancellation*: `exp(−exp x) − 0` is `10⁻⁹⁵⁶⁶` at `x = 10` and every digit is
+   real. The absolute form rejected **both positive controls** and would have reported "height 0
+   everywhere" from an instrument that was discarding exactly the interesting cases. The guard is
+   now relative to the operands. It also cut the undecided count from ~260 to ~4 per sweep.
+4. **The sample was strided, not random.** Striding an ordered product varies the second
+   component fast and the first barely at all: a "6 000-pair sample" contained a handful of
+   distinct left-hand trees. A census dressed as a sample, which this project has paid for before.
+
+**Defect 3 was caught by the controls and by nothing else.** The rule — *an instrument must be
+shown capable of both verdicts before either is read* — earned its keep here in the most literal
+way available: the search was reporting a clean negative result while unable to report anything
+else.
+
+**What this search cannot find, stated so the next one does not re-derive it.**
+
+* **It cannot see far.** How far the ray reaches is a function of depth: `x ≤ 10⁵` at depth 2,
+  `x ≤ 13` at depth 3, `x ≤ 2.8` at depth 4, because the tower passes 120-digit precision there.
+  A counterexample whose behaviour only separates beyond those points is invisible to it. This is
+  the sharpest limitation and it gets worse exactly where the question gets interesting.
+* **It samples thinly at depth 3** — 6 000 of ~4.7 × 10⁸ pairs, about 0.001 %.
+* **Its constants are a tiny fixed set.** A counterexample requiring a particular transcendental
+  constant is invisible, and this corpus has a recorded instance of exactly that miss.
+* **It measures a finite ray and reads a trend.** It cannot certify an asymptotic claim, only
+  fail to contradict one.
+
+**What it does support.** The height rising with *depth* (0, 1, 3 at depths 2, 3, 4) and not with
+constant magnitude at fixed depth is the shape the conjecture predicts — `k` may depend on `j`.
+Nothing in 226 000 measured pairs pushed the height up at fixed depth. That is weak evidence, of
+the only kind a search can give, and it is now on the record rather than in nobody's head.
+
 ---
 
 ## 7. Literature — what is settled and what is not

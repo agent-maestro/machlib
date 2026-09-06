@@ -34,6 +34,7 @@ theorem sigmoid_monotone_in_x (x : Real)
   unfold sigmoid
   try unfold SIGMOID_X_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -69,6 +70,7 @@ theorem sigmoid_alt_equals_canonical (x : Real)
   unfold sigmoid_alt
   try unfold SIGMOID_X_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

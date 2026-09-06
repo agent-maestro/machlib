@@ -85,6 +85,7 @@ theorem gating_step_bounded_in_unit_interval (gate : Real) (alpha : Real) (beta 
   try unfold CM_MIN at *
   try unfold CM_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))

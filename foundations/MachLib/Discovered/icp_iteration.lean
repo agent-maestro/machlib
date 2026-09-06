@@ -37,6 +37,7 @@ theorem icp_residual_sq_nonnegative (src_x : Real) (src_y : Real) (src_z : Real)
   unfold point_to_point_residual_sq
   try unfold COORD_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -72,6 +73,7 @@ theorem huber_weighted_residual_bounded (residual : Real) (delta : Real)
   unfold weighted_residual
   try unfold COORD_MAX at *
   try unfold HALF at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

@@ -45,6 +45,7 @@ theorem vd_command_within_inverter_limits (i_d_setpoint : Real) (i_d_measured : 
   try unfold dt at *
   try unfold V_DC at *
   try unfold V_LIMIT at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

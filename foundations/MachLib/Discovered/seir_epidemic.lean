@@ -43,6 +43,7 @@ theorem seir_step_susceptible_nonincreasing (s : Real) (i : Real) (n : Real) (be
   try unfold N_MAX at *
   try unfold RATE_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -130,6 +131,7 @@ theorem seir_step_recovered_nondecreasing (i : Real) (r : Real) (gamma : Real) (
   try unfold N_MAX at *
   try unfold RATE_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -168,6 +170,7 @@ theorem seir_r0_threshold_at_one (beta : Real) (gamma : Real)
   try unfold N_MAX at *
   try unfold RATE_MAX at *
   try unfold DT_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

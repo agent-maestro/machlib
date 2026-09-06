@@ -41,6 +41,7 @@ theorem schwarzschild_radius_proportional_to_mass (mass_kg : Real)
   try unfold M_MAX at *
   try unfold R_MIN at *
   try unfold R_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -83,6 +84,7 @@ theorem redshift_unity_at_infinity (schwarzschild_r : Real) (radius : Real)
   try unfold M_MAX at *
   try unfold R_MIN at *
   try unfold R_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -123,6 +125,7 @@ theorem orbital_velocity_decreases_with_radius (mass_kg : Real) (radius : Real)
   try unfold M_MAX at *
   try unfold R_MIN at *
   try unfold R_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
@@ -161,6 +164,7 @@ theorem photon_sphere_above_horizon (schwarzschild_r : Real)
   try unfold M_MAX at *
   try unfold R_MIN at *
   try unfold R_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi

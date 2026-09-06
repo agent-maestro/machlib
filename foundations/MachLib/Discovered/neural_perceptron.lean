@@ -38,6 +38,7 @@ theorem perceptron_threshold_in_unit_interval (weighted_sum : Real) (bias : Real
   try unfold X_MAX at *
   try unfold BIAS_MAX at *
   try unfold SUM_MAX at *
+  try mach_split_hyps
   refine ⟨?_, ?_⟩ <;>
     first
     | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
@@ -98,6 +99,7 @@ theorem rate_coded_bounded_in_max_rate (weighted_sum : Real) (threshold_v : Real
   try unfold X_MAX at *
   try unfold BIAS_MAX at *
   try unfold SUM_MAX at *
+  try mach_split_hyps
   first
   | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
   | apply clamp_le_hi
