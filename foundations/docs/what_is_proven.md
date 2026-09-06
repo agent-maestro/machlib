@@ -187,12 +187,32 @@ hold for arbitrary `λ₁, λ₂`, with no side condition and no decimal arithme
 therefore discharged once for every PI design with real eigenvalues, and the caller supplies only
 the eigenvalues of its own *quantised* gains and a bound on their moduli.
 
-**What is still not claimed.** The eigenvalues must be **real**: an under-damped design has a
-complex pair, no real eigenvector, and this measure does not exist for it. No derivative term, no
-anti-windup, and no claim that the quantised gains are close to the designer's intended ones —
-that is a separate question this theorem does not answer. `pid_trajectory_from_bits` is unchanged
-and is still not the end-to-end result; the D term and the complex-eigenvalue case are what
-remain of the original obstacle.
+**The complex-eigenvalue case is covered too, by a different measure**
+(`MachLib/QuadTracking.lean`). An under-damped design has no real eigenvector, so the
+maximum-of-functionals measure does not exist for it; the textbook replacement is a quadratic
+Lyapunov norm, whose triangle inequality is Cauchy–Schwarz and needs square roots this corpus does
+not have. `two_state_tracks_exact_quad` avoids both by working with the **squared** measure:
+
+* in real-Jordan coordinates a complex pair is a rotation-scaling, which multiplies the squared
+  measure by exactly `σ² + ω²` — an **equality**, proved as a ring identity (`n2_rotscale`), so
+  the contraction costs no inequality at all;
+* the cross term in `n2(x+y)` is split by a **sum of squares** rather than Cauchy–Schwarz: for
+  `α·β = 1` the slack is `β·(α·x₁−y₁)² + β·(α·x₂−y₂)²` (`n2_young`). Carrying the reciprocal as a
+  second variable keeps division out as well.
+
+The price is real and is carried in the statement: the factor is `(1+α)(σ²+ω²)`, not `σ²+ω²`, and
+the per-step term is inflated by `(1+β)`. A specimen shows the contracting regime survives it —
+at the symmetric split `α = β = 1` and the design `σ = 0`, `ω = e⁻¹`, the factor is below one,
+proved from `1 + 1 < e` with no numerics. And as in the real case, the PI loop's rotation-scaling
+relations are **ring identities** in `σ, ω` (`pi_complex_rotscale`), so the eigenstructure is
+again forced and free.
+
+**What is still not claimed.** No derivative term — a PID loop has three states and both measures
+here are two-state. No anti-windup. No claim that the quantised gains are close to the designer's
+intended ones, which is a separate question. `QuadTracking` supplies the measure and the tracking
+theorem for the complex case but is **not** instantiated at a bit-level datapath the way
+`SignedPILoop` is for the real case. `pid_trajectory_from_bits` is unchanged and is still not the
+end-to-end result.
 
 ---
 
