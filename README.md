@@ -48,9 +48,13 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   difference of two unsigned vectors, which is what makes an error signal `R − X` and negative
   feedback expressible at all; the unsigned datapath can represent neither. Ships with specimens
   discharging its hypotheses.
-- **The PID version of that join is still not proved.** A P loop stays affine, so the corpus's
-  scalar trajectory lemma applies; a PID loop has an integrator, so it does not, and the missing
-  piece is a trajectory bound over a non-scalar state. `pid_trajectory_from_bits` still quantifies
+- `two_state_tracks_exact`, `weighted_max_cannot_contract_integrator` (`TwoStateTracking`) — the
+  vector-state tracking bound a PID loop needs, and the proof that the obvious measure cannot
+  supply it: a weighted maximum of the components can never contract a loop containing an
+  integrator, for any gains, because taking moduli discards the sign that makes the feedback
+  negative. The measure that does work is built from linear functionals instead.
+- **The PID version of the join is still not proved.** The lemma exists; instantiating it at a
+  bit-level PID datapath with concrete gains does not. `pid_trajectory_from_bits` still quantifies
   its per-step error universally — do not cite it as an end-to-end result.
 - `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
   within their forward-error bounds.
@@ -131,13 +135,13 @@ fails if the text drifts from the corpus. Measured 2026-09-05:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 584 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 592 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 092 | `find MachLib -name '*.lean' \| wc -l` |
+| `.lean` files under `MachLib/` | 1 093 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 788 of 1 092 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 789 of 1 093 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

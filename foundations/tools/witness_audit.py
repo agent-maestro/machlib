@@ -44,10 +44,33 @@ RED, GREEN, YELLOW, DIM, RST = "\033[31m", "\033[32m", "\033[33m", "\033[2m", "\
 
 
 def corpus_text() -> str:
-    return subprocess.run(
+    """The corpus with COMMENTS AND DOCSTRINGS REMOVED.
+
+    THE DEFECT THIS FIXES (2026-09-06). Until today this returned the raw concatenation, so a
+    theorem counted as "witnessed" if its name appeared ANYWHERE -- including in prose. This
+    corpus is heavily commented and cross-references itself constantly, so the audit was reporting
+    capstones as exercised on the strength of a docstring mention. Measured when it was found:
+    **31 of the registered capstones had no code use at all**, among them
+    `positive_branch_impossible` -- the theorem that was found vacuous in 2026-08 and that THIS
+    AUDIT WAS BUILT TO CATCH. It appears 17 times in `MachLib/`: one declaration and sixteen
+    comments. The instrument built after a vacuity incident was being satisfied by the prose
+    written about that incident.
+
+    Found because a docstring cross-reference added in an unrelated commit flipped
+    `fxaffine_traj_tracks_exact` from unwitnessed to witnessed, and ratcheting the baseline down
+    would have recorded a capstone as exercised when nothing instantiates it.
+
+    CAVEAT, stated because it is the honest direction of error: Lean block comments nest, and the
+    non-greedy `/-...-/` match stops at the first close, so a nested comment can leave a tail of
+    prose in the text. That makes the audit MORE permissive (fewer reports), never less, so it
+    cannot manufacture a false alarm -- it can only fail to raise a true one."""
+    raw = subprocess.run(
         ["bash", "-c",
          "find MachLib -name '*.lean' -not -path 'MachLib/Discovered/*' -exec cat {} +"],
         cwd=ROOT, capture_output=True, text=True).stdout
+    raw = re.sub(r"/-.*?-/", " ", raw, flags=re.S)   # block comments AND /-- docstrings
+    raw = re.sub(r"--[^\n]*", " ", raw)             # line comments
+    return raw
 
 
 def unwitnessed(src: str, claims: list) -> list:

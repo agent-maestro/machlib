@@ -51,6 +51,11 @@
       "cmd": "python3 tools/obligation_ledger_check.py",
       "extract": "OBLIGATION-LEDGER OK [^0-9]*(\\d+) rows[\\s\\S]*?open rows: (\\d+)[\\s\\S]*?distinct open obligations: (\\d+)"
     },
+    "witness_entries": {
+      "kind": "shell",
+      "cmd": "python3 -c \"import json; print(len(json.load(open('tools/witness_baseline.json'))['unwitnessed']))\"",
+      "extract": "^\\s*(\\d+)\\s*$"
+    },
     "hypothesis_entries": {
       "kind": "shell",
       "cmd": "python3 -c \"import json; print(len(json.load(open('tools/hypothesis_baseline.json'))['unproduced']))\"",
@@ -104,6 +109,7 @@
     { "id": "claude.ledger_open_rows",    "file": "CLAUDE.md", "pattern": "Obligations ledger: \\*\\*\\d+ rows, (\\d+) open rows, \\d+ distinct open\\s+obligations\\*\\*", "source": "ledger", "group": 2 },
     { "id": "claude.ledger_distinct",     "file": "CLAUDE.md", "pattern": "Obligations ledger: \\*\\*\\d+ rows, \\d+ open rows, (\\d+) distinct open\\s+obligations\\*\\*", "source": "ledger", "group": 3 },
     { "id": "claude.hypothesis_entries",  "file": "CLAUDE.md", "pattern": "`tools/hypothesis_baseline.json`, (\\d+) entries", "source": "hypothesis_entries" },
+    { "id": "claude.witness_entries",     "file": "CLAUDE.md", "pattern": "`tools/witness_baseline.json`, (\\d+) entries", "source": "witness_entries" },
     { "id": "claude.closerate_pct",       "file": "CLAUDE.md", "pattern": "close-rate,\\s+([0-9.]+)% at the last sweep", "source": "closerate_pct" },
 
     { "id": "wip.axioms_pinned",          "file": "foundations/docs/what_is_proven.md", "pattern": "the ledger pins \\*\\*([0-9 \\u202f]+) axioms\\*\\*", "source": "axioms_pinned" },

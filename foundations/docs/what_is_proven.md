@@ -147,12 +147,30 @@ every gate passed.
    `affine_trajectory_bound` applies unchanged. This is a property of the P controller, not a
    shortcut.
 
-**What is still open, and it is obstacle (4) in its real form.** This is a P controller: no
-integrator, no anti-windup, and the closed-loop map stays first-order. **A PID loop does not**,
-because the integrator adds state — so the PID join needs a trajectory lemma over a non-scalar
-state, which the corpus does not have. `pid_trajectory_from_bits` is still not the end-to-end
-result and its `ε` is still universally quantified. What changed is that the blocker is now one
-identified missing lemma rather than a representation that cannot express the problem at all.
+**Obstacle (4) for the PID case, and it was half misdescribed.** "Every trajectory lemma is scalar
+and first-order" is not why a PID loop is hard: `iterate_affine_bound` is generic over an
+arbitrary sequence `s : Nat → Real` and never required `s` to be a scalar difference. The missing
+object was a **measure of the vector error that contracts**, and `MachLib/TwoStateTracking.lean`
+now supplies one, together with the reason the obvious candidate cannot work.
+
+* **The obvious candidate provably cannot work.** `weighted_max_cannot_contract_integrator`: a
+  weighted maximum of the components can bound the integrator row `i' = i + (r − x)` only by the
+  sum of its moduli, `1 + 1`, so a contraction factor would have to satisfy `w₁ + w₂ ≤ L·w₂` and
+  is therefore `> 1` — for **every** choice of weights and **every** set of gains. Measured over
+  five stable designs, each closed-loop matrix has spectral radius `< 1` while its entrywise
+  modulus matrix has spectral radius `1.03`–`1.14`: the negative feedback that stabilises the loop
+  lives in the sign of that `−1`, and taking moduli is exactly the step that discards it.
+* **What does work**: `m2 p q r s`, a seminorm built from two *linear functionals* rather than
+  from the components, so cancellation survives inside them. `m2_subadd` is the only property the
+  error recursion needs; `m2_contract_of_eigen` turns left-eigenvector data into the contraction,
+  which at concrete gains is arithmetic; `two_state_tracks_exact` assembles the bound. A specimen
+  discharges the contraction at a concrete non-diagonal update.
+
+**What is still open.** `TwoStateTracking` is the lemma, not the join: it is not instantiated at a
+bit-level PID datapath, and constructing the eigenvectors for a given design is left to the
+caller. `pid_trajectory_from_bits` is still not the end-to-end result and its `ε` is still
+universally quantified. What remains is an instantiation — signed PID datapath, concrete gains,
+the four eigen equations discharged by arithmetic — rather than a missing capability.
 
 ---
 

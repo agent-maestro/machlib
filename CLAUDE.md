@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 092 `.lean` files** (778 top-level + 314 in subdirectories) /
-**247 566 lines** / **7 584 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 093 `.lean` files** (779 top-level + 314 in subdirectories) /
+**247 802 lines** / **7 592 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 584
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 304
+  | paste -sd+ | bc                                    # 7 592
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 312
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -132,10 +132,22 @@ bash tools/check_obligations.sh                # EMLDepthTameness's open/dischar
 gate. It reports every registered claim-theorem that takes hypotheses and is referenced nowhere else
 in `MachLib/` — i.e. nobody has ever supplied its hypotheses. That is the one signal that was present
 and unread when `positive_branch_impossible` was vacuous: it had no caller and no specimen. The
-baseline is pinned as a **set** (`tools/witness_baseline.json`, 36 entries), not a count, so the
+baseline is pinned as a **set** (`tools/witness_baseline.json`, 65 entries), not a count, so the
 ratchet turns one way — a new entry fails, a witnessed one must be removed. It carries two convict
 specimens of its own. Read its scope note before trusting it: no-caller is not a defect on its own,
 and it cannot see vacuity, only drift.
+
+> **It counted PROSE as an instantiation until 2026-09-06, and its own motivating example was one
+> of the false positives.** `corpus_text()` concatenated the `.lean` files raw, so a theorem was
+> "witnessed" if its name appeared anywhere at all — and this corpus cross-references itself in
+> docstrings constantly. Stripping comments moved the true count from 35 to **65**:
+> **30 registered capstones had no code use whatever**, among them `positive_branch_impossible`,
+> which appears 17 times in `MachLib/` as one declaration and sixteen comments. The audit built
+> after that theorem was found vacuous was being satisfied by the prose written about it.
+> The baseline was re-set **once** for the instrument fix, every added entry annotated
+> `prose-only`; the ratchet turns one way from there. Found because a docstring cross-reference in
+> an unrelated commit flipped a capstone to "witnessed", and ratcheting it down would have
+> recorded an instantiation that does not exist.
 
 `python3 tools/hypothesis_audit.py` is `witness_audit`'s **mirror**, and also not a CI gate. Where
 the witness audit finds *capstones nobody instantiates* (a conclusion with no consumer), this finds
@@ -197,7 +209,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**788 of 1092 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**789 of 1093 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -370,7 +382,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**788 of 1 092 modules reachable, 12 documented unreachable** as of 2026-09-05); quote it from
+run (**789 of 1 093 modules reachable, 12 documented unreachable** as of 2026-09-05); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
