@@ -166,11 +166,33 @@ now supplies one, together with the reason the obvious candidate cannot work.
   which at concrete gains is arithmetic; `two_state_tracks_exact` assembles the bound. A specimen
   discharges the contraction at a concrete non-diagonal update.
 
-**What is still open.** `TwoStateTracking` is the lemma, not the join: it is not instantiated at a
-bit-level PID datapath, and constructing the eigenvectors for a given design is left to the
-caller. `pid_trajectory_from_bits` is still not the end-to-end result and its `ε` is still
-universally quantified. What remains is an instantiation — signed PID datapath, concrete gains,
-the four eigen equations discharged by arithmetic — rather than a missing capability.
+### ⚠ UPDATED again, same day — the join now exists for a PI controller, integrator included
+
+`MachLib/SignedPILoop.lean`, `spiloop_tracks_exact`:
+
+> the signed bit-level PI loop — state row `X' = GA⊗X ⊕ GB⊗I ⊕ GC` (two truncating multiplies),
+> integrator row `I' = (I ⊖ X) ⊕ GF` (**exact**) — stays within
+> `npow n L · m₀ + 4·ulp · geom L n` of the exact real PI trajectory, with the per-step `4·ulp`
+> derived from the datapath and the error measured in the eigen-coordinate seminorm.
+
+`sorryAx`-free, reachable, and it ships with a specimen at the deadbeat design (`λ₁ = λ₂ = 0`,
+gains `−1` and `+1` as genuine bit vectors via `qval oneVec = 1`), where the bound collapses to a
+single step's rounding.
+
+**It is general, not a specimen dressed up.** A PI loop's integrator row is always `i' = −x+i+r`,
+so the closed-loop matrix is `[[A,B],[−1,1]]` and its left eigenvectors are forced to
+`(1, λ₂−1)` and `(1, λ₁−1)`. Writing the gains through the characteristic equation
+(`A = λ₁+λ₂−1`, `B = (1−λ₁)(1−λ₂)`) makes all four eigen equations **pure ring identities** — they
+hold for arbitrary `λ₁, λ₂`, with no side condition and no decimal arithmetic. The contraction is
+therefore discharged once for every PI design with real eigenvalues, and the caller supplies only
+the eigenvalues of its own *quantised* gains and a bound on their moduli.
+
+**What is still not claimed.** The eigenvalues must be **real**: an under-damped design has a
+complex pair, no real eigenvector, and this measure does not exist for it. No derivative term, no
+anti-windup, and no claim that the quantised gains are close to the designer's intended ones —
+that is a separate question this theorem does not answer. `pid_trajectory_from_bits` is unchanged
+and is still not the end-to-end result; the D term and the complex-eigenvalue case are what
+remain of the original obstacle.
 
 ---
 
