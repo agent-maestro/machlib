@@ -113,6 +113,47 @@ recurrence over bits, and a first-order (proportional, or saturated-integral) in
 tracking theorem — several sessions, mostly in (1). A "join" built inside the unsigned model
 (positive feedback only) would be true and hollow, and is deliberately not written.
 
+### ⚠ UPDATED 2026-09-06 — (1) and (2) are done, and there is now a closed-loop join for a P controller
+
+`MachLib/SignedFixedPoint.lean` supplies the missing layer, and
+`sfxloop_tracks_exact` is the composition **for a proportional controller**:
+
+> the signed bit-level closed loop `X_{k+1} = A·X_k ⊕ KP·(R ⊖ X_k)`, built from `List Bool` pairs
+> by the signed adder, subtractor and truncating multiply, stays within `4·ulp · geom(A−KP)(n)`
+> of the exact real closed-loop trajectory — with the per-step `4·ulp` **derived from the bits**,
+> not supplied.
+
+`sorryAx`-free; the footprint is the algebra/`exp`-free spine plus `natCast` and the division
+axioms — no analytic axiom, no float bridge. It ships with specimens
+(`gain_specimen`, `sfxloop_tracks_exact_specimen`, and `sval_neg_specimen` exhibiting an actual
+negative value), because this corpus has one recorded flagship that was vacuous for weeks while
+every gate passed.
+
+**How the four obstacles moved.**
+
+1. **Unsigned model — REMOVED.** A signed value is a *pair* of unsigned vectors read as their
+   difference, `sval (p, n) = qval p − qval n`. Not two's-complement: `RTL` has no fixed width
+   (`addc` pads and grows), so there is no wraparound to model and nowhere to put a sign bit. The
+   difference representation needs no width, adds no primitive, and makes addition, negation and
+   **subtraction** exact, each discharged by an existing `RTL` correctness lemma.
+2. **No closed-loop object over bits — REMOVED for this loop.** `sfxloop` feeds the controller's
+   output into the plant's state update, which is what `fxTraj`'s constant `d` could not do.
+3. **No `qval`-scale step lemma — done on the signed side.** `sval_sfxmul_error` bounds the signed
+   truncating multiply two-sidedly by `2·ulp`; two of them give the loop's `4·ulp`. The bound is
+   `2·ulp` and not `1·ulp` because each limb truncates two unsigned cross products, and that
+   factor of two is carried rather than hidden. The `fxpid`-specific lemma is still not written.
+4. **Scalar first-order trajectory lemmas — not binding here.** Closing a *proportional*
+   controller around an affine plant leaves an affine map, `A·x + KP·(R−x) = (A−KP)·x + KP·R`, so
+   `affine_trajectory_bound` applies unchanged. This is a property of the P controller, not a
+   shortcut.
+
+**What is still open, and it is obstacle (4) in its real form.** This is a P controller: no
+integrator, no anti-windup, and the closed-loop map stays first-order. **A PID loop does not**,
+because the integrator adds state — so the PID join needs a trajectory lemma over a non-scalar
+state, which the corpus does not have. `pid_trajectory_from_bits` is still not the end-to-end
+result and its `ε` is still universally quantified. What changed is that the blocker is now one
+identified missing lemma rather than a representation that cannot express the problem at all.
+
 ---
 
 ## 3. The verified-numerics spine

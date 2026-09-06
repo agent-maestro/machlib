@@ -626,6 +626,7 @@ import MachLib.ChainExp2CdegInv
 import MachLib.CrossTargetPairs
 import MachLib.PIDCapstone
 import MachLib.FixedPointSat
+import MachLib.SignedFixedPoint
 import MachLib.CoreModel
 import MachLib.EMLToC
 import MachLib.EMLToCRuntime

@@ -42,10 +42,16 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
 
 - `fxaffine_traj_tracks_exact` (`FixedPointRealBridge`) — the bit-level datapath of the affine
   plant kernel tracks the exact real trajectory within `ulp · geom c n`, with the per-step error
-  *derived* from the bits. This is the end-to-end result. **The same composition for the PID
-  controller path (`fxpid`) is not yet proved**; `pid_trajectory_from_bits` and
-  `fxpid_real_trunc_lt_3ulp` are its two halves and the bridge between them is prose. Do not cite
-  the capstone as an end-to-end result.
+  *derived* from the bits.
+- `sfxloop_tracks_exact` (`SignedFixedPoint`) — the same, **in closed loop with a proportional
+  controller**, within `4 ulp · geom (A−KP) n`. The signed layer it needs represents a value as a
+  difference of two unsigned vectors, which is what makes an error signal `R − X` and negative
+  feedback expressible at all; the unsigned datapath can represent neither. Ships with specimens
+  discharging its hypotheses.
+- **The PID version of that join is still not proved.** A P loop stays affine, so the corpus's
+  scalar trajectory lemma applies; a PID loop has an integrator, so it does not, and the missing
+  piece is a trajectory bound over a non-scalar state. `pid_trajectory_from_bits` still quantifies
+  its per-step error universally — do not cite it as an end-to-end result.
 - `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
   within their forward-error bounds.
 - `kalman_update_1d_fwd_error` (`KalmanUpdateFixedPoint`) — a proven Q16.16 forward-error bound
@@ -125,13 +131,13 @@ fails if the text drifts from the corpus. Measured 2026-09-05:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 570 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 584 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 091 | `find MachLib -name '*.lean' \| wc -l` |
+| `.lean` files under `MachLib/` | 1 092 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 787 of 1 091 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 788 of 1 092 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 
