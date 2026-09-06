@@ -214,10 +214,64 @@ else.
 * **It measures a finite ray and reads a trend.** It cannot certify an asymptotic claim, only
   fail to contradict one.
 
-**What it does support.** The height rising with *depth* (0, 1, 3 at depths 2, 3, 4) and not with
-constant magnitude at fixed depth is the shape the conjecture predicts — `k` may depend on `j`.
-Nothing in 226 000 measured pairs pushed the height up at fixed depth. That is weak evidence, of
-the only kind a search can give, and it is now on the record rather than in nobody's head.
+**What it does support.** The height rising with *depth* and not with constant magnitude at fixed
+depth is the shape the conjecture predicts — `k` may depend on `j`. Nothing in 226 000 measured
+pairs pushed the height up at fixed depth. That is weak evidence, of the only kind a search can
+give, and it is now on the record rather than in nobody's head.
+
+### ▸ THE DECAY FORM, SWEPT EXHAUSTIVELY — and `deepDecay` is EXTREMAL where it can be checked
+
+`EmlGermApproach ⇄ DecayFloor ⇄ GrowthEnvelope` is a proved cycle, so the conjecture may be
+attacked in whichever form is cheapest to search. **`DecayFloor` is enormously cheaper, because it
+is a question about ONE tree rather than a pair** — `|S_j|` candidates instead of `|S_j|²`. That
+turns a 0.001 % sample into an exhaustive sweep at depth 3, which is a different kind of statement.
+
+| depth | coverage | max height | `j − 3` | verdict |
+|---|---|---|---|---|
+| 2 | **exhaustive**, 147 trees over `{0,1}`; 905 over `{0,1,5,50}` | 0 | 0 | matches |
+| 3 | **exhaustive**, 21 612 trees over `{0,1}` | 0 | 0 | matches |
+| 4 | 20 000 constructed at random, each nonzero reading re-checked | 1 | 1 | matches |
+| 5 | 8 000 constructed at random | 1 | 2 | **under-resolved** — see below |
+
+**The finding.** §3 records `deepDecay m` — `exp(1 − tower_{m+1}(x))` at depth `m + 4` — and says
+it "pins the required height at `≥ d − 3`". That is a **lower** bound, by construction. What
+nobody had was the other side. At every depth this search can resolve, **`d − 3` is also an upper
+bound, and `deepDecay` is the family that attains it**: the extremal tree the depth-4 sweep
+returns is `eml(eml(0, eml(eml(x,0), eml(x,0))), 1)`, which unfolds to `e·exp(−exp x)` — that
+family, rediscovered by the sweep rather than supplied to it.
+
+So at depths 2–4 the conjecture's `k` is pinned from both sides at `j − 3`. That is not a proof for
+any depth (a sweep is not an induction), but it does say the *value* of `k` is not in doubt, and a
+proof attempt should aim at exactly `j − 3` rather than search for the right constant.
+
+**Depth 5 is under-resolved and the table says so.** Its ray reaches only `x ≈ 2.2`, so the search
+cannot get to where a height-2 germ separates from a height-1 one; 354 of 8 000 readings were
+rejected as unstable and 1 141 overflowed. A max of 1 there is the instrument running out, not
+evidence about the class.
+
+**Two more instrument defects, both found by checking a result rather than by reasoning.**
+
+5. **The ray at depth 4 is too short to decide EVENTUAL POSITIVITY, not merely too short to
+   resolve a rate.** A first depth-4 sample reported seven trees at height 2, beating the
+   prediction — a counterexample, if true. The first one checked,
+   `eml(x, eml(eml(x,0), x))`, is depth **3**, and on a longer ray it crosses zero at `x ≈ 5.9`:
+   it is not a decaying germ at all, and the short ray had simply stopped before it went negative.
+   §6's warning is about a grid stepping *over* a singularity; this is a ray stopping *short* of
+   one, which is the same defect from the other side. Every nonzero height is now re-measured on a
+   ray three times longer and dropped unless both agree (`unstable`, 91 of 20 000 at depth 4).
+   The check is one-sided and the code says so: agreement does not prove a reading is asymptotic,
+   disagreement proves it is not.
+6. **Enumerate-then-sample is not sampling.** `trees_upto(4, {0,1})` is ~4.7 × 10⁸ trees; building
+   it to take a 40 000-tree sample reached **58 GB resident with 1 GB of RAM free** before it was
+   killed, on the machine whose editor an out-of-memory kill had already taken down that morning.
+   Samples are now *constructed*, never filtered out of a construction.
+
+**The prediction this table tests was itself corrected by the table.** A first draft of this
+section predicted `j − 2`, from miscounting the extremal construction: the smallest positive germ
+at depth `j` is `exp(1 − tower_{j−3})`, and the `exp` that makes it positive costs the extra level.
+The exhaustive depth-3 sweep returned 0 where `j − 2` predicted 1, which is how the miscount was
+found — the instrument correcting the prediction rather than the other way round, which is the
+only direction that is worth anything.
 
 ---
 

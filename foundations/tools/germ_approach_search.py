@@ -357,6 +357,140 @@ def run_controls():
     return allgood
 
 
+# ── the DECAY form, searched exhaustively ────────────────────────────────────
+#
+# `EmlGermApproach ⇄ DecayFloor ⇄ GrowthEnvelope` is a proved three-row cycle, so the conjecture
+# can be attacked in whichever form is cheapest to search — and DecayFloor is enormously cheaper,
+# because it is a question about ONE tree rather than a pair:
+#
+#     every eventually-positive tree of depth ≤ j satisfies  t(x) ≥ exp(−(C + tower_k(x)))
+#
+# The pair form has |S_j|² candidates and can only be sampled (0.001 % at depth 3).  The decay form
+# has |S_j|, so depth 3 over a two-constant set is 21 612 trees and can be swept EXHAUSTIVELY.
+# That upgrades "no counterexample in a thin random sample" to "no counterexample anywhere in this
+# constant set", which is a different kind of statement.
+#
+# THE PREDICTION THIS TESTS: k(j) = j − 3 for the decay form.
+#
+# §3 records the `deepDecay m` family — `exp(1 − tower_{m+1}(x))`, of depth exactly m + 4 — and
+# says it "pins the required height at ≥ d − 3".  That is a LOWER bound on what the floor must
+# allow, established by construction.  What nobody had was an upper bound: is `deepDecay`
+# EXTREMAL, or does some other shape at the same depth decay faster?
+#
+# An exhaustive sweep answers exactly that question at small depth, and its answer is the whole
+# value of this mode: if the maximum height over every tree of depth ≤ j is j − 3, then the known
+# family is extremal and the conjecture's k is pinned from both sides at that depth.
+#
+# (A first draft of this comment predicted j − 2, by miscounting the extremal construction: the
+# smallest positive germ at depth j is exp(1 − tower_{j−3}), and wrapping the negated node in the
+# `exp` that makes it positive costs the extra level.  The sweep said 0 at depth 3 where j − 2
+# would have said 1, which is how the miscount was found — the instrument correcting the
+# prediction rather than the other way round.)
+
+def decay_profile(t: Tree, xs, tail_from=0.6):
+    """Height of a single tree's decay, or why it has none."""
+    heights, vals, tail_measured = [], [], False
+    for i, x in enumerate(xs):
+        v = ev(t, x)
+        if v is None:
+            continue
+        if i >= int(len(xs) * tail_from):
+            tail_measured = True
+        if v is HUGE:
+            heights.append((x, 0)); vals.append((x, BIG)); continue
+        if isnan(v) or isinf(v):
+            continue
+        if v <= 0:
+            return ("not-positive", None, f"t ≤ 0 at x={float(x):.3g}")
+        vals.append((x, v))
+        heights.append((x, required_height(-mlog(v), x)))
+    if not heights:
+        return ("overflow", None, "no sample in range")
+    if not tail_measured:
+        return ("tail-unmeasured", None, f"{len(heights)} foot sample(s) only")
+    cut = int(len(heights) * tail_from)
+    return ("ok", max(k for _, k in heights[cut:] or heights[-1:]),
+            f"tail_k={[k for _, k in heights[cut:]]}")
+
+
+def random_tree(depth, consts, rng):
+    """Build one random tree of depth ≤ `depth` directly.
+
+    NEVER enumerate-then-sample past depth 3.  |S_4| over two constants is ~4.7 × 10⁸ trees;
+    `trees_upto(4, …)` reached 58 GB of resident memory and one gigabyte of free RAM before it was
+    killed, on a machine whose editor an out-of-memory kill had already taken down once the same
+    day.  Sampling means CONSTRUCTING samples, not filtering a construction."""
+    if depth == 0 or rng.random() < 0.25:
+        return C(rng.choice(consts)) if rng.random() < 0.5 else VAR
+    return E(random_tree(depth - 1, consts, rng), random_tree(depth - 1, consts, rng))
+
+
+def decay_stable(t, depth, factor=3):
+    """Measure a tree twice — on the depth's ray and on one reaching `factor`× further — and
+    report `unstable` unless both agree.
+
+    WHY THIS EXISTS.  The depth-4 ray stops at x = 2.8, and that is not merely low resolution: it
+    is too short to decide EVENTUAL POSITIVITY.  A sample at depth ≤ 4 reported seven trees at
+    height 2, beating the prediction; the first one checked, `eml(x, eml(eml(x,0), x))`, turns out
+    to be depth 3 and to cross zero at x ≈ 5.9 — it is not a decaying germ at all, and the short
+    ray simply stopped before it went negative.  A "counterexample" that is an artifact of where
+    the ray ends is the exact failure this file's §6 warns about, met from a new direction: not a
+    grid stepping over a singularity, a ray stopping short of one.
+
+    The check is cheap and it is one-sided: agreement does not prove the reading is asymptotic,
+    disagreement proves it is not."""
+    a = decay_profile(t, ray_for_depth(depth))
+    top = {2: mpf(10) ** 5, 3: mpf(13), 4: mpf("2.8")}.get(depth, mpf("2.2")) * factor
+    lo, n = mpf("1.5"), 12
+    lt, tt = mlog(lo), mlog(top)
+    b = decay_profile(t, [mexp(lt + (tt - lt) * mpf(i) / (n - 1)) for i in range(n)])
+    if a[0] != b[0] or a[1] != b[1]:
+        return ("unstable", None, f"near ray: {a[0]}/{a[1]}   far ray: {b[0]}/{b[1]}")
+    return a
+
+
+def decay_sweep(depth, consts, label, sample=None):
+    """Exhaustive over every tree of depth ≤ `depth` built from `consts`, or `sample` randomly
+    CONSTRUCTED trees when the class is too large to walk."""
+    xs = ray_for_depth(depth)
+    if sample:
+        import random
+        rng = random.Random(20260905)
+        seen, ts = set(), []
+        while len(ts) < sample and len(seen) < sample * 4:
+            t = random_tree(depth, consts, rng)
+            k = str(t)
+            if k not in seen:
+                seen.add(k); ts.append(t)
+        mode = f"RANDOM {len(ts)} constructed"
+    else:
+        ts = trees_upto(depth, consts)
+        mode = "EXHAUSTIVE"
+    print(f"\n=== {label}: decay, depth ≤ {depth}, {len(consts)} constants, "
+          f"{len(ts)} trees ({mode}) ===")
+    import collections
+    counts = collections.Counter()
+    best = []
+    for t in ts:
+        verdict, k, detail = decay_profile(t, xs)
+        # Any nonzero height is a candidate counterexample, so it is re-measured on a longer ray
+        # before it is believed.  Height 0 needs no such care: it is the conjecture holding.
+        if verdict == "ok" and k:
+            verdict, k, detail = decay_stable(t, depth)
+        counts[verdict] += 1
+        if verdict == "ok" and k is not None:
+            best.append((k, str(t), detail))
+    best.sort(key=lambda r: -r[0])
+    hs = collections.Counter(b[0] for b in best)
+    print(f"  {dict(counts)}")
+    print(f"  height distribution: {dict(hs)}")
+    if best:
+        print(f"  MAX height {best[0][0]}   (prediction for depth {depth}: {max(depth - 3, 0)})")
+        for b in best[:4]:
+            print(f"    k={b[0]}  {b[1][:90]}")
+    return best[0][0] if best else None
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "small"
     if mode == "controls":
@@ -372,9 +506,18 @@ if __name__ == "__main__":
             ("huge constants", [0, 1, 1000]),
         ]:
             sweep(2, consts, label)
+    elif mode == "decay":
+        if not run_controls():
+            sys.exit("controls failed; a negative result would be unreadable")
+        for d in (2, 3):
+            decay_sweep(d, [0, 1], f"depth {d}")
+        decay_sweep(2, [0, 1, 5, 50], "depth 2, wider constants")
+        decay_sweep(4, [0, 1], "depth 4", sample=40000)
     elif mode == "depth3":
         if not run_controls():
             sys.exit("controls failed; a negative result would be unreadable")
         sweep(3, [0, 1], "depth 3, minimal constants", limit_pairs=6000)
+
+
 
 

@@ -111,13 +111,30 @@ instances rather than counterexamples: outrunning the target by growth, and driv
 zero. Both occur in the class and both meet the floor comfortably. A counterexample would be a
 *family* at fixed depth whose required height is unbounded, and it is not of either shape.
 
-**Status of the evidence.** A falsification search was run (2026-09-05, script and full
-limitations in the repository): 223 248 measured pairs at depth ≤ 2 all require height 0; 2 978
-measured pairs at depth ≤ 3 require height 0 or 1. Positive controls constructed to need a
-nonzero height do report one, so the search can fail. It found nothing, and it cannot see past
-`x ≈ 13` at depth 3 because the tower outruns 120-digit arithmetic there — which is exactly where
-the question gets interesting. **The search is weak evidence for the conjecture and no evidence at
-all against it.**
+**Status of the evidence, and what it is worth.** A falsification search was run (2026-09-05;
+script, controls and full limitations in the repository). It is best stated in the *equivalent
+decay form* — every eventually-positive tree of depth ≤ `j` is bounded below by
+`exp(−(C + tower_k(x)))` — because that is a question about one tree rather than a pair, and can
+therefore be swept exhaustively rather than sampled:
+
+| depth | coverage | largest height found | `j − 3` |
+|---|---|---|---|
+| 2 | exhaustive, 147 trees; 905 with wider constants | 0 | 0 |
+| 3 | **exhaustive, 21 612 trees** | 0 | 0 |
+| 4 | 20 000 random trees, every nonzero reading re-checked on a longer ray | 1 | 1 |
+| 5 | 8 000 random trees | 1 | 2 — under-resolved, see below |
+
+**No counterexample, and something slightly better: the extremal family is identified.** A known
+construction gives a lower bound of `j − 3` on the height any valid floor must allow. At every
+depth this search resolves, `j − 3` is also an *upper* bound, and the tree the sweep returns as
+extremal at depth 4 unfolds to exactly that known family — rediscovered rather than supplied. So
+the *value* of `k` is not in doubt; an attempt should aim at `j − 3` and not hunt for the constant.
+
+**What it cannot do.** It cannot see far: the ray reaches `x ≈ 13` at depth 3 and `x ≈ 2.2` at
+depth 5, because the tower passes 120-digit arithmetic there. At depth 5 that is why the table
+under-reports — the instrument runs out, and the row says so rather than being read as evidence.
+Positive controls constructed to need a nonzero height do report one, so the search is capable of
+failing. **It is weak evidence for the conjecture and no evidence at all against it.**
 
 **Why an answer either way is worth having.** The statement is equivalent, inside this
 development, to two others that look different — a decay floor by depth, and a growth envelope by
