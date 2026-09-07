@@ -62,10 +62,12 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   triangle inequality would need Cauchy–Schwarz and square roots this corpus does not have, by
   working with the squared measure: a rotation-scaling multiplies it by exactly `σ²+ω²` (a ring
   identity), and the cross term splits by a sum of squares.
-- **Still not proved:** the derivative term (a PID loop has three states; both measures here are
-  two-state), and a bit-level instantiation of the complex case. `pid_trajectory_from_bits` is
-  unchanged and still quantifies its per-step error universally — do not cite it as an end-to-end
-  result.
+  Both cases are instantiated at the same datapath (`spiloop_tracks_exact_complex`), so every PI
+  design is covered whatever its damping.
+- **Still not proved:** the derivative term. A PID loop has three states, both measures here are
+  two-state, and the eigenstructure of a 3×3 is not forced by the integrator row the way the 2×2
+  was — so it will not come free. `pid_trajectory_from_bits` is unchanged and still quantifies its
+  per-step error universally; do not cite it as an end-to-end result.
 - `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
   within their forward-error bounds.
 - `kalman_update_1d_fwd_error` (`KalmanUpdateFixedPoint`) — a proven Q16.16 forward-error bound
@@ -145,7 +147,7 @@ fails if the text drifts from the corpus. Measured 2026-09-05:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 610 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 613 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
 | `.lean` files under `MachLib/` | 1 095 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |

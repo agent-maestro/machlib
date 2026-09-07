@@ -1,5 +1,7 @@
 import MachLib.SignedFixedPoint
 import MachLib.TwoStateTracking
+import MachLib.QuadTracking
+import MachLib.SignTactic
 
 /-!
 # The join, for a PI controller: a signed bit-level loop with an integrator
@@ -271,6 +273,101 @@ theorem spiloop_tracks_exact_deadbeat (GC GF X0 I0 : SVec) (n : Nat) :
   · rw [sval_posOne]; mach_ring
   · rw [abs_zero]; exact le_refl 0
   · rw [abs_zero]; exact le_refl 0
+
+/-! ### The same datapath, for an under-damped design
+
+`spiloop_tracks_exact` above needs the closed-loop eigenvalues to be **real**, because its measure
+is built from real left eigenvectors. An under-damped PI design has a complex pair and no such
+eigenvector. `QuadTracking` supplies the squared, rotation-scaling measure for that case; what
+follows is the *same datapath* analysed with it, so the two together cover every PI design
+whatever its damping.
+
+Nothing about the loop changes — `spiloop` is the same definition, the integrator row is still
+exact, and the state row still loses two truncating multiplies. Only the measure and the
+contraction factor differ. -/
+
+/-- With the real-Jordan functionals `(1, σ−1)` and `(0, −ω)`, a perturbation confined to the
+state row is measured as its own square — the integrator row being exact is again what makes this
+the whole per-step term. -/
+theorem n2_state_only (q s u : Real) : n2 1 q 0 s u 0 = u * u := by
+  show (1 * u + q * 0) * (1 * u + q * 0) + (0 * u + s * 0) * (0 * u + s * 0) = u * u
+  have e : (1 : Real) * u + q * 0 = u := by mach_mpoly [u, q]
+  have e' : (0 : Real) * u + s * 0 = 0 := by mach_mpoly [u, s]
+  rw [e, e']
+  mach_mpoly [u]
+
+/-- The state row's squared error, from its absolute one. -/
+theorem spi_state_error_sq (GA GB GC X I : SVec) :
+    (sval (sadd (sadd (sfxmul GA X) (sfxmul GB I)) GC)
+      - (sval GA * sval X + sval GB * sval I + sval GC))
+    * (sval (sadd (sadd (sfxmul GA X) (sfxmul GB I)) GC)
+      - (sval GA * sval X + sval GB * sval I + sval GC))
+      ≤ (natCast 4 * ulp) * (natCast 4 * ulp) := by
+  refine mul_self_le_mul_self_of_abs_le ?_
+  have hnn : (0 : Real) ≤ natCast 4 * ulp :=
+    mul_nonneg (natCast_nonneg 4) (le_of_lt ulp_pos)
+  rw [abs_of_nonneg hnn]
+  exact spi_state_error GA GB GC X I
+
+/-- **The join for an under-damped PI design.** The same signed bit-level loop, tracked in the
+squared rotation-scaling measure, so the result covers designs whose closed-loop eigenvalues are a
+complex pair `σ ± iω`.
+
+The contraction factor is `(1+α)(σ² + ω²)`, carrying the cost of splitting the cross term by a sum
+of squares instead of Cauchy–Schwarz — `QuadTracking` documents that price and exhibits a design
+where it is not fatal. As in the real case the rotation-scaling relations are ring identities in
+`σ, ω`, so no design-specific work is needed beyond naming the eigenvalues of the caller's own
+quantised gains. -/
+theorem spiloop_tracks_exact_complex
+    (GA GB GC GF X0 I0 : SVec) {sig om α β : Real}
+    (heigA : sval GA = (1 + 1) * sig - 1)
+    (heigB : sval GB = (sig - 1) * (sig - 1) + om * om)
+    (hαβ : α * β = 1) (hα : 0 ≤ α) (hβ : 0 ≤ β) (n : Nat) :
+    n2 1 (sig - 1) 0 (-om)
+        (sval (spiloop GA GB GC GF X0 I0 n).1
+          - (exactPI (sval GA) (sval GB) (sval GC) (sval GF) (sval X0) (sval I0) n).1)
+        (sval (spiloop GA GB GC GF X0 I0 n).2
+          - (exactPI (sval GA) (sval GB) (sval GC) (sval GF) (sval X0) (sval I0) n).2)
+      ≤ npow n ((1 + α) * (sig * sig + om * om))
+          * n2 1 (sig - 1) 0 (-om)
+              (sval (spiloop GA GB GC GF X0 I0 0).1
+                - (exactPI (sval GA) (sval GB) (sval GC) (sval GF) (sval X0) (sval I0) 0).1)
+              (sval (spiloop GA GB GC GF X0 I0 0).2
+                - (exactPI (sval GA) (sval GB) (sval GC) (sval GF) (sval X0) (sval I0) 0).2)
+        + (1 + β) * ((natCast 4 * ulp) * (natCast 4 * ulp))
+          * geom ((1 + α) * (sig * sig + om * om)) n := by
+  obtain ⟨r₁, r₂, r₃, r₄⟩ := pi_complex_rotscale sig om
+  rw [← heigA] at r₁ r₃
+  rw [← heigB] at r₂ r₄
+  have hβ1 : (0 : Real) ≤ 1 + β := le_trans (le_of_lt zero_lt_one_ax) (le_add_of_nonneg_right hβ)
+  refine two_state_tracks_exact_quad
+    (A := sval GA) (B := sval GB) (C := sval GC) (D := -1) (E := 1) (F := sval GF)
+    (sig := sig) (om := om) (α := α) (β := β)
+    (ε := (1 + β) * ((natCast 4 * ulp) * (natCast 4 * ulp)))
+    (p := 1) (q := sig - 1) (r := 0) (s := -om)
+    (x := fun k => sval (spiloop GA GB GC GF X0 I0 k).1)
+    (i := fun k => sval (spiloop GA GB GC GF X0 I0 k).2)
+    (xe := fun k => (exactPI (sval GA) (sval GB) (sval GC) (sval GF) (sval X0) (sval I0) k).1)
+    (ie := fun k => (exactPI (sval GA) (sval GB) (sval GC) (sval GF) (sval X0) (sval I0) k).2)
+    (dx := fun k => sval (spiloop GA GB GC GF X0 I0 (k + 1)).1
+        - (sval GA * sval (spiloop GA GB GC GF X0 I0 k).1
+           + sval GB * sval (spiloop GA GB GC GF X0 I0 k).2 + sval GC))
+    (di := fun _ => 0)
+    hαβ hβ hα
+    (mul_nonneg hβ1 (mul_self_nonneg _))
+    (add_nonneg (mul_self_nonneg sig) (mul_self_nonneg om))
+    (fun k => rfl) (fun k => rfl) (fun k => residual_eq _ _) ?_ r₁ r₂ r₃ r₄ ?_ n
+  · intro k
+    show sval (sadd (ssub (spiloop GA GB GC GF X0 I0 k).2 (spiloop GA GB GC GF X0 I0 k).1) GF)
+        = (-1) * sval (spiloop GA GB GC GF X0 I0 k).1
+          + 1 * sval (spiloop GA GB GC GF X0 I0 k).2 + sval GF + 0
+    rw [spi_integrator_exact]
+    exact eq_add_zero _
+  · intro k
+    rw [n2_state_only]
+    exact mul_le_mul_of_nonneg_left
+      (spi_state_error_sq GA GB GC (spiloop GA GB GC GF X0 I0 k).1
+        (spiloop GA GB GC GF X0 I0 k).2) hβ1
 
 end Real
 

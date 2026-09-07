@@ -207,12 +207,17 @@ proved from `1 + 1 < e` with no numerics. And as in the real case, the PI loop's
 relations are **ring identities** in `σ, ω` (`pi_complex_rotscale`), so the eigenstructure is
 again forced and free.
 
-**What is still not claimed.** No derivative term — a PID loop has three states and both measures
-here are two-state. No anti-windup. No claim that the quantised gains are close to the designer's
-intended ones, which is a separate question. `QuadTracking` supplies the measure and the tracking
-theorem for the complex case but is **not** instantiated at a bit-level datapath the way
-`SignedPILoop` is for the real case. `pid_trajectory_from_bits` is unchanged and is still not the
-end-to-end result.
+**Both cases are instantiated at the datapath, so every PI design is covered whatever its
+damping.** `spiloop_tracks_exact_complex` is the *same* `spiloop` — same definition, same exact
+integrator row, same two truncating multiplies — analysed in the squared measure, with per-step
+term `(1+β)·(4·ulp)²` and factor `(1+α)(σ²+ω²)`. Together with the real-eigenvalue theorem it
+leaves no gap in damping.
+
+**What is still not claimed.** No **derivative** term: a PID loop has three states and both
+measures here are two-state, and unlike the 2×2 case the eigenstructure of a 3×3 is not forced by
+the integrator row, so it will not come free. No anti-windup. No claim that the quantised gains
+are close to the designer's intended ones, which is a separate question this does not answer.
+`pid_trajectory_from_bits` is unchanged and is still not the end-to-end result.
 
 ---
 
