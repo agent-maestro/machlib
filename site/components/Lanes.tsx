@@ -6,8 +6,18 @@ const NUMERICS: Result[] = [
     text:
       "The bit-level fixed-point datapath of the affine plant kernel tracks the exact real " +
       "trajectory within ulp · geom c n, with the per-step error derived from the bits. This is " +
-      "the end-to-end result. The same composition for the PID controller path is not yet " +
-      "proved; its two halves exist and the bridge between them is prose.",
+      "the end-to-end result for a plant with no controller state.",
+  },
+  {
+    name: "spiloop_tracks_exact",
+    text:
+      "The same join with an integrator: a signed bit-level PI closed loop tracks the exact real " +
+      "PI trajectory within 4 ulp · geom L n plus transient. It is general rather than a worked " +
+      "example, because a PI loop's integrator row forces its left eigenvectors and the resulting " +
+      "eigen equations are ring identities. A companion theorem covers under-damped designs, " +
+      "whose eigenvalues are complex and admit no real eigenvector, so every PI design is " +
+      "covered whatever its damping. The derivative term has its contraction and its tracking " +
+      "bound too, but is not yet instantiated at a bit-level datapath.",
   },
   {
     name: "cross_target",
