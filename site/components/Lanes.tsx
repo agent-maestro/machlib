@@ -18,7 +18,9 @@ const NUMERICS: Result[] = [
       "whose eigenvalues are complex and admit no real eigenvector, so every PI design is " +
       "covered whatever its damping. The derivative term is joined at the datapath too " +
       "(spidloop_tracks_exact): in a PID loop the integrator row is exact and the delay row is a " +
-      "wire, so every rounding error comes from the state row's three multiplies.",
+      "wire, so every rounding error comes from the state row's three multiplies. Under-damped " +
+      "designs, whose eigenvalues are complex, are covered by a squared measure that needs no " +
+      "square roots, so every PI and PID design is covered whatever its damping.",
   },
   {
     name: "cross_target",

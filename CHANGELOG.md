@@ -5,6 +5,69 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-09-07 (hc)
+
+### The last damping gap — every PID design is now covered, whatever its damping
+
+`MachLib/ThreeStateQuadTracking.lean` (new, reachable, 0 `sorryAx`). `ThreeStateTracking` needs the
+three closed-loop eigenvalues to be **real**, because its measure is a maximum of three real left
+eigenvectors. An under-damped PID design has one real eigenvalue `r` and a conjugate pair
+`σ ± iω`, for which two of those functionals do not exist. `QuadTracking` closed the same gap one
+dimension down for PI. This closes it here.
+
+**The measure splits the way the state space does.** A real eigendirection plus a two-dimensional
+real-Jordan block, so
+
+```
+n3 = f²  +  (g₁² + g₂²)
+```
+
+and one step multiplies the first term by exactly `r²` and the second by exactly `σ²+ω²`. **Both
+are equalities, and both are ring identities** (`n3_split`). So a step of the loop costs no
+inequality at all, which is the same reason the two-dimensional version escaped Cauchy–Schwarz and
+square roots — this corpus has no `sqrt` machinery to spend on either. The only inequality in the
+final bound comes from the cross-term split, which is again a **sum of squares** with `α·β = 1`,
+the reciprocal carried as a second variable so no division appears in the statement or the proof.
+
+**Forced and free a third time — and this time the check came FIRST.** All nine relations are ring
+identities in `r, σ, ω` once the gains are written through the characteristic equation in its
+factored real form `(x−r)(x² − 2σx + (σ²+ω²))`. The estimate for the real case, in `(ha)`, was made
+by eyeballing the problem and was wrong; that is recorded in `ThreeStateTracking`'s header. This
+time the symbolic check was run **before any prose was written**, which is that correction put into
+practice rather than merely written down. It cost one command again.
+
+**When the measure is a norm.** The determinant of the three functionals factors as
+
+```
+det = ω · r · (r−1) · (σ²+ω²) · ((r−σ)²+ω²) · ((σ−1)²+ω²)
+```
+
+and the last two factors cannot vanish when `ω ≠ 0`. So `n3` is a norm exactly when **`ω ≠ 0` and
+`r` is neither `0` nor `1`** — the same two excluded values as the real case, with `ω ≠ 0` standing
+in for distinctness. `ω = 0` is precisely the real case that `ThreeStateTracking` already handles,
+so the two measures are complementary rather than overlapping and neither has to know about the
+other.
+
+**The specimen answers the obvious objection.** The split costs a factor `(1+α)` on top of
+`max(r², σ²+ω²)`, and the question is whether that is fatal. It is not:
+`pid_complex_contraction_specimen` exhibits `r = e⁻¹`, `σ = 0`, `ω = e⁻¹` with `α = β = 1`, where
+both modulus hypotheses hold with equality and the factor is `2e⁻²`, below one — proved with no
+numerics, reusing `QuadTracking`'s specimen whose quantity is literally the same. Its last conjunct
+is `0 < e⁻¹`, which is `ω ≠ 0` in positive form: the design is **genuinely complex** and not the
+real case in disguise, so `n3` is a norm there rather than a seminorm.
+
+**Two traps, both avoided rather than met.** Doubling is written additively (`sig + sig`, never
+`(1+1)*sig`), because `CLAUDE.md` records that the normaliser stalls when literal constants have to
+be distributed over sums. And the `0` entries of the integrator and delay rows are cleared with
+`mul_zero`/`add_zero` rewrites before the normaliser sees them, for the recorded reason that a
+literal `0 * t` makes `mach_mpoly` **grind rather than fail**.
+
+**Not claimed.** The complex case is the measure and the tracking theorem; it is **not** joined to
+`spidloop` the way the real case is by `(hb)`. That is the remaining asymmetry, and it is stated in
+the module header, the README and `what_is_proven.md`.
+
+Aggregator reaches **794 of 1 098**. Ledger unmoved: 23 rows, 7 open, 4 distinct, 243 axioms.
+
 ## [Unreleased] — 2026-09-07 (hb)
 
 ### The derivative term at the datapath — and a specimen that could not be the deadbeat one
