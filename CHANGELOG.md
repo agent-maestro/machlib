@@ -5,6 +5,42 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-09-07 (hd)
+
+### Both PID theorems are now joins about the SAME loop — the arc is closed
+
+`spidloop_tracks_exact_complex`, in `MachLib/SignedPIDLoop.lean`. `(hc)` supplied the squared
+measure and the tracking theorem for an under-damped PID design but was not wired to a datapath, so
+the complex case was a lemma while the real case was a join. That asymmetry was the one item `(hc)`
+listed as remaining, in three documents. It is gone.
+
+**Nothing about the datapath changes**, and that is the content of the claim rather than a caveat.
+`spidloop` is the same definition: the integrator row is still `ssub` then `sadd` and therefore
+still exact, the delay row is still a wire, and the state row still loses exactly three truncating
+multiplies. Only the measure and the contraction factor differ — `(1+α)·L` for any `L` dominating
+`r²` and `σ²+ω²`, with per-step term `(1+β)·(a₁²+a₂²+a₃²)·(6·ulp)²`. So the two PID theorems
+partition the design space by damping and leave no gap in it, which was the point.
+
+**The leading-coefficient price appears again, in squared form.** `n3_state_only` is an equality:
+a perturbation confined to the state row is measured as `(a₁²+a₂²+a₃²)·u²`. That is the squared
+analogue of the factor `K` the real-eigenvalue join carries, for the same reason — the PID
+functionals begin with `λ(λ−1)` rather than `1`. Neither join hides it.
+
+**One technique worth recording, because it shortened the statement as well as the proof.** The
+nine relations are stated with the gains inlined as expressions in `r, σ, ω`. Rewriting the three
+design hypotheses **backwards** (`rw [← heigA] …`) turns those inlined forms into `sval GA`,
+`sval GB`, `sval GC` — the caller's actual bit vectors. `SignedPILoop` does the same thing for the
+two-state case. The payoff here is larger: the PID functionals are *built from* the gains, so the
+measure's coefficients come out as `r · sval GB` rather than a page of algebra.
+
+**A trap in that step.** `rw [← heigA, ← heigB, ← heigC] at f₁ f₂ f₃ …` fails, because every
+rewrite in a list must succeed in every named hypothesis and `A` occurs in only the *first*
+relation of each triple. Split it: `A` into three hypotheses, `B` and `C` into all nine. The error
+message names the pattern it could not find, which makes this quick to diagnose once seen.
+
+Aggregator unchanged at **794 of 1 098** — the module already existed. Ledger unmoved: 23 rows,
+7 open, 4 distinct, 243 axioms.
+
 ## [Unreleased] — 2026-09-07 (hc)
 
 ### The last damping gap — every PID design is now covered, whatever its damping

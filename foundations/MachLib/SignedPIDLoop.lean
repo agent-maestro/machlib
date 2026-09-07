@@ -1,5 +1,6 @@
 import MachLib.ThreeStateTracking
 import MachLib.SignedPILoop
+import MachLib.ThreeStateQuadTracking
 
 /-!
 # The signed bit-level PID loop tracks its exact trajectory
@@ -546,6 +547,155 @@ theorem spidloop_tracks_exact_quarter (GD GF X0 I0 P0 : SVec) (n : Nat) :
       eq_sub_of_add_eq' quarter_sq_four
     rw [e, abs_neg, abs_of_nonneg (add_nonneg (add_nonneg hqq hqq) hqq), h3]
     exact le_trans (sub_le_self hqq) hq1
+
+/-! ### The same datapath, for an under-damped PID design
+
+`spidloop_tracks_exact` above needs all three closed-loop eigenvalues **real**, because `m3` is
+built from three real left eigenvectors. An under-damped PID design has one real eigenvalue and a
+complex pair, and two of those functionals do not exist for it. `ThreeStateQuadTracking` supplies
+the squared measure for that case; what follows is the *same datapath* analysed with it, so the two
+together cover every PID design whatever its damping.
+
+Nothing about the loop changes. `spidloop` is the same definition, the integrator row is still
+exact, the delay row is still a wire, and the state row still loses exactly three truncating
+multiplies. Only the measure and the contraction factor differ. -/
+
+/-- With a perturbation confined to the state row, `n3` reduces to the sum of the three leading
+coefficients' squares times `u²` — an equality, and the analogue of the factor `K` that the
+real-eigenvalue join carries. The integrator and delay rows being exact is again what makes this
+the whole per-step term rather than one part of it. -/
+theorem n3_state_only (a₁ b₁ c₁ a₂ b₂ c₂ a₃ b₃ c₃ u : Real) :
+    n3 a₁ b₁ c₁ a₂ b₂ c₂ a₃ b₃ c₃ u 0 0
+      = (a₁ * a₁ + (a₂ * a₂ + a₃ * a₃)) * (u * u) := by
+  have e : ∀ a b c : Real, a * u + b * 0 + c * 0 = a * u := by
+    intro a b c
+    rw [mul_zero, mul_zero, add_zero, add_zero]
+  show (a₁ * u + b₁ * 0 + c₁ * 0) * (a₁ * u + b₁ * 0 + c₁ * 0)
+      + ((a₂ * u + b₂ * 0 + c₂ * 0) * (a₂ * u + b₂ * 0 + c₂ * 0)
+         + (a₃ * u + b₃ * 0 + c₃ * 0) * (a₃ * u + b₃ * 0 + c₃ * 0)) = _
+  rw [e, e, e]
+  mach_mpoly [a₁, a₂, a₃, u]
+
+/-- The state row's squared error, from its absolute one. -/
+theorem spid_state_error_sq (GA GB GC GD X I P : SVec) :
+    (sval (sadd (sadd (sadd (sfxmul GA X) (sfxmul GB I)) (sfxmul GC P)) GD)
+      - (sval GA * sval X + sval GB * sval I + sval GC * sval P + sval GD))
+    * (sval (sadd (sadd (sadd (sfxmul GA X) (sfxmul GB I)) (sfxmul GC P)) GD)
+      - (sval GA * sval X + sval GB * sval I + sval GC * sval P + sval GD))
+      ≤ (natCast 6 * ulp) * (natCast 6 * ulp) := by
+  refine mul_self_le_mul_self_of_abs_le ?_
+  have hnn : (0 : Real) ≤ natCast 6 * ulp :=
+    mul_nonneg (natCast_nonneg 6) (le_of_lt ulp_pos)
+  rw [abs_of_nonneg hnn]
+  exact spid_state_error GA GB GC GD X I P
+
+/-- **The join for an under-damped PID design.** The same signed bit-level loop, tracked in the
+squared measure of `ThreeStateQuadTracking`, so the result covers designs with one real closed-loop
+eigenvalue and a complex pair.
+
+The contraction factor is `(1+α)·L` for any `L` dominating `r²` and `σ²+ω²`, carrying the cost of
+splitting the cross term by a sum of squares instead of Cauchy–Schwarz;
+`pid_complex_contraction_specimen` exhibits a genuinely complex design where that cost is not
+fatal. As in every other case in this arc the nine relations are ring identities, so nothing
+design-specific is needed beyond naming the eigenvalues of the caller's own quantised gains. -/
+theorem spidloop_tracks_exact_complex
+    (GA GB GC GD GF X0 I0 P0 : SVec) {rr sig om L α β : Real}
+    (heigA : sval GA = rr + sig + sig - 1)
+    (heigB : sval GB = rr * sig + rr * sig + (sig * sig + om * om) - rr - sig - sig + 1
+                        - rr * (sig * sig + om * om))
+    (heigC : sval GC = -(rr * (sig * sig + om * om)))
+    (hr : rr * rr ≤ L) (hc : sig * sig + om * om ≤ L) (hL : 0 ≤ L)
+    (hαβ : α * β = 1) (hα : 0 ≤ α) (hβ : 0 ≤ β) (n : Nat) :
+    n3 (rr * (rr - 1)) (rr * sval GB) ((rr - 1) * sval GC)
+       (sig * sig - om * om - sig) (sig * sval GB) ((sig - 1) * sval GC)
+       (sig * om + sig * om - om) (om * sval GB) (om * sval GC)
+        (sval (spidloop GA GB GC GD GF X0 I0 P0 n).1
+          - (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+              (sval X0) (sval I0) (sval P0) n).1)
+        (sval (spidloop GA GB GC GD GF X0 I0 P0 n).2.1
+          - (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+              (sval X0) (sval I0) (sval P0) n).2.1)
+        (sval (spidloop GA GB GC GD GF X0 I0 P0 n).2.2
+          - (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+              (sval X0) (sval I0) (sval P0) n).2.2)
+      ≤ npow n ((1 + α) * L)
+          * n3 (rr * (rr - 1)) (rr * sval GB) ((rr - 1) * sval GC)
+               (sig * sig - om * om - sig) (sig * sval GB) ((sig - 1) * sval GC)
+               (sig * om + sig * om - om) (om * sval GB) (om * sval GC)
+              (sval (spidloop GA GB GC GD GF X0 I0 P0 0).1
+                - (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+                    (sval X0) (sval I0) (sval P0) 0).1)
+              (sval (spidloop GA GB GC GD GF X0 I0 P0 0).2.1
+                - (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+                    (sval X0) (sval I0) (sval P0) 0).2.1)
+              (sval (spidloop GA GB GC GD GF X0 I0 P0 0).2.2
+                - (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+                    (sval X0) (sval I0) (sval P0) 0).2.2)
+        + (1 + β)
+            * (((rr * (rr - 1)) * (rr * (rr - 1))
+                + ((sig * sig - om * om - sig) * (sig * sig - om * om - sig)
+                   + (sig * om + sig * om - om) * (sig * om + sig * om - om)))
+               * ((natCast 6 * ulp) * (natCast 6 * ulp)))
+          * geom ((1 + α) * L) n := by
+  obtain ⟨f₁, f₂, f₃⟩ := pid_complex_real_direction rr sig om
+  obtain ⟨p₁, p₂, p₃⟩ := pid_complex_jordan_first rr sig om
+  obtain ⟨q₁, q₂, q₃⟩ := pid_complex_jordan_second rr sig om
+  -- `A` occurs only in the first relation of each triple; `B` and `C` occur in all nine, since
+  -- the functionals themselves are built from them. Rewriting the gains BACKWARDS turns the
+  -- inlined characteristic-equation forms into the caller's actual bit vectors.
+  rw [← heigA] at f₁ p₁ q₁
+  rw [← heigB, ← heigC] at f₁ f₂ f₃ p₁ p₂ p₃ q₁ q₂ q₃
+  have hβ1 : (0 : Real) ≤ 1 + β := le_trans (le_of_lt zero_lt_one_ax) (le_add_of_nonneg_right hβ)
+  have hSnn : (0 : Real) ≤ (rr * (rr - 1)) * (rr * (rr - 1))
+      + ((sig * sig - om * om - sig) * (sig * sig - om * om - sig)
+         + (sig * om + sig * om - om) * (sig * om + sig * om - om)) :=
+    add_nonneg (mul_self_nonneg _)
+      (add_nonneg (mul_self_nonneg _) (mul_self_nonneg _))
+  refine three_state_tracks_exact_quad
+    (A₁₁ := sval GA) (A₁₂ := sval GB) (A₁₃ := sval GC) (C₁ := sval GD)
+    (A₂₁ := -1) (A₂₂ := 1) (A₂₃ := 0) (C₂ := sval GF)
+    (A₃₁ := 1) (A₃₂ := 0) (A₃₃ := 0) (C₃ := 0)
+    (rr := rr) (sig := sig) (om := om) (L := L) (α := α) (β := β)
+    (ε := (1 + β)
+        * (((rr * (rr - 1)) * (rr * (rr - 1))
+            + ((sig * sig - om * om - sig) * (sig * sig - om * om - sig)
+               + (sig * om + sig * om - om) * (sig * om + sig * om - om)))
+           * ((natCast 6 * ulp) * (natCast 6 * ulp))))
+    (x := fun k => sval (spidloop GA GB GC GD GF X0 I0 P0 k).1)
+    (i := fun k => sval (spidloop GA GB GC GD GF X0 I0 P0 k).2.1)
+    (z := fun k => sval (spidloop GA GB GC GD GF X0 I0 P0 k).2.2)
+    (xe := fun k => (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+                      (sval X0) (sval I0) (sval P0) k).1)
+    (ie := fun k => (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+                      (sval X0) (sval I0) (sval P0) k).2.1)
+    (ze := fun k => (exactPID (sval GA) (sval GB) (sval GC) (sval GD) (sval GF)
+                      (sval X0) (sval I0) (sval P0) k).2.2)
+    (dx := fun k => sval (spidloop GA GB GC GD GF X0 I0 P0 (k + 1)).1
+        - (sval GA * sval (spidloop GA GB GC GD GF X0 I0 P0 k).1
+           + sval GB * sval (spidloop GA GB GC GD GF X0 I0 P0 k).2.1
+           + sval GC * sval (spidloop GA GB GC GD GF X0 I0 P0 k).2.2 + sval GD))
+    (di := fun _ => 0) (dz := fun _ => 0)
+    hαβ hβ hα (mul_nonneg hβ1 (mul_nonneg hSnn (mul_self_nonneg _))) hL
+    (fun k => rfl) (fun k => rfl) (fun k => rfl)
+    (fun k => residual_eq3 _ _) ?_ ?_ f₁ f₂ f₃ p₁ p₂ p₃ q₁ q₂ q₃ hr hc ?_ n
+  · intro k
+    show sval (sadd (ssub (spidloop GA GB GC GD GF X0 I0 P0 k).2.1
+                          (spidloop GA GB GC GD GF X0 I0 P0 k).1) GF)
+        = (-1) * sval (spidloop GA GB GC GD GF X0 I0 P0 k).1
+          + 1 * sval (spidloop GA GB GC GD GF X0 I0 P0 k).2.1
+          + 0 * sval (spidloop GA GB GC GD GF X0 I0 P0 k).2.2 + sval GF + 0
+    rw [spid_integrator_exact]
+    exact integ_shape _ _ _ _
+  · intro k
+    exact delay_shape _ _ _
+  · intro k
+    rw [n3_state_only]
+    exact mul_le_mul_of_nonneg_left
+      (mul_le_mul_of_nonneg_left
+        (spid_state_error_sq GA GB GC GD
+          (spidloop GA GB GC GD GF X0 I0 P0 k).1
+          (spidloop GA GB GC GD GF X0 I0 P0 k).2.1
+          (spidloop GA GB GC GD GF X0 I0 P0 k).2.2) hSnn) hβ1
 
 end Real
 

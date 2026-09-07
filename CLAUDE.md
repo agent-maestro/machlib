@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 098 `.lean` files** (784 top-level + 314 in subdirectories) /
-**249 736 lines** / **7 649 theorems**, re-exported through the aggregator
+**249 886 lines** / **7 652 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 649
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 369
+  | paste -sd+ | bc                                    # 7 652
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 372
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -444,8 +444,9 @@ error universally. The three-row `spidloop` datapath is **built** (`SignedPIDLoo
 row's three multiplies, scaled by the measure's leading coefficients. The complex-pair case is **also done**
 (`ThreeStateQuadTracking`, 2026-09-07): the measure splits as `f² + (g₁² + g₂²)`, a step multiplies
 the parts by exactly `r²` and `σ²+ω²`, and all nine relations are ring identities in `r, σ, ω`. So
-every PID design is covered whatever its damping. What is genuinely left: the complex case is not
-joined to `spidloop` the way the real case is.
+every PID design is covered whatever its damping. It is joined to `spidloop` as well
+(`spidloop_tracks_exact_complex`), so **both** PID theorems are joins about the same loop and the
+whole PI/PID arc is closed: real and complex, 2x2 and 3x3, measure and datapath.
 
 **`Depth3ApproachBelow` is DISCHARGED** (`depth3ApproachBelow_holds`, `MachLib/EMLDepth2Form.lean`,
 2026-09-05) — the decaying-floor replacement for the refuted `depth_le_three_gap_below`: a depth-≤3

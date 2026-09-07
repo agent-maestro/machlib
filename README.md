@@ -90,10 +90,12 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   `σ²+ω²`, both **equalities** proved as ring identities, so the dynamics cost no inequality at
   all. All nine relations are again forced and free. **Every PID design is now covered whatever its
   damping.**
-- **Still not proved:** the complex case is the measure and the tracking theorem; it is not joined
-  to a bit-level datapath the way the real case is by `spidloop_tracks_exact`. No anti-windup.
-  `pid_trajectory_from_bits` is unchanged and still quantifies its per-step error universally; do
-  not cite it as an end-to-end result.
+  `spidloop_tracks_exact_complex` instantiates it at the **same datapath** — same `spidloop`, same
+  exact integrator, same wire for the delay row — so the two PID theorems partition the design
+  space by damping and leave no gap in it.
+- **Still not proved:** no anti-windup, and no claim that the quantised gains are close to the
+  designer's intended ones. `pid_trajectory_from_bits` is unchanged and still quantifies its
+  per-step error universally; do not cite it as an end-to-end result.
 - `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
   within their forward-error bounds.
 - `kalman_update_1d_fwd_error` (`KalmanUpdateFixedPoint`) — a proven Q16.16 forward-error bound
@@ -173,7 +175,7 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 649 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 652 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
 | `.lean` files under `MachLib/` | 1 098 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |

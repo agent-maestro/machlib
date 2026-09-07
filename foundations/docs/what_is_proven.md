@@ -318,9 +318,15 @@ genuinely complex and not the real case in disguise.
 
 **Every PID design is now covered whatever its damping.**
 
-**What is still not claimed.** The complex case is the measure and the tracking theorem; it is
-**not** joined to a bit-level datapath the way the real case is by `spidloop_tracks_exact`. No
-anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
+**And it is joined at the datapath too.** `spidloop_tracks_exact_complex` is the *same* `spidloop`
+— same definition, same exact integrator row, same wire for the delay row, same three truncating
+multiplies — analysed in the squared measure, with contraction `(1+α)·L` and per-step term
+`(1+β)·(a₁²+a₂²+a₃²)·(6·ulp)²`. So both PID theorems are joins about the same loop, and together
+they partition the design space by damping with no gap in it. The leading-coefficient factor
+appears here as a sum of squares, which is the squared analogue of the `K` the real-eigenvalue join
+carries; neither hides it.
+
+**What is still not claimed.** No anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
 a separate question this does not answer. `pid_trajectory_from_bits` is unchanged and is still not
 the end-to-end result.
 
