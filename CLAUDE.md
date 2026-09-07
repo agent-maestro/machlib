@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 095 `.lean` files** (781 top-level + 314 in subdirectories) /
-**248 430 lines** / **7 613 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 096 `.lean` files** (782 top-level + 314 in subdirectories) /
+**248 741 lines** / **7 621 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 613
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 333
+  | paste -sd+ | bc                                    # 7 621
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 341
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -119,12 +119,12 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 764 jobs, ~3 s warm
+lake build                                     # 795 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "243 axioms pinned; 57 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 485 claims resolve against #print axioms"
+python3 tools/claim_audit/claim_audit.py       # "all 506 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
@@ -209,7 +209,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**791 of 1095 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**792 of 1096 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -382,7 +382,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**791 of 1 095 modules reachable, 12 documented unreachable** as of 2026-09-05); quote it from
+run (**792 of 1 096 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
@@ -395,12 +395,38 @@ route map prices them at ~2 400 lines; `EmlGermApproachResearch.md` says the nex
 ladder is the falsification search, not another cell. The ledger did not move — a cell is not a
 rung.
 
-**The `fxpid` end-to-end join was SIZED on 2026-09-05 and is not a composition of existing
-pieces** — see `what_is_proven.md` §2. The bit-level model is unsigned (no subtraction, so no
-error signal and no negative feedback), there is no closed-loop object over bits, and every
-trajectory lemma is scalar first-order. Price: a signed fixed-point RTL layer with its own real
-bridge, then a closed-loop recurrence, then a first-order instance of `clamp_guarded_tracking`.
+**The `fxpid` join was SIZED on 2026-09-05 and BUILT on 2026-09-05/07** — four obstacles,
+four modules, all reachable and `sorryAx`-free. Read `what_is_proven.md` §2 before touching any of
+it, and do **not** re-derive these: `SignedFixedPoint` (signed Q16.16 as a pair-of-unsigned
+difference, so negation is a swap and subtraction is exact), `TwoStateTracking` (the contracting
+measure — a maximum of *linear functionals*), `SignedPILoop` (`spiloop_tracks_exact`, the join with
+an integrator), `QuadTracking` + `spiloop_tracks_exact_complex` (the under-damped case in a squared
+measure), `ThreeStateTracking` (the derivative term).
+
+Four findings from that arc that will save a session:
+
+* **`iterate_affine_bound` was ALWAYS generic** over any `s(k+1) ≤ L·s k + ε`. The thing recorded as
+  a "missing non-scalar trajectory lemma" was a missing *measure*, not a missing lemma. Check
+  whether the general form already exists before pricing a generalisation.
+* **A componentwise measure cannot work, and this is proved, not observed** —
+  `weighted_max_cannot_contract_integrator`. A weighted maximum of components never contracts a
+  loop containing an integrator, for *any* gains, because moduli discard the sign that makes the
+  feedback negative. `ρ(M) < 1` while `ρ(|M|) ≈ 1.03–1.14`. Do not try it again.
+* **The eigenstructure is FORCED by the structural rows, so the contraction hypotheses are ring
+  identities** — for the 2×2 real case, the 2×2 complex case *and* the 3×3. The caller supplies only
+  the eigenvalues of its own quantised gains and a bound on their moduli; there is no side
+  condition and no decimal arithmetic anywhere in these files.
+* **I predicted the 3×3 would NOT come free and was wrong.** A PID loop has *two* structural rows
+  (integrator and delay `xₚ' = x`), not one. `ThreeStateTracking`'s header records the correction.
+  The check was one sympy command; the estimate was made from the shape of the problem rather than
+  from the algebra. When the next such estimate appears, run the command.
+
 Do not write a positive-feedback "join" inside the unsigned model; it would be true and hollow.
+And `pid_trajectory_from_bits` is **still** not the end-to-end result — it quantifies its per-step
+error universally. What is genuinely left: a PID design with one real eigenvalue and a complex
+pair (needs the squared measure in three dimensions), and a bit-level PID *datapath* — a three-row
+`spidloop` analogous to `spiloop` — since `ThreeStateTracking` is the measure and the tracking
+theorem only.
 
 **`Depth3ApproachBelow` is DISCHARGED** (`depth3ApproachBelow_holds`, `MachLib/EMLDepth2Form.lean`,
 2026-09-05) — the decaying-floor replacement for the refuted `depth_le_three_gap_below`: a depth-≤3

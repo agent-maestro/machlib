@@ -630,6 +630,7 @@ import MachLib.SignedFixedPoint
 import MachLib.TwoStateTracking
 import MachLib.SignedPILoop
 import MachLib.QuadTracking
+import MachLib.ThreeStateTracking
 import MachLib.CoreModel
 import MachLib.EMLToC
 import MachLib.EMLToCRuntime

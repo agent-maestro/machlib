@@ -213,11 +213,52 @@ integrator row, same two truncating multiplies — analysed in the squared measu
 term `(1+β)·(4·ulp)²` and factor `(1+α)(σ²+ω²)`. Together with the real-eigenvalue theorem it
 leaves no gap in damping.
 
-**What is still not claimed.** No **derivative** term: a PID loop has three states and both
-measures here are two-state, and unlike the 2×2 case the eigenstructure of a 3×3 is not forced by
-the integrator row, so it will not come free. No anti-windup. No claim that the quantised gains
-are close to the designer's intended ones, which is a separate question this does not answer.
-`pid_trajectory_from_bits` is unchanged and is still not the end-to-end result.
+### The derivative term — and a correction
+
+The paragraph that stood here said the derivative term "will not come free the way the last two
+did — the 2×2 eigenstructure was forced by the integrator row `[−1,1]`, and a 3×3's is not, so the
+functionals will have to be constructed rather than read off." **That was wrong, and it is
+recorded rather than quietly replaced**, because the estimate was made from the shape of the
+problem instead of from the algebra, and checking it cost one command.
+
+It is forced, and it is free. A PID loop over `(x, i, xₚ)` has **two** structural rows, not one:
+the integrator `i' = −x + i + r` and the delay `xₚ' = x`. Between them they pin the left
+eigenvectors just as the single integrator row did one dimension down. For the closed-loop matrix
+with rows `[A B C]`, `[−1 1 0]`, `[1 0 0]`, the left eigenvector for `λ` is
+`(λ(λ−1), λ·B, (λ−1)·C)`; writing the gains through the characteristic equation — `A = e₁−1`,
+`B = e₂−e₁+1−e₃`, `C = −e₃` for `eᵢ` the elementary symmetric functions of `λ₁, λ₂, λ₃` — makes
+**all nine relations ring identities in the eigenvalues** (`pid_eigen_relation`). Two of the three
+columns are identities outright for any gains; the third is the characteristic polynomial, i.e.
+the factorisation `λᵢ³ − e₁λᵢ² + e₂λᵢ − e₃ = (λᵢ−λ₁)(λᵢ−λ₂)(λᵢ−λ₃) = 0`, whose root hypothesis
+discharges itself at each `λᵢ` (`pid_eigen_relation_at_root`). So `pid_eigen_contraction` holds for
+**every** PID design with three real eigenvalues, with no side condition and no decimal arithmetic
+— the caller supplies only the eigenvalues of its own quantised gains and a bound on their moduli.
+`three_state_tracks_exact` is then the tracking bound in the three-functional measure `m3`.
+
+**When `m3` is a norm, exactly — and why the deadbeat design is vacuous here.** `m3` is a
+seminorm always and a norm only when its three functionals are independent. Their determinant
+factors sharply,
+
+```
+det = −λ₁λ₂λ₃ · (λ₁−1)(λ₂−1)(λ₃−1) · (λ₁−λ₂)(λ₁−λ₃)(λ₂−λ₃)
+```
+
+so it is a norm **iff the eigenvalues are distinct and none is `0` or `1`** — three ways to lose
+it, only one of which is the repeated-eigenvalue case one would think of. At the **deadbeat**
+design `λ₁ = λ₂ = λ₃ = 0` the left eigenvector collapses to `(0,0,0)` for every `λᵢ`, so `m3 ≡ 0`
+and `three_state_tracks_exact` degenerates to `0 ≤ 0`. Still true; says nothing.
+`m3_vacuous_at_deadbeat` is shipped as the convict specimen, because **the two-state case shipped a
+deadbeat specimen as its evidence** and reusing that instinct one dimension up would produce a
+bound that cannot fail and therefore cannot inform. A caller wanting a norm must pick a design off
+that hypersurface — generic, but a real condition rather than a formality.
+
+**What is still not claimed.** Three **real** eigenvalues: a PID design with one real eigenvalue
+and a complex pair needs the squared measure of `QuadTracking` extended to three dimensions, which
+is not done. `ThreeStateTracking` is the measure and the tracking theorem and is
+**not** instantiated at a bit-level datapath the way `SignedPILoop` is for the two-state cases. No
+anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
+a separate question this does not answer. `pid_trajectory_from_bits` is unchanged and is still not
+the end-to-end result.
 
 ---
 
@@ -247,7 +288,7 @@ correct (see §6), and grounding of the analytic base in a construction of ℝ
 MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the
 things Mathlib would prove as theorems — the real-number field/order axioms, the
 definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
-model — are **axioms** here. As of 2026-09-05 the ledger pins **243 axioms**
+model — are **axioms** here. As of 2026-09-07 the ledger pins **243 axioms**
 (`lake env lean AxiomLedger.lean`: 221 `MachLib.*` plus 22 `Certcom.*`), of which
 **149** form the trusted footprint of the headline theorems, and every one of those 149 is
 modeled: 112 witnessed by a kernel-checked Mathlib term, 12 interpreted carrier and function

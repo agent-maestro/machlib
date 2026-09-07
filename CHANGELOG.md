@@ -5,6 +5,88 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-09-07 (ha)
+
+### The PID tracking arc, in one entry — including a prediction of mine that was wrong
+
+**This entry is retrospective on purpose.** Four commits between 2026-09-05 and 2026-09-06 built
+the vector-state tracking layer and recorded it only in commit messages and `what_is_proven.md`;
+nothing reached this file. Adding a fifth entry alone would have made the record read as though the
+first four never happened, so the whole arc is here.
+
+`what_is_proven.md` §2 listed four obstacles to the `fxpid` join on 2026-09-05. The arc closes
+them in order, and each module is reachable from the aggregator with `0 sorryAx`.
+
+* **`MachLib/SignedFixedPoint.lean`** — the signed Q16.16 layer the unsigned RTL could not express.
+  A signed value is a *pair of unsigned* bit vectors read as a difference,
+  `sval (p,n) = qval p − qval n`, so negation is a swap and subtraction is exact. Only the
+  truncating multiply is scale-correct: an "exact signed product" written during the build was
+  wrong by `2^FRAC`, because `RTL.mul` lives at `qval a * qval b / ulp`. It was removed rather
+  than patched.
+* **`MachLib/TwoStateTracking.lean`** — the missing piece was never a trajectory lemma.
+  `iterate_affine_bound` was **already** generic over any sequence with `s(k+1) ≤ L·s k + ε`; what
+  was missing was a *contracting measure* for a vector state. And the obvious one cannot exist:
+  `weighted_max_cannot_contract_integrator` proves a weighted maximum of the components can never
+  contract a loop containing an integrator, for **any** gains, because taking moduli discards the
+  sign that makes the feedback negative. (Checked numerically first: `ρ(M) < 1` while
+  `ρ(|M|) ≈ 1.03–1.14`.) The measure that works is a maximum of *linear functionals* — the left
+  eigenvectors.
+* **`MachLib/SignedPILoop.lean`** — the join with an integrator. `spiloop_tracks_exact`: the signed
+  bit-level PI loop stays within `npow n L · m₀ + 4·ulp · geom L n` of the exact real trajectory,
+  the per-step `4·ulp` *derived* from the datapath. General rather than a specimen, because a PI
+  loop's integrator row `i' = −x + i + r` **forces** its left eigenvectors; write the gains through
+  the characteristic equation and all four eigen relations become ring identities. The integrator
+  row is also free to compute — `ssub` then `sadd`, both exact — so the row that made the loop hard
+  to analyse contributes no truncation at all.
+* **`MachLib/QuadTracking.lean`** — the complex-eigenvalue case, without square roots. An
+  under-damped design has no real eigenvector, so the previous measure does not exist for it. The
+  textbook answer needs `sqrt` and Cauchy–Schwarz, neither of which this corpus has. Working with
+  the **squared** measure avoids both: a rotation-scaling multiplies it by exactly `σ²+ω²` (a ring
+  *identity*, so the contraction costs no inequality), and the cross term splits by a sum of
+  squares with `α·β = 1`, keeping division out of the statement as well as the proof. Instantiated
+  at the same datapath (`spiloop_tracks_exact_complex`), so the two theorems partition the design
+  space by damping with no gap in it.
+
+### And the derivative term, which I predicted would not come free
+
+**It is forced, and it is free.** `MachLib/ThreeStateTracking.lean` (new). The four entries above
+each ended by saying the derivative term "will not come free the way the last two did — the 2×2
+eigenstructure was forced by the integrator row `[−1,1]`, and a 3×3's is not, so the functionals
+will have to be constructed rather than read off." README and `what_is_proven.md` said it in those
+words. **That was wrong**, and it is recorded rather than quietly replaced: the estimate was made
+from the shape of the problem instead of from the algebra, and checking it symbolically cost one
+command.
+
+A PID loop over `(x, i, xₚ)` has **two** structural rows, not one — the integrator and the delay
+`xₚ' = x` — and between them they pin the left eigenvectors exactly as the single integrator row
+did one dimension down. For rows `[A B C]`, `[−1 1 0]`, `[1 0 0]` the left eigenvector for `λ` is
+`(λ(λ−1), λ·B, (λ−1)·C)`, and with `A = e₁−1`, `B = e₂−e₁+1−e₃`, `C = −e₃` (the `eᵢ` elementary
+symmetric in `λ₁, λ₂, λ₃`) **all nine relations are ring identities**. Two columns are identities
+outright for any gains; the third is the characteristic polynomial, whose root hypothesis
+discharges itself at each `λᵢ` (`pid_eigen_relation_at_root`). So `pid_eigen_contraction` holds for
+every PID design with three real eigenvalues, no side condition and no decimal arithmetic.
+
+**And the deadbeat design is VACUOUS here, which is the finding worth carrying.** `m3` is a
+seminorm always and a norm only when its three functionals are independent; their determinant
+factors as `−λ₁λ₂λ₃·(λ₁−1)(λ₂−1)(λ₃−1)·(λ₁−λ₂)(λ₁−λ₃)(λ₂−λ₃)`, so it is a norm **iff the
+eigenvalues are distinct and none is `0` or `1`** — three ways to lose it, only one of them the
+repeated-eigenvalue case one would think of. At `λ₁ = λ₂ = λ₃ = 0` the left eigenvector collapses
+to `(0,0,0)` for every `λᵢ`, `m3 ≡ 0`, and the tracking theorem degenerates to `0 ≤ 0`. Still true;
+says nothing. `m3_vacuous_at_deadbeat` ships as the convict specimen **because `SignedPILoop`
+shipped a deadbeat specimen as its evidence** — reusing that instinct one dimension up would have
+produced a bound that cannot fail and therefore cannot inform, and every gate would have passed.
+Same disease as `positive_branch_impossible`, caught before rather than after.
+
+**Not claimed**: three *real* eigenvalues only — a real eigenvalue plus a complex pair needs the
+squared measure extended to three dimensions, which is not done. `ThreeStateTracking` is the
+measure and the tracking theorem and is **not** instantiated at a bit-level datapath the way
+`SignedPILoop` is. No anti-windup, and no claim that the quantised gains are close to the
+designer's intended ones. `pid_trajectory_from_bits` is unchanged and is still not the end-to-end
+result.
+
+Ledger unmoved: 23 rows, 7 open rows, 4 distinct open obligations, 243 axioms. Aggregator reaches
+792 of 1 096.
+
 ## [Unreleased] — 2026-08-28 (en)
 
 ### The query germ's ZERO branch, closed — and it costs one analytic axiom less

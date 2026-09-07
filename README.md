@@ -64,10 +64,23 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   identity), and the cross term splits by a sum of squares.
   Both cases are instantiated at the same datapath (`spiloop_tracks_exact_complex`), so every PI
   design is covered whatever its damping.
-- **Still not proved:** the derivative term. A PID loop has three states, both measures here are
-  two-state, and the eigenstructure of a 3×3 is not forced by the integrator row the way the 2×2
-  was — so it will not come free. `pid_trajectory_from_bits` is unchanged and still quantifies its
-  per-step error universally; do not cite it as an end-to-end result.
+- `three_state_tracks_exact`, `pid_eigen_contraction` (`ThreeStateTracking`) — the **derivative**
+  term, which the line here previously said would not come free. It did. A PID loop over
+  `(x, i, xₚ)` has *two* structural rows, not one — the integrator and the delay `xₚ' = x` — and
+  between them they force the left eigenvectors exactly as the single integrator row did one
+  dimension down. Write the gains through the characteristic equation and all nine eigen relations
+  are ring identities in the eigenvalues, so the contraction is discharged once for every PID
+  design with three real eigenvalues.
+  `m3` is a **norm** iff the eigenvalues are distinct and none is `0` or `1` — the determinant of
+  the three functionals factors as `−λ₁λ₂λ₃·(λᵢ−1)·(λᵢ−λⱼ)`. Off that set it is a seminorm and the
+  bound controls less; at the **deadbeat** design every functional vanishes and the theorem
+  degenerates to `0 ≤ 0`, which `m3_vacuous_at_deadbeat` records as a convict specimen because the
+  two-state case shipped a deadbeat specimen as its evidence.
+- **Still not proved:** a PID design with one real eigenvalue and a **complex pair** — that needs
+  the squared measure extended to three dimensions, which is not done. `ThreeStateTracking` is also
+  the measure and the tracking theorem only; it is **not** instantiated at a bit-level datapath the
+  way `SignedPILoop` is for the two-state cases. `pid_trajectory_from_bits` is unchanged and still
+  quantifies its per-step error universally; do not cite it as an end-to-end result.
 - `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
   within their forward-error bounds.
 - `kalman_update_1d_fwd_error` (`KalmanUpdateFixedPoint`) — a proven Q16.16 forward-error bound
@@ -143,17 +156,17 @@ gate: the Forge `@verify(lean)` corpus auto-closes **79.9 %** of its obligations
 ## Numbers, measured
 
 Every count below is the output of a command, not a memory, and `tools/prose_counts_check.py`
-fails if the text drifts from the corpus. Measured 2026-09-05:
+fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 613 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 621 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 095 | `find MachLib -name '*.lean' \| wc -l` |
+| `.lean` files under `MachLib/` | 1 096 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 791 of 1 095 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 792 of 1 096 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 
