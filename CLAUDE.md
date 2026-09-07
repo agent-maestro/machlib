@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 096 `.lean` files** (782 top-level + 314 in subdirectories) /
-**248 741 lines** / **7 621 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 097 `.lean` files** (783 top-level + 314 in subdirectories) /
+**249 312 lines** / **7 639 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 621
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 341
+  | paste -sd+ | bc                                    # 7 639
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 359
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -119,7 +119,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 795 jobs, ~3 s warm
+lake build                                     # 796 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
@@ -209,7 +209,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**792 of 1096 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**793 of 1097 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -393,7 +393,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**792 of 1 096 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
+run (**793 of 1 097 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
@@ -427,6 +427,11 @@ Four findings from that arc that will save a session:
   identities** — for the 2×2 real case, the 2×2 complex case *and* the 3×3. The caller supplies only
   the eigenvalues of its own quantised gains and a bound on their moduli; there is no side
   condition and no decimal arithmetic anywhere in these files.
+* **A deadbeat specimen is VACUOUS for the PID measure.** `m3` is a norm only when the
+  eigenvalues are distinct and none is `0` or `1`; at `λ = 0` every functional vanishes and the
+  bound reads `0 ≤ 0`. `SignedPILoop` uses a deadbeat specimen as its evidence and that is correct
+  *there*. Reusing the instinct one dimension up produces a bound that cannot fail, with every gate
+  green. `SignedPIDLoop` ships its specimen at `λ = 1/2, −1/2, 1/4` for exactly this reason.
 * **I predicted the 3×3 would NOT come free and was wrong.** A PID loop has *two* structural rows
   (integrator and delay `xₚ' = x`), not one. `ThreeStateTracking`'s header records the correction.
   The check was one sympy command; the estimate was made from the shape of the problem rather than
@@ -434,10 +439,11 @@ Four findings from that arc that will save a session:
 
 Do not write a positive-feedback "join" inside the unsigned model; it would be true and hollow.
 And `pid_trajectory_from_bits` is **still** not the end-to-end result — it quantifies its per-step
-error universally. What is genuinely left: a PID design with one real eigenvalue and a complex
-pair (needs the squared measure in three dimensions), and a bit-level PID *datapath* — a three-row
-`spidloop` analogous to `spiloop` — since `ThreeStateTracking` is the measure and the tracking
-theorem only.
+error universally. The three-row `spidloop` datapath is **built** (`SignedPIDLoop`,
+`spidloop_tracks_exact`, 2026-09-07): integrator exact, delay row a *wire*, all error in the state
+row's three multiplies, scaled by the measure's leading coefficients. What is genuinely left: a PID
+design with one real eigenvalue and a complex pair, which needs the squared measure in three
+dimensions.
 
 **`Depth3ApproachBelow` is DISCHARGED** (`depth3ApproachBelow_holds`, `MachLib/EMLDepth2Form.lean`,
 2026-09-05) — the decaying-floor replacement for the refuted `depth_le_three_gap_below`: a depth-≤3

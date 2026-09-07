@@ -76,11 +76,17 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   bound controls less; at the **deadbeat** design every functional vanishes and the theorem
   degenerates to `0 ≤ 0`, which `m3_vacuous_at_deadbeat` records as a convict specimen because the
   two-state case shipped a deadbeat specimen as its evidence.
+- `spidloop_tracks_exact` (`SignedPIDLoop`) — the derivative term **at the datapath**. The signed
+  bit-level PID loop tracks the exact real PID trajectory, per-step error derived from the bits.
+  Two of its three rows are free: the integrator is exact, and the delay row is a *wire*, so all
+  the error is the state row's three truncating multiplies. Unlike the PI case the error is scaled
+  by the measure's leading coefficients, and that factor is carried in the statement rather than
+  hidden. Ships with a specimen at `λ = 1/2, −1/2, 1/4` — **not** the deadbeat design, which is
+  vacuous for this measure.
 - **Still not proved:** a PID design with one real eigenvalue and a **complex pair** — that needs
-  the squared measure extended to three dimensions, which is not done. `ThreeStateTracking` is also
-  the measure and the tracking theorem only; it is **not** instantiated at a bit-level datapath the
-  way `SignedPILoop` is for the two-state cases. `pid_trajectory_from_bits` is unchanged and still
-  quantifies its per-step error universally; do not cite it as an end-to-end result.
+  the squared measure extended to three dimensions, which is not done. `pid_trajectory_from_bits`
+  is unchanged and still quantifies its per-step error universally; do not cite it as an end-to-end
+  result.
 - `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
   within their forward-error bounds.
 - `kalman_update_1d_fwd_error` (`KalmanUpdateFixedPoint`) — a proven Q16.16 forward-error bound
@@ -160,13 +166,13 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 621 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 639 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 096 | `find MachLib -name '*.lean' \| wc -l` |
+| `.lean` files under `MachLib/` | 1 097 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 792 of 1 096 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 793 of 1 097 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

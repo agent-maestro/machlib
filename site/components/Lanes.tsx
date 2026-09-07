@@ -16,8 +16,9 @@ const NUMERICS: Result[] = [
       "example, because a PI loop's integrator row forces its left eigenvectors and the resulting " +
       "eigen equations are ring identities. A companion theorem covers under-damped designs, " +
       "whose eigenvalues are complex and admit no real eigenvector, so every PI design is " +
-      "covered whatever its damping. The derivative term has its contraction and its tracking " +
-      "bound too, but is not yet instantiated at a bit-level datapath.",
+      "covered whatever its damping. The derivative term is joined at the datapath too " +
+      "(spidloop_tracks_exact): in a PID loop the integrator row is exact and the delay row is a " +
+      "wire, so every rounding error comes from the state row's three multiplies.",
   },
   {
     name: "cross_target",

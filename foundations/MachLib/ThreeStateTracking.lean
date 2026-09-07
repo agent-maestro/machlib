@@ -176,6 +176,25 @@ theorem m3_contract_of_eigen
       (mul_le_mul_of_nonneg_left (le_max_right _ _)
         (le_trans (abs_nonneg lam₃) hl₃))
 
+/-- **A perturbation confined to the state row, measured — and it is NOT free here.**
+
+In the two-state case both functionals begin with `1`, so a state-row perturbation is measured at
+exactly its own size and the datapath's per-step error passes through untouched. The PID
+functionals begin with `λᵢ(λᵢ−1)` instead, so the perturbation is **scaled** by whatever dominates
+those three coefficients. That factor is a real cost the caller pays, not an artefact: normalising
+the eigenvectors would need division, which this corpus does not have, and hiding the factor by
+rescaling the measure would only move it into the other side of the bound. -/
+theorem m3_state_only_le {a₁ b₁ c₁ a₂ b₂ c₂ a₃ b₃ c₃ K : Real}
+    (h₁ : abs a₁ ≤ K) (h₂ : abs a₂ ≤ K) (h₃ : abs a₃ ≤ K) (u : Real) :
+    m3 a₁ b₁ c₁ a₂ b₂ c₂ a₃ b₃ c₃ u 0 0 ≤ K * abs u := by
+  have e : ∀ a b c : Real, a * u + b * 0 + c * 0 = a * u := by
+    intro a b c
+    rw [mul_zero, mul_zero, add_zero, add_zero]
+  refine max_le (max_le ?_ ?_) ?_
+  · rw [e, abs_mul]; exact mul_le_mul_of_nonneg_right h₁ (abs_nonneg u)
+  · rw [e, abs_mul]; exact mul_le_mul_of_nonneg_right h₂ (abs_nonneg u)
+  · rw [e, abs_mul]; exact mul_le_mul_of_nonneg_right h₃ (abs_nonneg u)
+
 /-! ### The tracking theorem -/
 
 /-- **A three-state computed trajectory tracks its exact one.** Same shape as the two-state
