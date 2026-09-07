@@ -242,6 +242,17 @@ behind it is missing — registration is still a human act.
   excludes theorems concluding `False` **by design** — it now prints how many (60) it cannot examine,
   rather than leaving `OK` to read as coverage. Check your theorem is in the class a gate examines
   before citing it.
+- **DO NOT EDIT THE TREE DURING A GATE RUN — and the freeze you can see is not the only one.**
+  `check_all.sh` fingerprints `git status --porcelain | sha1sum`: a NAME-and-STATUS list.
+  `claim_audit.py` keeps its **own, stricter** fingerprint that also hashes the **CONTENTS** of every
+  dirty file — added 2026-08-23 for exactly the case the weaker one misses, and pinned by its
+  canary 14. So editing an **already-dirty** file mid-run leaves the porcelain hash **byte-identical**
+  while the audit's moves, and the audit returns **rc 2** (UNAVAILABLE, never a pass) while still
+  printing its green `CLAIM-AUDIT PASS` line. `check_all.sh` then reports
+  *"gates green, but 1 could not run — treat as UNKNOWN, not PASS"* and the whole ~25-minute run is
+  void. Cost one full run on 2026-09-07, and the reasoning that lost it was *careful*: the porcelain
+  fingerprint was checked before and after the edit and was genuinely unchanged. **Verifying the
+  weaker of two guards does not license the edit.** Wait for `GATE_RC`, then edit.
 - **`cmd | head; echo $?` reports `head`'s status.** Live instance 2026-08-31: a grep that matched
   nothing reported `rc=0` inside the very check meant to settle whether it matched. Use
   `${PIPESTATUS[0]}`, or redirect to a file and test that.
