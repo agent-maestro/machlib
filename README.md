@@ -1,7 +1,7 @@
 # MachLib
 
 A Mathlib-free Lean 4 library that proves things about **EML kernels** — the small
-`exp`/`log` expression language that [Forge](https://github.com/agent-maestro/forge) compiles
+`exp`/`log` expression language that **Forge** (a private sibling repository) compiles
 to C, GPU code and RTL — so that claims about compiled numerics rest on machine-checked theorems.
 It is a compact verification layer with its own axiomatised reals, not a Mathlib replacement
 and not a general analysis library.

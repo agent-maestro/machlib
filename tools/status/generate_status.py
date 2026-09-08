@@ -353,6 +353,10 @@ def build_payload(args: argparse.Namespace, previous: dict | None) -> dict:
             "command_lines": [
                 "git clone https://github.com/agent-maestro/machlib && cd machlib",
                 f"git checkout {args.machlib_sha}",
+                "# The next line needs READ access to a PRIVATE repository",
+                "# (agent-maestro/forge). Without it, SKIP it -- every other",
+                "# measurement below still reproduces, but the verify_audit block",
+                "# reads UNAVAILABLE and content_hash_sha256 will NOT match.",
                 "git clone --depth 1 https://github.com/agent-maestro/forge ../forge",
                 "git clone --depth 1 https://github.com/agent-maestro/eml-stdlib ../eml-stdlib",
                 "cd foundations && lake build && lake env lean AxiomAudit.lean > /tmp/axiom_audit.txt && cd ..",
@@ -368,10 +372,15 @@ def build_payload(args: argparse.Namespace, previous: dict | None) -> dict:
                 "    --previous-status .status-prev/status.json --out status.json",
             ],
             "note": (
-                "Anyone with these commits checked out can regenerate this "
-                "file. content_hash_sha256 should match byte-for-byte; if it "
-                "doesn't, the data has been tampered with or the toolchain "
-                "drifted (file a github issue with the diff)."
+                "Anyone with read access to ALL FOUR repositories can regenerate "
+                "this file byte-for-byte; content_hash_sha256 is the check, and a "
+                "mismatch means the data was tampered with or the toolchain drifted "
+                "(file a github issue with the diff). agent-maestro/forge is "
+                "PRIVATE, so an outside reader cannot run its clone: skip that step "
+                "and every other measurement still reproduces, but the verify_audit "
+                "block reads UNAVAILABLE and the hash will not match. That is a "
+                "limit on WHO CAN REPRODUCE the forge figures, not a claim that they "
+                "are unmeasured -- and UNAVAILABLE is never a pass."
             ),
         },
         "build": {

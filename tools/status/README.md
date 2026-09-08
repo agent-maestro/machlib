@@ -73,6 +73,12 @@ the change to monogate-research, or vice-versa.
 
 ## Reproduce locally
 
+**This needs a checkout of `agent-maestro/forge`, which is PRIVATE.** Without one, the
+`forge_verify_audit.py` step cannot run: skip it and omit `--verify-audit-json`, and every other
+measurement still reproduces, but the `verify_audit` block reads UNAVAILABLE and
+`content_hash_sha256` will not match the published payload. That is a limit on *who can reproduce*
+the Forge figures, not a claim that they are unmeasured — UNAVAILABLE is never a pass.
+
 ```bash
 cd machlib
 SHA=$(git rev-parse HEAD)

@@ -74,8 +74,8 @@ jobs:
       # only) can't clone it — that is why this workflow started failing when
       # forge went private (404 at "Clone forge"). FORGE_RO_TOKEN is a
       # fine-grained PAT with READ-ONLY Contents access to agent-maestro/forge
-      # (and eml-stdlib), added as a repo Actions secret. eml-stdlib is public
-      # today but uses the same token so it keeps working if it ever goes private.
+      # added as a repo Actions secret. It is used ONLY for the private forge clone;
+      # the public eml-stdlib clone below takes no token (see the note there).
       # Both clones are allowed to FAIL without failing the refresh. The token expired once
       # (2026-09-05: "Bad credentials" at this step) and the whole dashboard went dark, including
       # the build and sorry figures that need nothing from forge. A failed clone now yields a
@@ -92,6 +92,13 @@ jobs:
           fetch-depth: 1
           token: ${{ secrets.FORGE_RO_TOKEN }}
 
+      # eml-stdlib is PUBLIC and deliberately takes NO token. Passing one here used
+      # to look like future-proofing ("so it keeps working if it ever goes private")
+      # and was exactly backwards: a public repo clones fine with no credential at
+      # all, while an EXPIRED credential makes it FAIL. That is what widened the
+      # 2026-09-05 outage — one dead secret took down a clone that needed nothing
+      # from it, and with it the figures that need nothing from forge. A credential
+      # can only subtract availability from a public read; give it none.
       - name: Clone eml-stdlib
         id: clone_stdlib
         continue-on-error: true
@@ -100,7 +107,6 @@ jobs:
           repository: agent-maestro/eml-stdlib
           path: eml-stdlib
           fetch-depth: 1
-          token: ${{ secrets.FORGE_RO_TOKEN }}
 
       # Note: monogate-research is private; we use the embedded copy of
       # forge_verify_audit.py at machlib/tools/status/forge_verify_audit.py
