@@ -362,6 +362,35 @@ beats a two-sided two, because the pair-of-unsigned construction pays twice per 
 into non-negative pieces. So the hardware is better than the datapath this corpus was modelling,
 and modelling it as `sfxmul` was costing a factor of two on top of being the wrong function.
 
+### From a compiler's step function to the trajectory
+
+A compiler does not emit a trajectory. It emits a **step**: one function from the current state to
+the next. `iterState_eq_exactPID` (`MachLib/PIDStepIteration.lean`) closes that gap — iterating any
+step that maps `(x, i, p)` to `(A·x + B·i + C·p + D, (i − x) + F, x)` reproduces `exactPID`, so the
+trajectory bound becomes a statement about the artifact a compiler actually wrote.
+
+It needs proving rather than observing, because the two are not the *same* recurrence
+syntactically. `exactPID`'s integrator and delay rows are written in the coefficient form the eigen
+machinery matches against, `(−1)·x + 1·i + 0·p + F` and `1·x + 0·i + 0·p + 0`, while a compiler
+emits the form a person writes. They agree by ring, and doing that step once here means no backend
+rediscovers it and no caller's normaliser ever meets the `0 · p` terms.
+
+**Demonstrated on Forge's actual output.** Forge's Lean backend now emits a successor-state
+function for a stateful PID kernel. That function equals the recurrence by `rfl`, and therefore
+
+```lean
+theorem emitted_loop_is_the_exact_trajectory (r x0 i0 p0 : Real) (n : Nat) :
+    iterState (fun x i p => pid_loop2_step_def x i p r) x0 i0 p0 n
+      = exactPID A B C 0 r x0 i0 p0 n
+```
+
+typechecks with no `sorryAx`, where `pid_loop2_step_def` is the compiler's output verbatim.
+
+**What is still missing, and it is one thing.** The bound is on a *fixed-point* loop, and showing
+that Forge's emitted **Verilog** is that loop is a statement about RTL rather than about emitted
+Lean. It needs a Lean model of the shift-based datapath, which this corpus does not have. The
+`3·ulp` envelope is stated so that model is the only remaining input.
+
 **What is still not claimed.** No anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
 a separate question this does not answer. `pid_trajectory_from_bits` is unchanged and is still not
 the end-to-end result.

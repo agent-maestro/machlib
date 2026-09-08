@@ -5,6 +5,48 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-09-07 (hg)
+
+### A compiler emits a STEP, not a trajectory — and now the two are connected
+
+`MachLib/PIDStepIteration.lean` (new, reachable, 0 `sorryAx`). Every trajectory theorem in this arc
+bounds a fixed-point loop against `exactPID`. A compiler cannot hand you `exactPID`: it emits one
+function from the current state to the next. `iterState_eq_exactPID` says that iterating any step
+which maps `(x, i, p)` to `(A·x + B·i + C·p + D, (i − x) + F, x)` reproduces `exactPID` exactly, for
+every `n`.
+
+**It needs proving, not observing.** `exactPID`'s integrator and delay rows are written in the
+coefficient form the eigen machinery matches — `(−1)·x + 1·i + 0·p + F` and `1·x + 0·i + 0·p + 0` —
+while a compiler emits the form a person writes. They agree by ring. Doing it once here means no
+backend rediscovers it and no caller's normaliser meets a literal `0 · p`, which `CLAUDE.md` records
+as a hang rather than a failure.
+
+**Demonstrated on Forge's real output.** Forge's Lean backend now emits a successor-state function
+for a stateful PID kernel (`f_step`), that function equals the recurrence by `rfl`, and
+
+```lean
+theorem emitted_loop_is_the_exact_trajectory (r x0 i0 p0 : Real) (n : Nat) :
+    iterState (fun x i p => pid_loop2_step_def x i p r) x0 i0 p0 n
+      = exactPID A B C 0 r x0 i0 p0 n
+```
+
+typechecks with no `sorryAx`. Nothing in that was written for the proof; the step function is the
+compiler's output verbatim.
+
+**A rewrite trap worth recording.** Proving the two row forms agree by rewriting them separately
+OVER-rewrites: the delay row's `x` also occurs *inside* the integrator row as `−1 · x`, so a `rw`
+of the delay form rebuilds the integrator row around it and the goal stops matching. Split the
+tuple with `Prod.mk.injEq` first, then each component's rewrite stays where it belongs. Also
+`simp only [Prod.mk.injEq]` closes an identical component to `True`, so the conjunction wants
+`trivial` and not `rfl`.
+
+**Still missing, and it is one thing.** The bound is on a fixed-point loop; showing Forge's emitted
+*Verilog* is that loop is a statement about RTL rather than emitted Lean, and needs a Lean model of
+the shift-based datapath this corpus does not have. `(hf)`'s envelope is stated so that model is
+the only remaining input.
+
+Aggregator reaches **796 of 1 100**. Ledger unmoved: 23 rows, 7 open, 4 distinct, 243 axioms.
+
 ## [Unreleased] — 2026-09-07 (hf)
 
 ### The emitted datapath, from the shift's own definition — and it is TWICE as good as the model
