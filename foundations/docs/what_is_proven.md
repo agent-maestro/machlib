@@ -386,10 +386,27 @@ theorem emitted_loop_is_the_exact_trajectory (r x0 i0 p0 : Real) (n : Nat) :
 
 typechecks with no `sorryAx`, where `pid_loop2_step_def` is the compiler's output verbatim.
 
-**What is still missing, and it is one thing.** The bound is on a *fixed-point* loop, and showing
-that Forge's emitted **Verilog** is that loop is a statement about RTL rather than about emitted
-Lean. It needs a Lean model of the shift-based datapath, which this corpus does not have. The
-`3·ulp` envelope is stated so that model is the only remaining input.
+### The fixed-point loop itself, on the Q-grid
+
+`MachLib/FixedPointPIDLoop.lean` supplies the model that was missing, and the ingredient was
+already in the corpus. `MachLib/Forge.lean` carries `floor` with `floor x ≤ x` and
+`x < floor x + 1`, which bracket the fractional part in `[0, 1)` — the entire content of "an
+arithmetic shift right discards the low bits". Scaling to the grid, `qtrunc y = floor (y·2^FRAC)·ulp`
+satisfies `0 ≤ y − qtrunc y ≤ ulp`: at most one `ulp` below the exact value, never above.
+
+`fxpidloop_tracks_exact` is the result: a PID loop whose three products truncate that way stays
+within `npow n L · m₀ + K·3·ulp · geom L n` of the exact real trajectory, with the truncation side
+discharged from those two facts rather than assumed.
+
+**Two things this does not claim, both stated in the module rather than only here.** `qtrunc` is
+truncation on an *unbounded* grid, so it models the arithmetic and not the register width; a bound
+proved here is conditional on the design not overflowing. And the footprint grows: these theorems
+depend on `floor`, `floor_le` and `lt_floor_add_one`, where those in `SignedPIDLoop` rest on the
+plain real spine alone. `#print axioms` shows exactly those three and nothing else.
+
+The abstraction is the same one Forge's own fixed-point certifier makes, whose truncation is
+`floor(x/s)·s`, documented there as the typical fixed-point datapath. The two projects now model
+the same object, which the earlier `sfxmul` model did not.
 
 **What is still not claimed.** No anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
 a separate question this does not answer. `pid_trajectory_from_bits` is unchanged and is still not

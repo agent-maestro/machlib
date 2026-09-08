@@ -106,6 +106,11 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   below the exact one and never above it. No bit widths, no two's complement, no reference
   multiplier, no simulation. The per-step term is `K·3·ulp` against `K·6·ulp` for the modelled
   datapath, so the hardware is **better** than the model this corpus started with, not worse.
+- `fxpidloop_tracks_exact` (`FixedPointPIDLoop`) — the loop **on the Q-grid**, truncating the way
+  an arithmetic shift does. `floor` was already an axiom here with the two bracketing facts that
+  pin the fractional part to `[0, 1)`, so the truncation side is discharged rather than assumed.
+  Conditional on no overflow, and its footprint carries three `floor` axioms the rest of the arc
+  does not.
 - **Still not proved:** no anti-windup, and no claim that the quantised gains are close to the
   designer's intended ones. `pid_trajectory_from_bits` is unchanged and still quantifies its
   per-step error universally; do not cite it as an end-to-end result.
@@ -188,13 +193,13 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 659 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 663 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 100 | `find MachLib -name '*.lean' \| wc -l` |
+| `.lean` files under `MachLib/` | 1 101 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 796 of 1 100 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 797 of 1 101 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

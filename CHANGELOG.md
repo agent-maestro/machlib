@@ -5,6 +5,41 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-09-08 (hh)
+
+### The last link — and the piece it needed was already in the corpus
+
+`MachLib/FixedPointPIDLoop.lean` (new, reachable, 0 `sorryAx`). `(hg)` ended by naming exactly one
+missing input: a model of the truncating datapath, so the `3·ulp` envelope could be *discharged*
+rather than assumed. I priced it as a two's-complement bit layer. It is not.
+
+**`floor` was already an axiom here**, in `MachLib/Forge.lean`, with `floor_le : floor x ≤ x` and
+`lt_floor_add_one : x < floor x + 1`. Those two bracket the fractional part in `[0, 1)`, which is
+the whole content of "an arithmetic shift right discards the low bits". Scaling to the grid,
+
+```
+qtrunc y = floor (y · 2^FRAC) · ulp        0 ≤ y − qtrunc y ≤ ulp
+```
+
+one-sided, at most one `ulp` low and never high — precisely what `row_within_three_ulp` takes.
+`fxpidloop_tracks_exact` follows: the loop stays within `npow n L · m₀ + K·3·ulp · geom L n` of the
+exact real trajectory, truncation discharged from those two facts.
+
+**What it abstracts, said in the module and not only here.** `qtrunc` truncates on an *unbounded*
+grid. It does not model **overflow**, and a wrapped value is not within one `ulp` of anything, so
+every bound here is conditional on the design not overflowing. This is the same abstraction Forge's
+own certifier makes — its `_trunc` is `floor(x/s)·s`, documented there as the typical fixed-point
+datapath — so the two projects now model the same object. `sfxmul` did not: it truncated toward
+zero, a faithful model of a datapath nobody builds.
+
+**The axiom cost, predicted and then measured.** Three: `floor`, `floor_le`, `lt_floor_add_one`.
+The module header said so before the check; `#print axioms` shows exactly those three and no more.
+They are already pinned and Mathlib-witnessed through `Int.floor`, so the trusted base does not
+grow — but these theorems have a strictly larger footprint than `SignedPIDLoop`'s, which rest on
+the plain real spine, and that difference is real.
+
+Aggregator reaches **797 of 1 101**. Ledger unmoved: 23 rows, 7 open, 4 distinct, 243 axioms.
+
 ## [Unreleased] — 2026-09-07 (hg)
 
 ### A compiler emits a STEP, not a trajectory — and now the two are connected
