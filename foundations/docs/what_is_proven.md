@@ -326,7 +326,32 @@ they partition the design space by damping with no gap in it. The leading-coeffi
 appears here as a sum of squares, which is the squared analogue of the `K` the real-eigenvalue join
 carries; neither hides it.
 
-**What is still not claimed.** No anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
+### The model is not the hardware, and the theorem now says so
+
+`spidloop_tracks_exact` is a theorem about one datapath: the state row built from `sfxmul`. Forge
+emits a different one. Its Verilog computes `(A * x) >>> FRAC`, and an arithmetic shift right is
+**floor** division, truncating toward `−∞` for negative values too. `sfxmul` is a difference of
+truncated *unsigned* products, so it truncates toward **zero**. The two agree whenever the product
+is non-negative and differ by one `ulp` when it is not.
+
+This was measured, not reasoned: the emitted Verilog was simulated under Verilator over 40 steps of
+a PID loop and compared against both models. The floor model matched at every step; `sfxmul`
+diverged at step 3. Forge's own fixed-point certifier uses floor and documents it as the typical
+fixed-point datapath.
+
+Nothing in the trajectory proof uses *how* the multiply truncates. It uses one fact: the state row
+lands within `6·ulp` of the exact linear combination. So `spidloopOf_tracks_exact`
+(`MachLib/SignedLoopEnvelope.lean`) takes that envelope as a **hypothesis** and says nothing about
+the multiplier. The integrator and delay rows stay fixed, since their exactness is structural and
+is what forces the eigenvectors. A different multiplier is then a different instance rather than a
+different theorem, and an instance is what a compiler backend can supply about its own RTL.
+`spidloop_row_envelope` recovers the existing join as the `sfxmul` instance, and
+`spidloop_row_envelope_of_near` converts a per-operation measurement — "my multiplier is within `δ`
+of yours" — into the envelope at `δ + 6·ulp`, which is the form a measurement can actually take.
+
+**What is still not claimed.** That a shift-based multiplier meets the envelope: that is a
+statement about a bit-level operation this corpus does not model, and asserting it here would be
+the exact error both projects are built to avoid. No anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
 a separate question this does not answer. `pid_trajectory_from_bits` is unchanged and is still not
 the end-to-end result.
 

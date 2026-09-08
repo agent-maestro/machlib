@@ -5,6 +5,53 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-09-07 (he)
+
+### The model was not the hardware, and it took a simulator to find out
+
+`MachLib/SignedLoopEnvelope.lean` (new, reachable, 0 `sorryAx`). Everything in `(hb)`–`(hd)` is a
+theorem about **one** datapath: the state row built from `sfxmul`. Forge emits a different one, and
+nobody had checked.
+
+**What Forge actually emits.** Its Verilog backend writes, per gain,
+`assign _w2_full = A * x; assign _w3 = _w2_full >>> FRAC;`. An arithmetic shift right is **floor**
+division — it truncates toward `−∞`, for negatives too. `sfxmul` is built as a difference of
+*unsigned* truncated products, and each `fxmul` floors a non-negative quotient, so the difference
+they denote truncates toward **zero**. The two agree whenever the product is non-negative and
+differ by exactly one `ulp` when it is not.
+
+**Found by measurement, not by reading.** The emitted Verilog was simulated under Verilator over 40
+steps of a PID loop and compared against both models. The floor model matched at every one of the
+40 steps; `sfxmul` diverged at step 3, by one `ulp`. Over 200 000 random operand pairs the gap
+never exceeded one `ulp`, and both truncations stay strictly inside one `ulp` of the exact product.
+Forge's own fixed-point certifier uses floor and documents it as *"toward −∞, the typical
+fixed-point datapath"*, so the disagreement was MachLib's alone.
+
+**MachLib was not wrong; it was specific.** `spidloop_tracks_exact` is true, and it is true about a
+datapath that is not the one on the FPGA. That distinction is the whole content of this entry.
+
+**The fix is to stop naming the multiplier.** Nothing in the trajectory proof uses *how* the
+multiply truncates; it uses one fact, that the state row lands within `6·ulp` of the exact linear
+combination. `spidloopOf_tracks_exact` takes that envelope as a **hypothesis** and is silent about
+the multiplier. The integrator and delay rows stay fixed, because their exactness is structural and
+is what forces the eigenvectors. A different multiplier is now a different *instance* rather than a
+different theorem, and an instance is exactly what a compiler backend can supply about its own
+emitted RTL.
+
+Two instances ship with it. `spidloop_row_envelope` recovers the existing join as the `sfxmul`
+case, so nothing is lost. `spidloop_row_envelope_of_near` converts a **per-operation measurement**
+— "my multiplier is within `δ` of yours" — into the envelope at `δ + 6·ulp`, by the triangle
+inequality. That matters because comparing two multipliers is local, finite and checkable, whereas
+comparing two trajectories is not; it is the shape a measurement can actually take.
+
+**What is deliberately NOT proved.** That a shift-based multiplier meets the envelope. That is a
+statement about a bit-level operation this corpus does not model, and asserting it here would be
+precisely the "evidence attaches to names, not artifacts" error that both this project and Forge
+are built to avoid. The point of this entry is to make that the *only* remaining step, and to make
+it a step somebody can see.
+
+Aggregator reaches **795 of 1 099**. Ledger unmoved: 23 rows, 7 open, 4 distinct, 243 axioms.
+
 ## [Unreleased] — 2026-09-07 (hd)
 
 ### Both PID theorems are now joins about the SAME loop — the arc is closed

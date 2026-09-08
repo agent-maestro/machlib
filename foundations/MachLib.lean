@@ -633,6 +633,7 @@ import MachLib.QuadTracking
 import MachLib.ThreeStateTracking
 import MachLib.SignedPIDLoop
 import MachLib.ThreeStateQuadTracking
+import MachLib.SignedLoopEnvelope
 import MachLib.CoreModel
 import MachLib.EMLToC
 import MachLib.EMLToCRuntime
