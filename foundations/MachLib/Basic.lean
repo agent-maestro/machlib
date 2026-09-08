@@ -152,6 +152,15 @@ axiom div_zero (a : Real) : a / 0 = 0
   Classical.propDecidable _
 @[instance] noncomputable def instDecLE (a b : Real) : Decidable (a ≤ b) :=
   Classical.propDecidable _
+/-- Decidable EQUALITY, by the same classical mechanism as the two above.
+
+Missing until 2026-09-08, and its absence was invisible because nothing exercised it: an EML
+kernel writing `if x == 0.0` lowers to `ite (x = 0) ..`, Lean asks for `Decidable (x = 0)`, and
+`instDecLT`/`instDecLE` do not supply it. So `if a < b` compiled and `if a == b` did not, and
+the failure surfaced only when Forge began emitting BODIES for kernels it had previously
+axiomatised — an axiom has no `ite` in it to fail on. The gap was in this file the whole time. -/
+@[instance] noncomputable def instDecEq (a b : Real) : Decidable (a = b) :=
+  Classical.propDecidable _
 
 /-! ### Field axioms -/
 
