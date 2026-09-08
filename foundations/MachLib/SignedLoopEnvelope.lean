@@ -238,6 +238,110 @@ theorem spidloop_row_envelope_of_near
   exact le_trans (abs_add _ _)
     (add_le_add_both (hnear X I P) (spid_state_error GA GB GC GD X I P))
 
+/-! ### The datapath Forge actually emits, from the defining property of `>>>`
+
+`spidloop_row_envelope_of_near` gets the hardware inside the envelope by comparing it to `sfxmul`,
+which costs `δ + 6·ulp`. There is a better route, and it is better in three ways at once: it is
+tighter, it needs no reference model, and its hypothesis is the *definition* of an arithmetic
+shift rather than a measurement against something else.
+
+An arithmetic shift right by `FRAC` on the Q-grid discards the low `FRAC` bits. So the computed
+product is **at most one `ulp` below** the exact one and is **never above** it. That is a
+one-sided statement, and it is exactly what `>>>` does — a backend can assert it about its own
+emitter without simulating anything.
+
+One-sided at one `ulp` beats `sfxmul`'s two-sided two, so the emitted hardware is *better* than
+the datapath this corpus was modelling, not worse. Modelling it as `sfxmul` was costing a factor
+of two on top of being the wrong function. -/
+
+/-- **A state row built from three downward-truncating products lands within `3·ulp`.**
+
+Stated over the computed products themselves (`pa`, `pb`, `pc`) rather than over any multiplier,
+so nothing here mentions bit widths, two's complement, or how the truncation is implemented. The
+adders contribute nothing, as always. -/
+theorem row_within_three_ulp
+    {pa pb pc a x b i c p d : Real}
+    (hA₀ : 0 ≤ a * x - pa) (hA₁ : a * x - pa ≤ ulp)
+    (hB₀ : 0 ≤ b * i - pb) (hB₁ : b * i - pb ≤ ulp)
+    (hC₀ : 0 ≤ c * p - pc) (hC₁ : c * p - pc ≤ ulp) :
+    abs ((pa + pb + pc + d) - (a * x + b * i + c * p + d)) ≤ ulp + ulp + ulp := by
+  have hsum : (pa + pb + pc + d) - (a * x + b * i + c * p + d)
+      = -((a * x - pa) + (b * i - pb) + (c * p - pc)) := by
+    mach_mpoly [pa, pb, pc, d, a * x, b * i, c * p]
+  have hS0 : (0 : Real) ≤ (a * x - pa) + (b * i - pb) + (c * p - pc) :=
+    add_nonneg (add_nonneg hA₀ hB₀) hC₀
+  have hSle : (a * x - pa) + (b * i - pb) + (c * p - pc) ≤ ulp + ulp + ulp :=
+    add_le_add_both (add_le_add_both hA₁ hB₁) hC₁
+  have h3nn : (0 : Real) ≤ ulp + ulp + ulp :=
+    add_nonneg (add_nonneg (le_of_lt ulp_pos) (le_of_lt ulp_pos)) (le_of_lt ulp_pos)
+  rw [hsum]
+  refine abs_le_of ?_ ?_
+  · exact le_trans (neg_nonpos_of_nonneg hS0) h3nn
+  · rw [neg_neg_helper]
+    exact hSle
+
+
+/-- **The join for a downward-truncating datapath — Forge's, given only what `>>>` does.**
+
+The hypotheses are: the state row is three products plus the constant (`hrow`), and each product
+is at most one `ulp` below the exact one and never above it (`hA`, `hB`, `hC`). Nothing else. No
+bit widths, no two's complement, no reference multiplier, and no simulation — those three
+inequalities are the arithmetic shift's defining behaviour on the Q-grid, and they are what a
+backend can assert about its own emitter.
+
+The per-step term is `K·3·ulp`, against `K·6·ulp` for the `sfxmul` datapath. The hardware is
+better than the model this corpus started with, which is worth saying plainly after the model
+turned out to be the wrong function. -/
+theorem spidloopOf_tracks_exact_floor
+    (step : SVec → SVec → SVec → SVec) (GF X0 I0 P0 : SVec)
+    {A B C D : Real} {l₁ l₂ l₃ L K : Real}
+    {pA pB pC : SVec → SVec → SVec → Real}
+    (hrow : ∀ X I P : SVec, sval (step X I P) = pA X I P + pB X I P + pC X I P + D)
+    (hA : ∀ X I P : SVec, 0 ≤ A * sval X - pA X I P ∧ A * sval X - pA X I P ≤ ulp)
+    (hB : ∀ X I P : SVec, 0 ≤ B * sval I - pB X I P ∧ B * sval I - pB X I P ≤ ulp)
+    (hC : ∀ X I P : SVec, 0 ≤ C * sval P - pC X I P ∧ C * sval P - pC X I P ≤ ulp)
+    (heigA : A = (l₁ + l₂ + l₃) - 1)
+    (heigB : B = (l₁*l₂ + l₁*l₃ + l₂*l₃) - (l₁ + l₂ + l₃) + 1 - l₁*l₂*l₃)
+    (heigC : C = -(l₁*l₂*l₃))
+    (h₁ : abs l₁ ≤ L) (h₂ : abs l₂ ≤ L) (h₃ : abs l₃ ≤ L) (hL : 0 ≤ L)
+    (hK₁ : abs (l₁ * (l₁ - 1)) ≤ K) (hK₂ : abs (l₂ * (l₂ - 1)) ≤ K)
+    (hK₃ : abs (l₃ * (l₃ - 1)) ≤ K)
+    (n : Nat) :
+    m3 (l₁ * (l₁ - 1)) (l₁ * ((l₁*l₂ + l₁*l₃ + l₂*l₃) - (l₁ + l₂ + l₃) + 1 - l₁*l₂*l₃))
+         ((l₁ - 1) * (-(l₁*l₂*l₃)))
+       (l₂ * (l₂ - 1)) (l₂ * ((l₁*l₂ + l₁*l₃ + l₂*l₃) - (l₁ + l₂ + l₃) + 1 - l₁*l₂*l₃))
+         ((l₂ - 1) * (-(l₁*l₂*l₃)))
+       (l₃ * (l₃ - 1)) (l₃ * ((l₁*l₂ + l₁*l₃ + l₂*l₃) - (l₁ + l₂ + l₃) + 1 - l₁*l₂*l₃))
+         ((l₃ - 1) * (-(l₁*l₂*l₃)))
+        (sval (spidloopOf step GF X0 I0 P0 n).1
+          - (exactPID A B C D (sval GF) (sval X0) (sval I0) (sval P0) n).1)
+        (sval (spidloopOf step GF X0 I0 P0 n).2.1
+          - (exactPID A B C D (sval GF) (sval X0) (sval I0) (sval P0) n).2.1)
+        (sval (spidloopOf step GF X0 I0 P0 n).2.2
+          - (exactPID A B C D (sval GF) (sval X0) (sval I0) (sval P0) n).2.2)
+      ≤ npow n L
+          * m3 (l₁ * (l₁ - 1)) (l₁ * ((l₁*l₂ + l₁*l₃ + l₂*l₃) - (l₁ + l₂ + l₃) + 1 - l₁*l₂*l₃))
+                 ((l₁ - 1) * (-(l₁*l₂*l₃)))
+               (l₂ * (l₂ - 1)) (l₂ * ((l₁*l₂ + l₁*l₃ + l₂*l₃) - (l₁ + l₂ + l₃) + 1 - l₁*l₂*l₃))
+                 ((l₂ - 1) * (-(l₁*l₂*l₃)))
+               (l₃ * (l₃ - 1)) (l₃ * ((l₁*l₂ + l₁*l₃ + l₂*l₃) - (l₁ + l₂ + l₃) + 1 - l₁*l₂*l₃))
+                 ((l₃ - 1) * (-(l₁*l₂*l₃)))
+              (sval (spidloopOf step GF X0 I0 P0 0).1
+                - (exactPID A B C D (sval GF) (sval X0) (sval I0) (sval P0) 0).1)
+              (sval (spidloopOf step GF X0 I0 P0 0).2.1
+                - (exactPID A B C D (sval GF) (sval X0) (sval I0) (sval P0) 0).2.1)
+              (sval (spidloopOf step GF X0 I0 P0 0).2.2
+                - (exactPID A B C D (sval GF) (sval X0) (sval I0) (sval P0) 0).2.2)
+        + K * (ulp + ulp + ulp) * geom L n := by
+  refine spidloopOf_tracks_exact step GF X0 I0 P0 (ε := ulp + ulp + ulp)
+    ?_ heigA heigB heigC h₁ h₂ h₃ hL hK₁ hK₂ hK₃ n
+  intro X I P
+  rw [hrow X I P]
+  obtain ⟨a₀, a₁⟩ := hA X I P
+  obtain ⟨b₀, b₁⟩ := hB X I P
+  obtain ⟨c₀, c₁⟩ := hC X I P
+  exact row_within_three_ulp a₀ a₁ b₀ b₁ c₀ c₁
+
 end Real
 
 end MachLib

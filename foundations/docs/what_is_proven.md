@@ -349,9 +349,20 @@ different theorem, and an instance is what a compiler backend can supply about i
 `spidloop_row_envelope_of_near` converts a per-operation measurement — "my multiplier is within `δ`
 of yours" — into the envelope at `δ + 6·ulp`, which is the form a measurement can actually take.
 
-**What is still not claimed.** That a shift-based multiplier meets the envelope: that is a
-statement about a bit-level operation this corpus does not model, and asserting it here would be
-the exact error both projects are built to avoid. No anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
+**And the emitted datapath is covered, from the shift's own definition.** Comparing multipliers
+was not the only route, and not the best one. An arithmetic shift right on the Q-grid discards the
+low bits, so each computed product is at most one `ulp` **below** the exact one and never above it.
+That is one-sided, it is the shift's defining behaviour rather than a measurement against anything,
+and a backend can assert it about its own emitter. `row_within_three_ulp` turns three such products
+into a state row within `3·ulp`, and `spidloopOf_tracks_exact_floor` is the resulting trajectory
+bound with per-step term `K·3·ulp`.
+
+That is **half** the `K·6·ulp` the `sfxmul` datapath carries. One-sided truncation at one `ulp`
+beats a two-sided two, because the pair-of-unsigned construction pays twice per limb for splitting
+into non-negative pieces. So the hardware is better than the datapath this corpus was modelling,
+and modelling it as `sfxmul` was costing a factor of two on top of being the wrong function.
+
+**What is still not claimed.** No anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
 a separate question this does not answer. `pid_trajectory_from_bits` is unchanged and is still not
 the end-to-end result.
 

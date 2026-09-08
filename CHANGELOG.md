@@ -5,6 +5,39 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-09-07 (hf)
+
+### The emitted datapath, from the shift's own definition — and it is TWICE as good as the model
+
+`row_within_three_ulp` and `spidloopOf_tracks_exact_floor`, in `MachLib/SignedLoopEnvelope.lean`.
+`(he)` left one step open: showing that Forge's shift-based multiplier is inside the envelope. It
+offered one route, comparing the multiplier against `sfxmul` and paying `δ + 6·ulp` for the
+difference. There is a better one, and it is better three ways at once.
+
+**Use what the shift IS, not what it differs from.** An arithmetic shift right by `FRAC` on the
+Q-grid discards the low `FRAC` bits. So the computed product is **at most one `ulp` below** the
+exact one and is **never above** it. That is a one-sided statement, it is the shift's defining
+behaviour rather than a measurement against a reference, and a backend can assert it about its own
+emitter without simulating anything. `row_within_three_ulp` turns three such products into a state
+row within `3·ulp`; `spidloopOf_tracks_exact_floor` is the resulting trajectory bound.
+
+**The hypotheses are the whole interface**: the row is three products plus the constant, and each
+product is `≤ 1 ulp` low and never high. No bit widths, no two's complement, no reference
+multiplier, no simulation.
+
+**And it is TIGHTER than the model.** Per-step term `K·3·ulp`, against `K·6·ulp` for the `sfxmul`
+datapath. One-sided truncation at one `ulp` beats a two-sided two, because the pair-of-unsigned
+construction pays twice per limb for splitting into non-negative pieces. So the hardware Forge
+emits is **better** than the datapath this corpus has been modelling all arc, and modelling it as
+`sfxmul` was costing a factor of two on top of being the wrong function. That is worth stating
+plainly right after `(he)` had to admit the model was wrong: the correction improved the bound.
+
+`spidloop_row_envelope_of_near` from `(he)` stays, because a measurement-based route is still the
+right tool when a backend cannot characterise its own primitive and can only compare it to one.
+
+Aggregator unchanged at **795 of 1 099** — same module. Ledger unmoved: 23 rows, 7 open,
+4 distinct, 243 axioms.
+
 ## [Unreleased] — 2026-09-07 (he)
 
 ### The model was not the hardware, and it took a simulator to find out

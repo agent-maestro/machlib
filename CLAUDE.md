@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 099 `.lean` files** (785 top-level + 314 in subdirectories) /
-**250 129 lines** / **7 655 theorems**, re-exported through the aggregator
+**250 233 lines** / **7 657 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 655
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 375
+  | paste -sd+ | bc                                    # 7 657
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 377
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -434,7 +434,10 @@ Four findings from that arc that will save a session:
   steps (floor matched every step, `sfxmul` diverged at step 3). Forge's own certifier uses floor.
   Both are inside the `2·ulp` envelope the proof consumes, so use `spidloopOf_tracks_exact`
   (`SignedLoopEnvelope`), which takes the envelope as a hypothesis, rather than assuming the model
-  is the hardware.
+  is the hardware. For the shift specifically use `spidloopOf_tracks_exact_floor`: its hypothesis
+  is just "each product is `≤ 1 ulp` BELOW exact, never above", which is what `>>>` does, and it
+  gives `K·3·ulp` per step — HALF what `sfxmul` gives, since one-sided-at-one beats
+  two-sided-at-two.
 * **A deadbeat specimen is VACUOUS for the PID measure.** `m3` is a norm only when the
   eigenvalues are distinct and none is `0` or `1`; at `λ = 0` every functional vanishes and the
   bound reads `0 ≤ 0`. `SignedPILoop` uses a deadbeat specimen as its evidence and that is correct

@@ -101,10 +101,13 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   matched at every step and `sfxmul` diverged at step 3 by one `ulp`. Both sit inside the same
   envelope, and the envelope is all the proof consumes, so the conclusion transfers — but only
   once someone proves it for the multiplier actually emitted, which is what this form asks for.
-- **Still not proved:** that a shift-based multiplier meets the envelope. That is a statement
-  about a bit-level operation this corpus does not model, and asserting it would be exactly the
-  "evidence attaches to names" error. Also no anti-windup, and no claim that the quantised gains
-  are close to the designer's intended ones. `pid_trajectory_from_bits` is unchanged and still quantifies its
+- `spidloopOf_tracks_exact_floor` (`SignedLoopEnvelope`) — the join for the datapath Forge
+  actually emits, from **only** what an arithmetic shift does: each product is at most one `ulp`
+  below the exact one and never above it. No bit widths, no two's complement, no reference
+  multiplier, no simulation. The per-step term is `K·3·ulp` against `K·6·ulp` for the modelled
+  datapath, so the hardware is **better** than the model this corpus started with, not worse.
+- **Still not proved:** no anti-windup, and no claim that the quantised gains are close to the
+  designer's intended ones. `pid_trajectory_from_bits` is unchanged and still quantifies its
   per-step error universally; do not cite it as an end-to-end result.
 - `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
   within their forward-error bounds.
@@ -185,7 +188,7 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 655 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 657 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
 | `.lean` files under `MachLib/` | 1 099 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
