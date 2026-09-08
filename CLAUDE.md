@@ -360,6 +360,29 @@ behind it is missing — registration is still a human act.
   it named live obligations twice and both were discharged the same day, failing the gate because
   work succeeded. `discharged`, `refuted` and `reduced` specimens are stable; `open` is not.
 
+- **A GRINDING TACTIC DOES NOT JUST BURN TIME — IT CAN TAKE THE MACHINE DOWN, and `maxHeartbeats`
+  does not bound it.** On 2026-09-08 this box (121 GB RAM, 16 GB swap) went unresponsive and was
+  power-cycled by hand. The journal settles the cause: in **13 days of uptime there were exactly
+  two days with any memory pressure at all** — Sep 05 (598 events, ending with VSCode OOM-killed,
+  which is the "vscode crashed" of that session) and Sep 08 (608 events, starting 14:35:04, power
+  key pressed 27 minutes later). Both are days this corpus was worked on; no other day produced a
+  single event. Nothing was OOM-killed on the 8th, because the kernel never got the chance — the
+  desktop stopped responding first.
+  **Measured, same day:** one `lake env lean` on ONE emitted Forge artifact peaks at **3.4 GB RSS**.
+  Adding ONE `mach_linarith` arm to ONE theorem's closer alternation takes it to **7.8 GB**, and it
+  still only reaches the heartbeat timeout rather than a conclusion — a wide `first | … |` pays for
+  every arm that fails. The trap is the obvious next move: when a proof times out you RAISE
+  `maxHeartbeats`, which buys the grinding tactic more time **to allocate**. The budget is denominated
+  in heartbeats and **nothing is denominated in bytes**.
+  This is the resource face of gotchas already in this file (`mach_mpoly` GRINDS rather than fails on
+  a literal `-0`; the tell is a long run, not an error). What is new is that the blow-up escapes the
+  build. **Run exploratory elaborations through `tools/capped_lean.sh`** — a transient scope with
+  `MemoryMax` and no swap, so a runaway is killed by its own cgroup and the desktop survives. It
+  reports a kill as a RESOURCE verdict in as many words, because a killed run read as a failed proof
+  is this corpus's five-costume "instrument that can only return one value" all over again.
+  Three canaries (`--selftest`): a hog is killed, a control survives, an ordinary exit status passes
+  through. Default cap 16 G, per invocation — parallel harnesses multiply it.
+
 ## Counts: the gate is the source, prose is a copy
 
 **No count in prose — a claim total, an axiom total, an open-obligation total, a job count — may be
