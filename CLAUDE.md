@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 103 `.lean` files** (789 top-level + 314 in subdirectories) /
-**250 919 lines** / **7 674 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
+**251 100 lines** / **7 678 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 674
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 394
+  | paste -sd+ | bc                                    # 7 678
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 398
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -119,7 +119,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 802 jobs, ~3 s warm
+lake build                                     # 803 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
@@ -209,7 +209,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**799 of 1103 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**800 of 1104 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -437,9 +437,24 @@ behind it is missing — registration is still a human act.
   typechecks the composition. 31 axioms, algebra spine only: no `sorryAx`, no `HasDerivAt`, nothing
   analytic. That standard comes from `(fk)`, where a duplication audit was "a reading of two files"
   until it became two typechecked instantiations.
+  **ASSEMBLED 2026-09-08** (`LogGermAssembly`, `no_rational_log_germ`): a rational germ `S = P/Q`,
+  positive on a ray, whose denominator has a genuine pole at an irreducible `q`, admits no rational
+  germ for `log ∘ S`. 44 axioms, no `sorryAx`, nothing analytic. Every step was already present —
+  the two derivative rules (`logComp_hasDerivAt`, `div_hasDerivAt`, `DerivQuotientLog`) were built
+  for this route and I nearly rebuilt them; the only arithmetic added was `logderiv_normalise`,
+  turning `logComp_hasDerivAt`'s `s / S x` into one fraction over `P·Q`.
+  **`witness_audit` IS STRUCTURALLY BLIND TO IT.** The theorem concludes `False`, so it lands in the
+  audit's *"refutation theorem(s) NOT APPLICABLE"* bucket — a green `WITNESS-AUDIT OK` says nothing
+  about it, which is precisely the position `positive_branch_impossible` was in while vacuous for
+  weeks with every gate green. So `no_rational_log_germ_specimen` discharges every hypothesis
+  **except** the one being refuted, at `S = 1/x`: a full specimen is impossible on purpose, and what
+  needed showing is that the premises are not contradictory for some unrelated reason.
+  **Scope, at the width the count actually has:** `no_rational_logarithm` needs a genuine pole, so
+  the POLYNOMIAL case is not covered — `S = x` has `Q = 1` and no irreducible divides it. The repair
+  is to run the argument on `1/S`, which needs `P` non-constant; not claimed.
   **The ledger did not move and must not be read as if it had** — still 4 distinct open obligations.
-  What remains is the caller: producing leg 1's derivative identity at the right point and supplying
-  `S`'s non-vanishing on the ray. `(fm)`'s own warning is the right one to carry: *two green legs do
+  `BoundedGermTranscendence` consumes `not RatGerm (log ∘ S)` through further steps that are not this
+  module. `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
@@ -479,7 +494,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**799 of 1 103 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
+run (**800 of 1 104 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
