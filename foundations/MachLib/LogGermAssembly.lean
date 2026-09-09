@@ -574,4 +574,82 @@ theorem ratGerm_neg {f : Real → Real} (hf : RatGerm f) :
       mul_div_cancel_left (hQ x hx)]
   mach_ring
 
+/-- **An explicit quotient of polynomials is a rational germ.** The definition, packaged — this is
+what `S' = (P'Q − PQ')/Q²` and every other cleared derivative in the corpus already looks like. -/
+theorem ratGerm_of_pev_div {N D : List Real} {X : Real} (hX : 1 ≤ X)
+    (hD : ∀ x : Real, X ≤ x → pev D x ≠ 0) :
+    RatGerm (fun x => pev N x / pev D x) :=
+  ⟨N, D, X, hX, hD, fun _ _ => rfl⟩
+
+/-- **The reciprocal of a non-vanishing rational germ is one**, `1/(P/Q) = Q/P`. Needs the
+NUMERATOR non-vanishing too, which is exactly the `1/S` side condition route A carries. -/
+theorem ratGerm_inv_of_pev {P Q : List Real} {X : Real} (hX : 1 ≤ X)
+    (hP : ∀ x : Real, X ≤ x → pev P x ≠ 0)
+    (hQ : ∀ x : Real, X ≤ x → pev Q x ≠ 0) :
+    RatGerm (fun x => 1 / (pev P x / pev Q x)) := by
+  refine ⟨Q, P, X, hX, hP, fun x hx => ?_⟩
+  show 1 / (pev P x / pev Q x) = pev Q x / pev P x
+  refine div_eq_div_of_cross (div_ne_zero' (hP x hx) (hQ x hx)) (hP x hx) ?_
+  rw [one_mul_thm, mul_div_cancel_left (hQ x hx)]
+
+/-! ### Coefficientwise rationality is preserved by the list operations
+
+`substituted_coeff_splits` exhibits `A` and `B` as combinations of `es`, `gyd cs`, `s` and `1/S`.
+For `log_separation` those must be rational germs, so rationality has to survive `gadd`, `gscale`
+and `gyd`. Stated over MEMBERSHIP rather than indices: `gadd`'s elements are heads, tails or sums,
+which membership sees directly, whereas an index-based statement has to case on the two lists'
+relative lengths at every step (`gadd_getElem` needs both, `gadd_getElem_left_none` the overhang). -/
+
+/-- The zero germ is rational. -/
+theorem ratGerm_zero : RatGerm (fun _ : Real => (0 : Real)) := by
+  refine ⟨[], [1], 1, le_refl 1, fun x _ => by rw [pev_one]; exact ne_of_gt zero_lt_one_ax,
+    fun x _ => ?_⟩
+  show (0 : Real) = pev ([] : List Real) x / pev ([1] : List Real) x
+  rw [pev_one, show pev ([] : List Real) x = 0 from rfl, zero_div]
+
+/-- `gadd` preserves coefficientwise rationality. -/
+theorem allRatGerm_gadd : ∀ (a b : List (Real → Real)),
+    (∀ c ∈ a, RatGerm c) → (∀ c ∈ b, RatGerm c) → ∀ c ∈ gadd a b, RatGerm c := by
+  intro a
+  induction a with
+  | nil => intro b _ hb c hc; exact hb c hc
+  | cons d ds ih =>
+      intro b ha hb c hc
+      cases b with
+      | nil => exact ha c hc
+      | cons e es =>
+          rcases List.mem_cons.mp hc with hhead | htail
+          · rw [hhead]
+            exact ratGerm_add (ha d (List.Mem.head _)) (hb e (List.Mem.head _))
+          · exact ih es (fun z hz => ha z (List.Mem.tail _ hz))
+              (fun z hz => hb z (List.Mem.tail _ hz)) c htail
+
+/-- `gscale` preserves coefficientwise rationality, given a rational scalar. -/
+theorem allRatGerm_gscale {v : Real → Real} (hv : RatGerm v) :
+    ∀ (cs : List (Real → Real)), (∀ c ∈ cs, RatGerm c) → ∀ c ∈ gscale v cs, RatGerm c := by
+  intro cs
+  induction cs with
+  | nil => intro _ c hc; cases hc
+  | cons d ds ih =>
+      intro hcs c hc
+      rcases List.mem_cons.mp hc with hhead | htail
+      · rw [hhead]; exact ratGerm_mul hv (hcs d (List.Mem.head _))
+      · exact ih (fun z hz => hcs z (List.Mem.tail _ hz)) c htail
+
+/-- **`gyd` preserves coefficientwise rationality.** The formal `y`-derivative is built from `gadd`
+and a zero-headed shift, so this is the two lemmas above plus `ratGerm_zero`. -/
+theorem allRatGerm_gyd : ∀ (cs : List (Real → Real)),
+    (∀ c ∈ cs, RatGerm c) → ∀ c ∈ gyd cs, RatGerm c := by
+  intro cs
+  induction cs with
+  | nil => intro _ c hc; cases hc
+  | cons d ds ih =>
+      intro hcs c hc
+      have hds : ∀ z ∈ ds, RatGerm z := fun z hz => hcs z (List.Mem.tail _ hz)
+      refine allRatGerm_gadd ds ((fun _ => (0 : Real)) :: gyd ds) hds ?_ c hc
+      intro z hz
+      rcases List.mem_cons.mp hz with hhead | htail
+      · rw [hhead]; exact ratGerm_zero
+      · exact ih hds z htail
+
 end MachLib

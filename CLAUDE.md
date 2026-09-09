@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 507 lines** / **7 688 theorems**, re-exported through the aggregator
+**251 585 lines** / **7 694 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 688
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 408
+  | paste -sd+ | bc                                    # 7 694
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 414
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -497,9 +497,13 @@ behind it is missing — registration is still a human act.
   `ratGerm_neg`, 2026-09-09) — the corpus had NONE of these, only `ratGerm_sub_const`. They are what
   turns "those `A`, `B` are built from rational pieces" into a proof, and they are reusable well
   beyond this route since `RatGerm` is the level-0 class the germ layer is stratified by.
-  **What remains is the instantiation**: assembling those closures at the obligation's own data
-  (`bipevLead A Ls` polynomial, so `ratGerm_pev`; `s = S'` and `1/S` rational from `S = P/Q`) and
-  feeding `log_separation`. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
+  **The instantiation infrastructure is complete too**: `ratGerm_of_pev_div` and
+  `ratGerm_inv_of_pev` for `s = S'` and `1/S`, and `allRatGerm_gadd`/`_gscale`/`_gyd` carrying
+  coefficientwise rationality through the list operations. Those three are stated over MEMBERSHIP,
+  not indices, on purpose: `gadd`'s elements are heads, tails or sums, which membership sees
+  directly, while an index statement must case on the two lists' relative lengths at every step.
+  **What remains is only to apply them** at the obligation's own data and feed `log_separation` —
+  every piece that step needs is now a theorem. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
