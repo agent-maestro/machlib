@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 382 lines** / **7 683 theorems**, re-exported through the aggregator
+**251 411 lines** / **7 684 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 683
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 403
+  | paste -sd+ | bc                                    # 7 684
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 404
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -482,9 +482,14 @@ behind it is missing — registration is still a human act.
   and contains no `log`; separating it would need `¬ RatGerm (exp ∘ S)`, which the bounded branch
   cannot supply — every exclusion instrument here argues by growth and
   `polyEnvelope_of_Fbasis_floor` proves `F ∘ S` IS polynomially enveloped there.
-  `fbasis_relation_substituted`'s coefficients DO carry `log`. `LogGermAssembly` records the facts
-  and marks the inference as an inference; **read that note before wiring anything**, and do not
-  promote the inference to the route. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
+  `fbasis_relation_substituted`'s coefficients DO carry `log`.
+  **The fork is RESOLVED** (`top_two_multiplier_splits`, 2026-09-09): the multiplier is
+  `s·u + fbasisSubMul S s`, so in `A + B·log` form the top-two identity has `A` carrying
+  `u = exp ∘ S + log ∘ S` — not a rational germ on this branch — while `log_separation` needs
+  `RatGerm A`. So it does NOT apply to the top-two identity, and the substituted coefficients are
+  the only candidate. That took one small ring identity; it was held as an explicitly-marked
+  inference for exactly one step first, which is what kept a guess out of this file.
+  Say "every named step is proved", never "route A is closed" — the wiring is still open. `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the

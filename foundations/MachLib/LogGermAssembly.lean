@@ -409,16 +409,17 @@ they need DIFFERENT inputs, so guessing costs a session.
    `A_j = es[j] + s·(gyd cs)[j−1] + s·(gyd cs)[j]/S` and `B_j = −s·(gyd cs)[j]`.
 4. `fbasis_top_two_identity` has no consumer anywhere in `MachLib/`.
 
-**Inferred, and NOT verified:** that `log_separation` is meant for (3) rather than (1) — because (1)
-would need an input (2) says is unavailable, and the substitution in (3) exists precisely to trade
-`exp` for `log`. That reading is consistent with everything above and with `(fm)`'s naming of
-`not RatGerm (log ∘ S)` as the absent step, but no theorem states the connection and this note is
-not evidence for it.
+**RESOLVED — and it was checkable after all.** `top_two_multiplier_splits` (below) proves the
+multiplier is `s·u + fbasisSubMul S s`. So in `A + B·log` form the top-two identity has `B` free of
+`log` but `A` carrying `u = exp ∘ S + log ∘ S`, which by (2) is not a rational germ on this branch.
+`log_separation` requires `RatGerm A`, so it does **not** apply to (1), and (3) is the only
+remaining candidate.
 
-**Do not record the inference as the route.** Three headers in this corpus asserted what was needed
-and were wrong (`smoothstep_nonneg`, this file's own `GermDerivFbasis`, `LogRatDeriv`), each costing
-a wrong start; the fix was to check before writing. This is the check, stopped at the point where it
-stops being checkable from the outside. -/
+**What the stopping rule bought.** The previous revision of this note recorded that as an INFERENCE
+and refused to write it into CLAUDE.md as the route — three headers here asserted what was needed
+and were wrong (`smoothstep_nonneg`, `GermDerivFbasis`, `LogRatDeriv`), each costing a wrong start.
+Holding it as an inference for one step cost nothing and made the difference between recording a
+guess and recording a theorem. The wiring itself is still open. -/
 
 /-! ### The bridge to the obligation's own shape
 
@@ -448,5 +449,33 @@ theorem log_separation_pev {S : Real → Real} {A B : List Real} {X : Real}
     (h : ∀ x : Real, X ≤ x → pev A x + pev B x * log (S x) = 0) :
     EvZeroF (pev B) :=
   log_separation hnr (ratGerm_pev A) (ratGerm_pev B) hX h
+
+/-! ### Settling the fork: the top-two identity is NOT in separable form
+
+The note above left one step as an inference. It is now a theorem, and it decides the question.
+
+`fbasis_top_two_identity`'s multiplier splits as `s·u + fbasisSubMul S s`, with `u = Fbasis ∘ S`.
+Written in `A + B·log (S x)` form the identity therefore has
+
+    B = −(m+1)·cd²·s          free of `log`
+    A ∋ (m+1)·cd²·s·u         and `u x = exp (S x) + log (S x)`
+
+so **`A` carries `u`, and `u` is not a rational germ** — on the bounded branch nothing can make it
+one, since `polyEnvelope_of_Fbasis_floor` proves `F ∘ S` polynomially enveloped there and every
+exclusion instrument argues by growth. `log_separation` requires `RatGerm A`. It therefore does NOT
+apply to the top-two identity, and the substituted relation's coefficients are the only remaining
+candidate.
+
+That is now verified rather than guessed. What is still open is the wiring itself. -/
+
+/-- **The chain-rule multiplier, split.** `(exp (S x) + 1/S x)·s x = s x·Fbasis (S x) + fbasisSubMul S s x`.
+
+A ring identity in the atoms `exp (S x)`, `log (S x)`, `1/S x` — the `log`s cancel, which is exactly
+why the split is available and why the residue `fbasisSubMul` is where the `log` ends up. -/
+theorem top_two_multiplier_splits (S s : Real → Real) (x : Real) :
+    (exp (S x) + 1 / S x) * s x = s x * Fbasis (S x) + fbasisSubMul S s x := by
+  show (exp (S x) + 1 / S x) * s x
+      = s x * (exp (S x) + log (S x)) + s x * (1 / S x - log (S x))
+  mach_ring
 
 end MachLib
