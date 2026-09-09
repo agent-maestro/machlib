@@ -1,6 +1,7 @@
 import MachLib.PevEvEq
 import MachLib.PolyLogDeriv
 import MachLib.EMLRationalGerm
+import MachLib.LogRatDeriv
 
 /-!
 # Leg 2 of the route to `not RatGerm (log ∘ S)` — clearing denominators
@@ -27,6 +28,14 @@ so `S'/S = (N/D)'` cross-multiplies to `(N'D − ND')·(P·Q) = (P'Q − PQ')·D
 two rational functions agreeing on a ray have equal cross-products **as polynomials**, and the `log`
 shape only fixes what `A`, `B`, `C`, `E` are.
 
+## What was already here, and was not read
+
+`LogRatDeriv` already carried `cross_of_div_eq_div` (pointwise cross-multiplication) and
+`logRat_cross_identity` (the raw derivative identity cleared in one step). A first version of this
+file re-proved both. They are cited now. Its header even warns about the failure — *"(fk) found
+bricks re-deriving generic machinery because the summit was never checked"* — and the way to have
+avoided it was to read the module named after the route before adding to it.
+
 ## Why the general form, and why it is stated over `pev` rather than over germs
 
 `peq_of_quot_eq_on_ray` is the whole of leg 2 and mentions neither `log` nor `S`. Stating it that way
@@ -45,20 +54,6 @@ three as well.
 namespace MachLib
 open Real
 
-/-- **Cross-multiplication, pointwise.** `a/b = c/e` with `b, e ≠ 0` gives `a·e = c·b`.
-
-Stated separately from the ray version because it is pure field arithmetic and the ray version is
-about polynomials; keeping them apart is what lets `mach_ring` do the work here without seeing a
-`pev`. -/
-theorem cross_of_div_eq {a b c e : Real} (hb : b ≠ 0) (he : e ≠ 0)
-    (h : a / b = c / e) : a * e = c * b := by
-  rw [div_def a b hb, div_def c e he] at h
-  have h2 : (a * (1 / b)) * (b * e) = (c * (1 / e)) * (b * e) := by rw [h]
-  have l : (a * (1 / b)) * (b * e) = (a * e) * (b * (1 / b)) := by mach_ring
-  have r : (c * (1 / e)) * (b * e) = (c * b) * (e * (1 / e)) := by mach_ring
-  rw [l, r, mul_inv b hb, mul_inv e he, mul_one_ax, mul_one_ax] at h2
-  exact h2
-
 /-- **Leg 2.** Two rational functions agreeing on a ray have equal cross-products *as polynomials*.
 
 The denominators are only required non-zero ON THE RAY, which is what a germ hypothesis supplies;
@@ -71,7 +66,7 @@ theorem peq_of_quot_eq_on_ray {A B C E : List Real} {X : Real} (hX : 1 ≤ X)
     PEq (pmul A E) (pmul C B) := by
   refine peq_of_ev_eq hX (fun x hx => ?_)
   rw [pev_pmul, pev_pmul]
-  exact cross_of_div_eq (hB x hx) (hE x hx) (h x hx)
+  exact cross_of_div_eq_div (hB x hx) (hE x hx) (h x hx)
 
 /-- **Leg 2 at the log-derivative shape** — the exact `hident` of `no_rational_logarithm`.
 

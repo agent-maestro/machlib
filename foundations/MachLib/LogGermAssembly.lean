@@ -15,15 +15,18 @@ mathematics — every step below already existed — which is the point: the rem
     leg 1  differentiate the germ identity   deriv_eq_of_eq_on_ray   (GermDerivFbasis)
            the two derivative rules          logComp_hasDerivAt,
                                              div_hasDerivAt          (DerivQuotientLog)
-    leg 2  clear denominators                logderiv_count_composes (LogDerivCleared)
+    leg 2  clear denominators                logRat_cross_identity   (LogRatDeriv)
+                                             peq_of_ev_eq promotion  (LogDerivCleared)
     leg 3  pointwise → PEq                   peq_of_ev_eq            (PevEvEq, inside leg 2)
 
 ## The one genuinely missing step was arithmetic, not analysis
 
 `logComp_hasDerivAt` yields the derivative as `s / S x` — the quotient of `S`'s derivative by `S`
 itself — while the `q`-adic count wants a single fraction over `P·Q`. With `S = P/Q` and
-`s = (P'Q − PQ')/(Q·Q)` those are the same number, and `logderiv_normalise` is the cancellation
-that says so. It is the only lemma this file adds.
+`s = (P'Q − PQ')/(Q·Q)` those are the same number. A first version of this file proved that
+cancellation itself; `LogRatDeriv.logRat_cross_identity` already did it, in one step and with a
+better argument (multiply through by `Q·Q`, which cancels the left quotient outright), and is cited
+instead.
 
 ## Scope, stated at the width the count actually has
 
@@ -47,40 +50,12 @@ theorem div_ne_zero' {p q : Real} (hp : p ≠ 0) (hq : q ≠ 0) : p / q ≠ 0 :=
   rw [div_def p q hq]
   exact mul_ne_zero hp (one_div_ne_zero hq)
 
-/-- **The logarithmic-derivative normalisation.** `(u/(q·q)) / (p/q) = u/(p·q)`.
-
-This is the whole arithmetic content of the assembly: `logComp_hasDerivAt` hands back `S'/S` as a
-quotient of quotients, and the `q`-adic count wants one fraction over `P·Q`. Proved by cancelling
-`p·q`, which turns the goal into a single `mach_mpoly` identity over the reciprocals as atoms —
-the same shape `div_hasDerivAt` uses one module over. -/
-theorem logderiv_normalise {u p q : Real} (hp : p ≠ 0) (hq : q ≠ 0) :
-    (u / (q * q)) / (p / q) = u / (p * q) := by
-  have hqq : q * q ≠ 0 := mul_ne_zero hq hq
-  have hpq : p * q ≠ 0 := mul_ne_zero hp hq
-  have hpdq : p / q ≠ 0 := div_ne_zero' hp hq
-  have key : (1 / (q * q)) * (1 / (p / q)) = 1 / (p * q) := by
-    refine mul_left_cancel hpq ?_
-    rw [mul_inv (p * q) hpq]
-    have h1 : (p / q) * (1 / (p / q)) = 1 := mul_inv (p / q) hpdq
-    have h2 : (q * q) * (1 / (q * q)) = 1 := mul_inv (q * q) hqq
-    have h3 : q * (1 / q) = 1 := mul_inv q hq
-    have e : ((p / q) * (1 / (p / q))) * ((q * q) * (1 / (q * q)))
-           = ((p * q) * ((1 / (q * q)) * (1 / (p / q)))) * (q * (1 / q)) := by
-      rw [div_def p q hq]
-      mach_mpoly [p, q, 1 / q, 1 / (q * q), 1 / (p / q)]
-    rw [h1, h2, h3] at e
-    rw [show (1 : Real) * 1 = 1 from by mach_ring] at e
-    rw [mul_one_ax ((p * q) * ((1 / (q * q)) * (1 / (p / q))))] at e
-    exact e.symm
-  rw [div_def (u / (q * q)) (p / q) hpdq, div_def u (q * q) hqq, div_def u (p * q) hpq,
-      mul_assoc, key]
-
 /-- **Route `(fm)`, assembled.** A rational germ `S = P/Q` that is positive on a ray, whose
 denominator has a genuine pole at the irreducible `q`, has no rational germ for `log ∘ S`.
 
 Every step is cited, none is new: the two derivative rules (`DerivQuotientLog`), the ray step
 (`GermDerivFbasis`), the cleared identity and the `q`-adic count (`LogDerivCleared`, `PolyLogDeriv`).
-The only arithmetic added is `logderiv_normalise`.
+The only genuinely new content is the germ-level packaging, the numerator-pole case, and the specimen.
 
 The ray is opened by one: leg 1 needs a two-sided neighbourhood, so the derivative identity holds
 on `X < x` and the count is fed from `X + 1` — a derivative is local, and the endpoint of `[X, ∞)`
@@ -112,15 +87,15 @@ theorem no_rational_log_germ {q P Q Qt N D : List Real} {X : Real}
     exact mul_ne_zero (hDne x (hstep x hx).1) (hDne x (hstep x hx).1)
   · intro x hx
     obtain ⟨hxle, hxlt⟩ := hstep x hx
-    -- leg 1: both sides are differentiable at `x`, and they agree on the ray
-    have hSd := div_hasDerivAt (hasDerivAt_pev P x) (hasDerivAt_pev Q x) (hQne x hxle)
-    have hLd := logComp_hasDerivAt hSd (hSpos x hxle)
-    have hRd := div_hasDerivAt (hasDerivAt_pev N x) (hasDerivAt_pev D x) (hDne x hxle)
-    have heq := deriv_eq_of_eq_on_ray hxlt hlog hLd hRd
-    -- the quotient-of-quotients is one fraction over `P·Q`
-    rw [logderiv_normalise (hPne x hxle) (hQne x hxle)] at heq
+    -- leg 1, ALREADY COMPOSED in `LogRatDeriv`: the derivatives agree on the OPEN ray
+    have heq := logRat_deriv_eq hQne hDne hSpos hlog x hxlt
+    -- and `LogRatDeriv` already clears it in one step, by multiplying through by `Q·Q`
+    have hcross := logRat_cross_identity (hQne x hxle) (hDne x hxle) (hPne x hxle) heq
+    have hcomm : pev Q x * pev P x = pev P x * pev Q x := by mach_ring
+    rw [hcomm] at hcross
     rw [pev_psub, pev_pmul, pev_pmul, pev_pmul, pev_psub, pev_pmul, pev_pmul, pev_pmul]
-    exact heq
+    exact div_eq_div_of_cross (mul_ne_zero (hPne x hxle) (hQne x hxle))
+      (mul_ne_zero (hDne x hxle) (hDne x hxle)) hcross
 
 private theorem not_evZeroF_pev_one' : ¬ EvZeroF (pev ([1] : List Real)) := by
   intro ⟨Y, hY, h⟩

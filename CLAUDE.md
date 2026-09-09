@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 176 lines** / **7 681 theorems**, re-exported through the aggregator
+**251 146 lines** / **7 679 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 681
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 401
+  | paste -sd+ | bc                                    # 7 679
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 399
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -464,6 +464,19 @@ behind it is missing — registration is still a human act.
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
   step actually ABSENT is `not RatGerm (log ∘ S)`, a weaker and different statement, and the
   commit-letter for `b8ebfad2` states the four-line route status that supersedes the docstring.
+
+- **READ THE MODULE NAMED AFTER THE ROUTE BEFORE ADDING TO IT.** `LogRatDeriv` already carried
+  `logRat_deriv_eq` (leg 1 fully composed), `cross_of_div_eq_div` and `logRat_cross_identity` (the
+  derivative identity cleared in one step). A first pass at `LogDerivCleared`/`LogGermAssembly`
+  re-proved the last two and re-derived the first inline — and `LogRatDeriv`'s own header warns
+  about exactly that failure, quoting `(fk)`: *"bricks re-deriving generic machinery because the
+  summit was never checked"*. Deduplicated 2026-09-09; the theorem count went **down** (7 681 →
+  7 679), which is the signature to expect.
+  The search that would have caught it took one command — `grep -rn "RatGerm (log" MachLib/` — and
+  I ran it only after building. **Grep the route's own name, not just the lemma you want.**
+  Note also that `LogRatDeriv`'s header lists more as remaining than actually did: it names the
+  cross-multiplication as open while `logRat_cross_identity`, in that same file, performs it. What
+  genuinely remained of leg 2 was the `peq_of_ev_eq` promotion.
 
 ## Counts: the gate is the source, prose is a copy
 
