@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 101 `.lean` files** (787 top-level + 314 in subdirectories) /
-**250 640 lines** / **7 665 theorems**, re-exported through the aggregator
+**250 661 lines** / **7 665 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -407,6 +407,24 @@ behind it is missing — registration is still a human act.
   atom, and decimal arithmetic is needed only when the bound is a bare numeral. Forcing the
   literals early would push decimal arithmetic into every step. Forge emits these for callers that
   compose; see forge's CLAUDE.md for the emission side.
+
+- **A LEMMA STATED IN `OfNat` FORM CANNOT UNIFY WITH A DECIMAL GOAL, AND NOTHING REPORTS IT.**
+  `OfNat Real` exists only for `0` and `1`, so this corpus states band lemmas over
+  `(1+1+1) - (1+1)*s`. Forge emits `3.0 - 2.0*t`, which elaborates to
+  `OfScientific.ofScientific 30 true 1`. Same number, different term, no unification, no
+  diagnostic — the lemma simply never fires, and the goal it can no longer reach gets written up
+  as needing new mathematics.
+  **It cost a theorem for months.** `smoothstep_le_one` has been here for years, built on the
+  certificate `1 - s²(3-2s) = (1-s)²(1+2s)` (`one_sub_smoothstep_factored`), while Forge's
+  CLAUDE.md recorded that same bound as wanting "a real polynomial-positivity route". Nothing was
+  missing. `smoothstep_nonneg`'s docstring *still* claims it "matches the form Forge emits" — it
+  did, until the emitter changed under it. **A stale docstring asserting compatibility is worse
+  than none: it is the thing you check before concluding the lemma is unusable.**
+  Use **`mach_ofnat_numerals`** (`MachLib/Decimal.lean`) to bridge the spelling. It covers `2.0`
+  and `3.0` only, because `OfNat` reaches no further and those are the band-lemma coefficients.
+  Generalisation of the rule already in this file under `iterate_affine_bound`: **check whether
+  the lemma EXISTS and cannot UNIFY before pricing new mathematics.** On 2026-09-08 that rule
+  would have saved three separate wrong diagnoses in one session.
 
 ## Counts: the gate is the source, prose is a copy
 

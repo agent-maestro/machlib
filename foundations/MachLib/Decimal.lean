@@ -228,6 +228,27 @@ macro "mach_decimal_ofnat" : tactic => `(tactic|
    | (refine Eq.trans ?_ realOfScientific_two_dot_zero <;> mach_decimal)
    | (refine Eq.trans ?_ realOfScientific_three_dot_zero <;> mach_decimal)))
 
+/-- **Rewrite whole-valued decimal numerals into the `OfNat` form MachLib lemmas are stated in.**
+
+A quiet interoperability break, and it cost the corpus a theorem for months. `MachLib.Linarith`
+states its band lemmas over `(1+1+1) - (1+1)*s`, because `OfNat Real` exists only for `0` and `1`.
+Forge used to emit exactly that; it now emits `3.0 - 2.0*t`. Those are the same number and NOT the
+same term -- `(3.0 : Real)` elaborates to `OfScientific.ofScientific 30 true 1` -- so
+`smoothstep_le_one` stopped matching the goal it was written for, and `smoothstep_nonneg`'s own
+docstring still claims it "matches the form Forge emits".
+
+The failure mode is the expensive kind: the lemma is present, correct, and cited in the docs, while
+the goal it cannot unify with is written off as needing new mathematics. `smoothstep`'s upper bound
+was recorded in Forge's CLAUDE.md as wanting "a real polynomial-positivity route"; the certificate
+`1 - s²(3-2s) = (1-s)²(1+2s)` was already proved here as `one_sub_smoothstep_factored`.
+
+Only `2.0` and `3.0` are covered, because `OfNat Real` reaches no further and those are the
+coefficients the band lemmas use. Each step is `mach_decimal_ofnat`, so nothing is assumed. -/
+macro "mach_ofnat_numerals" : tactic => `(tactic|
+  (repeat (first
+   | rw [show (2.0 : Real) = 1 + 1 from by mach_decimal_ofnat]
+   | rw [show (3.0 : Real) = 1 + 1 + 1 from by mach_decimal_ofnat])))
+
 /-- **The PID kernel's safety-envelope relation, machine-checked.** `first_order_clamp_envelope` takes
 `(1−a)·X = U+W`; for the silicon/RC-validated PID (`a=0.99, X=1, U=0.01, W=0`) that is `(1−0.99)·1 =
 0.01+0`. Previously this decimal fact was asserted in Python; now it is a theorem. -/
