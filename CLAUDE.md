@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 323 lines** / **7 681 theorems**, re-exported through the aggregator
+**251 352 lines** / **7 683 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 681
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 401
+  | paste -sd+ | bc                                    # 7 683
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 403
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -471,9 +471,16 @@ behind it is missing — registration is still a human act.
   `A`, `B` RATIONAL germs and `log ∘ S` not one, `EvZeroF B`. The rationality of `B` is not
   decoration — "not eventually zero" gives a general germ NO zero-free tail, and the division needs
   one; `evNonvanish_pev` supplies it only because `B = pev U / pev V`.
-  **What that is and is not.** It is the lemma at the shape route A needs. It is NOT route A closed:
-  wiring it in requires showing the route's own coefficient germs ARE rational germs, which is a
-  separate step and is not done. Say "the shape is available", not "the route is finished". `(fm)`'s own warning is the right one to carry: *two green legs do
+  **The rationality bridge is written too** (`ratGerm_pev`, `log_separation_pev`): `GEvRel` and
+  `GProperRel` put NO rationality constraint on their coefficients — they are arbitrary germs — so
+  the hypothesis does not come from the germ layer. It comes from the obligation, which supplies
+  POLYNOMIAL coefficients (`bipevLead A Ls`), and a polynomial is a rational germ with denominator
+  `1`. Easy to assume rather than write, which is why it is its own theorem.
+  **What is still NOT done.** The four route-A steps are theorems and the separation is available at
+  the obligation's own shape, but nothing yet DERIVES `A + B·log (S x) ≡ 0` from
+  `fbasis_top_two_identity` — the top-two identity is stated over `exp (S x) + 1/S x`, and reading
+  it as `A + B·log` is the step `subMul_summand_top_vanishes` licenses and no theorem performs. Say
+  "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the

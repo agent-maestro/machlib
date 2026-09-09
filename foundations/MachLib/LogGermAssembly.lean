@@ -390,4 +390,33 @@ theorem log_separation {S A B : Real → Real} {X : Real}
          = log (S x) * ((pev Va x * pev Ub x) * (1 / (pev Va x * pev Ub x))) from by mach_ring,
       mul_inv _ hDen, mul_one_ax]
 
+/-! ### The bridge to the obligation's own shape
+
+`GEvRel`/`GProperRel` put NO rationality constraint on their coefficients — they are arbitrary
+germs — so `log_separation`'s hypotheses do not come from the germ layer. They come from the
+obligation, which supplies POLYNOMIAL coefficients (`bipevLead A Ls` in
+`BoundedGermTranscendence`), and a polynomial is a rational germ with denominator `1`.
+
+Small, and worth stating separately: the gap between "the shape is available" and "the route can
+use it" is exactly this bridge, and it is easy to assume rather than write. -/
+
+/-- `a / 1 = a`. -/
+private theorem div_one' (a : Real) : a / 1 = a := by
+  rw [div_def a 1 (ne_of_gt zero_lt_one_ax),
+      show (1 : Real) / 1 = 1 * (1 / 1) from by rw [one_mul_thm],
+      mul_inv 1 (ne_of_gt zero_lt_one_ax), mul_one_ax]
+
+/-- **A polynomial is a rational germ**, with denominator `1`. -/
+theorem ratGerm_pev (L : List Real) : RatGerm (fun x => pev L x) :=
+  ⟨L, [1], 1, le_refl 1,
+   fun x _ => by rw [pev_one]; exact ne_of_gt zero_lt_one_ax,
+   fun x _ => by rw [pev_one, div_one']⟩
+
+/-- **The separation at polynomial coefficients** — the form the obligation actually supplies. -/
+theorem log_separation_pev {S : Real → Real} {A B : List Real} {X : Real}
+    (hnr : ¬ RatGerm (fun x => log (S x))) (hX : 1 ≤ X)
+    (h : ∀ x : Real, X ≤ x → pev A x + pev B x * log (S x) = 0) :
+    EvZeroF (pev B) :=
+  log_separation hnr (ratGerm_pev A) (ratGerm_pev B) hX h
+
 end MachLib
