@@ -206,6 +206,28 @@ macro "mach_decimal" : tactic => `(tactic|
    | (apply le_of_lt <;> apply realOfScientific_lt_of_nat <;> decide)
    | (apply realOfScientific_pos <;> decide)))
 
+/-- **`mach_decimal`, but the right-hand side may be an `OfNat` numeral.**
+
+`mach_decimal` proves `0.5 + 0.5 = 1.0` and does NOT prove `0.5 + 0.5 = 1`. The two differ only in
+how the right side is spelt: `1.0` is `realOfScientific 10 true 1`, while `1` is the `OfNat`
+literal, and `MachLib.Basic` bridges them by axiom (`realOfScientific_one_dot_zero`) rather than by
+computation. Nothing in the decimal simp set crosses that line, so the tactic stalls one rewrite
+short with the goal `1 = realOfScientific (5 + 5) true 1` still open.
+
+That is exactly the shape a Forge composition obligation produces: a kernel whose `ensures` bound is
+a bare `0.0`/`1.0`/`2.0`/`3.0` and whose coefficients are decimals. `actuator` in
+`examples/multimodal_reflex.eml` is the specimen — its endpoint condition is `0.5 + 0.5·1 = 1`.
+
+Retargets the goal through the bridge (`Eq.trans ?_ <bridge>` leaves `lhs = 1.0`, which the decimal
+machinery CAN close) before falling back. `OfNat Real` exists only for `0` and `1`, so `2` and `3`
+appear as `1+1` and `1+1+1`; the corresponding bridges are covered. -/
+macro "mach_decimal_ofnat" : tactic => `(tactic|
+  (first
+   | mach_decimal
+   | (refine Eq.trans ?_ realOfScientific_one_dot_zero <;> mach_decimal)
+   | (refine Eq.trans ?_ realOfScientific_two_dot_zero <;> mach_decimal)
+   | (refine Eq.trans ?_ realOfScientific_three_dot_zero <;> mach_decimal)))
+
 /-- **The PID kernel's safety-envelope relation, machine-checked.** `first_order_clamp_envelope` takes
 `(1−a)·X = U+W`; for the silicon/RC-validated PID (`a=0.99, X=1, U=0.01, W=0`) that is `(1−0.99)·1 =
 0.01+0`. Previously this decimal fact was asserted in Python; now it is a theorem. -/

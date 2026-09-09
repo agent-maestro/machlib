@@ -440,6 +440,31 @@ theorem affine_remap_nonneg {c x : Real} (hc : 0 ≤ c) (hx : -1 ≤ x) : 0 ≤ 
   rw [sub_def, neg_neg_helper] at h
   exact h
 
+/-- **A monotone affine image is bounded by its value at the lower endpoint.**
+`A ≤ a + b·x` whenever `b ≥ 0`, `lo ≤ x`, and `A` is what `a + b·x` evaluates to at `x = lo`.
+
+Why the endpoint arrives as a HYPOTHESIS (`hA`) rather than being computed: the caller's declared
+bound is written in the kernel's own constants — `AUDIO_CENTER_HZ * (1 - AUDIO_SPAN)`, not `220.0`
+— and forcing it into a literal here would demand decimal arithmetic this lemma has no business
+doing. Left as an equation, it is discharged by `mach_ring` whenever the bound and the coefficients
+are built from the same constants, which is the usual case, and only falls back to decimal
+arithmetic when the bound is a bare numeral. See `affine_upper` for the mirror.
+
+This is the lemma that makes a caller able to USE its callee's proved range: given
+`multimodal_state_in_unit_interval : LO ≤ reflex_state … ≤ HI`, the caller's obligation is an
+affine image of that one atom rather than a re-derivation of the callee's whole body. -/
+theorem affine_lower {a b x lo A : Real}
+    (hb : 0 ≤ b) (hx : lo ≤ x) (hA : A = a + b * lo) : A ≤ a + b * x := by
+  rw [hA]
+  exact add_le_add_left (mul_le_mul_of_nonneg_left hx hb) a
+
+/-- **A monotone affine image is bounded by its value at the upper endpoint.**
+`a + b·x ≤ B` for `b ≥ 0`, `x ≤ hi`, `B` the value at `x = hi`. Mirror of `affine_lower`. -/
+theorem affine_upper {a b x hi B : Real}
+    (hb : 0 ≤ b) (hx : x ≤ hi) (hB : a + b * hi = B) : a + b * x ≤ B := by
+  rw [← hB]
+  exact add_le_add_left (mul_le_mul_of_nonneg_left hx hb) a
+
 /-- Fractional part is nonneg: `0 ≤ z − ⌊z⌋` (white-noise hash `frac(sin·k)`). -/
 theorem frac_nonneg (z : Real) : 0 ≤ z - floor z := sub_nonneg_of_le (floor_le z)
 

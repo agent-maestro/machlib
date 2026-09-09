@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 101 `.lean` files** (787 top-level + 314 in subdirectories) /
-**250 593 lines** / **7 663 theorems**, re-exported through the aggregator
+**250 640 lines** / **7 665 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 663
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 383
+  | paste -sd+ | bc                                    # 7 665
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 385
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -382,6 +382,31 @@ behind it is missing — registration is still a human act.
   is this corpus's five-costume "instrument that can only return one value" all over again.
   Three canaries (`--selftest`): a hog is killed, a control survives, an ordinary exit status passes
   through. Default cap 16 G, per invocation — parallel harnesses multiply it.
+
+- **`mach_decimal` PROVES `0.5 + 0.5 = 1.0` AND DOES NOT PROVE `0.5 + 0.5 = 1`.** The two differ
+  only in how the right side is spelt: `1.0` is `realOfScientific 10 true 1`, `1` is the `OfNat`
+  literal, and `Basic.lean` bridges them **by axiom** (`realOfScientific_one_dot_zero`) rather than
+  by computation. Nothing in the decimal simp set crosses that line, so the tactic stalls one
+  rewrite short and leaves `1 = realOfScientific (5 + 5) true 1` open — which reads exactly like
+  "the fact is false" rather than "the tactic stopped". Use **`mach_decimal_ofnat`**
+  (`MachLib/Decimal.lean`), which retargets the goal through the bridge first. `OfNat Real` exists
+  only for `0` and `1`, so `2`/`3` arrive as `1+1`/`1+1+1`; those bridges are covered too.
+- **`first | mach_ring | X` IS WRONG WHENEVER `mach_ring` CAN PARTIALLY SUCCEED.** On
+  `1*0.5 + 1*0.5*1 = 1` it normalises to `0.5 + 0.5 = 1` and stops. It does **not fail**, so
+  `first` counts the arm as successful and never tries `X` — the goal is simply left open, and the
+  error surfaces later as "unsolved goals" pointing at the wrong place. Sequence instead:
+  `(try mach_ring) <;> mach_decimal_ofnat`. This is the sharper form of the `first`-does-not-
+  backtrack entry above: the hazard is not only an arm that ERRORS, it is an arm that makes
+  PROGRESS without closing. Cost an hour on 2026-09-08; found only because the isolated tactic
+  worked and the alternation did not.
+- **`affine_lower` / `affine_upper` (`MachLib/Linarith.lean`) are what let a Forge caller USE its
+  callee's proved range.** `A ≤ a + b·x ≤ B` from `b ≥ 0` and `lo ≤ x ≤ hi`, with the endpoint
+  values arriving as *hypotheses* (`A = a + b·lo`) rather than being computed. That is deliberate:
+  a kernel's declared bound is written in its own constants (`AUDIO_CENTER_HZ * (1 - AUDIO_SPAN)`,
+  not `220.0`), so left as an equation it is a pure ring identity with every constant an opaque
+  atom, and decimal arithmetic is needed only when the bound is a bare numeral. Forcing the
+  literals early would push decimal arithmetic into every step. Forge emits these for callers that
+  compose; see forge's CLAUDE.md for the emission side.
 
 ## Counts: the gate is the source, prose is a copy
 
