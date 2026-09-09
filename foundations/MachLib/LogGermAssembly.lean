@@ -319,4 +319,75 @@ theorem not_ratGerm_log_of_pole {q P Q Qt : List Real} {X : Real} {r : Nat}
     -- `hlow`: `exists_common_ord_split` returns exactly this, modulo `pnorm`
     refine Pdvd_pnorm (fun hn => hsplit hn (Pdvd_of_pnorm hd))
 
+/-! ### The separation — route A's remaining step
+
+`subMul_summand_top_vanishes` establishes that the only `log`-carrying summand dies at the top
+degree, so each proportionality equation reads `A(x) + B(x)·log (S x) ≡ 0` with `A`, `B` free of
+`log`. This is what that shape buys once `log ∘ S` is known not to be a rational germ: **`B` is
+eventually zero.**
+
+The mathematics is one step; the care is in one hypothesis. "Not eventually zero" does NOT give a
+zero-free tail for a general germ — it can dodge zero infinitely often — and the division below
+needs one. That is exactly where `B` has to be a RATIONAL germ: it is `pev U / pev V`, and
+`evNonvanish_pev` turns `¬ EvZeroF (pev U)` into a tail. On that tail `log (S x) = −A x / B x`, a
+quotient of rational germs and so rational, contradicting the hypothesis. -/
+theorem log_separation {S A B : Real → Real} {X : Real}
+    (hnr : ¬ RatGerm (fun x => log (S x)))
+    (hA : RatGerm A) (hB : RatGerm B) (hX : 1 ≤ X)
+    (h : ∀ x : Real, X ≤ x → A x + B x * log (S x) = 0) :
+    EvZeroF B := by
+  -- `by_contra` does not exist here (CLAUDE.md; `by-contra-absent` in the absence registry) —
+  -- the local idiom is an explicit `Classical.em` split.
+  rcases Classical.em (EvZeroF B) with hgood | hB0
+  · exact hgood
+  exfalso
+  obtain ⟨Ua, Va, Xa, hXa, hVa, hAdef⟩ := hA
+  obtain ⟨Ub, Vb, Xb, hXb, hVb, hBdef⟩ := hB
+  have hUb : ¬ EvZeroF (pev Ub) := by
+    rintro ⟨Z, hZ, hz⟩
+    obtain ⟨W, hW1, hWb, hWZ⟩ := two_bounds' hXb hZ
+    exact hB0 ⟨W, hW1, fun x hx => by
+      rw [hBdef x (le_trans hWb hx), hz x (le_trans hWZ hx), zero_div]⟩
+  obtain ⟨Xn, hXn, hUbne⟩ := evNonvanish_pev hUb
+  obtain ⟨Y1, hY1, hY1a, hY1b⟩ := two_bounds' hXa hXb
+  obtain ⟨Y2, hY2, hY2n, hY2X⟩ := two_bounds' hXn hX
+  obtain ⟨Y, hY, hYY1, hYY2⟩ := two_bounds' hY1 hY2
+  have hva : ∀ x : Real, Y ≤ x → pev Va x ≠ 0 :=
+    fun x hx => hVa x (le_trans (le_trans hY1a hYY1) hx)
+  have hvb : ∀ x : Real, Y ≤ x → pev Vb x ≠ 0 :=
+    fun x hx => hVb x (le_trans (le_trans hY1b hYY1) hx)
+  have hub : ∀ x : Real, Y ≤ x → pev Ub x ≠ 0 :=
+    fun x hx => hUbne x (le_trans (le_trans hY2n hYY2) hx)
+  refine hnr ⟨pscale (0 - 1) (pmul Ua Vb), pmul Va Ub, Y, hY,
+    (fun x hx => by rw [pev_pmul]; exact mul_ne_zero (hva x hx) (hub x hx)), fun x hx => ?_⟩
+  have h0 := h x (le_trans (le_trans hY2X hYY2) hx)
+  rw [hAdef x (le_trans (le_trans hY1a hYY1) hx),
+      hBdef x (le_trans (le_trans hY1b hYY1) hx)] at h0
+  -- clear both denominators by multiplying through by `va·vb`
+  have hclear : pev Ua x * pev Vb x + (pev Va x * pev Ub x) * log (S x) = 0 := by
+    have e2 := congrArg (fun z => (pev Va x * pev Vb x) * z) h0
+    rw [show (pev Va x * pev Vb x)
+          * (pev Ua x / pev Va x + (pev Ub x / pev Vb x) * log (S x))
+        = pev Vb x * (pev Va x * (pev Ua x / pev Va x))
+          + pev Va x * (pev Vb x * (pev Ub x / pev Vb x)) * log (S x) from by mach_ring,
+        mul_div_cancel_left (hva x hx), mul_div_cancel_left (hvb x hx),
+        show (pev Va x * pev Vb x) * (0 : Real) = 0 from by mach_ring] at e2
+    rw [← e2]; mach_ring
+  rw [pev_pscale, pev_pmul, pev_pmul]
+  have hDen : pev Va x * pev Ub x ≠ 0 := mul_ne_zero (hva x hx) (hub x hx)
+  -- NOT `rw [← hclear]`: the goal contains `0 - 1`, and that rewrite fires on ITS zero.
+  have hLD : log (S x) * (pev Va x * pev Ub x) = (0 - 1) * (pev Ua x * pev Vb x) := by
+    have e : (pev Va x * pev Ub x) * log (S x)
+        = (0 - 1) * (pev Ua x * pev Vb x)
+          + (pev Ua x * pev Vb x + (pev Va x * pev Ub x) * log (S x)) := by mach_ring
+    rw [hclear, show (0 - 1) * (pev Ua x * pev Vb x) + 0
+                   = (0 - 1) * (pev Ua x * pev Vb x) from by mach_ring] at e
+    rw [show log (S x) * (pev Va x * pev Ub x)
+           = (pev Va x * pev Ub x) * log (S x) from by mach_ring]
+    exact e
+  rw [div_def _ _ hDen, ← hLD,
+      show log (S x) * (pev Va x * pev Ub x) * (1 / (pev Va x * pev Ub x))
+         = log (S x) * ((pev Va x * pev Ub x) * (1 / (pev Va x * pev Ub x))) from by mach_ring,
+      mul_inv _ hDen, mul_one_ax]
+
 end MachLib

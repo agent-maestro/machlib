@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 252 lines** / **7 680 theorems**, re-exported through the aggregator
+**251 323 lines** / **7 681 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 680
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 400
+  | paste -sd+ | bc                                    # 7 681
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 401
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -466,7 +466,14 @@ behind it is missing — registration is still a human act.
   contradicting the pole hypothesis). 47 axioms, no `sorryAx`, nothing analytic.
   **The ledger did not move and must not be read as if it had** — still 4 distinct open obligations.
   `BoundedGermTranscendence` consumes `not RatGerm (log ∘ S)` through further steps that are not this
-  module; route A's own remaining step is the SEPARATION, `A + B·log (S x) ≡ 0 ⟹ cd ≡ 0`. `(fm)`'s own warning is the right one to carry: *two green legs do
+  module.
+  **The separation is proved too** (`log_separation`, 2026-09-09): from `A + B·log (S x) ≡ 0` with
+  `A`, `B` RATIONAL germs and `log ∘ S` not one, `EvZeroF B`. The rationality of `B` is not
+  decoration — "not eventually zero" gives a general germ NO zero-free tail, and the division needs
+  one; `evNonvanish_pev` supplies it only because `B = pev U / pev V`.
+  **What that is and is not.** It is the lemma at the shape route A needs. It is NOT route A closed:
+  wiring it in requires showing the route's own coefficient germs ARE rational germs, which is a
+  separate step and is not done. Say "the shape is available", not "the route is finished". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
