@@ -390,6 +390,36 @@ theorem log_separation {S A B : Real → Real} {X : Real}
          = log (S x) * ((pev Va x * pev Ub x) * (1 / (pev Va x * pev Ub x))) from by mach_ring,
       mul_inv _ hDen, mul_one_ax]
 
+/-! ### WHERE `log_separation` ATTACHES — an open question, with the facts separated from the guess
+
+Before wiring this into route A, settle which equation it applies to. There are two candidates and
+they need DIFFERENT inputs, so guessing costs a session.
+
+**Verified, by reading the sources:**
+
+1. `fbasis_top_two_identity` (`GermDerivFbasis`) concludes over `exp (S x) + 1/S x`. Its statement
+   contains **no `log`**. Separating it would be `A + B·exp (S x) ≡ 0`, needing
+   `¬ RatGerm (exp ∘ S)`.
+2. Every exclusion instrument here — `not_algebraic_of_dominates_exp`,
+   `not_algebraic_of_dominated_by_exp`, and the `FS_not_algebraic_*` family — argues by GROWTH, and
+   `BoundedGermEnvelope.polyEnvelope_of_Fbasis_floor` proves `F ∘ S` IS polynomially enveloped on
+   the bounded branch. So `¬ RatGerm (exp ∘ S)` is not available there by any existing route.
+3. `fbasis_relation_substituted` writes the multiplier as `s·u + s·(1/S − log S)`, so the
+   SUBSTITUTED relation's coefficients carry `log` and are, coefficientwise,
+   `A_j = es[j] + s·(gyd cs)[j−1] + s·(gyd cs)[j]/S` and `B_j = −s·(gyd cs)[j]`.
+4. `fbasis_top_two_identity` has no consumer anywhere in `MachLib/`.
+
+**Inferred, and NOT verified:** that `log_separation` is meant for (3) rather than (1) — because (1)
+would need an input (2) says is unavailable, and the substitution in (3) exists precisely to trade
+`exp` for `log`. That reading is consistent with everything above and with `(fm)`'s naming of
+`not RatGerm (log ∘ S)` as the absent step, but no theorem states the connection and this note is
+not evidence for it.
+
+**Do not record the inference as the route.** Three headers in this corpus asserted what was needed
+and were wrong (`smoothstep_nonneg`, this file's own `GermDerivFbasis`, `LogRatDeriv`), each costing
+a wrong start; the fix was to check before writing. This is the check, stopped at the point where it
+stops being checkable from the outside. -/
+
 /-! ### The bridge to the obligation's own shape
 
 `GEvRel`/`GProperRel` put NO rationality constraint on their coefficients — they are arbitrary

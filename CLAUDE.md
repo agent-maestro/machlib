@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 352 lines** / **7 683 theorems**, re-exported through the aggregator
+**251 382 lines** / **7 683 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -476,11 +476,15 @@ behind it is missing — registration is still a human act.
   the hypothesis does not come from the germ layer. It comes from the obligation, which supplies
   POLYNOMIAL coefficients (`bipevLead A Ls`), and a polynomial is a rational germ with denominator
   `1`. Easy to assume rather than write, which is why it is its own theorem.
-  **What is still NOT done.** The four route-A steps are theorems and the separation is available at
-  the obligation's own shape, but nothing yet DERIVES `A + B·log (S x) ≡ 0` from
-  `fbasis_top_two_identity` — the top-two identity is stated over `exp (S x) + 1/S x`, and reading
-  it as `A + B·log` is the step `subMul_summand_top_vanishes` licenses and no theorem performs. Say
-  "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
+  **What is still NOT done, and a fork to settle before doing it.** Every named route-A step is a
+  theorem, but nothing derives `A + B·log (S x) ≡ 0` from anything, and there are TWO candidate
+  equations needing DIFFERENT inputs. `fbasis_top_two_identity` concludes over `exp (S x) + 1/S x`
+  and contains no `log`; separating it would need `¬ RatGerm (exp ∘ S)`, which the bounded branch
+  cannot supply — every exclusion instrument here argues by growth and
+  `polyEnvelope_of_Fbasis_floor` proves `F ∘ S` IS polynomially enveloped there.
+  `fbasis_relation_substituted`'s coefficients DO carry `log`. `LogGermAssembly` records the facts
+  and marks the inference as an inference; **read that note before wiring anything**, and do not
+  promote the inference to the route. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
