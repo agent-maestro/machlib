@@ -16,7 +16,7 @@ The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
 | witnessed | 112 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
-| float-bridge | 22 | about IEEE floats, **not modelable in `ℝ`** — validated by measurement |
+| float-bridge | 22 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
 | GAP | 0 | witnessable, not yet witnessed — reason given per row |
 | **UNACCOUNTED** | 0 | must be 0; gate 13 fails otherwise |
 
@@ -25,6 +25,30 @@ No Mathlib witness can discharge "the machine `atan` rounds to within ε of `Rea
 Mathlib has no IEEE-754 semantics. Those 22 axioms are what a hardware
 certificate actually rests on, so anyone reading an atan/tan bench certificate should read that
 block first.
+
+**And read this before reading them.** These rows are not one kind of thing, and the difference
+decides what a certificate can claim.
+
+* **The `real_<f>_eps` constants are UNCONSTRAINED.** Each is an `axiom` of type `MachLib.Real`
+  with nothing said about it — not `0 ≤ eps`, not a relation to the unit roundoff `u`. So a
+  grounded theorem such as `Certcom.pid_sin_grounded` concludes *"within `real_sin_eps + absErr`"*,
+  which holds for any sufficiently large constant. **Its content is UNIFORMITY — one constant
+  works for every `Float` — and not accuracy.** The uniformity is real and was hard-won: the
+  2026-07-22 audit found it FALSE for `exp`/`log`/`sqrt`/`asin`/`acos`/`tan` and repaired those six
+  with domain hypotheses, which is why they carry `R`/`lo`/`hi` and the globally-Lipschitz five do
+  not. But a reader cannot get a NUMBER out of any of them.
+* **The measurement exists and is separate.** The forward-error certifier measures the f64 lane at
+  `u = 2⁻⁵³` for the correctly-rounded operations and `4u` (two ulp) for the libm transcendentals,
+  over ~1.4M samples, and its own headline finding is that the transcendentals are **not**
+  correctly rounded. Note that IEEE-754 *requires* `√` to be correctly rounded and says nothing
+  about any transcendental, so `real_sqrt_rounds` is a different grade of claim from
+  `real_sin_rounds` even though both sit in this block.
+* **`MachLib/LibmBudget.lean` is the join**, added 2026-09-08: an interface (not new axioms, so this
+  count does not move) carrying `real_<f>_eps ≤ B`, with `abs` exact at `0` because IEEE-754 `abs`
+  clears the sign bit exactly as `FPBridge.neg` already records for negation. Under it the grounded
+  kernels restate with a numeric bound. What it does not do — and cannot, `Float` being opaque — is
+  establish that the runtime meets any particular `B`. That stays empirical; it is now quantitative
+  and in one named place instead of implicit in four unconstrained constants.
 
 | axiom | class | statement | witness / reason |
 |---|---|---|---|

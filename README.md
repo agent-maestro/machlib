@@ -193,13 +193,13 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 665 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 670 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 101 | `find MachLib -name '*.lean' \| wc -l` |
+| `.lean` files under `MachLib/` | 1 102 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 797 of 1 101 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 798 of 1 102 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 
