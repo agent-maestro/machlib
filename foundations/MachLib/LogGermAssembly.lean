@@ -478,4 +478,37 @@ theorem top_two_multiplier_splits (S s : Real → Real) (x : Real) :
       = s x * (exp (S x) + log (S x)) + s x * (1 / S x - log (S x))
   mach_ring
 
+/-! ### The wiring: each substituted coefficient IS an `A + B·log (S x)`
+
+`top_two_multiplier_splits` settled that the separation attaches to the SUBSTITUTED relation, not to
+the top-two identity. This performs the attachment at the level of a single coefficient, which is
+where the descent compares them.
+
+The `A` and `B` are exhibited, not merely asserted to exist, because the separation needs them to be
+RATIONAL germs and that is a property of the exhibited expressions — `B = −s·(gyd cs)[j]` is rational
+exactly when `s` and the relation's coefficients are, which is what the obligation's polynomial
+`bipevLead A Ls` supplies and what `GEvRel` alone does not. -/
+
+/-- **Each coefficient of the substituted relation splits as `A + B·log (S x)`.**
+
+`A = es[j] + (s·(0 :: gyd cs))[j] + s·(1/S)·(gyd cs)[j]` and `B = −s·(gyd cs)[j]`, both free of
+`log`. The only input is that `fbasisSubMul S s x = s x·(1/S x) + (0 − s x)·log (S x)`, a ring
+identity — the same cancellation `top_two_multiplier_splits` runs on, one level down. -/
+theorem substituted_coeff_splits {S s : Real → Real} {es cs : List (Real → Real)}
+    {j : Nat} {p q r : Real → Real}
+    (hp : es[j]? = some p)
+    (hq : (gscale s ((fun _ => (0 : Real)) :: gyd cs))[j]? = some q)
+    (hr : (gyd cs)[j]? = some r) :
+    ∃ w : Real → Real,
+      (gadd es (gadd (gscale s ((fun _ => (0 : Real)) :: gyd cs))
+                     (gscale (fbasisSubMul S s) (gyd cs))))[j]? = some w
+      ∧ ∀ x : Real,
+          w x = (p x + q x + s x * (1 / S x) * r x)
+                + ((0 - s x) * r x) * log (S x) := by
+  refine ⟨_, gadd_getElem _ _ _ _ _ hp
+      (gadd_getElem _ _ _ _ _ hq (gscale_getElem _ _ _ _ hr)), fun x => ?_⟩
+  show p x + (q x + s x * (1 / S x - log (S x)) * r x)
+      = (p x + q x + s x * (1 / S x) * r x) + ((0 - s x) * r x) * log (S x)
+  mach_ring
+
 end MachLib
