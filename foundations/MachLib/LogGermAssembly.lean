@@ -511,4 +511,67 @@ theorem substituted_coeff_splits {S s : Real → Real} {es cs : List (Real → R
       = (p x + q x + s x * (1 / S x) * r x) + ((0 - s x) * r x) * log (S x)
   mach_ring
 
+/-! ### `RatGerm` is closed under the field operations
+
+The instantiation step needs `RatGerm A` and `RatGerm B` for the `A`, `B` that
+`substituted_coeff_splits` exhibits, and those are sums and products of the relation's
+coefficients with `s` and `1/S`. **The corpus had no closure lemmas at all** — only
+`ratGerm_sub_const`, which subtracts a constant. These are the general ones; they are reusable well
+beyond this route, since `RatGerm` is the level-0 class the whole germ layer is stratified by. -/
+
+/-- `(a·d + c·b)/(b·d) = a/b + c/d`. -/
+private theorem div_add_div' {a b c d : Real} (hb : b ≠ 0) (hd : d ≠ 0) :
+    (a * d + c * b) / (b * d) = a / b + c / d := by
+  refine div_of_eq_mul (mul_ne_zero hb hd) ?_
+  rw [show (b * d) * (a / b + c / d) = d * (b * (a / b)) + b * (d * (c / d)) from by mach_ring,
+      mul_div_cancel_left hb, mul_div_cancel_left hd]
+  mach_ring
+
+/-- `(a·c)/(b·d) = (a/b)·(c/d)`. -/
+private theorem div_mul_div' {a b c d : Real} (hb : b ≠ 0) (hd : d ≠ 0) :
+    (a * c) / (b * d) = (a / b) * (c / d) := by
+  refine div_of_eq_mul (mul_ne_zero hb hd) ?_
+  rw [show (b * d) * ((a / b) * (c / d)) = (b * (a / b)) * (d * (c / d)) from by mach_ring,
+      mul_div_cancel_left hb, mul_div_cancel_left hd]
+
+/-- **`RatGerm` is closed under sum.** Common denominator `Qa·Qb`, on the merged ray. -/
+theorem ratGerm_add {f g : Real → Real} (hf : RatGerm f) (hg : RatGerm g) :
+    RatGerm (fun x => f x + g x) := by
+  obtain ⟨Pa, Qa, Xa, hXa, hQa, hfa⟩ := hf
+  obtain ⟨Pb, Qb, Xb, hXb, hQb, hgb⟩ := hg
+  obtain ⟨Y, hY, hYa, hYb⟩ := two_bounds' hXa hXb
+  refine ⟨padd (pmul Pa Qb) (pmul Pb Qa), pmul Qa Qb, Y, hY, fun x hx => ?_, fun x hx => ?_⟩
+  · rw [pev_pmul]
+    exact mul_ne_zero (hQa x (le_trans hYa hx)) (hQb x (le_trans hYb hx))
+  · show f x + g x = _
+    rw [pev_padd, pev_pmul, pev_pmul, pev_pmul,
+        hfa x (le_trans hYa hx), hgb x (le_trans hYb hx)]
+    exact (div_add_div' (hQa x (le_trans hYa hx)) (hQb x (le_trans hYb hx))).symm
+
+/-- **`RatGerm` is closed under product.** -/
+theorem ratGerm_mul {f g : Real → Real} (hf : RatGerm f) (hg : RatGerm g) :
+    RatGerm (fun x => f x * g x) := by
+  obtain ⟨Pa, Qa, Xa, hXa, hQa, hfa⟩ := hf
+  obtain ⟨Pb, Qb, Xb, hXb, hQb, hgb⟩ := hg
+  obtain ⟨Y, hY, hYa, hYb⟩ := two_bounds' hXa hXb
+  refine ⟨pmul Pa Pb, pmul Qa Qb, Y, hY, fun x hx => ?_, fun x hx => ?_⟩
+  · rw [pev_pmul]
+    exact mul_ne_zero (hQa x (le_trans hYa hx)) (hQb x (le_trans hYb hx))
+  · show f x * g x = _
+    rw [pev_pmul, pev_pmul, hfa x (le_trans hYa hx), hgb x (le_trans hYb hx)]
+    exact (div_mul_div' (hQa x (le_trans hYa hx)) (hQb x (le_trans hYb hx))).symm
+
+/-- **`RatGerm` is closed under negation**, in the `0 − ·` form the corpus writes. -/
+theorem ratGerm_neg {f : Real → Real} (hf : RatGerm f) :
+    RatGerm (fun x => 0 - f x) := by
+  obtain ⟨P, Q, X, hX, hQ, hfe⟩ := hf
+  refine ⟨pscale (0 - 1) P, Q, X, hX, hQ, fun x hx => ?_⟩
+  show (0 : Real) - f x = _
+  rw [pev_pscale, hfe x hx]
+  -- `neg_div` does not apply: the goal has `0 - _`, not `-(_)`, and `rw` matches syntactically
+  refine (div_of_eq_mul (hQ x hx) ?_).symm
+  rw [show pev Q x * (0 - pev P x / pev Q x) = 0 - pev Q x * (pev P x / pev Q x) from by mach_ring,
+      mul_div_cancel_left (hQ x hx)]
+  mach_ring
+
 end MachLib

@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 444 lines** / **7 685 theorems**, re-exported through the aggregator
+**251 507 lines** / **7 688 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 685
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 405
+  | paste -sd+ | bc                                    # 7 688
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 408
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -493,9 +493,13 @@ behind it is missing — registration is still a human act.
   relation is `A + B·log (S x)` with `A = es[j] + (s·(0::gyd cs))[j] + s·(1/S)·(gyd cs)[j]` and
   `B = −s·(gyd cs)[j]`, both EXHIBITED rather than asserted to exist — the separation needs them to
   be rational germs, and that is a property of the exhibited expressions.
-  **What remains is the instantiation**: showing those `A`, `B` ARE rational germs at the
-  obligation's own data (`bipevLead A Ls`, polynomial, so `ratGerm_pev` applies; `1/S = Q/P`), and
-  then feeding `log_separation`. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
+  **`RatGerm` is now closed under the field operations** (`ratGerm_add`, `ratGerm_mul`,
+  `ratGerm_neg`, 2026-09-09) — the corpus had NONE of these, only `ratGerm_sub_const`. They are what
+  turns "those `A`, `B` are built from rational pieces" into a proof, and they are reusable well
+  beyond this route since `RatGerm` is the level-0 class the germ layer is stratified by.
+  **What remains is the instantiation**: assembling those closures at the obligation's own data
+  (`bipevLead A Ls` polynomial, so `ratGerm_pev`; `s = S'` and `1/S` rational from `S = P/Q`) and
+  feeding `log_separation`. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
