@@ -229,4 +229,94 @@ theorem no_rational_log_germ_num_pole {q P Pt Q N D : List Real} {X : Real}
     (fun x hx => div_pos_of_pos_pos (hQpos x hx) (hPpos x hx))
     (log_recip_germ hPpos hQpos hDne hlog)
 
+/-- `PEq` is `pnorm`-equality, so equal polynomials evaluate equally. -/
+private theorem pev_of_peq {A B : List Real} (h : PEq A B) (x : Real) : pev A x = pev B x := by
+  rw [← pev_pnorm A, h, pev_pnorm B]
+
+/-- `Pdvd` only looks at `pnorm`, so it transfers back off a normalisation. -/
+private theorem Pdvd_of_pnorm {q A : List Real} (h : Pdvd q (pnorm A)) : Pdvd q A := by
+  obtain ⟨M, hM, hEq⟩ := h
+  exact ⟨M, hM, by rw [← pnorm_idem A]; exact hEq⟩
+
+/-! ### The germ-level form: no rational germ AT ALL, not just this one
+
+`no_rational_log_germ` refutes a NAMED candidate primitive `N/D`. `¬ RatGerm (log ∘ S)` says no
+candidate exists, and the gap between them is that `RatGerm` hands over an arbitrary `N`, `D` —
+nothing says the fraction is in lowest terms at `q`, which `no_rational_logarithm`'s `q ∣ D` branch
+needs. `CrossIdentities.exists_common_ord_split` closes it: it peels a common `q`-power off both and
+returns exactly `Pdvd q N₁ → ¬ Pdvd q D₁`.
+
+Two details that make the peel free rather than fiddly. The cancelled factor is never zero on the
+ray — `pev D x = pev (qˢ) x · pev D₁ x` and `pev D x ≠ 0`, so both factors are non-zero, and no
+root-counting is needed. And the degenerate `N ≡ 0` case is not a nuisance but a separate small
+argument: it forces `log (P/Q) ≡ 0`, hence `P/Q ≡ 1` by `exp_log`, hence `PEq P Q`, hence `q ∣ P`
+because `q ∣ Q` — contradicting the pole hypothesis directly. -/
+theorem not_ratGerm_log_of_pole {q P Q Qt : List Real} {X : Real} {r : Nat}
+    (hq : PIrred q) (hchar : ∀ rr : Nat, DerivCoprime q (rr + 1))
+    (hPd : ¬ Pdvd q P) (hPn : PNormal P)
+    (hQ : PEq Q (pmul (ppow q (r + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
+    (hX : 1 ≤ X)
+    (hPpos : ∀ x : Real, X ≤ x → 0 < pev P x)
+    (hQpos : ∀ x : Real, X ≤ x → 0 < pev Q x) :
+    ¬ RatGerm (fun x => log (pev P x / pev Q x)) := by
+  rintro ⟨N, D, X', hX', hDne, hlog⟩
+  obtain ⟨Y, hY1, hYX, hYX'⟩ := two_bounds' hX hX'
+  have hPposY : ∀ x : Real, Y ≤ x → 0 < pev P x := fun x hx => hPpos x (le_trans hYX hx)
+  have hQposY : ∀ x : Real, Y ≤ x → 0 < pev Q x := fun x hx => hQpos x (le_trans hYX hx)
+  have hDneY : ∀ x : Real, Y ≤ x → pev D x ≠ 0 := fun x hx => hDne x (le_trans hYX' hx)
+  have hlogY : ∀ x : Real, Y ≤ x → log (pev P x / pev Q x) = pev N x / pev D x :=
+    fun x hx => hlog x (le_trans hYX' hx)
+  -- `q ∣ Q`, from the pole factorisation. Used by the degenerate branch.
+  have hqQ : Pdvd q Q := by
+    refine Pdvd_of_peq (PEq.trans hQ ?_) (Pdvd_pmul_self q (pmul (ppow q r) Qt))
+    show PEq (pmul (pmul q (ppow q r)) Qt) (pmul q (pmul (ppow q r) Qt))
+    exact peq_pmul_assoc q (ppow q r) Qt
+  rcases Classical.em (pnorm N = []) with hN0 | hN0
+  · -- `N ≡ 0`: then `log (P/Q) ≡ 0`, so `P ≡ Q` on the ray, so `q ∣ P`.
+    refine hPd (Pdvd_of_peq (peq_of_ev_eq hY1 (fun x hx => ?_)) hqQ)
+    have h0 : log (pev P x / pev Q x) = 0 := by
+      rw [hlogY x hx, pev_eq_zero_of_pnorm_nil hN0, zero_div]
+    have hpos : 0 < pev P x / pev Q x := div_pos_of_pos_pos (hPposY x hx) (hQposY x hx)
+    have h1 : pev P x / pev Q x = 1 := by
+      rw [← exp_log hpos, h0, exp_zero]
+    have := mul_div_cancel_left (ne_of_gt (hQposY x hx)) (a := pev P x)
+    rw [h1, mul_one_ax] at this
+    exact this.symm
+  · -- the general case: peel the common `q`-power, then apply the named-candidate theorem
+    have hDn0 : pnorm D ≠ [] := by
+      refine pnorm_ne_nil_of_not_evZero ?_
+      rintro ⟨Z, hZ, hz⟩
+      obtain ⟨W, hW1, hWY, hWZ⟩ := two_bounds' hY1 hZ
+      exact hDneY W hWY (hz W hWZ)
+    obtain ⟨s, N₁, D₁, hNs, hDs, hsplit⟩ := exists_common_ord_split hq hN0 hDn0
+    -- the peeled factor is non-zero on the ray because `pev D` is: a product is zero only if a
+    -- factor is, so no root-counting is needed to justify the cancellation
+    have hfac : ∀ x : Real, Y ≤ x → pev (ppow q s) x ≠ 0 ∧ pev D₁ x ≠ 0 := by
+      intro x hx
+      have hD : pev D x = pev (ppow q s) x * pev D₁ x := by
+        rw [pev_of_peq hDs, pev_pmul]
+      refine ⟨fun h => hDneY x hx ?_, fun h => hDneY x hx ?_⟩
+      · rw [hD, h, zero_mul]
+      · rw [hD, h, mul_zero]
+    have hD₁ne : ∀ x : Real, Y ≤ x → pev D₁ x ≠ 0 := fun x hx => (hfac x hx).2
+    have hD₁n : pnorm D₁ ≠ [] := by
+      refine pnorm_ne_nil_of_not_evZero ?_
+      rintro ⟨Z, hZ, hz⟩
+      obtain ⟨W, hW1, hWY, hWZ⟩ := two_bounds' hY1 hZ
+      exact hD₁ne W hWY (hz W hWZ)
+    -- the germ identity, in the reduced fraction
+    have hlog₁ : ∀ x : Real, Y ≤ x →
+        log (pev P x / pev Q x) = pev (pnorm N₁) x / pev (pnorm D₁) x := by
+      intro x hx
+      rw [pev_pnorm, pev_pnorm, hlogY x hx, pev_of_peq hNs, pev_of_peq hDs, pev_pmul, pev_pmul]
+      exact div_eq_div_of_cross (mul_ne_zero (hfac x hx).1 (hD₁ne x hx)) (hD₁ne x hx)
+        (by mach_ring)
+    refine no_rational_log_germ hq hchar hPd hPn (pnorm_normal N₁) hQ hQtd
+      (by rw [pnorm_idem]; exact hD₁n) (fun hd => ?_) hY1
+      (fun x hx => ne_of_gt (hQposY x hx)) (fun x hx => ne_of_gt (hPposY x hx))
+      (fun x hx => by rw [pev_pnorm]; exact hD₁ne x hx)
+      (fun x hx => div_pos_of_pos_pos (hPposY x hx) (hQposY x hx)) hlog₁
+    -- `hlow`: `exists_common_ord_split` returns exactly this, modulo `pnorm`
+    refine Pdvd_pnorm (fun hn => hsplit hn (Pdvd_of_pnorm hd))
+
 end MachLib
