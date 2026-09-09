@@ -93,6 +93,7 @@ import MachLib.PolyRing
 import MachLib.PolyRingTactic
 import MachLib.MPolyRing
 import MachLib.LibmBudget
+import MachLib.LogDerivCleared
 import MachLib.Linarith
 import MachLib.LinarithTest
 import MachLib.Lemmas

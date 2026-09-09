@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 102 `.lean` files** (788 top-level + 314 in subdirectories) /
-**250 802 lines** / **7 670 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 103 `.lean` files** (789 top-level + 314 in subdirectories) /
+**250 919 lines** / **7 674 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 670
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 390
+  | paste -sd+ | bc                                    # 7 674
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 394
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -119,7 +119,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 801 jobs, ~3 s warm
+lake build                                     # 802 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
@@ -209,7 +209,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**798 of 1102 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**799 of 1103 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -426,6 +426,26 @@ behind it is missing — registration is still a human act.
   the lemma EXISTS and cannot UNIFY before pricing new mathematics.** On 2026-09-08 that rule
   would have saved three separate wrong diagnoses in one session.
 
+- **`BoundedGermTranscendence`: route `(fm)`'s three legs now all stand — and that is an ASSEMBLY, not
+  the obligation.** The legs to `not RatGerm (log ∘ S)` are (1) differentiate the germ identity
+  (`deriv_eq_of_eq_on_ray`, `GermDerivFbasis`), (2) clear denominators (`LogDerivCleared`, added
+  2026-09-08), (3) promote a pointwise identity to `PEq` (`peq_of_ev_eq`, `PevEvEq`). Leg 2 was the
+  untouched one; its content is that two rational functions agreeing on a ray have equal
+  cross-products *as polynomials*, and it mentions neither `log` nor `S`.
+  **`logderiv_count_composes` is the join, by instantiation** — `logderiv_cleared`'s conclusion is
+  syntactically `no_rational_logarithm`'s `hident`, and rather than assert that, the module
+  typechecks the composition. 31 axioms, algebra spine only: no `sorryAx`, no `HasDerivAt`, nothing
+  analytic. That standard comes from `(fk)`, where a duplication audit was "a reading of two files"
+  until it became two typechecked instantiations.
+  **The ledger did not move and must not be read as if it had** — still 4 distinct open obligations.
+  What remains is the caller: producing leg 1's derivative identity at the right point and supplying
+  `S`'s non-vanishing on the ray. `(fm)`'s own warning is the right one to carry: *two green legs do
+  not imply a third*, and it applies to the third as well.
+  Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
+  "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
+  step actually ABSENT is `not RatGerm (log ∘ S)`, a weaker and different statement, and the
+  commit-letter for `b8ebfad2` states the four-line route status that supersedes the docstring.
+
 ## Counts: the gate is the source, prose is a copy
 
 **No count in prose — a claim total, an axiom total, an open-obligation total, a job count — may be
@@ -459,7 +479,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**798 of 1 102 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
+run (**799 of 1 103 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
