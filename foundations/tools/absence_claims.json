@@ -1,123 +1,137 @@
 {
-  "_comment": "Prose claims that something DOES NOT EXIST in the corpus. `absence_audit.py` re-runs each registered search and fails if it now matches. Registering an absence claim WITHOUT a search that could falsify it is the anti-pattern this registry exists to discourage -- a claim nothing can refute is not checked, it is merely written down.",
-  "_provenance": "Seeded 2026-08-28 after three claims in CLAUDE.md were found false: mul_lt_mul_of_pos_left (exists), min and abs (both exist in Basic.lean and are used). Every entry below was re-verified against the corpus at registration; the ones that failed were fixed rather than registered.",
-  "claims": [
-    {
-      "id": "claudemd-order-lemmas-absent",
-      "source_file": "../CLAUDE.md",
-      "claim_text": [
-        "These order lemmas do NOT exist here"
-      ],
-      "search": {
-        "pattern": "^(theorem|axiom|private theorem) (lt_or_ge|lt_trans|lt_irrefl|le_or_lt|add_lt_add_right) ",
-        "paths": "MachLib",
-        "positive_control": "theorem lt_trans {a b c : Real} : a < b -> b < c -> a < c"
-      },
-      "expect": "no_match",
-      "recorded": "2026-08-28",
-      "note": "mul_lt_mul_of_pos_left was on this list and DOES exist; removed from the prose and from this pattern."
-    },
-    {
-      "id": "claudemd-tactics-absent",
-      "source_file": "../CLAUDE.md",
-      "claim_text": [
-        "`set`, `linarith`, `ring` do not exist here"
-      ],
-      "expect": "no_match",
-      "recorded": "2026-08-28",
-      "note": "Upgraded 2026-08-28 from a grep for `^syntax \"linarith\"` to a compile probe. The grep proved nobody DECLARED it here; only compiling proves it is unavailable, which is what the gotcha actually claims.",
-      "probe": {
-        "snippet": "example : (1:Nat) = 1 := by linarith",
-        "must_fail_with": "unknown tactic"
-      }
-    },
-    {
-      "id": "no-complex-in-machlib",
-      "source_file": "../CLAUDE.md",
-      "claim_text": [
-        "there is no Mathlib, no `Complex`"
-      ],
-      "search": {
-        "pattern": "^(structure|inductive|def|noncomputable def) Complex\\b",
-        "paths": "MachLib",
-        "positive_control": "noncomputable def Complex := Unit"
-      },
-      "expect": "no_match",
-      "recorded": "2026-08-28",
-      "note": "Load-bearing: the Frontier G work is non-transportable BECAUSE of this. If a Complex type ever lands, several 'does not transport' claims need re-reading."
-    },
-    {
-      "id": "by-contra-absent",
-      "source_file": "MachLib/EMLHeightInterface.lean",
-      "claim_text": [
-        "`by_contra` does not exist here"
-      ],
-      "probe": {
-        "snippet": "example (p : Prop) (h : ¬¬p) : p := by by_contra hc; exact absurd hc h",
-        "must_fail_with": "unknown tactic"
-      },
-      "expect": "no_match",
-      "recorded": "2026-08-28",
-      "note": "Verified by compilation at registration: reports `unknown tactic`. The local idiom is `rcases Nat.lt_or_ge`."
-    },
-    {
-      "id": "conv-lhs-absent",
-      "source_file": "MachLib/RatLogDeriv.lean",
-      "claim_text": [
-        "`conv_lhs` does not exist here"
-      ],
-      "probe": {
-        "snippet": "example : (1:Nat) = 1 := by conv_lhs => rfl",
-        "must_fail_with": "unknown tactic"
-      },
-      "expect": "no_match",
-      "recorded": "2026-08-28",
-      "note": "Verified by compilation at registration. Rewrite through the equation instead."
-    },
-    {
-      "id": "no-measure-theory",
-      "source_file": "MachLib/ElementaryEMLErf.lean",
-      "claim_text": [
-        "measure theory, which does not exist anywhere in MachLib"
-      ],
-      "search": {
-        "pattern": "^(structure|class|def|noncomputable def|axiom) (Measure|Measurable|MeasureSpace)\\b",
-        "paths": "MachLib",
-        "positive_control": "axiom Measure : Type"
-      },
-      "expect": "no_match",
-      "recorded": "2026-08-28",
-      "note": "Narrowed at registration: the prose said 'measure AND integration theory', but a monotone Riemann integral (RiemannIntegralMonotone) and several Gaussian integrals DO exist, added the same day. Measure theory is the part that is genuinely absent, and is what the search checks."
-    },
-    {
-      "id": "no-eval-path-in-machlib",
-      "source_file": "MachLib/EMLCertifiedSynthesis.lean",
-      "claim_text": [
-        "because there is no `#eval` path at all"
-      ],
-      "search": {
-        "pattern": "^ *#eval ",
-        "paths": "MachLib",
-        "positive_control": "  #eval 1"
-      },
-      "expect": "no_match",
-      "recorded": "2026-08-28",
-      "note": "SAFETY-RELEVANT, and the best kind of absence claim to register: it is the reason a numerical spot-check cannot inhabit `Meets` and be mistaken for a discharged obligation. If an #eval ever lands in MachLib/, that argument needs re-reading before the claim is re-worded. 0 occurrences at registration."
-    },
-    {
-      "id": "ofnat-real-zero-and-one-only",
-      "source_file": "MachLib/Geometry/Apollonius/SymmetricTriple.lean",
-      "claim_text": [
-        "there is no other way to write a constant at this layer"
-      ],
-      "search": {
-        "pattern": "OfNat Real \\(nat_lit ([2-9]|[0-9][0-9])",
-        "paths": "MachLib",
-        "positive_control": "instance : OfNat Real (nat_lit 2) := inferInstance"
-      },
-      "expect": "no_match",
-      "recorded": "2026-08-28",
-      "note": "MachLib.Real carries OfNat for 0 and 1 only (Basic.lean:38-39). This is why numerals must be written as natCast N, which is the single most repeated tactic gotcha in the corpus. Verified: exactly 2 OfNat Real instances at registration. NOTE ON THE PATTERN: it first used a negative lookahead `(?!Zero|One)`, which grep -E does not support (POSIX ERE has none), so it matched instOfNatOne and reported a false NOW-FALSE. That failure was LOUD. The dangerous direction is the opposite one -- a search too NARROW to match anything passes silently, and nothing in this auditor detects it."
-    }
-  ]
+ "_comment": "Prose claims that something DOES NOT EXIST in the corpus. `absence_audit.py` re-runs each registered search and fails if it now matches. Registering an absence claim WITHOUT a search that could falsify it is the anti-pattern this registry exists to discourage -- a claim nothing can refute is not checked, it is merely written down.",
+ "_provenance": "Seeded 2026-08-28 after three claims in CLAUDE.md were found false: mul_lt_mul_of_pos_left (exists), min and abs (both exist in Basic.lean and are used). Every entry below was re-verified against the corpus at registration; the ones that failed were fixed rather than registered.",
+ "claims": [
+  {
+   "id": "claudemd-order-lemmas-absent",
+   "source_file": "../CLAUDE.md",
+   "claim_text": [
+    "These order lemmas do NOT exist here"
+   ],
+   "search": {
+    "pattern": "^(theorem|axiom|private theorem) (lt_or_ge|lt_trans|lt_irrefl|le_or_lt|add_lt_add_right) ",
+    "paths": "MachLib",
+    "positive_control": "theorem lt_trans {a b c : Real} : a < b -> b < c -> a < c"
+   },
+   "expect": "no_match",
+   "recorded": "2026-08-28",
+   "note": "mul_lt_mul_of_pos_left was on this list and DOES exist; removed from the prose and from this pattern."
+  },
+  {
+   "id": "claudemd-tactics-absent",
+   "source_file": "../CLAUDE.md",
+   "claim_text": [
+    "`set`, `linarith`, `ring` do not exist here"
+   ],
+   "expect": "no_match",
+   "recorded": "2026-08-28",
+   "note": "Upgraded 2026-08-28 from a grep for `^syntax \"linarith\"` to a compile probe. The grep proved nobody DECLARED it here; only compiling proves it is unavailable, which is what the gotcha actually claims.",
+   "probe": {
+    "snippet": "example : (1:Nat) = 1 := by linarith",
+    "must_fail_with": "unknown tactic"
+   }
+  },
+  {
+   "id": "no-complex-in-machlib",
+   "source_file": "../CLAUDE.md",
+   "claim_text": [
+    "there is no Mathlib, no `Complex`"
+   ],
+   "search": {
+    "pattern": "^(structure|inductive|def|noncomputable def) Complex\\b",
+    "paths": "MachLib",
+    "positive_control": "noncomputable def Complex := Unit"
+   },
+   "expect": "no_match",
+   "recorded": "2026-08-28",
+   "note": "Load-bearing: the Frontier G work is non-transportable BECAUSE of this. If a Complex type ever lands, several 'does not transport' claims need re-reading."
+  },
+  {
+   "id": "by-contra-absent",
+   "source_file": "MachLib/EMLHeightInterface.lean",
+   "claim_text": [
+    "`by_contra` does not exist here"
+   ],
+   "probe": {
+    "snippet": "example (p : Prop) (h : ¬¬p) : p := by by_contra hc; exact absurd hc h",
+    "must_fail_with": "unknown tactic"
+   },
+   "expect": "no_match",
+   "recorded": "2026-08-28",
+   "note": "Verified by compilation at registration: reports `unknown tactic`. The local idiom is `rcases Nat.lt_or_ge`."
+  },
+  {
+   "id": "conv-lhs-absent",
+   "source_file": "MachLib/RatLogDeriv.lean",
+   "claim_text": [
+    "`conv_lhs` does not exist here"
+   ],
+   "probe": {
+    "snippet": "example : (1:Nat) = 1 := by conv_lhs => rfl",
+    "must_fail_with": "unknown tactic"
+   },
+   "expect": "no_match",
+   "recorded": "2026-08-28",
+   "note": "Verified by compilation at registration. Rewrite through the equation instead."
+  },
+  {
+   "id": "no-measure-theory",
+   "source_file": "MachLib/ElementaryEMLErf.lean",
+   "claim_text": [
+    "measure theory, which does not exist anywhere in MachLib"
+   ],
+   "search": {
+    "pattern": "^(structure|class|def|noncomputable def|axiom) (Measure|Measurable|MeasureSpace)\\b",
+    "paths": "MachLib",
+    "positive_control": "axiom Measure : Type"
+   },
+   "expect": "no_match",
+   "recorded": "2026-08-28",
+   "note": "Narrowed at registration: the prose said 'measure AND integration theory', but a monotone Riemann integral (RiemannIntegralMonotone) and several Gaussian integrals DO exist, added the same day. Measure theory is the part that is genuinely absent, and is what the search checks."
+  },
+  {
+   "id": "no-eval-path-in-machlib",
+   "source_file": "MachLib/EMLCertifiedSynthesis.lean",
+   "claim_text": [
+    "because there is no `#eval` path at all"
+   ],
+   "search": {
+    "pattern": "^ *#eval ",
+    "paths": "MachLib",
+    "positive_control": "  #eval 1"
+   },
+   "expect": "no_match",
+   "recorded": "2026-08-28",
+   "note": "SAFETY-RELEVANT, and the best kind of absence claim to register: it is the reason a numerical spot-check cannot inhabit `Meets` and be mistaken for a discharged obligation. If an #eval ever lands in MachLib/, that argument needs re-reading before the claim is re-worded. 0 occurrences at registration."
+  },
+  {
+   "id": "ofnat-real-zero-and-one-only",
+   "source_file": "MachLib/Geometry/Apollonius/SymmetricTriple.lean",
+   "claim_text": [
+    "there is no other way to write a constant at this layer"
+   ],
+   "search": {
+    "pattern": "OfNat Real \\(nat_lit ([2-9]|[0-9][0-9])",
+    "paths": "MachLib",
+    "positive_control": "instance : OfNat Real (nat_lit 2) := inferInstance"
+   },
+   "expect": "no_match",
+   "recorded": "2026-08-28",
+   "note": "MachLib.Real carries OfNat for 0 and 1 only (Basic.lean:38-39). This is why numerals must be written as natCast N, which is the single most repeated tactic gotcha in the corpus. Verified: exactly 2 OfNat Real instances at registration. NOTE ON THE PATTERN: it first used a negative lookahead `(?!Zero|One)`, which grep -E does not support (POSIX ERE has none), so it matched instOfNatOne and reported a false NOW-FALSE. That failure was LOUD. The dangerous direction is the opposite one -- a search too NARROW to match anything passes silently, and nothing in this auditor detects it."
+  },
+  {
+   "id": "smoothstep-ofnat-vs-decimal",
+   "source_file": "MachLib/Linarith.lean",
+   "claim_text": [
+    "This shape does NOT unify with what Forge emits"
+   ],
+   "expect": "no_match",
+   "probe": {
+    "snippet": "example (t : MachLib.Real) (h0 : (0:MachLib.Real) ≤ t) (h1 : t ≤ 1) :\n    (0:MachLib.Real) ≤ t * t * ((3.0 : MachLib.Real) - (2.0 : MachLib.Real) * t) :=\n  MachLib.Real.smoothstep_nonneg h0 h1",
+    "must_fail_with": "Type mismatch"
+   },
+   "note": "A ROUTE-NOTE ratchet, not a lemma-absence one. The docstring claimed compatibility with Forge's emitted shape and the emitter drifted out from under it; the stale claim cost a session, because a lemma that stops applying looks exactly like a lemma that was never strong enough. Three such notes went stale in two days (smoothstep_nonneg, GermDerivFbasis, LogRatDeriv) and none was checked by anything. This is the first of them registered.",
+   "recorded": "2026-09-09"
+  }
+ ]
 }

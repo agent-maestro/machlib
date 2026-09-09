@@ -22,20 +22,18 @@ having as a checked theorem rather than as a claim that they compose. That disti
 arc twice: `(fq)` asserted the chain and quotient rules "compose" before either existed, and `(fk)`
 found bricks re-deriving generic machinery because the summit was never checked.
 
-## What remains of leg 2
+## Leg 2 is COMPLETE — and this note used to overstate what was left
 
-The **algebra half**: cross-multiplying the display above into
+**CLOSED 2026-09-09.** This section listed the cross-multiplication as remaining, while
+`logRat_cross_identity` — in this same file, forty lines below — performs it. What genuinely
+remained was the `peq_of_ev_eq` promotion from a ray identity to `PEq`, which is one step and lives
+in `LogDerivCleared` (`peq_of_quot_eq_on_ray`). `LogGermAssembly` composes the route end to end.
 
-```
-(P′Q − PQ′)·(D·D)  =  (N′D − ND′)·(Q·P)
-```
-
-which is `hident` at `k = 1`, then `peq_of_ev_eq` to promote it from a ray identity to `PEq`.
-
-That is three nested divisions cleared against each other. It is standard, and it is **long in this
-corpus's idiom**: `mach_mpoly` cannot relate distinct reciprocals, so each clearing step needs its
-own `div_of_eq_mul` or `mul_left_cancel`. Recorded as open rather than estimated, per this arc's
-record on the word "assembly".
+**The cost of leaving it stale was real**: a session read this note, believed the cross-
+multiplication was open, and re-proved both it and `cross_of_div_eq_div` before opening the file.
+The header of a module is read *before* its theorems; a route note that overstates what is left is
+an instruction to duplicate. Registered in `tools/absence_claims.json` (`legtwo-complete`) so the
+claim is now checked rather than trusted.
 -/
 
 namespace MachLib

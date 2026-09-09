@@ -41,10 +41,19 @@ largest δ available at `x` is `x - X`.
 
 It produces a relation, not a contradiction. Turning the pair of relations into one for `exp (S x)`
 alone means eliminating `F (S x)` between them, which is where the Euclidean layer (`euclid_lemma`,
-`Pdvd`) would come in, and then the *real* base case is needed: `exp ∘ S` transcendental over the
-rational functions for non-constant rational `S`. That is **not** `exp_not_algebraic`, which is about
-`exp x` and is proved by growth — and growth is exactly what this branch has ruled out. No obligation
-is registered here for the residue.
+`Pdvd`) would come in.
+
+**CORRECTED 2026-09-09. This paragraph used to say the residue was "`exp ∘ S` transcendental over
+the rational functions", and that is NOT the frontier.** Route A's status (see `b8ebfad2`'s commit
+letter, which supersedes this header) names the absent step as **`not RatGerm (log ∘ S)`** — a
+weaker and different statement — and that is now routed end to end in `LogGermAssembly`
+(`no_rational_log_germ`, `no_rational_log_germ_num_pole`), covering both pole positions with a
+vacuity specimen. What is still open on route A is the SEPARATION step: from
+`A + B·log (S x) ≡ 0` conclude the top coefficient vanishes.
+
+The wrong statement stood here for ten days and cost a session a wrong start — it is strictly
+stronger than what is needed, so believing it prices the route far above its actual cost. Registered
+in `tools/absence_claims.json` (`routea-separation-absent`).
 -/
 
 namespace MachLib

@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 146 lines** / **7 679 theorems**, re-exported through the aggregator
+**251 162 lines** / **7 679 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -168,7 +168,7 @@ here"*, *"the existing machinery cannot answer this"* — was checked by nothing
 silently**: someone adds the thing, and the sentence saying it is missing keeps reading as true.
 
 It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
-8 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
+9 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
 
 * **search** — a regex, for *"no such declaration"*;
 * **probe** — a Lean snippet that must FAIL to compile, for *"no such tactic"*. A grep for

@@ -336,9 +336,18 @@ theorem le_of_sub_nonneg {a b : Real} (h : 0 ≤ b - a) : a ≤ b := by
     exact le_of_lt hh
   · rw [← heq, add_zero] at e; rw [e]; exact le_refl _
 
-/-- Smoothstep LOWER bound in FACTORED shape: `0 ≤ s²(3−2s)` on `[0,1]`. (Matches
-the `s*s*((1+1+1)-(1+1)*s)` form Forge emits, vs `cube_band_nonneg`'s expanded
-`A·t²−B·t³`.) Product of nonnegs: `s² ≥ 0`, and `3−2s ≥ 1 > 0` since `s ≤ 1`. -/
+/-- Smoothstep LOWER bound in FACTORED shape: `0 ≤ s²(3−2s)` on `[0,1]`, stated over
+`s*s*((1+1+1)-(1+1)*s)` because `OfNat Real` exists only for `0` and `1`. Contrast
+`cube_band_nonneg`'s expanded `A·t²−B·t³`. Product of nonnegs: `s² ≥ 0`, and
+`3−2s ≥ 1 > 0` since `s ≤ 1`.
+
+**This shape does NOT unify with what Forge emits.** The docstring here said "matches the form
+Forge emits" until 2026-09-09; the emitter had moved to `3.0 - 2.0*t`, which elaborates to
+`OfScientific.ofScientific 30 true 1`, and the two are the same number in different terms. The
+claim was read as evidence the lemma was unusable and `smoothstep`'s bound was written up as
+needing new mathematics. Bridge the spelling with `mach_ofnat_numerals` (`MachLib.Decimal`).
+Registered as `smoothstep-ofnat-vs-decimal` in `tools/absence_claims.json`, as a compile probe:
+if the shapes ever DO unify, the probe compiles and the audit fires so this note gets updated. -/
 theorem smoothstep_nonneg {s : Real} (h0 : 0 ≤ s) (h1 : s ≤ 1) :
     0 ≤ s * s * ((1 + 1 + 1) - (1 + 1) * s) := by
   apply mul_nonneg (mul_nonneg h0 h0)
