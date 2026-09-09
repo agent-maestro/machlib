@@ -3,6 +3,7 @@ import MachLib.DerivQuotientLog
 import MachLib.GermDerivFbasis
 import MachLib.GermClearedSpecimen
 import MachLib.PolyConstDvd
+import MachLib.OperatorBasisComplete
 
 /-!
 # Route `(fm)`, assembled: a rational germ's logarithm is not a rational germ
@@ -177,5 +178,80 @@ theorem no_rational_log_germ_specimen
   · intro x hx
     rw [pev_one, pev_X]
     exact div_pos_of_pos_pos zero_lt_one_ax (lt_of_lt_of_le zero_lt_one_ax hx)
+
+/-! ### The numerator-pole case, via `1/S`
+
+`no_rational_logarithm` needs the pole in the DENOMINATOR, so `no_rational_log_germ` is silent on a
+germ like `S = x` where `Q` is constant. The repair is to run the argument on `1/S = Q/P`, which has
+a pole wherever `P` vanishes, and the only germ-level content is that inverting `S` negates its
+logarithm. Together the two cover every non-constant rational germ in lowest terms: `S` non-constant
+means `P` or `Q` is non-constant, hence has an irreducible factor, and lowest terms says that factor
+misses the other. -/
+
+/-- `pscale` by a NON-ZERO scalar preserves `PNormal`: it multiplies the last coefficient, and a
+product of non-zeros is non-zero. -/
+theorem pNormal_pscale {r : Real} (hr : r ≠ 0) :
+    ∀ {L : List Real}, PNormal L → PNormal (pscale r L)
+  | [], _ => by intro c hc; exact absurd hc (by simp [pscale])
+  | [a], h => by
+      intro c hc
+      have ha : a ≠ 0 := h a (by simp)
+      have : c = r * a := by simpa [pscale] using hc.symm
+      rw [this]; exact mul_ne_zero hr ha
+  | a :: b :: L, h => by
+      intro c hc
+      have hrest : PNormal (b :: L) := by
+        intro d hd; exact h d (by simpa using hd)
+      exact pNormal_pscale hr hrest c (by simpa [pscale] using hc)
+
+/-- **Inverting a rational germ negates its logarithm.** `log (Q/P) = (−N)/D` from
+`log (P/Q) = N/D`, on a ray where `P` and `Q` are positive. `log_div` twice, then `neg_div`. -/
+theorem log_recip_germ {P Q N D : List Real} {X : Real}
+    (hPpos : ∀ x : Real, X ≤ x → 0 < pev P x)
+    (hQpos : ∀ x : Real, X ≤ x → 0 < pev Q x)
+    (hDne : ∀ x : Real, X ≤ x → pev D x ≠ 0)
+    (h : ∀ x : Real, X ≤ x → log (pev P x / pev Q x) = pev N x / pev D x) :
+    ∀ x : Real, X ≤ x →
+      log (pev Q x / pev P x) = pev (pscale (0 - 1) N) x / pev D x := by
+  intro x hx
+  have hfwd : log (pev P x / pev Q x) = log (pev P x) - log (pev Q x) :=
+    log_div (hPpos x hx) (hQpos x hx)
+  have hbwd : log (pev Q x / pev P x) = log (pev Q x) - log (pev P x) :=
+    log_div (hQpos x hx) (hPpos x hx)
+  have hneg : log (pev Q x / pev P x) = -(log (pev P x / pev Q x)) := by
+    rw [hfwd, hbwd]; mach_ring
+  rw [hneg, h x hx, neg_div (hDne x hx), pev_pscale]
+  have : (0 - 1) * pev N x = -(pev N x) := by mach_ring
+  rw [this]
+
+/-- `0 - 1 ≠ 0`, the scalar `pscale` negates by. -/
+private theorem sub_one_ne_zero : (0 - 1 : Real) ≠ 0 := by
+  have e : (0 - 1 : Real) = -(1 : Real) := by mach_ring
+  rw [e]
+  exact ne_of_lt (neg_neg_of_pos zero_lt_one_ax)
+
+/-- **The numerator-pole case.** Same conclusion as `no_rational_log_germ` when the genuine pole
+sits in `P` rather than `Q` — obtained by running that theorem on `1/S = Q/P`, whose logarithm is
+`(−N)/D`. Nothing new is proved; the two together cover every non-constant rational germ in lowest
+terms. -/
+theorem no_rational_log_germ_num_pole {q P Pt Q N D : List Real} {X : Real}
+    (hq : PIrred q) (hchar : ∀ rr : Nat, DerivCoprime q (rr + 1))
+    (hQd : ¬ Pdvd q Q) (hQn : PNormal Q) (hNn : PNormal N)
+    {r : Nat} (hP : PEq P (pmul (ppow q (r + 1)) Pt)) (hPtd : ¬ Pdvd q Pt)
+    (hDnorm : pnorm D ≠ []) (hlow : Pdvd q D → ¬ Pdvd q (pscale (0 - 1) N))
+    (hX : 1 ≤ X)
+    (hPpos : ∀ x : Real, X ≤ x → 0 < pev P x)
+    (hQpos : ∀ x : Real, X ≤ x → 0 < pev Q x)
+    (hDne : ∀ x : Real, X ≤ x → pev D x ≠ 0)
+    (hlog : ∀ x : Real, X ≤ x → log (pev P x / pev Q x) = pev N x / pev D x) :
+    False :=
+  no_rational_log_germ (q := q) (P := Q) (Q := P) (Qt := Pt)
+    (N := pscale (0 - 1) N) (D := D)
+    hq hchar hQd hQn (pNormal_pscale sub_one_ne_zero hNn) hP hPtd hDnorm hlow hX
+    (fun x hx => ne_of_gt (hPpos x hx))
+    (fun x hx => ne_of_gt (hQpos x hx))
+    hDne
+    (fun x hx => div_pos_of_pos_pos (hQpos x hx) (hPpos x hx))
+    (log_recip_germ hPpos hQpos hDne hlog)
 
 end MachLib

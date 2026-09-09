@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 100 lines** / **7 678 theorems**, re-exported through the aggregator
+**251 176 lines** / **7 681 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 678
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 398
+  | paste -sd+ | bc                                    # 7 681
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 401
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -449,9 +449,13 @@ behind it is missing — registration is still a human act.
   weeks with every gate green. So `no_rational_log_germ_specimen` discharges every hypothesis
   **except** the one being refuted, at `S = 1/x`: a full specimen is impossible on purpose, and what
   needed showing is that the premises are not contradictory for some unrelated reason.
-  **Scope, at the width the count actually has:** `no_rational_logarithm` needs a genuine pole, so
-  the POLYNOMIAL case is not covered — `S = x` has `Q = 1` and no irreducible divides it. The repair
-  is to run the argument on `1/S`, which needs `P` non-constant; not claimed.
+  **Both pole positions are covered.** `no_rational_logarithm` needs the pole in the DENOMINATOR,
+  so `no_rational_log_germ` alone is silent on `S = x` (`Q = 1`, no irreducible divides it).
+  `no_rational_log_germ_num_pole` runs the same theorem on `1/S = Q/P`, and the only germ-level
+  content is `log_recip_germ`: inverting a rational germ NEGATES its logarithm (`log_div` twice,
+  then `neg_div`). Together they cover every non-constant rational germ in lowest terms — `S`
+  non-constant means `P` or `Q` is non-constant, hence has an irreducible factor, and lowest terms
+  says that factor misses the other.
   **The ledger did not move and must not be read as if it had** — still 4 distinct open obligations.
   `BoundedGermTranscendence` consumes `not RatGerm (log ∘ S)` through further steps that are not this
   module. `(fm)`'s own warning is the right one to carry: *two green legs do
