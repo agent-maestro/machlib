@@ -426,110 +426,22 @@ behind it is missing — registration is still a human act.
   the lemma EXISTS and cannot UNIFY before pricing new mathematics.** On 2026-09-08 that rule
   would have saved three separate wrong diagnoses in one session.
 
-- **`BoundedGermTranscendence`: route `(fm)`'s three legs now all stand — and that is an ASSEMBLY, not
-  the obligation.** The legs to `not RatGerm (log ∘ S)` are (1) differentiate the germ identity
-  (`deriv_eq_of_eq_on_ray`, `GermDerivFbasis`), (2) clear denominators (`LogDerivCleared`, added
-  2026-09-08), (3) promote a pointwise identity to `PEq` (`peq_of_ev_eq`, `PevEvEq`). Leg 2 was the
-  untouched one; its content is that two rational functions agreeing on a ray have equal
-  cross-products *as polynomials*, and it mentions neither `log` nor `S`.
-  **`logderiv_count_composes` is the join, by instantiation** — `logderiv_cleared`'s conclusion is
-  syntactically `no_rational_logarithm`'s `hident`, and rather than assert that, the module
-  typechecks the composition. 31 axioms, algebra spine only: no `sorryAx`, no `HasDerivAt`, nothing
-  analytic. That standard comes from `(fk)`, where a duplication audit was "a reading of two files"
-  until it became two typechecked instantiations.
-  **ASSEMBLED 2026-09-08** (`LogGermAssembly`, `no_rational_log_germ`): a rational germ `S = P/Q`,
-  positive on a ray, whose denominator has a genuine pole at an irreducible `q`, admits no rational
-  germ for `log ∘ S`. 44 axioms, no `sorryAx`, nothing analytic. Every step was already present —
-  the two derivative rules (`logComp_hasDerivAt`, `div_hasDerivAt`, `DerivQuotientLog`) were built
-  for this route and I nearly rebuilt them; the only arithmetic added was `logderiv_normalise`,
-  turning `logComp_hasDerivAt`'s `s / S x` into one fraction over `P·Q`.
-  **`witness_audit` IS STRUCTURALLY BLIND TO IT.** The theorem concludes `False`, so it lands in the
-  audit's *"refutation theorem(s) NOT APPLICABLE"* bucket — a green `WITNESS-AUDIT OK` says nothing
-  about it, which is precisely the position `positive_branch_impossible` was in while vacuous for
-  weeks with every gate green. So `no_rational_log_germ_specimen` discharges every hypothesis
-  **except** the one being refuted, at `S = 1/x`: a full specimen is impossible on purpose, and what
-  needed showing is that the premises are not contradictory for some unrelated reason.
-  **Both pole positions are covered.** `no_rational_logarithm` needs the pole in the DENOMINATOR,
-  so `no_rational_log_germ` alone is silent on `S = x` (`Q = 1`, no irreducible divides it).
-  `no_rational_log_germ_num_pole` runs the same theorem on `1/S = Q/P`, and the only germ-level
-  content is `log_recip_germ`: inverting a rational germ NEGATES its logarithm (`log_div` twice,
-  then `neg_div`). Together they cover every non-constant rational germ in lowest terms — `S`
-  non-constant means `P` or `Q` is non-constant, hence has an irreducible factor, and lowest terms
-  says that factor misses the other.
-  **UPGRADED to the germ form 2026-09-09** (`not_ratGerm_log_of_pole`): `¬ RatGerm (log ∘ S)`
-  outright, not merely "this named `N/D` fails". The gap was that `RatGerm` hands over an ARBITRARY
-  `N`, `D` while `no_rational_logarithm`'s `q ∣ D` branch needs lowest terms at `q`;
-  `CrossIdentities.exists_common_ord_split` peels the common `q`-power and returns exactly that.
-  Two things make the peel free: the cancelled factor is non-zero on the ray because `pev D` is (a
-  product vanishes only if a factor does — no root-counting), and the degenerate `N ≡ 0` case is a
-  separate three-line argument, not a nuisance (it forces `P/Q ≡ 1` by `exp_log`, hence `q ∣ P`,
-  contradicting the pole hypothesis). 47 axioms, no `sorryAx`, nothing analytic.
-  **The ledger did not move and must not be read as if it had** — still 4 distinct open obligations.
-  `BoundedGermTranscendence` consumes `not RatGerm (log ∘ S)` through further steps that are not this
-  module.
-  **The separation is proved too** (`log_separation`, 2026-09-09): from `A + B·log (S x) ≡ 0` with
-  `A`, `B` RATIONAL germs and `log ∘ S` not one, `EvZeroF B`. The rationality of `B` is not
-  decoration — "not eventually zero" gives a general germ NO zero-free tail, and the division needs
-  one; `evNonvanish_pev` supplies it only because `B = pev U / pev V`.
-  **The rationality bridge is written too** (`ratGerm_pev`, `log_separation_pev`): `GEvRel` and
-  `GProperRel` put NO rationality constraint on their coefficients — they are arbitrary germs — so
-  the hypothesis does not come from the germ layer. It comes from the obligation, which supplies
-  POLYNOMIAL coefficients (`bipevLead A Ls`), and a polynomial is a rational germ with denominator
-  `1`. Easy to assume rather than write, which is why it is its own theorem.
-  **What is still NOT done, and a fork to settle before doing it.** Every named route-A step is a
-  theorem, but nothing derives `A + B·log (S x) ≡ 0` from anything, and there are TWO candidate
-  equations needing DIFFERENT inputs. `fbasis_top_two_identity` concludes over `exp (S x) + 1/S x`
-  and contains no `log`; separating it would need `¬ RatGerm (exp ∘ S)`, which the bounded branch
-  cannot supply — every exclusion instrument here argues by growth and
-  `polyEnvelope_of_Fbasis_floor` proves `F ∘ S` IS polynomially enveloped there.
-  `fbasis_relation_substituted`'s coefficients DO carry `log`.
-  **The fork is RESOLVED** (`top_two_multiplier_splits`, 2026-09-09): the multiplier is
-  `s·u + fbasisSubMul S s`, so in `A + B·log` form the top-two identity has `A` carrying
-  `u = exp ∘ S + log ∘ S` — not a rational germ on this branch — while `log_separation` needs
-  `RatGerm A`. So it does NOT apply to the top-two identity, and the substituted coefficients are
-  the only candidate. That took one small ring identity; it was held as an explicitly-marked
-  inference for exactly one step first, which is what kept a guess out of this file.
-  **The wiring is written** (`substituted_coeff_splits`): each coefficient of the substituted
-  relation is `A + B·log (S x)` with `A = es[j] + (s·(0::gyd cs))[j] + s·(1/S)·(gyd cs)[j]` and
-  `B = −s·(gyd cs)[j]`, both EXHIBITED rather than asserted to exist — the separation needs them to
-  be rational germs, and that is a property of the exhibited expressions.
-  **`RatGerm` is now closed under the field operations** (`ratGerm_add`, `ratGerm_mul`,
-  `ratGerm_neg`, 2026-09-09) — the corpus had NONE of these, only `ratGerm_sub_const`. They are what
-  turns "those `A`, `B` are built from rational pieces" into a proof, and they are reusable well
-  beyond this route since `RatGerm` is the level-0 class the germ layer is stratified by.
-  **The instantiation infrastructure is complete too**: `ratGerm_of_pev_div` and
-  `ratGerm_inv_of_pev` for `s = S'` and `1/S`, and `allRatGerm_gadd`/`_gscale`/`_gyd` carrying
-  coefficientwise rationality through the list operations. Those three are stated over MEMBERSHIP,
-  not indices, on purpose: `gadd`'s elements are heads, tails or sums, which membership sees
-  directly, while an index statement must case on the two lists' relative lengths at every step.
-  **The composition is written** (`substituted_coeff_log_part_evZero`): a substituted coefficient
-  that vanishes on a ray has `EvZeroF` `log`-part, i.e. `EvZeroF (−s·(gyd cs)[j])`. 36 axioms, no
-  `sorryAx`, nothing analytic.
-  **Prefer `crossDiff_log_part_evZero`, and here is why the other one nearly did not apply.**
-  Checking what the descent supplies showed the vanishing on offer is NOT of a substituted
-  coefficient: `GermDerivEntry` builds `gscaleSub cd dtop cs₀ ds₀`, entries `cd·d − dtop·c`, and
-  minimality kills those. The separation survives — `cd·(A + B·log S) − dtop·c` is
-  `(cd·A − dtop·c) + (cd·B)·log S`, still linear in `log` — so the cross-difference version is the
-  one a caller can reach for.
-  **The vanishing is available too** (`minimal_crossDiff_evZero`): minimality kills every entry of
-  `gscaleSub cd dtop cs₀ ds₀` — `gcancel_top` then `all_gcoeffs_evZero_of_shorter'`, three lines
-  that existed only INSIDE `minimal_grel_identity`'s proof and are now a theorem.
-  **And it must be run on the SUBSTITUTED list, not `gdrel`.** `gdrel v cs es = gadd es (gscale v
-  (gyd cs))` carries `v = (exp (S x) + 1/S x)·s x`, so its coefficients carry `exp`, and
-  `top_two_multiplier_splits` already showed that shape is not separable. The substituted list is a
-  DIFFERENT list with the same `gbipev` at `Fbasis ∘ S` whose coefficients carry `log`. Both
-  descent lemmas are generic in the relation, so nothing stops running them there — that is how the
-  two threads meet, and it is the answer to the fork this file records above.
-  **Cite `not_ratGerm_log_comp_of_pole`, not `not_ratGerm_log_of_pole`**: the route carries an
-  abstract `S` agreeing with `P/Q` on a ray, not a literal pair of polynomials, and the pole version
-  concludes about `log (pev P x / pev Q x)` verbatim. `ratGerm_congr` is the transfer — `RatGerm`
-  only sees the germ — and it was being done INLINE in `EMLLogNotRational` until this was the
-  second copy. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
-  not imply a third*, and it applies to the third as well.
-  Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
-  "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
-  step actually ABSENT is `not RatGerm (log ∘ S)`, a weaker and different statement, and the
-  commit-letter for `b8ebfad2` states the four-line route status that supersedes the docstring.
+- **`BoundedGermTranscendence` / route `(fm)`: every NAMED step is a theorem, and the route is NOT
+  closed.** Read `MachLib/LogGermAssembly.lean`'s docstrings for the detail — they sit next to the
+  code and cannot drift from it; this entry is a pointer, not a copy. The chain is
+  `not_ratGerm_log_comp_of_pole` → `substituted_coeff_splits` → `crossDiff_log_part_evZero`
+  ← `minimal_crossDiff_evZero`, with the algebra in `MachLib/RatGermAlgebra.lean`.
+  Four things a reader needs *before* opening the module, because each one has already cost a
+  session:
+  * **Cite `not_ratGerm_log_comp_of_pole`, not `not_ratGerm_log_of_pole`** — the route carries an
+    abstract `S`, the pole version concludes about `log (pev P x / pev Q x)` verbatim.
+  * **`witness_audit` is structurally blind here.** These theorems conclude `False`, so they land in
+    its "refutation theorem(s) NOT APPLICABLE" bucket and a green line says nothing about them.
+    `no_rational_log_germ_specimen` is the vacuity check, done by hand.
+  * **The descent must run on the SUBSTITUTED list, not `gdrel`** — `gdrel`'s coefficients carry
+    `exp` and `top_two_multiplier_splits` proves that shape is not separable.
+  * **Chained is not composed.** No theorem runs the chain end to end at the obligation's own data,
+    and the obligation needs more besides. **The ledger is unmoved: 4 distinct open obligations.**
 
 - **READ THE MODULE NAMED AFTER THE ROUTE BEFORE ADDING TO IT.** `LogRatDeriv` already carried
   `logRat_deriv_eq` (leg 1 fully composed), `cross_of_div_eq_div` and `logRat_cross_identity` (the
@@ -576,6 +488,17 @@ behind it is missing — registration is still a human act.
   was never run. Leaving `ratGerm_add` in a log-specific file sets the identical trap.
   A pure move shows a distinctive gate signature worth recognising: **module and file counts move,
   theorem counts do NOT**. If a "refactor" changes the theorem count, it is not a refactor.
+
+- **THIS FILE IS A POINTER, NOT A COPY — and one session grew it 39%.** On 2026-09-08/10 the
+  route-A work added **105 lines** here restating what `LogGermAssembly`'s docstrings already said,
+  and said less well: the module carried five mentions of `top_two_multiplier_splits` to this file's
+  two. Condensed to 17. Detail belongs beside the code, where it cannot drift from what it
+  describes; this file carries what a reader needs *before* deciding which module to open.
+  The same discipline as the counts policy one section down — **prose is a copy and never
+  authoritative** — applied to prose about CODE rather than prose about NUMBERS. The failure mode is
+  identical and this corpus has three stale route headers from 2026-09 to show for it.
+  **Before adding a long entry here, ask whether it belongs in the module docstring instead.**
+  555 lines at that session's start, 772 at its peak, 684 after the trim.
 
 ## Counts: the gate is the source, prose is a copy
 
