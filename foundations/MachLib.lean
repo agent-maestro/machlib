@@ -95,6 +95,7 @@ import MachLib.MPolyRing
 import MachLib.LibmBudget
 import MachLib.LogDerivCleared
 import MachLib.LogGermAssembly
+import MachLib.RatGermAlgebra
 import MachLib.Linarith
 import MachLib.LinarithTest
 import MachLib.Lemmas

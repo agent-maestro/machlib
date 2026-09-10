@@ -149,7 +149,7 @@
   },
   {
    "id": "negdiv-vs-zero-sub",
-   "source_file": "MachLib/LogGermAssembly.lean",
+   "source_file": "MachLib/RatGermAlgebra.lean",
    "claim_text": [
     "the goal has `0 - _`, not `-(_)`, and `rw` matches syntactically"
    ],
@@ -158,7 +158,7 @@
     "snippet": "example (a c : MachLib.Real) (hc : c ≠ 0) :\n    (0 : MachLib.Real) - a / c = (0 - a) / c := by\n  rw [MachLib.Real.neg_div hc]",
     "must_fail_with": "0 - a / c = (0 - a) / c"
    },
-   "note": "TERM-MISMATCH probe. This corpus writes negation as `0 - ·` throughout (`psub`, `pscale (0-1)`), so `neg_div` -- stated over `-(_)` -- does not fire on the goals it looks applicable to, and a backward `rw` against `= 0` finds the zero INSIDE `0 - _`. The second cost a 200 000-heartbeat timeout on 2026-09-09. If a `0 - ·` form of `neg_div` is ever added, this probe compiles and the note should be updated.",
+   "note": "TERM-MISMATCH probe. This corpus writes negation as `0 - ·` throughout (`psub`, `pscale (0-1)`), so `neg_div` -- stated over `-(_)` -- does not fire on the goals it looks applicable to, and a backward `rw` against `= 0` finds the zero INSIDE `0 - _`. The second cost a 200 000-heartbeat timeout on 2026-09-09. If a `0 - ·` form of `neg_div` is ever added, this probe compiles and the note should be updated. Source file updated 2026-09-10 when the RatGerm algebra was split out of LogGermAssembly — the audit caught the move as TEXT-GONE rather than passing, which is the decay it exists to detect.",
    "recorded": "2026-09-09"
   }
  ]

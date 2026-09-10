@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 760 lines** / **7 700 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 105 `.lean` files** (791 top-level + 314 in subdirectories) /
+**251 787 lines** / **7 700 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -119,7 +119,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 803 jobs, ~3 s warm
+lake build                                     # 804 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
@@ -209,7 +209,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**800 of 1104 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**801 of 1105 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -565,6 +565,18 @@ behind it is missing — registration is still a human act.
   mismatch is ever closed — notes decay, instruments do not, and this file has three stale route
   headers from 2026-09 to prove it.
 
+- **PUT A LEMMA WHERE ITS NAME WOULD BE LOOKED FOR, NOT WHERE IT WAS PROVED.** `MachLib/
+  RatGermAlgebra.lean` (2026-09-10) holds `RatGerm`'s closure under `+ − × ·⁻¹`, germ congruence,
+  and the coefficientwise versions for `gadd`/`gscale`/`gyd`. All of it was written while proving
+  `¬ RatGerm (log ∘ S)` and all of it sat in `LogGermAssembly`, where nobody asking *"is `RatGerm`
+  closed under products"* would look.
+  **The cost of getting this wrong is measured, not hypothetical.** One day earlier this same arc
+  re-proved `cross_of_div_eq_div` and `logRat_cross_identity` because they lived in `LogRatDeriv` —
+  a module named after the ROUTE rather than the lemmas — and the search that would have found them
+  was never run. Leaving `ratGerm_add` in a log-specific file sets the identical trap.
+  A pure move shows a distinctive gate signature worth recognising: **module and file counts move,
+  theorem counts do NOT**. If a "refactor" changes the theorem count, it is not a refactor.
+
 ## Counts: the gate is the source, prose is a copy
 
 **No count in prose — a claim total, an axiom total, an open-obligation total, a job count — may be
@@ -598,7 +610,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**800 of 1 104 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
+run (**801 of 1 105 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
