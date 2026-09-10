@@ -168,7 +168,7 @@ here"*, *"the existing machinery cannot answer this"* — was checked by nothing
 silently**: someone adds the thing, and the sentence saying it is missing keeps reading as true.
 
 It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
-9 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
+11 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
 
 * **search** — a regex, for *"no such declaration"*;
 * **probe** — a Lean snippet that must FAIL to compile, for *"no such tactic"*. A grep for
@@ -543,6 +543,27 @@ behind it is missing — registration is still a human act.
   Note also that `LogRatDeriv`'s header lists more as remaining than actually did: it names the
   cross-multiplication as open while `logRat_cross_identity`, in that same file, performs it. What
   genuinely remained of leg 2 was the `peq_of_ev_eq` promotion.
+
+- **A CORRECT THEOREM YOU CANNOT REACH BECAUSE THE TERM DOES NOT MATCH — one failure mode, four
+  costumes, and it cost this corpus four separate wrong diagnoses on 2026-09-08/09.**
+
+  | mismatch | what it cost |
+  |---|---|
+  | `3.0` vs `1+1+1` | `smoothstep_le_one` existed and was written up as needing new mathematics |
+  | `OfNat` vs `OfScientific` | `mach_decimal` stalls one rewrite short of `= 1` |
+  | `0 - _` vs `-(_)` | `neg_div` silently does not fire; a backward `rw` against `= 0` finds the zero INSIDE `0 - _` — one instance was a 200 000-heartbeat timeout |
+  | a literal quotient vs an abstract germ | `not_ratGerm_log_of_pole` was not citable by the route that needed it |
+
+  Different mechanisms, one shape: the VALUES are equal and the TERMS are not, `rw` and `apply`
+  match syntactically, and nothing reports it — a lemma that stops applying looks exactly like a
+  lemma that was never strong enough.
+  **The check: when a lemma "should" apply and does not, compare the TERMS before concluding
+  anything about the mathematics.** Bridges that exist: `mach_ofnat_numerals` (numerals),
+  `realOfScientific_*_dot_zero` (decimal↦`OfNat`), `ratGerm_congr` (germ equality on a ray).
+  Two of the four are now compile PROBES in `tools/absence_claims.json`
+  (`machdecimal-ofnat-boundary`, `negdiv-vs-zero-sub`) rather than prose, so they fire if the
+  mismatch is ever closed — notes decay, instruments do not, and this file has three stale route
+  headers from 2026-09 to prove it.
 
 ## Counts: the gate is the source, prose is a copy
 

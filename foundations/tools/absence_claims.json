@@ -132,6 +132,34 @@
    },
    "note": "A ROUTE-NOTE ratchet, not a lemma-absence one. The docstring claimed compatibility with Forge's emitted shape and the emitter drifted out from under it; the stale claim cost a session, because a lemma that stops applying looks exactly like a lemma that was never strong enough. Three such notes went stale in two days (smoothstep_nonneg, GermDerivFbasis, LogRatDeriv) and none was checked by anything. This is the first of them registered.",
    "recorded": "2026-09-09"
+  },
+  {
+   "id": "machdecimal-ofnat-boundary",
+   "source_file": "MachLib/Decimal.lean",
+   "claim_text": [
+    "does NOT prove `0.5 + 0.5 = 1`"
+   ],
+   "expect": "no_match",
+   "probe": {
+    "snippet": "open MachLib.Real in\nexample : (0.5 : MachLib.Real) + 0.5 = 1 := by mach_decimal",
+    "must_fail_with": "realOfScientific (5 + 5) true 1 = 1"
+   },
+   "note": "TERM-MISMATCH probe. `mach_decimal` stalls one rewrite short of the `OfNat` boundary, which is why `mach_decimal_ofnat` exists. If `mach_decimal` is ever strengthened to cross it, this probe COMPILES and the audit fires -- at which point `mach_decimal_ofnat` and the notes about it should be revisited rather than left asserting a limitation that no longer holds.",
+   "recorded": "2026-09-09"
+  },
+  {
+   "id": "negdiv-vs-zero-sub",
+   "source_file": "MachLib/LogGermAssembly.lean",
+   "claim_text": [
+    "the goal has `0 - _`, not `-(_)`, and `rw` matches syntactically"
+   ],
+   "expect": "no_match",
+   "probe": {
+    "snippet": "example (a c : MachLib.Real) (hc : c ≠ 0) :\n    (0 : MachLib.Real) - a / c = (0 - a) / c := by\n  rw [MachLib.Real.neg_div hc]",
+    "must_fail_with": "0 - a / c = (0 - a) / c"
+   },
+   "note": "TERM-MISMATCH probe. This corpus writes negation as `0 - ·` throughout (`psub`, `pscale (0-1)`), so `neg_div` -- stated over `-(_)` -- does not fire on the goals it looks applicable to, and a backward `rw` against `= 0` finds the zero INSIDE `0 - _`. The second cost a 200 000-heartbeat timeout on 2026-09-09. If a `0 - ·` form of `neg_div` is ever added, this probe compiles and the note should be updated.",
+   "recorded": "2026-09-09"
   }
  ]
 }
