@@ -60,9 +60,12 @@ as a hang rather than a failure.
 for a stateful PID kernel (`f_step`), that function equals the recurrence by `rfl`, and
 
 ```lean
-theorem emitted_loop_is_the_exact_trajectory (r x0 i0 p0 : Real) (n : Nat) :
+theorem emittedStepSpecimen_iterates_to_exactPID (A B C r x0 i0 p0 : Real) (n : Nat) :
     iterState (fun x i p => pid_loop2_step_def x i p r) x0 i0 p0 n
       = exactPID A B C 0 r x0 i0 p0 n
+-- NAME CORRECTED 2026-09-10: this entry displayed
+-- `emitted_loop_is_the_exact_trajectory` over `pid_loop2_step_def`, neither of which ever
+-- existed. See what_is_proven.md for the correction and its scope.
 ```
 
 typechecks with no `sorryAx`. Nothing in that was written for the proof; the step function is the

@@ -375,16 +375,33 @@ machinery matches against, `(−1)·x + 1·i + 0·p + F` and `1·x + 0·i + 0·p
 emits the form a person writes. They agree by ring, and doing that step once here means no backend
 rediscovers it and no caller's normaliser ever meets the `0 · p` terms.
 
-**Demonstrated on Forge's actual output.** Forge's Lean backend now emits a successor-state
-function for a stateful PID kernel. That function equals the recurrence by `rfl`, and therefore
+**Demonstrated at the emitted SHAPE.** A successor-state function of the form Forge's Lean backend
+emits for a stateful PID kernel equals the recurrence by `rfl`, and therefore
 
 ```lean
-theorem emitted_loop_is_the_exact_trajectory (r x0 i0 p0 : Real) (n : Nat) :
-    iterState (fun x i p => pid_loop2_step_def x i p r) x0 i0 p0 n
+theorem emittedStepSpecimen_iterates_to_exactPID (A B C r x0 i0 p0 : Real) (n : Nat) :
+    iterState (emittedStepSpecimen A B C r) x0 i0 p0 n
       = exactPID A B C 0 r x0 i0 p0 n
 ```
 
-typechecks with no `sorryAx`, where `pid_loop2_step_def` is the compiler's output verbatim.
+typechecks with no `sorryAx` (`MachLib/PIDStepIteration.lean`), where
+
+```lean
+noncomputable def emittedStepSpecimen (A B C r x i p : Real) : Real × Real × Real :=
+  (A * x + B * i + C * p + 0, (i - x) + r, x)
+```
+
+**Corrected 2026-09-10, and the correction is the point.** This block previously displayed
+`emitted_loop_is_the_exact_trajectory` over `pid_loop2_step_def` and called the latter *"the
+compiler's output verbatim"*. **Neither name has ever existed in any `.lean` file**, the displayed
+signature omitted `A B C`, and no kernel in Forge's current `examples/` emits that shape — checked
+2026-09-10, and the trailing `+ 0` (the `D` term at `D = 0`) is the tell that it was transcribed by
+hand rather than copied. So the honest statement is SHAPE, not provenance: the specimen is a
+faithful transcription of the emitted form and the theorem about it is real and `sorryAx`-free;
+that it is byte-identical to some kernel's output is not established here.
+
+`tools/doc_theorem_names_check.py` now fails the build on a displayed name that does not exist —
+this section is its convict specimen.
 
 ### The fixed-point loop itself, on the Q-grid
 

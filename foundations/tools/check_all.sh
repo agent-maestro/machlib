@@ -104,6 +104,8 @@ else
   run "witness"      python3 tools/witness_audit.py
   run "hypothesis"   python3 tools/hypothesis_audit.py --self-test
   run "absence"      python3 tools/absence_audit.py --self-test
+  run "doc-names"    python3 tools/doc_theorem_names_check.py
+  run "doc-names-selftest" python3 tools/doc_theorem_names_check.py --self-test
   # Every tracked number in README / CLAUDE.md / what_is_proven.md must equal what the corpus
   # measures (tools/prose_counts.json). The selftest stages doctored copies in a temp dir and
   # never writes into the tree, so it is safe inside a fingerprinted run.
