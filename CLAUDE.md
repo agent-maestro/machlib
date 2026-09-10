@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 696 lines** / **7 697 theorems**, re-exported through the aggregator
+**251 728 lines** / **7 698 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 697
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 417
+  | paste -sd+ | bc                                    # 7 698
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 418
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -511,9 +511,15 @@ behind it is missing — registration is still a human act.
   minimality kills those. The separation survives — `cd·(A + B·log S) − dtop·c` is
   `(cd·A − dtop·c) + (cd·B)·log S`, still linear in `log` — so the cross-difference version is the
   one a caller can reach for.
-  **Where the vanishing comes from is still a hypothesis.** The chain from `¬ RatGerm (log ∘ S)` to
-  "the log-part dies" is complete; the chain from the OBLIGATION to a vanishing cross-difference is
-  not, and `BoundedGermTranscendence` needs both. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
+  **The vanishing is available too** (`minimal_crossDiff_evZero`): minimality kills every entry of
+  `gscaleSub cd dtop cs₀ ds₀` — `gcancel_top` then `all_gcoeffs_evZero_of_shorter'`, three lines
+  that existed only INSIDE `minimal_grel_identity`'s proof and are now a theorem.
+  **And it must be run on the SUBSTITUTED list, not `gdrel`.** `gdrel v cs es = gadd es (gscale v
+  (gyd cs))` carries `v = (exp (S x) + 1/S x)·s x`, so its coefficients carry `exp`, and
+  `top_two_multiplier_splits` already showed that shape is not separable. The substituted list is a
+  DIFFERENT list with the same `gbipev` at `Fbasis ∘ S` whose coefficients carry `log`. Both
+  descent lemmas are generic in the relation, so nothing stops running them there — that is how the
+  two threads meet, and it is the answer to the fork this file records above. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the

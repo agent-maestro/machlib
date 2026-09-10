@@ -763,4 +763,36 @@ theorem crossDiff_log_part_evZero
                  + ((0 - s x) * r x) * log (S x)) - dtop x * c x from by mach_ring]
   exact hz
 
+/-! ### Minimality kills every cross-difference coefficient — extracted
+
+The vanishing that `crossDiff_log_part_evZero` consumes is available, but only INSIDE
+`minimal_grel_identity`'s proof: `gcancel_top` then `all_gcoeffs_evZero_of_shorter'`, three lines
+that are not exposed as a theorem. Extracted here, because it is what lets the descent be run on a
+relation OTHER than `gdrel`.
+
+**And it must be run on another one.** `gdrel v cs es = gadd es (gscale v (gyd cs))` — its
+coefficients carry `v = (exp (S x) + 1/S x)·s x`, so they carry `exp`, and `top_two_multiplier_splits`
+already showed that shape is not separable. The SUBSTITUTED list
+(`fbasis_relation_substituted`) is a different list with the same `gbipev` at `Fbasis ∘ S`, and its
+coefficients carry `log` instead — which is the whole point of the substitution.
+
+Both machinery pieces are generic in the relation, so nothing stops the descent running on the
+substituted list, and that is how the two threads meet. -/
+
+/-- **Minimality kills every cross-difference coefficient.** For a minimal relation `cs₀ ++ [cd]`
+and any relation `ds₀ ++ [dtop]` of the same length, every entry of `gscaleSub cd dtop cs₀ ds₀` is
+eventually zero — the top cancels, and what is left is shorter than minimal. -/
+theorem minimal_crossDiff_evZero {u : Real → Real} {cs₀ ds₀ : List (Real → Real)}
+    {cd dtop : Real → Real}
+    (hlen : cs₀.length = ds₀.length)
+    (hmin : ∀ ns : List (Real → Real), GProperRel u ns → (cs₀ ++ [cd]).length ≤ ns.length)
+    (hc : GEvRel u (cs₀ ++ [cd])) (hd : GEvRel u (ds₀ ++ [dtop])) :
+    ∀ c : Real → Real, c ∈ gscaleSub cd dtop cs₀ ds₀ → EvZeroF c := by
+  refine all_gcoeffs_evZero_of_shorter' hmin (gcancel_top hlen hc hd) ?_
+  have h1 : (gscaleSub cd dtop cs₀ ds₀).length = cs₀.length :=
+    gscaleSub_length cd dtop cs₀ ds₀ hlen
+  have h2 : (cs₀ ++ [cd]).length = cs₀.length + 1 := by simp
+  rw [h1, h2]
+  omega
+
 end MachLib
