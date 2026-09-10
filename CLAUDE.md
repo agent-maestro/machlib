@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 624 lines** / **7 695 theorems**, re-exported through the aggregator
+**251 696 lines** / **7 697 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 695
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 415
+  | paste -sd+ | bc                                    # 7 697
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 417
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -505,11 +505,15 @@ behind it is missing — registration is still a human act.
   **The composition is written** (`substituted_coeff_log_part_evZero`): a substituted coefficient
   that vanishes on a ray has `EvZeroF` `log`-part, i.e. `EvZeroF (−s·(gyd cs)[j])`. 36 axioms, no
   `sorryAx`, nothing analytic.
-  **Read its hypotheses before citing it.** Where the coefficient's VANISHING comes from is a
-  hypothesis, not a conclusion — in route A it arrives from the proportionality the minimal-relation
-  argument forces, and that argument is not this module. The chain from `¬ RatGerm (log ∘ S)` to
-  "the log-part dies" is complete; the chain from the OBLIGATION to a vanishing coefficient is not,
-  and `BoundedGermTranscendence` needs both. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
+  **Prefer `crossDiff_log_part_evZero`, and here is why the other one nearly did not apply.**
+  Checking what the descent supplies showed the vanishing on offer is NOT of a substituted
+  coefficient: `GermDerivEntry` builds `gscaleSub cd dtop cs₀ ds₀`, entries `cd·d − dtop·c`, and
+  minimality kills those. The separation survives — `cd·(A + B·log S) − dtop·c` is
+  `(cd·A − dtop·c) + (cd·B)·log S`, still linear in `log` — so the cross-difference version is the
+  one a caller can reach for.
+  **Where the vanishing comes from is still a hypothesis.** The chain from `¬ RatGerm (log ∘ S)` to
+  "the log-part dies" is complete; the chain from the OBLIGATION to a vanishing cross-difference is
+  not, and `BoundedGermTranscendence` needs both. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the

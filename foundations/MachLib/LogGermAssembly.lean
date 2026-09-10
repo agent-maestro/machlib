@@ -691,4 +691,76 @@ theorem substituted_coeff_log_part_evZero
   rw [← hsplit x, ← hww]
   exact hzero x hx
 
+/-- **`RatGerm` is closed under difference.** Same construction as `ratGerm_add` with `psub`. -/
+theorem ratGerm_sub {f g : Real → Real} (hf : RatGerm f) (hg : RatGerm g) :
+    RatGerm (fun x => f x - g x) := by
+  obtain ⟨Pa, Qa, Xa, hXa, hQa, hfa⟩ := hf
+  obtain ⟨Pb, Qb, Xb, hXb, hQb, hgb⟩ := hg
+  obtain ⟨Y, hY, hYa, hYb⟩ := two_bounds' hXa hXb
+  refine ⟨psub (pmul Pa Qb) (pmul Pb Qa), pmul Qa Qb, Y, hY, fun x hx => ?_, fun x hx => ?_⟩
+  · rw [pev_pmul]
+    exact mul_ne_zero (hQa x (le_trans hYa hx)) (hQb x (le_trans hYb hx))
+  · show f x - g x = _
+    rw [pev_psub, pev_pmul, pev_pmul, pev_pmul,
+        hfa x (le_trans hYa hx), hgb x (le_trans hYb hx)]
+    refine (div_of_eq_mul (mul_ne_zero (hQa x (le_trans hYa hx)) (hQb x (le_trans hYb hx))) ?_).symm
+    rw [show (pev Qa x * pev Qb x)
+           * (pev Pa x / pev Qa x - pev Pb x / pev Qb x)
+         = pev Qb x * (pev Qa x * (pev Pa x / pev Qa x))
+           - pev Qa x * (pev Qb x * (pev Pb x / pev Qb x)) from by mach_ring,
+        mul_div_cancel_left (hQa x (le_trans hYa hx)),
+        mul_div_cancel_left (hQb x (le_trans hYb hx))]
+    mach_ring
+
+/-! ### The shape minimality actually supplies: the CROSS-DIFFERENCE
+
+`substituted_coeff_log_part_evZero` takes "the coefficient vanishes" as its hypothesis. Checking
+what the descent delivers shows that is **not** the shape available: `GermDerivEntry`'s descent
+builds `gscaleSub cd dtop cs₀ ds₀`, whose entries are `cd·d − dtop·c`, and *"minimality kills every
+remaining coefficient"* of THAT. So the vanishing on offer is of a cross-difference, not of a
+substituted coefficient on its own.
+
+The separation survives it, because the cross-difference is still linear in `log`:
+
+    cd·(A + B·log S) − dtop·c  =  (cd·A − dtop·c)  +  (cd·B)·log S
+
+so the `log`-part is `cd·B` and the rest stays free of `log`. This is the version a caller can
+actually reach for; the earlier one is kept because it is the simpler statement and the algebra is
+shared, but **prefer this one when wiring the descent**. -/
+theorem crossDiff_log_part_evZero
+    {S s cd dtop c : Real → Real} {es cs : List (Real → Real)}
+    {j : Nat} {p q r w : Real → Real} {X : Real}
+    (hnr : ¬ RatGerm (fun x => log (S x))) (hX : 1 ≤ X)
+    (hp : es[j]? = some p)
+    (hq : (gscale s ((fun _ => (0 : Real)) :: gyd cs))[j]? = some q)
+    (hr : (gyd cs)[j]? = some r)
+    (hRp : RatGerm p) (hRq : RatGerm q) (hRr : RatGerm r)
+    (hRs : RatGerm s) (hRinv : RatGerm (fun x => 1 / S x))
+    (hRcd : RatGerm cd) (hRdtop : RatGerm dtop) (hRc : RatGerm c)
+    (hw : (gadd es (gadd (gscale s ((fun _ => (0 : Real)) :: gyd cs))
+                         (gscale (fbasisSubMul S s) (gyd cs))))[j]? = some w)
+    (hzero : ∀ x : Real, X ≤ x → cd x * w x - dtop x * c x = 0) :
+    EvZeroF (fun x => cd x * ((0 - s x) * r x)) := by
+  obtain ⟨w', hw', hsplit⟩ := substituted_coeff_splits hp hq hr
+  have hww : w = w' := by rw [hw] at hw'; exact Option.some_inj.mp hw'
+  refine log_separation
+    (A := fun x => cd x * (p x + q x + s x * (1 / S x) * r x) - dtop x * c x)
+    (B := fun x => cd x * ((0 - s x) * r x)) hnr
+    (ratGerm_sub (ratGerm_mul hRcd
+        (ratGerm_add (ratGerm_add hRp hRq) (ratGerm_mul (ratGerm_mul hRs hRinv) hRr)))
+      (ratGerm_mul hRdtop hRc))
+    (ratGerm_mul hRcd (ratGerm_mul (ratGerm_neg hRs) hRr)) hX (fun x hx => ?_)
+  have hz := hzero x hx
+  rw [hww, hsplit x] at hz
+  show (cd x * (p x + q x + s x * (1 / S x) * r x) - dtop x * c x)
+      + (cd x * ((0 - s x) * r x)) * log (S x) = 0
+  -- NOT `rw [← hz]`: the goal contains `0 - s x`, and a backward rewrite of `_ = 0` fires on THAT
+  -- zero. Third instance of this in one session; the corpus writes negation as `0 - ·` throughout,
+  -- so backward rewrites against `= 0` are systematically hazardous here. Go forward instead.
+  rw [show (cd x * (p x + q x + s x * (1 / S x) * r x) - dtop x * c x)
+         + (cd x * ((0 - s x) * r x)) * log (S x)
+       = cd x * ((p x + q x + s x * (1 / S x) * r x)
+                 + ((0 - s x) * r x) * log (S x)) - dtop x * c x from by mach_ring]
+  exact hz
+
 end MachLib
