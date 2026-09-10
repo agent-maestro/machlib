@@ -795,4 +795,36 @@ theorem minimal_crossDiff_evZero {u : Real → Real} {cs₀ ds₀ : List (Real �
   rw [h1, h2]
   omega
 
+/-! ### Germ congruence, and the abstract-`S` form the route needs
+
+`not_ratGerm_log_of_pole` concludes about `fun x => log (pev P x / pev Q x)` LITERALLY, while route
+A carries an abstract `S` that merely agrees with `P/Q` on a ray. `RatGerm` is a germ property, so
+the transfer is sound — but it was being done INLINE (`EMLLogNotRational`'s
+`fun x hx => by rw [← h x]; exact hg x hx`), and this would have been the second copy. The corpus's
+own rule is to generalise at the second instance, so here it is as a lemma. -/
+
+/-- **`RatGerm` only sees the germ.** Two functions agreeing on a ray are rational together. -/
+theorem ratGerm_congr {f g : Real → Real} {X : Real} (hX : 1 ≤ X)
+    (h : ∀ x : Real, X ≤ x → f x = g x) (hg : RatGerm g) : RatGerm f := by
+  obtain ⟨P, Q, Xg, hXg, hQ, hge⟩ := hg
+  obtain ⟨Y, hY, hYX, hYg⟩ := two_bounds' hX hXg
+  exact ⟨P, Q, Y, hY, fun x hx => hQ x (le_trans hYg hx),
+    fun x hx => by rw [h x (le_trans hYX hx)]; exact hge x (le_trans hYg hx)⟩
+
+/-- **`¬ RatGerm (log ∘ S)` for an abstract `S`** that agrees with `P/Q` on a ray. This is the form
+route A can actually cite: it carries `S` as a germ, not as a pair of polynomials. -/
+theorem not_ratGerm_log_comp_of_pole {q P Q Qt : List Real} {S : Real → Real}
+    {X : Real} {r : Nat}
+    (hq : PIrred q) (hchar : ∀ rr : Nat, DerivCoprime q (rr + 1))
+    (hPd : ¬ Pdvd q P) (hPn : PNormal P)
+    (hQ : PEq Q (pmul (ppow q (r + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
+    (hX : 1 ≤ X)
+    (hPpos : ∀ x : Real, X ≤ x → 0 < pev P x)
+    (hQpos : ∀ x : Real, X ≤ x → 0 < pev Q x)
+    (hSdef : ∀ x : Real, X ≤ x → S x = pev P x / pev Q x) :
+    ¬ RatGerm (fun x => log (S x)) := by
+  intro hrat
+  exact not_ratGerm_log_of_pole hq hchar hPd hPn hQ hQtd hX hPpos hQpos
+    (ratGerm_congr hX (fun x hx => by rw [hSdef x hx]) hrat)
+
 end MachLib

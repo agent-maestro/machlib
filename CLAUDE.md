@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 728 lines** / **7 698 theorems**, re-exported through the aggregator
+**251 760 lines** / **7 700 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 698
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 418
+  | paste -sd+ | bc                                    # 7 700
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 420
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -519,7 +519,12 @@ behind it is missing — registration is still a human act.
   `top_two_multiplier_splits` already showed that shape is not separable. The substituted list is a
   DIFFERENT list with the same `gbipev` at `Fbasis ∘ S` whose coefficients carry `log`. Both
   descent lemmas are generic in the relation, so nothing stops running them there — that is how the
-  two threads meet, and it is the answer to the fork this file records above. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
+  two threads meet, and it is the answer to the fork this file records above.
+  **Cite `not_ratGerm_log_comp_of_pole`, not `not_ratGerm_log_of_pole`**: the route carries an
+  abstract `S` agreeing with `P/Q` on a ray, not a literal pair of polynomials, and the pole version
+  concludes about `log (pev P x / pev Q x)` verbatim. `ratGerm_congr` is the transfer — `RatGerm`
+  only sees the germ — and it was being done INLINE in `EMLLogNotRational` until this was the
+  second copy. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the
