@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 104 `.lean` files** (790 top-level + 314 in subdirectories) /
-**251 585 lines** / **7 694 theorems**, re-exported through the aggregator
+**251 624 lines** / **7 695 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 694
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 414
+  | paste -sd+ | bc                                    # 7 695
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 415
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -502,8 +502,14 @@ behind it is missing — registration is still a human act.
   coefficientwise rationality through the list operations. Those three are stated over MEMBERSHIP,
   not indices, on purpose: `gadd`'s elements are heads, tails or sums, which membership sees
   directly, while an index statement must case on the two lists' relative lengths at every step.
-  **What remains is only to apply them** at the obligation's own data and feed `log_separation` —
-  every piece that step needs is now a theorem. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
+  **The composition is written** (`substituted_coeff_log_part_evZero`): a substituted coefficient
+  that vanishes on a ray has `EvZeroF` `log`-part, i.e. `EvZeroF (−s·(gyd cs)[j])`. 36 axioms, no
+  `sorryAx`, nothing analytic.
+  **Read its hypotheses before citing it.** Where the coefficient's VANISHING comes from is a
+  hypothesis, not a conclusion — in route A it arrives from the proportionality the minimal-relation
+  argument forces, and that argument is not this module. The chain from `¬ RatGerm (log ∘ S)` to
+  "the log-part dies" is complete; the chain from the OBLIGATION to a vanishing coefficient is not,
+  and `BoundedGermTranscendence` needs both. Say "every named step is proved", never "route A is closed". `(fm)`'s own warning is the right one to carry: *two green legs do
   not imply a third*, and it applies to the third as well.
   Also worth knowing before reading around here: **`GermDerivFbasis`'s docstring says the route needs
   "`exp ∘ S` transcendental over the rational functions". That is not the current frontier** — the

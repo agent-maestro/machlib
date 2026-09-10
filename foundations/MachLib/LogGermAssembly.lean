@@ -652,4 +652,43 @@ theorem allRatGerm_gyd : ∀ (cs : List (Real → Real)),
       · rw [hhead]; exact ratGerm_zero
       · exact ih hds z htail
 
+/-! ### The composition: a vanishing substituted coefficient has a vanishing `log`-part
+
+Every piece is now a theorem, so this is the assembly and nothing else. Given
+
+  * `log ∘ S` not a rational germ  (`not_ratGerm_log_of_pole`),
+  * the coefficient's split into `A + B·log (S x)`  (`substituted_coeff_splits`),
+  * `A` and `B` rational  (the closure lemmas), and
+  * the coefficient vanishing on a ray  — which is what the descent's minimality supplies,
+
+the `log`-part `B = −s·(gyd cs)[j]` is eventually zero.
+
+**Where the vanishing comes from is not this theorem's business**, and that is deliberate: it is a
+hypothesis, because in route A it arrives from the proportionality the minimal-relation argument
+forces, not from the relation itself. Folding it in would have made this look like more than it is. -/
+
+/-- **The assembly.** A substituted coefficient that vanishes on a ray has `EvZeroF` `log`-part. -/
+theorem substituted_coeff_log_part_evZero
+    {S s : Real → Real} {es cs : List (Real → Real)}
+    {j : Nat} {p q r w : Real → Real} {X : Real}
+    (hnr : ¬ RatGerm (fun x => log (S x))) (hX : 1 ≤ X)
+    (hp : es[j]? = some p)
+    (hq : (gscale s ((fun _ => (0 : Real)) :: gyd cs))[j]? = some q)
+    (hr : (gyd cs)[j]? = some r)
+    (hRp : RatGerm p) (hRq : RatGerm q) (hRr : RatGerm r)
+    (hRs : RatGerm s) (hRinv : RatGerm (fun x => 1 / S x))
+    (hw : (gadd es (gadd (gscale s ((fun _ => (0 : Real)) :: gyd cs))
+                         (gscale (fbasisSubMul S s) (gyd cs))))[j]? = some w)
+    (hzero : ∀ x : Real, X ≤ x → w x = 0) :
+    EvZeroF (fun x => (0 - s x) * r x) := by
+  obtain ⟨w', hw', hsplit⟩ := substituted_coeff_splits hp hq hr
+  have hww : w = w' := by rw [hw] at hw'; exact Option.some_inj.mp hw'
+  refine log_separation (A := fun x => p x + q x + s x * (1 / S x) * r x)
+    (B := fun x => (0 - s x) * r x) hnr
+    (ratGerm_add (ratGerm_add hRp hRq) (ratGerm_mul (ratGerm_mul hRs hRinv) hRr))
+    (ratGerm_mul (ratGerm_neg hRs) hRr) hX (fun x hx => ?_)
+  show (p x + q x + s x * (1 / S x) * r x) + ((0 - s x) * r x) * log (S x) = 0
+  rw [← hsplit x, ← hww]
+  exact hzero x hx
+
 end MachLib
