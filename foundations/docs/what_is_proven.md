@@ -459,8 +459,8 @@ things Mathlib would prove as theorems — the real-number field/order axioms, t
 definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
 model — are **axioms** here. As of 2026-09-07 the ledger pins **243 axioms**
 (`lake env lean AxiomLedger.lean`: 221 `MachLib.*` plus 22 `Certcom.*`), of which
-**149** form the trusted footprint of the headline theorems, and every one of those 149 is
-modeled: 112 witnessed by a kernel-checked Mathlib term, 12 interpreted carrier and function
+**156** form the trusted footprint of the headline theorems, and every one of those 156 is
+modeled: 119 witnessed by a kernel-checked Mathlib term, 12 interpreted carrier and function
 symbols, 3 standard, 22 IEEE-754 float-bridge facts validated by measurement — see
 [`AXIOM_MANIFEST.md`](../AXIOM_MANIFEST.md), which is generated, and **(d)** below. (This
 section said **260** from 2026-06-27 until 2026-09-05; that figure was a different count over a
@@ -531,7 +531,7 @@ earned and what is cited never share a count.
 
 **(d) Every trusted axiom has a model, checked outside this library.** Nothing Mathlib-free
 can show its own axioms are satisfiable, so the check lives in the sibling project
-`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 149 trusted axioms,
+`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 156 trusted axioms,
 verifies in the kernel that a Mathlib term inhabits the axiom's *interpreted* type
 (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The result is a certificate *about* MachLib, never a
 dependency *of* it. The 22 float-bridge axioms are the exception by nature — Mathlib has no

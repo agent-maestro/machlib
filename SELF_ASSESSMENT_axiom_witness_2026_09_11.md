@@ -45,8 +45,8 @@ The live figures, all of which this document's own build gate pins to the corpus
 
 | class | n | meaning |
 |---|---|---|
-| trusted footprint | 149 | axioms any shipped theorem is allowed to touch |
-| witnessed | 112 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| trusted footprint | 156 | axioms any shipped theorem is allowed to touch |
+| witnessed | 119 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 22 | about IEEE-754 floats — **unwitnessable in principle**, see §5 |
@@ -71,8 +71,8 @@ interpreted type raises `logError`.
 teeth-verified in the negative direction too: deliberately pairing `rolle_ct` with `Real.exp_pos`,
 or `add_comm` with `mul_comm`, is rejected.
 
-A cross-repo note, since you will hit it immediately: the registry holds **114** witnesses, the
-audit reports **112**. Both are right — two witnesses cover axioms that are no longer in the trusted
+A cross-repo note, since you will hit it immediately: the registry holds **121** witnesses, the
+audit reports **119**. Both are right — two witnesses cover axioms that are no longer in the trusted
 footprint. The audit says so explicitly rather than silently taking the larger number.
 
 ## 3. Prior art, as we understand it — please correct this
@@ -143,8 +143,8 @@ $EDITOR monogate-lean/MonogateEML/AxiomWitnessBridge.lean
 
 # the classification, live, from machlib/foundations:
 python3 tools/soundness_witness_audit.py
-#   trusted footprint (live ledger) : 149
-#   witnessed against Mathlib       : 112
+#   trusted footprint (live ledger) : 156
+#   witnessed against Mathlib       : 119
 #   UNMODELED (no witness at all)   : 0
 ```
 

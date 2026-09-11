@@ -158,7 +158,7 @@ type. The honest headline is **zero unmodeled axioms**, never "zero axioms":
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 112 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 119 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier or function symbol, interpreted rather than asserted |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 22 | IEEE-754 facts with no model in ℝ, validated by measurement |
@@ -199,7 +199,7 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
 | `.lean` files under `MachLib/` | 1 106 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
-| trusted axioms, all modeled | 149 | `AXIOM_MANIFEST.md` |
+| trusted axioms, all modeled | 156 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 23 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
 | modules reachable from the aggregator | 802 of 1 106 | `scripts/check_aggregator.sh` |
 

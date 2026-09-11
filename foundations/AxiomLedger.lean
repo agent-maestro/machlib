@@ -209,7 +209,23 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   -- Added 2026-07-25: the Kalman/MMSE arc's `optimalMSE_tendsto` footprint leaks one axiom no prior
   -- headline touched: `one_add_le_exp` (the basic `1+x ≤ exp x` bound, used in the Gaussian tail-
   -- decay lemmas the density-integral limits rest on). Already `knownAxioms` — no new trust.
-  `MachLib.Real.one_add_le_exp]
+  `MachLib.Real.one_add_le_exp,
+  -- **The decimal-literal family, promoted 2026-09-11.** Absent before, and the reason is a blind
+  -- spot rather than a judgement: this footprint is indexed on MACHLIB's theorems, and MachLib's own
+  -- proofs use `0`, `1` and constructed constants -- never a literal like `100.0`. Decimal literals
+  -- are what USER code contains, so every Forge certificate carrying one depended on these while the
+  -- trust story did not cover them; 18 kernels in the example corpus were affected. Found by reading
+  -- a generated certificate's `#print axioms` while checking a sentence about to be published.
+  -- All seven are WITNESSED against Mathlib (`realOfScientific m s e` denotes `m·10⁻ᵉ` when `s`,
+  -- else `m·10ᵉ`), so this widens the trusted set without widening the UNWITNESSED set -- the
+  -- count that matters stays 0.
+  `MachLib.Real.realOfScientific,
+  `MachLib.Real.realOfScientific_clears,
+  `MachLib.Real.realOfScientific_pos,
+  `MachLib.Real.realOfScientific_one_dot_zero,
+  `MachLib.Real.realOfScientific_two_dot_zero,
+  `MachLib.Real.realOfScientific_three_dot_zero,
+  `MachLib.Real.lit_one_eq]
 
 /-- Unwitnessed-but-disclosed axioms + machine-readable reason. Must stay inert. -/
 def disclosedUnwitnessed : List (Name × String) := [(`MachLib.Real.erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.erf_le_one, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.neg_one_le_erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.eml_tree_analytic_on_interval, "unwitnessed-but-SOUND: the INTERVAL-LOCALISED twin of eml_tree_analytic_on_pos, added 2026-08-25. Same upstream fact (a well-formed EML tree is real-analytic), domain localised from (0,inf) to strictly inside any (a,b) on which LogArgPos holds -- needed because declamping supplies log-argument positivity per INTERVAL while the existing form demands it on all of (0,inf). Deliberately NOT an IsAnalyticOnReals congruence: IsAnalyticOnReals f (Icc a b) depends on f NEAR each point, so a plain set-congruence would be UNSOUND. User-approved 2026-08-25 via AskUserQuestion, choosing this over the congruence route. UNLIKE eml_tree_analytic_on_pos this one IS in a footprint: MachLib.signHardCase_holds and everything under it (EMLAnalyticDischarge)."), (`MachLib.eml_tree_analytic_on_pos, "unwitnessed-but-SOUND: EMLLogArgPosOnIoi side-condition restored (was false-as-stated, fixed); real-analyticity of well-formed EML trees not yet proven in machlib; in NO footprint"), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.of_parts._elambda_1, "elaborator-synthesized axiom (isUnsafe=true), NOT hand-written -- `of_parts` in TwoExpPfaffianReductionWitness.lean is a plain structure-literal def with no `partial`/`sorry`/`Classical.choice` at the call site; root cause not yet identified (found + disclosed 2026-07-16, AxiomLedger self-check going red; see AxiomLedger investigation notes). Gate-2d multivariate-Khovanskii frontier work (added 2026-07-13/14), not on any shipped headline's path."), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.reducer._elambda_1, "same as .of_parts._elambda_1 above -- same file, same unexplained isUnsafe synthesis, same frontier, not on any headline's path."), (`MachLib.MultiVarMod.TwoExp.twoExpLowerReductionSolver_of_predicateSolver._elambda_1, "same pattern again -- plain structure-literal def, no visible partial/sorry/Classical.choice; three occurrences in one file is worth a dedicated Lean-internals investigation, not yet done. Not on any headline's path.")]

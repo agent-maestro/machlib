@@ -9,11 +9,11 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-149 of them and they are all listed below.
+156 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 112 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 119 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 22 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
@@ -132,6 +132,7 @@ decides what a certificate can claim.
 | `MachLib.Real.leR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a ≤ b) |
 | `MachLib.Real.le_iff_lt_or_eq` | witnessed | `(a b : Real) : a ≤ b ↔ a < b ∨ a = b` | fun {a b} => le_iff_lt_or_eq |
 | `MachLib.Real.le_sqrt_of_sq_le` | witnessed | `{z y : Real} (hz : 0 ≤ z) (h : z * z ≤ y) : z ≤ sqrt y` | fun {z y} hz h => by rw [show z = Real.sqrt (z * z) from (Real.sqrt_mul_self hz).symm]; exact Real.sqrt_le_sqrt h |
+| `MachLib.Real.lit_one_eq` | witnessed | `: (1.0 : Real) = (1 : Real)` | by norm_num |
 | `MachLib.Real.log10` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.log10_def` | witnessed | `(x : Real) : 0 < x → exp (log10 x * log (natCast 10)) = x` | fun x hx => by rw [show ((10:ℕ):ℝ) = (10:ℝ) by norm_num, Real.logb, div_mul_cancel₀ _ (by norm_num : Real.log (10:ℝ) ≠ 0)] exact Real.exp_log hx |
 | `MachLib.Real.ltR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a < b) |
@@ -159,6 +160,12 @@ decides what a certificate can claim.
 | `MachLib.Real.pi_gt_one` | witnessed | `: (1 : Real) < pi` | by linarith [Real.pi_gt_three] |
 | `MachLib.Real.pi_pos` | witnessed | `: 0 < pi` | Real.pi_pos |
 | `MachLib.Real.pythagorean` | witnessed | `(x : Real) : sin x * sin x + cos x * cos x = 1` | fun x => by simpa [sq] using Real.sin_sq_add_cos_sq x |
+| `MachLib.Real.realOfScientific` | witnessed | `(mantissa : Nat) (exponentSign : Bool) (decimalExponent : Nat) : Real` | (fun (m : ℕ) (s : Bool) (e : ℕ) => cond s ((m : ℝ) / 10 ^ e) ((m : ℝ) * 10 ^ e)) |
+| `MachLib.Real.realOfScientific_clears` | witnessed | `(m e : Nat) : realOfScientific m true e * natCast (10 ^ e) = natCast m` | fun m e => by show (m : ℝ) / 10 ^ e * ((10 ^ e : ℕ) : ℝ) = ((m : ℕ) : ℝ) rw [Nat.cast_pow]; push_cast; field_simp |
+| `MachLib.Real.realOfScientific_one_dot_zero` | witnessed | `: realOfScientific 10 true 1 = 1` | by norm_num |
+| `MachLib.Real.realOfScientific_pos` | witnessed | `(m : Nat) (s : Bool) (e : Nat) (hm : 0 < m) : 0 < realOfScientific m s e` | fun m s e hm => by have hm' : (0 : ℝ) < (m : ℝ) := by exact_mod_cast hm cases s · show (0:ℝ) < (m : ℝ) * 10 ^ e positivity · show (0:ℝ) < (m : ℝ) / 10 ^ e positivity |
+| `MachLib.Real.realOfScientific_three_dot_zero` | witnessed | `: realOfScientific 30 true 1 = 1 + 1 + 1` | by norm_num |
+| `MachLib.Real.realOfScientific_two_dot_zero` | witnessed | `: realOfScientific 20 true 1 = 1 + 1` | by norm_num |
 | `MachLib.Real.rolle_ct` | witnessed | `(f : Real → Real) (a b : Real) (hab : a < b) (hfa_eq_fb : f a = f b) (hdiff : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt f f' c) : ∃ c : Real` | MonogateEML.RealModel.rolle_witnessed |
 | `MachLib.Real.sin` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.sin_add` | witnessed | `(x y : Real) : sin (x + y) = sin x * cos y + cos x * sin y` | Real.sin_add |

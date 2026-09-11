@@ -78,7 +78,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 
 | class | n | |
 |---|---|---|
-| witnessed | 112 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 119 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | **float-bridge** | **22** | about IEEE floats — **no Mathlib witness can ever discharge these** |
@@ -86,7 +86,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 | unmodeled | **0** | gate 13 fails if this is ever nonzero |
 
 **Every mathematical axiom in the trusted footprint now has a kernel-checked Mathlib witness.**
-`112 + 12 + 3 + 22 = 149`. The only axioms without one are the 22 float-bridge rows, which are
+`119 + 12 + 3 + 22 = 156`. The only axioms without one are the 22 float-bridge rows, which are
 unwitnessable *in principle* rather than pending — see below.
 
 **The 22 float-bridge axioms are a different kind of trust and must not be averaged in.** They
