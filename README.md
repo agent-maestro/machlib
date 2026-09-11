@@ -195,13 +195,13 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 668 | `python3 tools/count_theorems.py --scope core` |
+| theorems outside `Discovered/` | 7 669 | `python3 tools/count_theorems.py --scope core` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 107 | `find MachLib -name '*.lean' \| wc -l` |
+| `.lean` files under `MachLib/` | 1 108 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 156 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 803 of 1 107 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 804 of 1 108 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

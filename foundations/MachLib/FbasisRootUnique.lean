@@ -26,6 +26,12 @@ ray, which is where `queryGerm_finite_zeros_on_ray` could not reach
 This module states the uniqueness only. It does not claim the bounded half — the general germ is
 `bipev N x (Fbasis …)`, a polynomial in `Fbasis` rather than `Fbasis` itself, and that reduction is
 not made here.
+
+**The GENERATOR's half is now made, 2026-09-11**, in `FbasisGeneratorLevelSet`:
+`fbasis_generator_level_set` assembles the uniqueness above with `pev_zero_or_finite_roots` into a
+finite-or-cofinite verdict that is **global** rather than eventual. The general one-hole context is
+still not covered, and for a sharper reason than "a polynomial in `Fbasis`" — see the amendment
+below.
 -/
 
 namespace MachLib
