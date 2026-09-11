@@ -181,8 +181,10 @@ tools/check_all.sh         # every gate and audit; prints every verdict; rc = 0 
 The gates, in the order the runner prints them: build, aggregator reachability, the ℤ-model
 consistency check, the axiom ledger, the obligations ledger, the Forge `@verify` corpus compiles,
 Forge certificates, the soundness witness, MachSig signatures, the claim audit, the witness and
-hypothesis and absence audits, and the sorry audit — most with their own self-tests, each of which
-must be shown able to fail before its pass is read. `scripts/closerate.sh` is a measurement, not a
+hypothesis and absence audits, two name checks — every theorem shown in a docs code block, and
+every constant named in the trust disclosure, must exist — the prose-count gate, and the sorry
+audit; most with their own self-tests, each of which must be shown able to fail before its pass is
+read. `scripts/closerate.sh` is a measurement, not a
 gate: the Forge `@verify(lean)` corpus auto-closes **79.9 %** of its obligations
 (573 of 717, measured 2026-09-05 under Lean v4.32.2).
 
@@ -193,7 +195,7 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 700 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
+| theorems outside `Discovered/` | 7 701 | `find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \| paste -sd+ \| bc` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
 | `.lean` files under `MachLib/` | 1 105 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |

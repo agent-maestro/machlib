@@ -106,6 +106,11 @@ else
   run "absence"      python3 tools/absence_audit.py --self-test
   run "doc-names"    python3 tools/doc_theorem_names_check.py
   run "doc-names-selftest" python3 tools/doc_theorem_names_check.py --self-test
+  # The same name check, pointed at the TRUST DISCLOSURE rather than the docs. `disclosedTrusted`
+  # named ten eps constants an erratum had deleted seven weeks earlier; the Lean-side check only
+  # verifies the disclosed AXIOMS are trusted and load-bearing, never the text.
+  run "disclosure-names" python3 tools/disclosure_names_check.py
+  run "disclosure-names-selftest" python3 tools/disclosure_names_check.py --self-test
   # Every tracked number in README / CLAUDE.md / what_is_proven.md must equal what the corpus
   # measures (tools/prose_counts.json). The selftest stages doctored copies in a temp dir and
   # never writes into the tree, so it is safe inside a fingerprinted run.

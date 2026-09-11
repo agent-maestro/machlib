@@ -138,4 +138,26 @@ theorem pid_atan_at_budget (env : Env) {B : MachLib.Real} (hb : RuntimeLibmBudge
   absenc_mono (pid_atan_grounded env)
     (add_le_add_both hb.atan (le_refl _))
 
+/-- **`abs(PID law)`, at the budget — and the libm term is GONE.**
+
+The only one of the four whose bound loses its libm contribution entirely rather than replacing it
+with `B`: `abs` is IEEE-754-exact, so `abs_exact` collapses `real_abs_eps + 1 * absErr` to `absErr`,
+and every remaining unit of error is the ARITHMETIC's. `sin`/`cos`/`atan` above keep a `B +` because
+their primitives genuinely round; this one does not.
+
+That asymmetry is the whole reason `abs_exact` is an equality field rather than a fourth `≤ B`, and
+until now nothing consumed it — the structure stated that `abs` is exact and no theorem drew the
+conclusion. A field no theorem reads is a claim the corpus makes to itself and never uses.
+
+Takes the full `RuntimeLibmBudget` for uniformity with its three neighbours even though only
+`abs_exact` is used, so that a reader instantiating the budget once gets all four kernels. -/
+theorem pid_abs_at_budget (env : Env) {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
+    AbsEnc (absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env
+        (emitC (tr1OfEML .abs pidRawEML))).toF)
+      (abs (exactR realToR env pidRawEML)) := by
+  have h := pid_abs_grounded env
+  rw [hb.abs_exact] at h
+  exact absenc_mono h (le_of_eq (by rw [one_mul_thm, zero_add]))
+
 end Certcom

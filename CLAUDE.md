@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 105 `.lean` files** (791 top-level + 314 in subdirectories) /
-**251 787 lines** / **7 700 theorems**, re-exported through the aggregator
+**251 809 lines** / **7 701 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -16,8 +16,8 @@ The theorem count is exactly this command, run from `foundations/`, and nothing 
 
 ```bash
 find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + \
-  | paste -sd+ | bc                                    # 7 700
-find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 420
+  | paste -sd+ | bc                                    # 7 701
+find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc   # 8 421
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -166,6 +166,15 @@ auditor *"is structurally blind to a claim about a theorem that does not [exist]
 `check_obligations.sh` covers **one** case of that. The general shape — *"these lemmas do not exist
 here"*, *"the existing machinery cannot answer this"* — was checked by nothing and **decays
 silently**: someone adds the thing, and the sentence saying it is missing keeps reading as true.
+
+**Free text sitting next to a machine-checked structure is unchecked, and drifts.** Two instances
+now, both closed by name gates. Gates 21-22 (`doc_theorem_names_check.py`): a ```lean fence in the
+docs displaying a theorem that never existed. Gates 23-24 (`disclosure_names_check.py`):
+`AxiomLedger.lean`'s `disclosedTrusted` strings named **ten** eps constants a 2026-07-22 erratum had
+deleted the same day, and described the repaired axioms as *unconditional* when all ten are now
+domain-restricted. The Lean-side `run_cmd` checked the disclosed **axioms** were trusted and
+load-bearing; nothing read the **sentences**. When you add a checked list whose rows carry prose,
+assume the prose is unchecked until you find the gate that reads it.
 
 It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
 11 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
