@@ -1,6 +1,6 @@
 {
   "_comment": "Registered claim-theorems that take hypotheses and are referenced nowhere else in MachLib/ -- nobody supplies their hypotheses. Uses are counted over the corpus with COMMENTS STRIPPED (see corpus_text's docstring): a name in a docstring is not an instantiation, and counting it as one is the defect this baseline was re-set for.",
-  "taken": "2026-09-06 — RE-BASELINED ONCE, because the instrument was fixed rather than because the corpus regressed. `corpus_text()` now strips comments and docstrings before counting uses; before today a docstring mention counted as an instantiation, so 30 capstones were reported witnessed on prose alone. Among them `positive_branch_impossible` — the vacuous flagship this audit was built to catch, which appears 17 times in MachLib/: one declaration, sixteen comments. The ratchet still turns one way from here; this single step is the correction, and every entry it added is annotated `prose-only`. Previously: 2026-08-31 — ratcheted: derivCoprime_of_ne_zero witnessed by derivCoprime_of_irred (PolyDerivNonzero)",
+  "taken": "2026-09-06 \u2014 RE-BASELINED ONCE, because the instrument was fixed rather than because the corpus regressed. `corpus_text()` now strips comments and docstrings before counting uses; before today a docstring mention counted as an instantiation, so 30 capstones were reported witnessed on prose alone. Among them `positive_branch_impossible` \u2014 the vacuous flagship this audit was built to catch, which appears 17 times in MachLib/: one declaration, sixteen comments. The ratchet still turns one way from here; this single step is the correction, and every entry it added is annotated `prose-only`. Previously: 2026-08-31 \u2014 ratcheted: derivCoprime_of_ne_zero witnessed by derivCoprime_of_irred (PolyDerivNonzero)",
   "unwitnessed": [
     "MachLib.EMLTree.depth_optimal_value_unique",
     "MachLib.EMLTree.inv_x_min_depth",
@@ -46,7 +46,6 @@
     "MachLib.neg_log_path_is_right_branching",
     "MachLib.not_Pdvd_pnsum_one",
     "MachLib.one_query_finite_exception_normal_form",
-    "MachLib.one_query_normal_form",
     "MachLib.ord_deriv_drop",
     "MachLib.pdivmod_spec",
     "MachLib.pnsum_deriv_ne_zero",

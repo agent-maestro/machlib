@@ -7,16 +7,16 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 106 `.lean` files** (792 top-level + 314 in subdirectories) /
-**252 203 lines** / **7 662 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 107 `.lean` files** (793 top-level + 314 in subdirectories) /
+**252 435 lines** / **7 667 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 662
-python3 tools/count_theorems.py --scope all           # 8 382
+python3 tools/count_theorems.py --scope core          # 7 667
+python3 tools/count_theorems.py --scope all           # 8 387
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -118,7 +118,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 805 jobs, ~3 s warm
+lake build                                     # 806 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
@@ -131,7 +131,7 @@ bash tools/check_obligations.sh                # EMLDepthTameness's open/dischar
 gate. It reports every registered claim-theorem that takes hypotheses and is referenced nowhere else
 in `MachLib/` — i.e. nobody has ever supplied its hypotheses. That is the one signal that was present
 and unread when `positive_branch_impossible` was vacuous: it had no caller and no specimen. The
-baseline is pinned as a **set** (`tools/witness_baseline.json`, 65 entries), not a count, so the
+baseline is pinned as a **set** (`tools/witness_baseline.json`, 64 entries), not a count, so the
 ratchet turns one way — a new entry fails, a witnessed one must be removed. It carries two convict
 specimens of its own. Read its scope note before trusting it: no-caller is not a defect on its own,
 and it cannot see vacuity, only drift.
@@ -226,7 +226,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**802 of 1106 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**803 of 1107 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -550,10 +550,10 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**802 of 1 106 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
+run (**803 of 1 107 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
-the entire depth/decay programme below. Obligations ledger: **23 rows, 7 open rows, 4 distinct open
+the entire depth/decay programme below. Obligations ledger: **24 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,

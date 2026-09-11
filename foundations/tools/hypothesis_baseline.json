@@ -6,7 +6,7 @@
     "Depth3DecayHard",
     "LadderInputs",
     "LeadingMonomialFloor",
-    "OneQueryLevelSet",
+    "OneQueryLevelSetResidue",
     "SignHardNonzero",
     "SignHardUniformZeroBound",
     "TowerLowerBound"
@@ -28,7 +28,7 @@
     "Lipschitz",
     "MPEvalZero",
     "MonotoneOn",
-    "OneQueryLevelSet",
+    "OneQueryLevelSetResidue",
     "Periodic",
     "PfaffianFunction",
     "Pos",

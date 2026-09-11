@@ -13377,7 +13377,8 @@ in commit archaeology:
 | `LogQueryLowerBound` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 | `RatGermTrichotomy` | **discharged** | `ratGermTrichotomy_holds` (`PevLeading`) |
-| `OneQueryLevelSet` | **open** | — (the level-1 analogue of `zero_query_level_set`; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy`) |
+| `OneQueryLevelSet` | **reduced** | `oneQueryLevelSet_of_residue` → `OneQueryLevelSetResidue` — via `one_query_level_set_two_sided`, which gets the second tail from `FTerm.reflect` at no query cost; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy` |
+| `OneQueryLevelSetResidue` | **open** | — (rigidity ∧ bounded-finiteness. The rigidity half is the real one: agreeing with a constant on a TAIL must force agreement off a finite set. The two-sided eventual dichotomy does not exclude `sign`, which is eventually constant on each side with *different* constants) |
 | `Depth3ApproachBelow` | **discharged** | `depth3ApproachBelow_holds`, through `depth3ApproachBelowEml_holds` — the decaying-floor replacement for the refuted `depth_le_three_gap_below`; the bounded-left window closed by `d3b_sep` (rate separation at first order) |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —

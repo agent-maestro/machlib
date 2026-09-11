@@ -179,12 +179,26 @@ def main() -> int:
     found = unproduced(decls)
 
     if "--update-baseline" in sys.argv:
-        BASELINE.write_text(json.dumps(
-            {"_comment": "Props consumed as hypotheses with no theorem concluding them. "
-                         "A SET, not a count: a new entry fails, a fixed one must be removed. "
-                         "Most entries are correct — a named open obligation is meant to be here.",
-             "unproduced": sorted(found)}, indent=2) + "\n")
-        print(f"baseline written: {len(found)} entries")
+        # PRESERVE every metadata key already in the file. The first version of this branch wrote a
+        # fresh dict with its own `_comment` and the new set, which silently DELETED `_triage_note`
+        # and `_known_obligations` -- guidance a previous session wrote precisely so the next reader
+        # could tell a deliberate open obligation from a real defect. Ratcheting a baseline must
+        # never cost the notes explaining how to read it.
+        prior = {}
+        if BASELINE.exists():
+            try:
+                prior = json.loads(BASELINE.read_text())
+            except Exception:                                        # noqa: BLE001
+                prior = {}
+        out = {k: v for k, v in prior.items() if k != "unproduced"}
+        out.setdefault("_comment",
+                       "Props consumed as hypotheses with no theorem concluding them. "
+                       "A SET, not a count: a new entry fails, a fixed one must be removed. "
+                       "Most entries are correct — a named open obligation is meant to be here.")
+        out["unproduced"] = sorted(found)
+        BASELINE.write_text(json.dumps(out, indent=2) + "\n")
+        kept = [k for k in out if k.startswith("_")]
+        print(f"baseline written: {len(found)} entries; metadata kept: {kept}")
         return 0
 
     if not BASELINE.exists():
