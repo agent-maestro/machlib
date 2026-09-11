@@ -1,7 +1,44 @@
 # Trust-boundary decision — `analytic_finite_zeros_compact`
 
-**Status: OPEN. No change has been made.** This record exists so the constraint stops blocking
-silently. Choosing Option A and closing this record is a complete and legitimate outcome.
+## ⚠ VOID — 2026-09-11, same day. The premise was false.
+
+**`MachLib.analytic_finite_zeros_compact` is already in `trustedFootprint`, and it is already
+`witnessed`.** There is no fork, nothing to promote, and no trust cost to pay. Everything below was
+written on a checking error and is kept only as the record of it.
+
+**The error.** `def trustedFootprint` spans **64 lines**. The check that produced this document read
+only the first:
+
+```python
+line = next(l for l in s.splitlines() if l.startswith("def trustedFootprint"))   # WRONG
+"analytic_finite_zeros_compact" in line                                          # False
+```
+
+Reading the whole definition, and stripping the backticked names that appear in its interleaved
+*comments*, gives exactly **149** names — matching the count the ledger and manifest both state,
+which is the cross-check that should have been run before writing anything. `AXIOM_MANIFEST.md`
+lists the axiom as `witnessed` and always did.
+
+**What this changes, and it is good news.** The ray-vs-global gap in `OneQueryLevelSet` can be
+attacked **right now**, with an axiom that is already trusted and already witnessed. The cost that
+made this a decision does not exist. §2's composition is still unproved and still the thing to try;
+it just needs no permission.
+
+**What survives.** §2's shape, §4's blast-radius reasoning, and the criterion in §5 — *the trusted
+footprint moves only in exchange for a theorem a shipped artifact consumes* — which is unaffected
+and has since found a real instance elsewhere: `MachLib.Real.realOfScientific`, which every Forge
+certificate containing a decimal literal depends on and which **is** genuinely outside the trusted
+footprint (verified by the corrected method). See
+`forge/reports/BUG_certificates_depend_on_unclassified_axiom.md`.
+
+---
+
+*Original text follows, preserved for the record. Its §0 claim that the axiom is "in `knownAxioms`
+and not in `trustedFootprint`" is FALSE.*
+
+---
+
+**Status: VOID — see above.**
 
 ---
 
