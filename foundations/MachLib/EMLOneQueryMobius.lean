@@ -53,11 +53,21 @@ It does not prove `OneQueryLevelSet`, and the gap is not the algebra above. Two 
    an eventual statement cannot look" — and the one `EMLZeroListFromBound.lean` names outright:
    the ray form is what today's `divClamp` work produces, while a level-set theorem consumes the
    global form.
-2. **The residue.** Even granted the side conditions, `u·(c·d₁ − n₁) = (n₀ − c·d₀)` off the
-   degenerate locus says `F(P/Q) = A/B` for polynomials `A`, `B` — and that this has finitely many
-   solutions, or holds identically, is an analytic statement about `Fbasis = exp + log` composed
-   with a rational function. It is not proved here and is not an algebraic consequence of anything
-   here.
+2. **The residue — and it is a strictly SMALLER residue than the corpus records.**
+   `one_hole_level_is_affine` below turns `C(x, y) = c` into `y·B(x) = A(x)` for polynomials `A`,
+   `B` built from the Möbius coefficients. Off the degenerate locus that says `F(P/Q) = A/B`, an
+   analytic statement about `exp + log` composed with a rational function. Not proved here.
+
+   **What is new is the degree.** `FbasisRootUnique`'s closing note says the lift from the
+   generator to the general one-query germ "needs linear independence of the **powers** of
+   `Fbasis ∘ u` over rational germs — which is `BoundedGermTranscendence`, itself an OPEN
+   obligation." That is right for an arbitrary context. For a ONE-HOLE context it is too strong:
+   `ctxFrac_ydeg` caps the degree in `y` at one, so only `y⁰` and `y¹` ever occur and no
+   independence of higher powers is required.
+
+   So `OneQueryLevelSet` does not need `BoundedGermTranscendence`. It needs its **degree-1
+   fragment**, which is a weaker statement, and the two open rows are related more tightly than
+   either records. Whether the fragment is easier is not claimed — only that it is smaller.
 
 So: the *linearisation* is discharged; the finiteness is not. Stated this way because the
 temptation, having made the equation linear, is to call the row reduced.
@@ -388,5 +398,27 @@ theorem oneQueryCtx_mobius (C : FCtx) (h : FCtx.holes C = 1) :
   have e := ctxFrac_eval C x y hok hne
   rw [hd x y, hn x y] at e
   exact e
+
+/-- The level equation for a ONE-HOLE context is affine in the query value: no power of
+`Fbasis` above the first ever appears. -/
+theorem one_hole_level_is_affine (C : FCtx) (hC : FCtx.holes C = 1) (c : Real) :
+    ∃ n1 n0 d1 d0 : List Real, ∀ x y : Real, DivDenomsOK C x y →
+      bipev (ctxFrac C).2 x y ≠ 0 → FCtx.eval C x y = c →
+        y * (pev n1 x - c * pev d1 x) = c * pev d0 x - pev n0 x := by
+  obtain ⟨n1, n0, d1, d0, hm⟩ := oneQueryCtx_mobius C hC
+  refine ⟨n1, n0, d1, d0, fun x y hok hne hEq => ?_⟩
+  have h := hm x y hok hne
+  rw [hEq] at h
+  -- c * (d0 + y*d1) = n0 + y*n1  ⟹  y*(n1 - c*d1) = c*d0 - n0
+  have e : c * (pev d0 x + y * pev d1 x) - (pev n0 x + y * pev n1 x)
+         = (c * pev d0 x - pev n0 x) - y * (pev n1 x - c * pev d1 x) := by
+    mach_mpoly [c, pev d0 x, pev d1 x, pev n0 x, pev n1 x, y]
+  have hz : (c * pev d0 x - pev n0 x) - y * (pev n1 x - c * pev d1 x) = 0 := by
+    rw [← e, h]; mach_ring
+  have e2 : c * pev d0 x - pev n0 x
+          = ((c * pev d0 x - pev n0 x) - y * (pev n1 x - c * pev d1 x))
+            + y * (pev n1 x - c * pev d1 x) := by
+    mach_mpoly [c, pev d0 x, pev d1 x, pev n0 x, pev n1 x, y]
+  rw [e2, hz]; mach_ring
 
 end MachLib
