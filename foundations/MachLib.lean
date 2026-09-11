@@ -456,6 +456,7 @@ import MachLib.EMLOneQueryNormalForm
 import MachLib.EMLOneQueryMobius
 import MachLib.EMLOneQueryReflect
 import MachLib.FbasisGeneratorLevelSet
+import MachLib.ExpBeatsPowers
 import MachLib.EMLZeroBoundRay
 import MachLib.ChainExp2Uniform
 import MachLib.EMLSignFromNonzero
