@@ -501,6 +501,72 @@
    "file": "CLAUDE.md",
    "pattern": "([0-9  ]+) entries\\) and fails when that thing starts holding",
    "source": "absence_claims"
+  },
+  {
+   "id": "review.lean_lines",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "read ([0-9  ]+) lines of Lean",
+   "source": "lean_lines"
+  },
+  {
+   "id": "review.theorems_core",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "≈ ([0-9  ]+) theorems outside its generated sub-corpus",
+   "source": "theorems_core"
+  },
+  {
+   "id": "review.trusted",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "\\| trusted footprint \\| ([0-9]+) \\|",
+   "source": "manifest_trusted"
+  },
+  {
+   "id": "review.witnessed",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "\\| witnessed \\| ([0-9]+) \\|",
+   "source": "manifest_witnessed"
+  },
+  {
+   "id": "review.mapped",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "\\| mapped \\| ([0-9]+) \\|",
+   "source": "manifest_mapped"
+  },
+  {
+   "id": "review.standard",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "\\| standard \\| ([0-9]+) \\|",
+   "source": "manifest_standard"
+  },
+  {
+   "id": "review.float_bridge",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "\\| float-bridge \\| ([0-9]+) \\|",
+   "source": "manifest_float"
+  },
+  {
+   "id": "review.float_prose",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "\\*\\*([0-9]+) float-bridge axioms cannot be witnessed",
+   "source": "manifest_float"
+  },
+  {
+   "id": "review.witnessed_cli",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "witnessed against Mathlib       : ([0-9]+)",
+   "source": "manifest_witnessed"
+  },
+  {
+   "id": "review.trusted_cli",
+   "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
+   "pattern": "trusted footprint \\(live ledger\\) : ([0-9]+)",
+   "source": "manifest_trusted"
+  },
+  {
+   "id": "decision.theorems_discovered",
+   "file": "TRUST_BOUNDARY_DECISION_analytic_finite_zeros_2026_09_11.md",
+   "pattern": "The ([0-9  ]+)-theorem generated corpus",
+   "source": "theorems_discovered"
   }
  ]
 }
