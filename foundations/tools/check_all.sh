@@ -114,6 +114,10 @@ else
   # Every tracked number in README / CLAUDE.md / what_is_proven.md must equal what the corpus
   # measures (tools/prose_counts.json). The selftest stages doctored copies in a temp dir and
   # never writes into the tree, so it is safe inside a fingerprinted run.
+  # The theorem count feeding prose-counts is a pattern count, and the pattern it replaced could
+  # not tell a declaration from a docstring sentence beginning with the word "theorem" -- 47 of
+  # them. The counter must keep demonstrating it can tell the difference.
+  run "count-theorems-selftest" python3 tools/count_theorems.py --self-test
   run "prose-counts" python3 tools/prose_counts_check.py
   run "prose-counts-selftest" python3 tools/prose_counts_check.py --self-test
   run "sorry"        lake env lean tools/sorry_audit.lean

@@ -3,17 +3,17 @@
  "sources": {
   "theorems_core": {
    "kind": "shell",
-   "cmd": "find MachLib -name '*.lean' -not -path '*/Discovered/*' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc",
+   "cmd": "python3 tools/count_theorems.py --scope core",
    "extract": "^\\s*(\\d+)\\s*$"
   },
   "theorems_discovered": {
    "kind": "shell",
-   "cmd": "find MachLib/Discovered -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc",
+   "cmd": "python3 tools/count_theorems.py --scope discovered",
    "extract": "^\\s*(\\d+)\\s*$"
   },
   "theorems_all": {
    "kind": "shell",
-   "cmd": "find MachLib -name '*.lean' -exec grep -hcE '^ *theorem ' {} + | paste -sd+ | bc",
+   "cmd": "python3 tools/count_theorems.py --scope all",
    "extract": "^\\s*(\\d+)\\s*$"
   },
   "lean_files": {
@@ -278,13 +278,13 @@
   {
    "id": "claude.theorems_core_cmd",
    "file": "CLAUDE.md",
-   "pattern": "^  \\| paste -sd\\+ \\| bc\\s+# ([0-9 \\u202f]+)\\s*$",
+   "pattern": "^python3 tools/count_theorems\\.py --scope core\\s+# ([0-9  ]+)\\s*$",
    "source": "theorems_core"
   },
   {
    "id": "claude.theorems_all_cmd",
    "file": "CLAUDE.md",
-   "pattern": "^find MachLib -name '\\*\\.lean' -exec grep -hcE '\\^ \\*theorem ' \\{\\} \\+ \\| paste -sd\\+ \\| bc\\s+# ([0-9 \\u202f]+)\\s*$",
+   "pattern": "^python3 tools/count_theorems\\.py --scope all\\s+# ([0-9  ]+)\\s*$",
    "source": "theorems_all"
   },
   {

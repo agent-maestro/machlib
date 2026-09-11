@@ -19,20 +19,22 @@ right generalisation rather than a repackaging.
 
 ## What depth 4 now costs
 
-Two inputs at `j = 3`. One of them is **not** a research problem:
+**One input at `j = 3`, not two.** This section read "two inputs" and flagged an unchecked friction
+in the first of them; §5 below resolved that friction and proved it, and the paragraph was not
+brought forward. Corrected here rather than left standing, because a stale "what is open" note is
+the most expensive kind: it sends the next reader to redo finished work.
 
-* `LowerEnvBound 3 m` — a lower envelope for depth-≤3 germs. The ingredients exist:
-  `node_lower_of_right_upper` derives a lower bound at depth `j+1` from an **upper** bound at depth
-  `j`, and `depth_le_two_growth_envelope` is that upper bound (giving `m = 3`, since
-  `exp (exp x + K) + M` needs `towerFn 3` to dominate it). **One friction, flagged rather than
-  waved at:** `LowerEnvBound` as defined here quantifies over all `x ≥ 1` with no per-tree ray, and
-  the depth-2 growth envelope holds only past a tree-dependent `X₀`. Either the constant absorbs the
-  ray or the definition grows one, and which is cheaper has not been checked. Not discovery, but not
-  nothing either.
-* `NodeDecayBound 3 m` — **the residue.** The depth-4 analogue of `Depth3DecayExp`: how small can
-  `exp (A x) − log (B x)` be, positive, with `A` and `B` at depth ≤ 3.
+* `LowerEnvBound 3 3` — **done**, `lowerEnvBound_three` in §5. `node_lower_of_right_upper` turns an
+  upper bound at depth `j` into a lower bound at depth `j+1`, and `depth_le_two_growth_envelope`
+  supplies it. The friction — `LowerEnvBound` quantifying over all `x ≥ 1` while the depth-2
+  envelope holds only past a tree-dependent `X₀` — was resolved by giving `LowerEnvBound` a **ray**,
+  which the definition now carries. §5 records why absorbing the ray into the constant was the wrong
+  branch: it would need every EML germ bounded on `[1, X₀]`, which this base cannot prove.
+* `NodeDecayBound 3 m` — **the residue, and the only one.** The depth-4 analogue of
+  `Depth3DecayExp`: how small can `exp (A x) − log (B x)` be, positive, with `A` and `B` at
+  depth ≤ 3.
 
-So depth 4 reduces to one named proposition, and it is the same proposition `Depth3DecayExp` was one
+So depth 4 rests on one named proposition, and it is the same proposition `Depth3DecayExp` was one
 rung down.
 
 ## Correcting what `(dt)`'s summary said about `(di)`
