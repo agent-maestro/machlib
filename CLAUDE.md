@@ -8,15 +8,15 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 111 `.lean` files** (797 top-level + 314 in subdirectories) /
-**253 389 lines** / **7 699 theorems**, re-exported through the aggregator
+**253 459 lines** / **7 704 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 699
-python3 tools/count_theorems.py --scope all           # 8 419
+python3 tools/count_theorems.py --scope core          # 7 704
+python3 tools/count_theorems.py --scope all           # 8 424
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the

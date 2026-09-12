@@ -78,6 +78,22 @@ theorem clamp_mono {a b : Real} (h : a ≤ b) (lo hi : Real) :
   unfold clamp
   exact min_mono_left (max_mono_left h lo) hi
 
+theorem max_eq_left_of_le {a b : Real} (h : b ≤ a) : max a b = a := by
+  unfold MachLib.Real.max
+  by_cases hab : a ≤ b
+  · rw [if_pos hab]
+    exact le_antisymm h hab
+  · rw [if_neg hab]
+
+theorem min_eq_left_of_le {a b : Real} (h : a ≤ b) : min a b = a := by
+  unfold MachLib.Real.min
+  rw [if_pos h]
+
+/-- **A clamp leaves a value already inside its bounds alone.** -/
+theorem clamp_eq_self {v lo hi : Real} (h1 : lo ≤ v) (h2 : v ≤ hi) : clamp v lo hi = v := by
+  unfold clamp
+  rw [max_eq_left_of_le h1, min_eq_left_of_le h2]
+
 /-- **Same bounds: the clamp difference lies between `0` and `a − b`.** Monotonicity fixes its sign,
 `clamp_lipschitz` its size. -/
 theorem clamp_sub_between (a b lo hi : Real) :

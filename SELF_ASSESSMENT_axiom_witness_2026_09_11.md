@@ -7,7 +7,7 @@ owed. It is kept because its value does not depend on a reader: **§5 is an hone
 where we think this is weakest.**
 
 If a reviewer does appear, this is the packet to hand them — one mechanism, not the corpus, not the
-compiler, self-contained enough that nobody need read 253 389 lines of Lean.
+compiler, self-contained enough that nobody need read 253 459 lines of Lean.
 
 **The question we would ask, stated so it can be answered "no":**
 
@@ -30,7 +30,7 @@ Answers that would be useful, including the dismissive ones:
 
 **MachLib** is a Lean 4 corpus that does not depend on Mathlib. `MachLib.Real` is an *axiomatised*
 ordered field with `exp`, `log`, `sin`, derivatives, and so on — declared, not constructed. The
-corpus is ≈ 7 699 theorems outside its generated sub-corpus.
+corpus is ≈ 7 704 theorems outside its generated sub-corpus.
 
 Why no Mathlib: the corpus ships proof certificates alongside generated engineering artifacts
 (C, Verilog, VHDL…), and we wanted the trusted base to be small, enumerable and auditable rather

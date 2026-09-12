@@ -315,6 +315,60 @@ theorem antiwindup_pi_tracks_exact_x {g Kp Ki κ h U l1 l2 w1 w2 L ε : Real}
       (antiwindup_pi_tracks_exact hkp hki hkap hw1 hw2 hw1n hw2n hgap hL1 hL2 hLg hL hε
         hexJ hexX hcJ hcX hpert n) hg1)
 
+/-! ### The control law stays in the band
+
+The integrator clamp is chosen so that `Kp·e + Ki·J'` can never leave `[−U, U]`. So a kernel may
+carry a defensive output clamp — to absorb fixed-point overshoot — and still be exactly the loop
+`antiwindup_pi_tracks_exact` is about: in exact arithmetic that clamp never acts. This is what a
+compiled controller's step is joined to the loop through. -/
+
+/-- **The unclamped control law never leaves the band.** -/
+theorem antiwindup_control_in_band (Kp Ki κ U e J : Real)
+    (hkap : Ki * κ = 1) (hKi : 0 ≤ Ki) (hκ : 0 ≤ κ) (hU : 0 ≤ U) :
+    -U ≤ Kp * e + Ki * clamp J (κ * (-U - Kp * e)) (κ * (U - Kp * e)) ∧
+    Kp * e + Ki * clamp J (κ * (-U - Kp * e)) (κ * (U - Kp * e)) ≤ U := by
+  have hUU : -U ≤ U := by
+    have h0 : 0 + 0 ≤ U + U := add_le_add_both hU hU
+    rw [zero_add] at h0
+    have h1 := add_le_add_both h0 (le_refl (-U))
+    rw [zero_add] at h1
+    have e1 : (U + U) + -U = U := by mach_mpoly [U]
+    rw [e1] at h1
+    exact h1
+  have hlohi : κ * (-U - Kp * e) ≤ κ * (U - Kp * e) :=
+    mul_le_mul_of_nonneg_left (sub_le_sub_right hUU (Kp * e)) hκ
+  have hlo := lo_le_clamp J (κ * (-U - Kp * e)) (κ * (U - Kp * e)) hlohi
+  have hhi := clamp_le_hi J (κ * (-U - Kp * e)) (κ * (U - Kp * e))
+  have elo : Ki * (κ * (-U - Kp * e)) = -U - Kp * e := by
+    calc Ki * (κ * (-U - Kp * e)) = (Ki * κ) * (-U - Kp * e) := by mach_mpoly [Ki, κ, U, Kp, e]
+      _ = 1 * (-U - Kp * e) := by rw [hkap]
+      _ = -U - Kp * e := by mach_mpoly [U, Kp, e]
+  have ehi : Ki * (κ * (U - Kp * e)) = U - Kp * e := by
+    calc Ki * (κ * (U - Kp * e)) = (Ki * κ) * (U - Kp * e) := by mach_mpoly [Ki, κ, U, Kp, e]
+      _ = 1 * (U - Kp * e) := by rw [hkap]
+      _ = U - Kp * e := by mach_mpoly [U, Kp, e]
+  have ml := mul_le_mul_of_nonneg_left hlo hKi
+  have mh := mul_le_mul_of_nonneg_left hhi hKi
+  rw [elo] at ml
+  rw [ehi] at mh
+  have eL : Kp * e + (-U - Kp * e) = -U := by mach_mpoly [Kp, e, U]
+  have eH : Kp * e + (U - Kp * e) = U := by mach_mpoly [Kp, e, U]
+  constructor
+  · have t := add_le_add_both (le_refl (Kp * e)) ml
+    rw [eL] at t
+    exact t
+  · have t := add_le_add_both (le_refl (Kp * e)) mh
+    rw [eH] at t
+    exact t
+
+/-- **An output clamp downstream of the anti-windup law is inactive in exact arithmetic.** -/
+theorem antiwindup_output_clamp_inactive (Kp Ki κ U e J : Real)
+    (hkap : Ki * κ = 1) (hKi : 0 ≤ Ki) (hκ : 0 ≤ κ) (hU : 0 ≤ U) :
+    clamp (Kp * e + Ki * clamp J (κ * (-U - Kp * e)) (κ * (U - Kp * e))) (-U) U
+      = Kp * e + Ki * clamp J (κ * (-U - Kp * e)) (κ * (U - Kp * e)) :=
+  clamp_eq_self (antiwindup_control_in_band Kp Ki κ U e J hkap hKi hκ hU).1
+    (antiwindup_control_in_band Kp Ki κ U e J hkap hKi hκ hU).2
+
 /-! ### The specimen — the hypotheses are satisfiable and the measure is a norm
 
 Recorded failure mode of this corpus: a capstone whose hypotheses nothing satisfies, true vacuously

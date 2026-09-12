@@ -448,6 +448,10 @@ nonnegative iff the plant pole lies between the closed-loop eigenvalues. The foo
 real spine; `antiwindup_pi_specimen` adds the decimal-literal axioms by instantiating everything at
 concrete gains.
 
+A kernel may carry a defensive output clamp and still be this loop. `antiwindup_output_clamp_inactive`:
+with `Ki·κ = 1` and `Ki`, `κ`, `U ≥ 0`, the unclamped law `Kp·e + Ki·J'` never leaves `[−U, U]`, so an
+output clamp never acts in exact arithmetic.
+
 **Not claimed:** the `dI`, `dx` envelope is a hypothesis, not derived from bits; no derivative term;
 no complex eigenvalues; nothing about a constant clamp `|J| ≤ M`, which the same measurement found
 bounded only for `M ≤ U/Ki` and whose proof would need a dwell-time argument.
