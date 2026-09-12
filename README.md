@@ -111,9 +111,18 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   pin the fractional part to `[0, 1)`, so the truncation side is discharged rather than assumed.
   Conditional on no overflow, and its footprint carries three `floor` axioms the rest of the arc
   does not.
-- **Still not proved:** no anti-windup, and no claim that the quantised gains are close to the
-  designer's intended ones. `pid_trajectory_from_bits` is unchanged and still quantifies its
-  per-step error universally; do not cite it as an end-to-end result.
+- `antiwindup_pi_tracks_exact` (`AntiWindupPITracking`) — tracking **through saturation**, for a PI
+  loop whose integrator is clamped to `[κ(−U − Kp·e), κ(U − Kp·e)]`, so the output never leaves
+  `[−U, U]`. A perturbed copy tracks the exact loop uniformly in time. A clamped step lies between
+  the free step and the fully clamped one (`clamp_sub_between_shift`), and one eigen-functional
+  measure contracts both — at `max |λᵢ|`, and at exactly `1 − g` — whenever the plant pole lies
+  between the closed-loop eigenvalues. Ships a specimen at concrete gains. The loop as built has no
+  integrator clamp, and on a bit-exact model of its emitted RTL it has no grid-proportional tracking
+  bound at all; a constant clamp `|J| ≤ M` is not covered either.
+- **Still not proved:** anti-windup beyond that form — no Q-grid instantiation, no derivative term —
+  and no claim that the quantised gains are close to the designer's intended ones.
+  `pid_trajectory_from_bits` is unchanged and still quantifies its per-step error universally; do
+  not cite it as an end-to-end result.
 - `cross_target` (`FPModel`) — two evaluations of one exact value at different precisions agree
   within their forward-error bounds.
 - `kalman_update_1d_fwd_error` (`KalmanUpdateFixedPoint`) — a proven Q16.16 forward-error bound
@@ -195,13 +204,13 @@ fails if the text drifts from the corpus. Measured 2026-09-07:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 672 | `python3 tools/count_theorems.py --scope core` |
+| theorems outside `Discovered/` | 7 699 | `python3 tools/count_theorems.py --scope core` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 109 | `find MachLib -name '*.lean' \| wc -l` |
+| `.lean` files under `MachLib/` | 1 111 | `find MachLib -name '*.lean' \| wc -l` |
 | axioms pinned by the ledger | 243 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all modeled | 156 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 805 of 1 109 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 807 of 1 111 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

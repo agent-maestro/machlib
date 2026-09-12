@@ -174,6 +174,20 @@
    },
    "note": "SEARCH-TOOL probe, sibling of `smoothstep-ofnat-vs-decimal`. That one pins that the lemma does not UNIFY with the decimal spelling; this one pins that library SEARCH does not find it either, so `exact?` cannot stand in for the term check. Verified at registration under the harness's own `import MachLib`: the OfNat spelling of the same goal returns `smoothstep_le_one h0 h1` (1.4 s) and this snippet fails with the message below (1.5 s). It fires if a decimal-form lemma is added or search learns to bridge the spelling; reword the CLAUDE.md entry then. SCOPE: it cannot tell `smoothstep_le_one` being renamed or deleted from the mismatch still holding, since both fail the same way, so it pins the limitation and not the lemma.",
    "recorded": "2026-09-12"
+  },
+  {
+   "id": "machdecimal-no-literal-subtraction",
+   "source_file": "../CLAUDE.md",
+   "claim_text": [
+    "cannot subtract one decimal literal from another"
+   ],
+   "expect": "no_match",
+   "probe": {
+    "snippet": "open MachLib.Real in\nexample : (0.7500 : MachLib.Real) - 0.4375 = 0.3125 := by mach_decimal",
+    "must_fail_with": "could not unify the conclusion of `realOfScientific_pos`"
+   },
+   "note": "TOOL-CAPABILITY probe, sibling of machdecimal-ofnat-boundary. Found 2026-09-12 while building the AntiWindupPITracking specimen: the same-exponent sum 0.3125 + 0.4375 = 0.7500 closes and the subtraction it inverts does not. The error names realOfScientific_pos, which reads like a sign problem rather than a missing subtraction rule, so the note matters more than usual. If mach_decimal learns literal subtraction this snippet compiles and the audit fires; revisit the CLAUDE.md entry and antiwindup_sub_eq_of_add_eq then.",
+   "recorded": "2026-09-12"
   }
  ]
 }

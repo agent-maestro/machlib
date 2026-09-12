@@ -425,9 +425,32 @@ The abstraction is the same one Forge's own fixed-point certifier makes, whose t
 `floor(x/s)·s`, documented there as the typical fixed-point datapath. The two projects now model
 the same object, which the earlier `sfxmul` model did not.
 
-**What is still not claimed.** No anti-windup. No claim that the quantised gains are close to the designer's intended ones, which is
-a separate question this does not answer. `pid_trajectory_from_bits` is unchanged and is still not
-the end-to-end result.
+**What is still not claimed.** No anti-windup on the Q-grid, and none with a derivative term (the PI
+result in envelope form is the next section). No claim that the quantised gains are close to the
+designer's intended ones, which is a separate question this does not answer.
+`pid_trajectory_from_bits` is unchanged and is still not the end-to-end result.
+
+### Tracking through saturation — anti-windup, the PI loop
+
+`MachLib/AntiWindupPITracking.lean`. The loop as built has no integrator clamp, and it has **no**
+grid-proportional tracking bound: on a bit-exact model of the emitted RTL, validated digit-for-digit
+against the Arty captures, integrator drift grows with time spent saturated. The safety envelope is
+unaffected, because it never depended on the integrator.
+
+`antiwindup_pi_tracks_exact` covers a PI loop whose stored integrator is clamped to
+`[κ(−U − Kp·e), κ(U − Kp·e)]` with `Ki·κ = 1`. A perturbed copy tracks the exact loop uniformly in
+time, in the same eigen-functional measure as `SignedPILoop`, and `antiwindup_pi_tracks_exact_x`
+bounds `w₁w₂·|x − xₑ|`. The mechanism: a clamped step lies between the free step and the fully
+clamped one (`clamp_sub_between_shift`). The free vertex contracts at `max |λᵢ|`. At the clamped
+vertex the integrator error is slaved to the state error and the control error vanishes, and once
+the two functionals are weighted by `−κ₂` and `κ₁` it contracts at exactly `1 − g`. The weights are
+nonnegative iff the plant pole lies between the closed-loop eigenvalues. The footprint is the plain
+real spine; `antiwindup_pi_specimen` adds the decimal-literal axioms by instantiating everything at
+concrete gains.
+
+**Not claimed:** the `dI`, `dx` envelope is a hypothesis, not derived from bits; no derivative term;
+no complex eigenvalues; nothing about a constant clamp `|J| ≤ M`, which the same measurement found
+bounded only for `M ≤ U/Ki` and whose proof would need a dwell-time argument.
 
 ---
 

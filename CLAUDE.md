@@ -7,16 +7,16 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 109 `.lean` files** (795 top-level + 314 in subdirectories) /
-**252 781 lines** / **7 672 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 111 `.lean` files** (797 top-level + 314 in subdirectories) /
+**253 389 lines** / **7 699 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 672
-python3 tools/count_theorems.py --scope all           # 8 392
+python3 tools/count_theorems.py --scope core          # 7 699
+python3 tools/count_theorems.py --scope all           # 8 419
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -118,7 +118,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 808 jobs, ~3 s warm
+lake build                                     # 810 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
@@ -185,7 +185,7 @@ load-bearing; nothing read the **sentences**. When you add a checked list whose 
 assume the prose is unchecked until you find the gate that reads it.
 
 It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
-12 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
+13 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
 
 * **search** — a regex, for *"no such declaration"*;
 * **probe** — a Lean snippet that must FAIL to compile, for *"no such tactic"*. A grep for
@@ -239,7 +239,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**805 of 1109 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**807 of 1111 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -421,6 +421,12 @@ behind it is missing — registration is still a human act.
   "the fact is false" rather than "the tactic stopped". Use **`mach_decimal_ofnat`**
   (`MachLib/Decimal.lean`), which retargets the goal through the bridge first. `OfNat Real` exists
   only for `0` and `1`, so `2`/`3` arrive as `1+1`/`1+1+1`; those bridges are covered too.
+  **It also cannot subtract one decimal literal from another**: `0.7500 - 0.4375 = 0.3125` fails,
+  while `1 - 0.25 = 0.750` (an `OfNat` minus a decimal) and every sum and product go through. The
+  error names `realOfScientific_pos`, which reads like a sign problem, not a missing rule. Prove the
+  addition it inverts and convert with `antiwindup_sub_eq_of_add_eq` (`AntiWindupPITracking`);
+  `machdecimal-no-literal-subtraction` in `tools/absence_claims.json` fires if that ever changes.
+  State positivity strictly (`0 < c`, then `le_of_lt`), the form its own tests exercise.
 - **`first | mach_ring | X` IS WRONG WHENEVER `mach_ring` CAN PARTIALLY SUCCEED.** On
   `1*0.5 + 1*0.5*1 = 1` it normalises to `0.5 + 0.5 = 1` and stops. It does **not fail**, so
   `first` counts the arm as successful and never tries `X` — the goal is simply left open, and the
@@ -563,7 +569,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**805 of 1 109 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
+run (**807 of 1 111 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **24 rows, 7 open rows, 4 distinct open
