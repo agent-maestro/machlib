@@ -185,7 +185,7 @@ load-bearing; nothing read the **sentences**. When you add a checked list whose 
 assume the prose is unchecked until you find the gate that reads it.
 
 It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
-11 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
+12 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
 
 * **search** — a regex, for *"no such declaration"*;
 * **probe** — a Lean snippet that must FAIL to compile, for *"no such tactic"*. A grep for
@@ -221,6 +221,19 @@ behind it is missing — registration is still a human act.
 
 ## Gotchas
 
+- **SEARCH BEFORE YOU PRICE: state the goal, run `exact?`, and only then decide a lemma is
+  missing.** Core Lean's library search works on this corpus and costs almost nothing. Measured
+  2026-09-12 through `tools/capped_lean.sh`, from a scratch file importing only `import MachLib`
+  (the whole aggregator): about 1.5 s wall and under 2 GB peak RSS per file. From a bare statement
+  of the goal it returned `iterate_affine_bound` and `smoothstep_le_one` — both recorded below as
+  lemmas that existed while their work was priced as new mathematics — and `mul_lt_mul_left_helper`
+  (`SinNotInEMLDepth2Sweep`), a second lemma with the content of `mul_lt_mul_of_pos_left` under
+  another name. Its negative control fails as it should (`c * a < c * b` without `0 < c` is not
+  closed). Paste the `Try this` term; never commit `exact?` itself.
+  **It does not replace the term-mismatch check further down.** The `smoothstep_le_one` goal
+  spelt `3.0 - 2.0 * s` is NOT found, and `exact-search-term-mismatch` in `tools/absence_claims.json`
+  fires if that ever changes. It also searches only what is imported: nothing unreachable from
+  `MachLib.lean`, nothing in `Discovered/`.
 - **`lake` from `foundations/`.** From the repo root it silently resolves the wrong toolchain (v4.14).
 - **Stale `.olean`s.** `lake env lean Foo.lean` typechecks against *old* dependencies; run
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.

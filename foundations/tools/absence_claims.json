@@ -160,6 +160,20 @@
    },
    "note": "TERM-MISMATCH probe. This corpus writes negation as `0 - ·` throughout (`psub`, `pscale (0-1)`), so `neg_div` -- stated over `-(_)` -- does not fire on the goals it looks applicable to, and a backward `rw` against `= 0` finds the zero INSIDE `0 - _`. The second cost a 200 000-heartbeat timeout on 2026-09-09. If a `0 - ·` form of `neg_div` is ever added, this probe compiles and the note should be updated. Source file updated 2026-09-10 when the RatGerm algebra was split out of LogGermAssembly — the audit caught the move as TEXT-GONE rather than passing, which is the decay it exists to detect.",
    "recorded": "2026-09-09"
+  },
+  {
+   "id": "exact-search-term-mismatch",
+   "source_file": "../CLAUDE.md",
+   "claim_text": [
+    "spelt `3.0 - 2.0 * s` is NOT found"
+   ],
+   "expect": "no_match",
+   "probe": {
+    "snippet": "open MachLib.Real in\nexample {s : MachLib.Real} (h0 : 0 ≤ s) (h1 : s ≤ 1) : s * s * (3.0 - 2.0 * s) ≤ 1.0 := by exact?",
+    "must_fail_with": "`exact?` could not close the goal"
+   },
+   "note": "SEARCH-TOOL probe, sibling of `smoothstep-ofnat-vs-decimal`. That one pins that the lemma does not UNIFY with the decimal spelling; this one pins that library SEARCH does not find it either, so `exact?` cannot stand in for the term check. Verified at registration under the harness's own `import MachLib`: the OfNat spelling of the same goal returns `smoothstep_le_one h0 h1` (1.4 s) and this snippet fails with the message below (1.5 s). It fires if a decimal-form lemma is added or search learns to bridge the spelling; reword the CLAUDE.md entry then. SCOPE: it cannot tell `smoothstep_le_one` being renamed or deleted from the mismatch still holding, since both fail the same way, so it pins the limitation and not the lemma.",
+   "recorded": "2026-09-12"
   }
  ]
 }
