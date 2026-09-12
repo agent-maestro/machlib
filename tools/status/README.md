@@ -105,8 +105,10 @@ published data was tampered with.
 
 ## What does NOT live here
 
-- The build-time badge — `.github/workflows/build-time.yml` still
-  commits `build-time.json` to master. That predates this design and
-  ships a separate concern (cold-build wall-time, not verification
-  status). If we want to subsume it, the right shape is moving the
-  build-time figure into `status.json` and retiring `build-time.json`.
+- The build-time badge — `.github/workflows/build-time.yml` publishes
+  `build-time.json` to its own orphan branch, `build-time-data`, with
+  this design (it committed to master until 2026-09-12). It stays
+  separate because it is a separate concern (cold-build wall-time, not
+  verification status). If we want to subsume it, the right shape is
+  moving the build-time figure into `status.json` and retiring
+  `build-time.json`.

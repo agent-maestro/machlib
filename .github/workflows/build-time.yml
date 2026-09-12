@@ -1,13 +1,14 @@
 name: build-time
 
 # Times a clean `lake build` of MachLib foundations on every push to
-# master, writes the wall-time to `.github/build-time.json`, and
-# commits the JSON back to master so the README badge reads from raw.
-# githubusercontent.com without manual intervention.
+# master, runs the CI gate set, and publishes the wall-time as a
+# shields.io endpoint JSON on the orphan branch `build-time-data`
+# (raw.githubusercontent.com/agent-maestro/machlib/build-time-data/build-time.json).
 #
-# The headline "X-second cold build" claim on machlib.org is the
-# value this workflow stamps. Re-anchoring it requires no human in
-# the loop -- only that the workflow run succeed.
+# It is NOT committed to master. Until 2026-09-12 it was: 627 bot
+# commits, each forcing a merge before the working branch could
+# fast-forward master again, for a file nothing read. Same design as
+# `status-data` in status.yml.
 
 on:
   push:
@@ -26,10 +27,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Fetch full history so the auto-commit step can push.
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install elan
         run: |
@@ -112,7 +109,7 @@ jobs:
         working-directory: foundations
         run: lake env lean AxiomLedger.lean
 
-      - name: Claim audit (headline prose ↔ #print axioms footprint)
+      - name: "Claim audit (headline prose ↔ #print axioms footprint)"
         working-directory: foundations
         run: python3 tools/claim_audit/claim_audit.py
 
@@ -139,7 +136,7 @@ jobs:
         env:
           BUILD_SECONDS: ${{ steps.cold_build.outputs.seconds }}
         run: |
-          mkdir -p .github
+          mkdir -p "$RUNNER_TEMP/build-time-publish"
           # shields.io endpoint badge schema:
           # https://shields.io/badges/endpoint-badge
           # color is "brightgreen" up to 6s, "yellow" 6-15s, "red" beyond.
@@ -149,29 +146,28 @@ jobs:
                      else print "red" }')
           export COLOR="$color"
           python3 -c "import json,os; print(json.dumps({'schemaVersion':1,'label':'cold build','message':f\"{os.environ['BUILD_SECONDS']}s\",'color':os.environ['COLOR'],'cacheSeconds':300}, indent=2))" \
-            > .github/build-time.json
-          cat .github/build-time.json
+            > "$RUNNER_TEMP/build-time-publish/build-time.json"
+          cat "$RUNNER_TEMP/build-time-publish/build-time.json"
 
-      - name: Commit + push the badge JSON
+      # Orphan force-push, the design status.yml uses for `status-data`: the branch holds ONE
+      # commit, only this workflow writes it, and master is never touched. The commit message
+      # names the measured SHA, so the branch log is the provenance. Overlapping runs are
+      # last-writer-wins, acceptable for a wall-time figure, which is why there is no rebase loop.
+      # The vercel.json is status.yml's too: Vercel builds every pushed branch, and one with no
+      # `site/` fails and emails the maintainer on every run.
+      - name: Publish build-time.json to the build-time-data branch (force-push)
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_SECONDS: ${{ steps.cold_build.outputs.seconds }}
         run: |
+          cd "$RUNNER_TEMP/build-time-publish"
+          cat > vercel.json <<'EOF'
+          {"git":{"deploymentEnabled":false}}
+          EOF
+          git init -b build-time-data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet .github/build-time.json; then
-            echo "build-time.json unchanged; skipping commit."
-            exit 0
-          fi
-          git add .github/build-time.json
-          git commit -m "ci(build-time): refresh cold-build badge to ${BUILD_SECONDS}s [skip ci]"
-          for attempt in 1 2 3 4 5; do
-            if git push; then
-              exit 0
-            fi
-            echo "push rejected (attempt ${attempt}/5) -- another commit landed on master while this run was building, rebasing and retrying"
-            git fetch origin master
-            git rebase origin/master
-            sleep $((RANDOM % 5 + 1))
-          done
-          echo "::error::failed to push the badge JSON after 5 rebase-retry attempts"
-          exit 1
+          git add build-time.json vercel.json
+          git commit -m "ci(build-time): cold build ${BUILD_SECONDS}s at ${GITHUB_SHA}"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin build-time-data
