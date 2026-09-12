@@ -72,16 +72,20 @@ jobs:
 
       # forge is a PRIVATE repo, so the default GITHUB_TOKEN (scoped to machlib
       # only) can't clone it — that is why this workflow started failing when
-      # forge went private (404 at "Clone forge"). FORGE_RO_TOKEN is a
-      # fine-grained PAT with READ-ONLY Contents access to agent-maestro/forge
-      # added as a repo Actions secret. It is used ONLY for the private forge clone;
-      # the public eml-stdlib clone below takes no token (see the note there).
-      # Both clones are allowed to FAIL without failing the refresh. The token expired once
-      # (2026-09-05: "Bad credentials" at this step) and the whole dashboard went dark, including
-      # the build and sorry figures that need nothing from forge. A failed clone now yields a
-      # status.json whose verify_audit block says UNAVAILABLE with the reason — the renderer shows
-      # that loudly — while every other field stays measured. UNAVAILABLE is not a pass, and it is
-      # not a reason to hide the rest.
+      # forge went private (404 at "Clone forge"). The clone uses a READ-ONLY deploy
+      # key on agent-maestro/forge, titled "machlib status.yml (read-only)"; its private
+      # half is the machlib Actions secret FORGE_DEPLOY_KEY. It is used ONLY for the
+      # private forge clone; the public eml-stdlib clone below takes no credential.
+      # The deploy key replaced a fine-grained PAT (FORGE_RO_TOKEN) on 2026-09-12. That
+      # PAT expired (2026-09-05: "Bad credentials" at this step) and stayed expired for a
+      # week while the dashboard reported every Forge figure as UNAVAILABLE. A deploy key
+      # grants the same access — read one repository — and does not expire; revoke it in
+      # forge's Settings > Deploy keys.
+      # Both clones are allowed to FAIL without failing the refresh: before that, the expired
+      # token took the whole dashboard dark, including the build and sorry figures that need
+      # nothing from forge. A failed clone yields a status.json whose verify_audit block says
+      # UNAVAILABLE with the reason — the renderer shows that loudly — while every other field
+      # stays measured. UNAVAILABLE is not a pass, and it is not a reason to hide the rest.
       - name: Clone forge
         id: clone_forge
         continue-on-error: true
@@ -90,7 +94,7 @@ jobs:
           repository: agent-maestro/forge
           path: forge
           fetch-depth: 1
-          token: ${{ secrets.FORGE_RO_TOKEN }}
+          ssh-key: ${{ secrets.FORGE_DEPLOY_KEY }}
 
       # eml-stdlib is PUBLIC and deliberately takes NO token. Passing one here used
       # to look like future-proofing ("so it keeps working if it ever goes private")
@@ -155,7 +159,7 @@ jobs:
             "unavailable": True,
             "reason": "clone of agent-maestro/forge or eml-stdlib failed in CI "
                       "(forge: ${{ steps.clone_forge.outcome }}, eml-stdlib: ${{ steps.clone_stdlib.outcome }}); "
-                      "usually an expired FORGE_RO_TOKEN secret",
+                      "check the FORGE_DEPLOY_KEY secret and forge's read-only deploy key",
           }, open("verify_audit.json", "w"), indent=2)
           PY
           echo "verify_audit.json written as UNAVAILABLE"
