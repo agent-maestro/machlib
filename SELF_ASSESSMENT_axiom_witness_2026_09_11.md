@@ -7,7 +7,7 @@ owed. It is kept because its value does not depend on a reader: **§5 is an hone
 where we think this is weakest.**
 
 If a reviewer does appear, this is the packet to hand them — one mechanism, not the corpus, not the
-compiler, self-contained enough that nobody need read 252 764 lines of Lean.
+compiler, self-contained enough that nobody need read 252 781 lines of Lean.
 
 **The question we would ask, stated so it can be answered "no":**
 

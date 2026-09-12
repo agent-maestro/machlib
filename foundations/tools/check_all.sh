@@ -104,6 +104,11 @@ else
   run "witness"      python3 tools/witness_audit.py
   run "hypothesis"   python3 tools/hypothesis_audit.py --self-test
   run "absence"      python3 tools/absence_audit.py --self-test
+  # `absence_audit` checks every REGISTERED claim still holds. Nothing checked that a CITED
+  # registration EXISTS -- `GermDerivFbasis` advertised `routea-separation-absent`, which was never
+  # in the registry, and the claim had in fact decayed with nothing to fire.
+  run "absence-ids"  python3 tools/absence_ids_cited_check.py
+  run "absence-ids-selftest" python3 tools/absence_ids_cited_check.py --self-test
   run "doc-names"    python3 tools/doc_theorem_names_check.py
   run "doc-names-selftest" python3 tools/doc_theorem_names_check.py --self-test
   # The same name check, pointed at the TRUST DISCLOSURE rather than the docs. `disclosedTrusted`
