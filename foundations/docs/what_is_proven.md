@@ -604,6 +604,10 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
 - **The analytic base is axiomatized, not constructed.** §4 is the whole story;
   we do not build ℝ. We prove the load-bearing closure consistent and minimise
   the rest.
+- **No grounded floating-point certificate is evidence about a computation with an arithmetic node.**
+  Their float side conditions cannot be established for any input from the disclosed axioms; the one
+  instantiated certificate is a constant leaf. §7, "Grounded floating-point certificates", says why
+  and what would change it.
 - **Not a Mathlib replacement**, and not a general theorem library.
 - **Coverage / close-rate numbers are per-release snapshots**, regenerable from
   source; treat any single number as snapshot-specific.
@@ -903,6 +907,39 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   to know that `exp w − w − c > 0` so the equation can be inverted through `exp`. That is a thin use,
   and it means this proof does **not** explain the positive/negative asymmetry of `d(x + c)`; the
   asymmetry recorded in `EMLDepthTameness` §4 stands, now with one more of its branches closed.
+
+- **Grounded floating-point certificates: one instance, and the fact that blocks the rest
+  (2026-09-14).** Since the float-bridge axioms were restated from a measurement, every grounded
+  forward-error certificate (`FPGrounding.lean`, `EMLCertcomGrounded.lean`,
+  `EMLTreeGroundedPipeline.lean`) takes float side conditions: `FloatSafe` or `EMLTreeFloatSafe`, and
+  for some primitives the finiteness of one float besides. `MachLib/FloatSafeDischarge.lean` is what can
+  be done with them.
+
+  - **Instantiated: `eml_tree_grounded` at a constant leaf, and nothing else.**
+    `eml_tree_grounded_const_leaf`: for every real `c` that is `0` or has `DBL_MIN ≤ |c| ≤ DBL_MAX`,
+    the compiled constant reads back within `u·|c|` of `c`. Its specimens take both branches of that
+    domain, `c = 1` (within `u`) and `c = 0` (exact). It is depth 0 and rests on `real_round_bounds`;
+    it certifies no arithmetic node and no primitive.
+  - **Not instantiated: every certificate with an arithmetic node.** That is every flat certificate in
+    `FPGrounding.lean` (`pid_grounded`, `pipeline_det_grounded`, `pipeline_arith_grounded` at any tree
+    with an operator, the `pid_<prim>_grounded` family) and every `eml`-node instance of
+    `eml_tree_grounded`. The reason is not a missing proof: no theorem or axiom here concludes that a
+    float is finite. Every disclosed axiom that mentions `Float.isFinite` has it as a premise,
+    `Float.isFinite` is an opaque extern that `decide` cannot evaluate, and `native_decide` adds an
+    axiom per use. So `FloatSafe` of an arithmetic node cannot be established for any input, however
+    bounded. `no-float-finiteness-producer` in `tools/absence_claims.json` scans the environment and
+    fires if that changes.
+  - **Half of `FloatSafe` does discharge.** `FloatSafe` is exactly `FloatFinite` (the computed floats
+    are finite) together with `ProductsNormal` (each exact product is `0` or at least `DBL_MIN`), and the
+    second half follows from a magnitude floor on the operands (`productsNormal_detEML`). A bound alone
+    is not enough, and that is proved: `bounded_inputs_can_have_subnormal_product`. For the PID law the
+    floor also involves the real values of its literal gains, which no axiom constrains.
+  - **What would unblock it is a new axiom, not a proof, and none has been added.** It needs
+    round-to-nearest's overflow rule over `realToR` (finite operands and an exact result at most
+    `DBL_MAX` in magnitude give a finite result), a finite `floatOfR x` for `|x| ≤ DBL_MAX`, the real
+    values of the PID gains, and a finite `exp`, `sinh` and `cosh` from a bounded argument. Even then
+    `u` is known only to satisfy `0 ≤ u ≤ 1`, so no float is provably nonzero and no specimen can reach
+    the `DBL_MIN` branch of a product.
 
 ---
 

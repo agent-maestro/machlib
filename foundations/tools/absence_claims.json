@@ -188,6 +188,20 @@
    },
    "note": "TOOL-CAPABILITY probe, sibling of machdecimal-ofnat-boundary. Found 2026-09-12 while building the AntiWindupPITracking specimen: the same-exponent sum 0.3125 + 0.4375 = 0.7500 closes and the subtraction it inverts does not. The error names realOfScientific_pos, which reads like a sign problem rather than a missing subtraction rule, so the note matters more than usual. If mach_decimal learns literal subtraction this snippet compiles and the audit fires; revisit the CLAUDE.md entry and antiwindup_sub_eq_of_add_eq then.",
    "recorded": "2026-09-12"
+  },
+  {
+   "id": "no-float-finiteness-producer",
+   "source_file": "docs/what_is_proven.md",
+   "claim_text": [
+    "no theorem or axiom here concludes that a float is finite"
+   ],
+   "expect": "no_match",
+   "probe": {
+    "snippet": "open Lean Meta Elab Command in\n#eval show CommandElabM Unit from do\n  let env ← getEnv\n  let fin := ``Float.isFinite\n  -- S: `Float.isFinite`, and every inductive with a constructor argument whose CONCLUSION mentions a member\n  -- of S (so `FloatSafe` is in S: it stores finiteness; `FPBridgeFinite` is not: it only assumes it).\n  let inds := env.constants.toList.filterMap fun (n, ci) =>\n    match ci with | .inductInfo v => some (n, v.ctors) | _ => none\n  let mut S : NameSet := NameSet.empty.insert fin\n  let mut changed := true\n  while changed do\n    changed := false\n    for (n, ctors) in inds do\n      if !S.contains n then\n        let mut stores := false\n        for c in ctors do\n          if let some cci := env.find? c then\n            let hit ← liftTermElabM <| forallTelescope cci.type fun xs _ => do\n              let mut h := false\n              for x in xs do\n                let t ← inferType x\n                let tc ← forallTelescope t fun _ b => pure b\n                if tc.getUsedConstants.any S.contains then h := true\n              return h\n            if hit then stores := true\n        if stores then\n          S := S.insert n\n          changed := true\n  -- A producer: an axiom or theorem whose conclusion mentions `Float.isFinite` (or, for an axiom, any member\n  -- of S), none of whose premises' conclusions mention a member of S.\n  let mut producers : Array Name := #[]\n  for (n, ci) in env.constants.toList do\n    let kind : Option Bool := match ci with\n      | .axiomInfo _ => some true | .thmInfo _ => some false | _ => none\n    if let some isAx := kind then\n      if ci.type.getUsedConstants.any S.contains then\n        let ok ← liftTermElabM <| forallTelescope ci.type fun xs body => do\n          let bc := body.getUsedConstants\n          unless bc.contains fin || (isAx && bc.any S.contains) do return false\n          for x in xs do\n            let t ← inferType x\n            let tc ← forallTelescope t fun _ b => pure b\n            if tc.getUsedConstants.any S.contains then return false\n          return true\n        if ok then producers := producers.push n\n  if producers.isEmpty then\n    throwError \"NO-FINITENESS-PRODUCER: nothing in the environment concludes that a float is finite\"\n  else\n    logInfo m!\"finiteness producers: {producers}\"",
+    "must_fail_with": "NO-FINITENESS-PRODUCER"
+   },
+   "note": "ENVIRONMENT probe, registered 2026-09-14 with MachLib/FloatSafeDischarge.lean. It scans every axiom and theorem after `import MachLib` for one that concludes Float.isFinite (or, for an axiom, an inductive that stores finiteness, such as a structure whose field concludes it) from premises that supply none, and throws when there is none. Checked capable of both verdicts before registration: it throws on the corpus and on a harmless `FloatSafe … (.var x)` lemma, and it finds a planted `axiom : (2.0 : Float).isFinite = true`, a planted structure-shaped range axiom, and a `native_decide` theorem (with the axiom native_decide mints). If it fires, a finiteness fact has arrived: the grounded certificates may now be instantiable, and what_is_proven.md's grounded-certificates lane and FloatSafeDischarge's docstring must be revisited.",
+   "recorded": "2026-09-14"
   }
  ]
 }

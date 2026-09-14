@@ -7,16 +7,16 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 111 `.lean` files** (797 top-level + 314 in subdirectories) /
-**254 694 lines** / **7 737 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 112 `.lean` files** (798 top-level + 314 in subdirectories) /
+**255 006 lines** / **7 751 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 737
-python3 tools/count_theorems.py --scope all           # 8 457
+python3 tools/count_theorems.py --scope core          # 7 751
+python3 tools/count_theorems.py --scope all           # 8 471
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -112,6 +112,11 @@ statements, and it is deliberately visible there: they take `hsafe : FloatSafe �
 conditions at each node of the kernel's evaluation) and, where a primitive needs one, a result-finiteness or
 `DBL_MIN` hypothesis. Nothing in Lean can discharge those for a concrete input. Read each axiom's docstring,
 and the registry, before citing a grounded bound.
+**That was checked on 2026-09-14, and it is a property of the axiom set rather than of the proofs**: nothing
+in the environment concludes that a float is finite (`no-float-finiteness-producer`, an environment scan in
+`tools/absence_claims.json`), so only a constant leaf of `eml_tree_grounded` is instantiated. The `DBL_MIN`
+half of `FloatSafe` does discharge from a magnitude floor. `MachLib/FloatSafeDischarge.lean`'s docstring has
+both, and the axioms that would change it, none of them added.
 
 > **It went dark once, for 33 days, and nothing said so.** MachLib moved to Lean v4.32.2 on
 > 2026-07-31; `monogate-lean` stayed on v4.14.0. Because it requires MachLib *by path*, it was
@@ -136,12 +141,12 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 810 jobs, ~3 s warm
+lake build                                     # 811 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "243 axioms pinned; 57 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 510 claims resolve against #print axioms"
+python3 tools/claim_audit/claim_audit.py       # "all 515 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
@@ -203,7 +208,7 @@ load-bearing; nothing read the **sentences**. When you add a checked list whose 
 assume the prose is unchecked until you find the gate that reads it.
 
 It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
-13 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
+14 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
 
 * **search** — a regex, for *"no such declaration"*;
 * **probe** — a Lean snippet that must FAIL to compile, for *"no such tactic"*. A grep for
@@ -257,7 +262,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**807 of 1111 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**808 of 1112 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -587,7 +592,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**807 of 1 111 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
+run (**808 of 1 112 modules reachable, 12 documented unreachable** as of 2026-09-07); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **243 axioms pinned — unchanged across the whole 2026-08 EML arc**, including the `S > 0` repair and
 the entire depth/decay programme below. Obligations ledger: **24 rows, 7 open rows, 4 distinct open
