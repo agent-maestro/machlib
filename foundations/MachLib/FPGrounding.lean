@@ -109,24 +109,34 @@ enters the fold with no domain hypothesis; and `tanh`-saturation is a real contr
 alternative to the hard `clamp`, and — unlike `clamp` — inside the certified `+/−/×/tr1` fragment). -/
 
 /-- **The disclosed libm rounding bound for the runtime `tanh`, domain-restricted.** For any `R` and
-`a : Float` with `abs (realToR a) ≤ R`, `leanPrims.tanh`, through `realToR`, is within `u` of the exact
-`Real.tanh` — a CONSTANT bound (not scaled by `R`): `tanh`'s output is always in `(-1,1)` regardless of
-domain, so `R` here exists purely to guard the underlying implementation, not to calibrate the bound's
-size. **Not claimed unconditionally** (erratum-driven design, 2026-07-22, matching `real_exp_rounds`):
-`libmonogate.h` computes `tanh` via `stdI1 leanPrims .tanh = fun x => (p.exp x - p.exp (-x))/(p.exp x +
-p.exp (-x))`, an exp-DECOMPOSITION (`EMLToCRuntime.lean`) — for large `|a|`, `Float.exp` on one branch
-overflows to `+inf` while the other underflows to `0`, giving `inf/inf = NaN`, and `realToR (NaN)` is
-completely unconstrained by any existing axiom. `tanh` being mathematically globally-Lipschitz does NOT
-protect its Float IMPLEMENTATION from this — the composite, not the math, is what breaks. Un-witnessable
-in Lean (`Float` opaque), disclosed like `real_fpbridge`; the residual libm trust for this primitive. -/
+`a : Float` with `abs (realToR a) ≤ R`, `stdI1 leanPrims .tanh`, through `realToR`, is within `u` of the
+exact `Real.tanh` — a CONSTANT bound (not scaled by `R`): `tanh`'s output lies in `[-1,1]` regardless of
+domain, so `R` does not calibrate the bound's size. **Not claimed unconditionally** (erratum-driven
+design, 2026-07-22, matching `real_exp_rounds`).
+
+**The reason recorded for `R` then no longer holds.** `R` guarded the runtime's exp-QUOTIENT
+`(p.exp x - p.exp (-x))/(p.exp x + p.exp (-x))`: from `|a| = 710` one `Float.exp` overflows to `+inf`,
+giving `inf/inf = NaN`, and `realToR (NaN)` is unconstrained by any axiom. Since forge `51337a3`
+(2026-09-13), `libmonogate.h` — and so `stdI1 leanPrims .tanh` (`EMLToCRuntime.lean`) — computes
+`copysign((1−t)/(1+t), x)` with `t = exp(−2|x|) ∈ [0,1]`, which is finite and in `[-1,1]` for every
+non-NaN input (`tanh 1000 = 1.0` is a `native_decide` example there). The statement is unchanged, so
+`R` is now a hypothesis the current runtime does not need.
+
+**Measured the same day, the bound `u` itself does not hold of either runtime.** Against a 200-bit
+`tanh` (mpmath), with glibc 2.39's `exp` on aarch64 (the `exp` Lean's `Float.exp` calls there), the
+current composite's error exceeds `u = 2⁻⁵³` at 2 318 of the 60 001 points of `[-30, 30]` in steps of
+`10⁻³` (max `1.65·10⁻¹⁶ ≈ 1.48u`, at `x = −5.581`); the old quotient exceeded it at 10 224 (max
+`2.65·10⁻¹⁶ ≈ 2.39u`, at `x = −15.271`). Nothing here was changed for that. Un-witnessable in Lean
+(`Float` opaque), disclosed like `real_fpbridge`; the residual libm trust for this primitive. -/
 axiom real_tanh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
     abs (realToR (stdI1 leanPrims .tanh a) - tanh (realToR a)) ≤ u
 
 /-- **A grounded transcendental control kernel.** The emitted C for `tanh(1.5·e + 0.4·i + 0.05·d)` — a
 soft-saturated PID — read through `realToR`, is within `u + absErr` of the exact ℝ value `tanh(PID
 law)`, GIVEN a bound `R` on the PID law's own value (both computed and exact — the one new hypothesis
-this theorem needs beyond the erratum-free version, to keep the underlying exp-decomposition from
-overflowing; see `real_tanh_rounds`). `FPBridge` is discharged by `real_fpbridge`, the runtime
+this theorem needs beyond the erratum-free version; it was added to keep the runtime's exp-quotient
+from overflowing, which the runtime since forge `51337a3` no longer does, and it stays because
+`real_tanh_rounds` still takes it). `FPBridge` is discharged by `real_fpbridge`, the runtime
 correspondence by the proven `std_hrt` at Lean's libm basis, and the one `tanh` rounding by the
 disclosed, domain-restricted `real_tanh_rounds`. First grounded certificate reaching a transcendental
 layer over real `Float` bytes. `1`-Lipschitz `tanh` (`globLip_lipschitz`) amplifies the arithmetic fold's
@@ -246,8 +256,9 @@ composite `leanPrims.sin`, through `realToR`, is within a fixed `real_sin_eps` o
 Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive.
 
 **Confirmed unconditional (2026-07-22 audit, not changed)** — unlike `exp`/`sinh`/`cosh`/`tanh`,
-`sin` is a NATIVE `Prims` field (`Float.sin`), not an exp-composite, so it cannot hit the
-`inf/inf = NaN` failure those primitives' erratum fixes address. Its mathematical output is bounded
+`sin` is a NATIVE `Prims` field (`Float.sin`), not an exp-composite, so it cannot hit the overflow
+failures those primitives' erratum fixes address (`inf`, and, for the `tanh` quotient used before
+forge `51337a3`, `inf/inf = NaN`). Its mathematical output is bounded
 (`abs (sin x) ≤ 1` for every real `x`), so — unlike `exp` (genuinely unbounded, no fixed constant
 works), `log`/`sqrt`/`asin`/`acos` (undefined outside a domain, `NaN` outside it), or `tan` (poles) —
 a fixed `real_sin_eps` COULD be a true statement about the real runtime for every `Float`, PROVIDED
@@ -504,17 +515,21 @@ theorem pid_acos_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
 /-! ### Grounding a twelfth libm primitive: `sinh`, SYMMETRIC domain, unconditional on `R`
 
 `sinh` needs a domain (unlike globally-Lipschitz `tanh`) but, like `exp`, no extra sign hypothesis:
-`L = cosh R > 0` for every `R`. `leanPrims`'s `.sinh` is itself a composite of `exp` (`EMLToCRuntime.lean`
-`(p.exp x - p.exp (-x)) * 0.5`), not a distinct native call. -/
+`L = cosh R > 0` for every `R`. `stdI1 leanPrims .sinh` is itself a composite of `exp`, not a distinct
+native call: since forge `51337a3`, `copysign` of `(eᵃ − e⁻ᵃ)·½` for `a = |x| ≤ 709.78` and of
+`(½·w)·w` with `w = exp(a/2)` above that (`EMLToCRuntime.lean`). -/
 
 /-- **The disclosed libm rounding bound for the runtime `sinh`, domain-restricted.** For any `R` and
 `a : Float` with `abs (realToR a) ≤ R`, `leanPrims.sinh`, through `realToR`, is within `u · cosh R` of
 the exact `Real.sinh` — reusing `cosh R` as the safe magnitude bound (`abs (sinh x) ≤ cosh x ≤ cosh R`
 for `abs x ≤ R`), exactly the SAME quantity `pid_sinh_grounded` already uses as its Lipschitz constant,
 so this costs no new hypothesis at that call site. **Not claimed unconditionally** (erratum-driven
-design, 2026-07-22): `leanPrims.sinh` is itself an exp-composite (`(p.exp x - p.exp (-x)) * 0.5`,
-`EMLToCRuntime.lean`) with the same overflow risk `real_exp_rounds`'s erratum note describes. Un-
-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
+design, 2026-07-22): `stdI1 leanPrims .sinh` is an exp-composite (`EMLToCRuntime.lean`) and
+overflows to `inf`, as `real_exp_rounds`'s erratum note describes for `exp`. Before forge `51337a3`
+the difference `exp x − exp (−x)` was already `inf` from `|x| > 709.78`; the composite since then is
+finite on `(709.78, 710.4758]` as well (forge `51337a3`'s sweep; `sinh 710` is a `native_decide`
+example in `EMLToCRuntime.lean`) and `inf` only beyond, where `sinh` itself exceeds the largest double.
+Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
 axiom real_sinh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
     abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ u * cosh R
 
@@ -546,7 +561,8 @@ primitive — every `Trans1` constructor except `tan` is now grounded. -/
 `a : Float` with `abs (realToR a) ≤ R`, `leanPrims.cosh`, through `realToR`, is within `u · cosh R` of
 the exact `Real.cosh` (`cosh` monotonic in `abs ·`, so `cosh x ≤ cosh R` for `abs x ≤ R`) — reusing the
 SAME `cosh R`/`sinh R` shape `pid_cosh_grounded` already needs. **Not claimed unconditionally**
-(erratum-driven design, 2026-07-22): same exp-composite overflow risk as `sinh`/`real_sinh_rounds`.
+(erratum-driven design, 2026-07-22): the same exp-composite overflow as `sinh`/`real_sinh_rounds`,
+with the same boundary since forge `51337a3` (`cosh 710` is finite; `inf` beyond `|x| = 710.4758`).
 Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
 axiom real_cosh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
     abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ u * cosh R

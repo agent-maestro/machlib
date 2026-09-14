@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 111 `.lean` files** (797 top-level + 314 in subdirectories) /
-**253 459 lines** / **7 704 theorems**, re-exported through the aggregator
+**253 601 lines** / **7 704 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
