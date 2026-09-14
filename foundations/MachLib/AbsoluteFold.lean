@@ -165,4 +165,125 @@ theorem pipeline_tr1_of_arith {toR : Float → MachLib.Real} (br : FPBridge toR)
       (toR (i1 t (evalEML i1 i2 env e).toF)) (f (exactR toR env e))
   exact absenc_lip hLnn hL (evalEML_absErr br i1 i2 env e he) hround
 
+/-! ## The same fold over the bridge binary64 satisfies
+
+`FPBridge` asks more of IEEE binary64 than it gives (`FPBridgeFinite`, `FloatRealBridge.lean`). The theorems
+below are the ones above over `FPBridgeFinite`, with its side conditions supplied per node by `FloatSafe`. -/
+
+/-- The float side conditions `FPBridgeFinite` needs along one evaluation, node by node: every `+`, `−`, `×`
+and negation computes a finite float, and no product's exact value is a nonzero real below `DBL_MIN` in
+magnitude. A `tr1` node adds nothing of its own (its rounding fact is the primitive's axiom) and passes the
+conditions to its argument; leaves need nothing. Nothing inside Lean can establish these, since `Float` is
+opaque: they are what a caller checks at run time or guarantees by bounding its inputs. -/
+inductive FloatSafe (toR : Float → MachLib.Real) (i1 : Trans1 → Float → Float)
+    (i2 : Trans2 → Float → Float → Float) (env : Env) : EML → Prop
+  | lit (c : Float) : FloatSafe toR i1 i2 env (.lit c)
+  | var (s : String) : FloatSafe toR i1 i2 env (.var s)
+  | add (a b : EML) : FloatSafe toR i1 i2 env a → FloatSafe toR i1 i2 env b →
+      ((evalEML i1 i2 env a).toF + (evalEML i1 i2 env b).toF).isFinite = true →
+      FloatSafe toR i1 i2 env (.bin .add a b)
+  | sub (a b : EML) : FloatSafe toR i1 i2 env a → FloatSafe toR i1 i2 env b →
+      ((evalEML i1 i2 env a).toF - (evalEML i1 i2 env b).toF).isFinite = true →
+      FloatSafe toR i1 i2 env (.bin .sub a b)
+  | mul (a b : EML) : FloatSafe toR i1 i2 env a → FloatSafe toR i1 i2 env b →
+      ((evalEML i1 i2 env a).toF * (evalEML i1 i2 env b).toF).isFinite = true →
+      (toR (evalEML i1 i2 env a).toF * toR (evalEML i1 i2 env b).toF = 0 ∨
+        dblMin ≤ abs (toR (evalEML i1 i2 env a).toF * toR (evalEML i1 i2 env b).toF)) →
+      FloatSafe toR i1 i2 env (.bin .mul a b)
+  | neg (a : EML) : FloatSafe toR i1 i2 env a → (evalEML i1 i2 env a).toF.isFinite = true →
+      FloatSafe toR i1 i2 env (.neg a)
+  | tr1 (t : Trans1) (a : EML) : FloatSafe toR i1 i2 env a → FloatSafe toR i1 i2 env (.tr1 t a)
+
+/-- At a `+` root, `FloatSafe` says the computed float is finite: that is its own condition there. -/
+theorem FloatSafe.add_isFinite {toR : Float → MachLib.Real} {i1 : Trans1 → Float → Float}
+    {i2 : Trans2 → Float → Float → Float} {env : Env} {a b : EML}
+    (h : FloatSafe toR i1 i2 env (.bin .add a b)) :
+    (evalEML i1 i2 env (.bin .add a b)).toF.isFinite = true := by
+  cases h with
+  | add _ _ _ _ hf => exact hf
+
+/-- `evalEML_absErr` over `FPBridgeFinite`: the absolute forward error of an arithmetic tree, given the tree's
+float side conditions. -/
+theorem evalEML_absErr_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float) (env : Env) :
+    ∀ e : EML, IsArith e → FloatSafe toR i1 i2 env e →
+      AbsEnc (absErr toR env e) (toR (evalEML i1 i2 env e).toF) (exactR toR env e) := by
+  intro e he
+  induction he with
+  | lit c => intro _; exact absenc_exact (toR c)
+  | var s => intro _; exact absenc_exact (toR (env s).toF)
+  | add a b _ _ iha ihb =>
+      intro hs
+      cases hs with
+      | add _ _ hsa hsb hf => exact absenc_add (iha hsa) (ihb hsb) (br.add _ _ hf)
+  | sub a b _ _ iha ihb =>
+      intro hs
+      cases hs with
+      | sub _ _ hsa hsb hf => exact absenc_sub (iha hsa) (ihb hsb) (br.sub _ _ hf)
+  | mul a b _ _ iha ihb =>
+      intro hs
+      cases hs with
+      | mul _ _ hsa hsb hf hz => exact absenc_mul (iha hsa) (ihb hsb) (br.mul _ _ hf hz)
+  | neg a _ iha =>
+      intro hs
+      cases hs with
+      | neg _ hsa hf =>
+          show AbsEnc (absErr toR env a) (toR (-(evalEML i1 i2 env a).toF)) (-(exactR toR env a))
+          rw [br.neg _ hf]
+          exact absenc_neg (iha hsa)
+
+/-- `pipeline_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions. -/
+theorem pipeline_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (e : EML) (he : IsArith e) (hs : FloatSafe toR i1 i2 env e) :
+    AbsEnc (absErr toR env e) (toR (evalC r1 r2 env (emitC e)).toF) (exactR toR env e) := by
+  rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 e env]
+  exact evalEML_absErr_finite br i1 i2 env e he hs
+
+/-- `pipeline_det` (`AbsoluteBridge.lean`) over `FPBridgeFinite`: the two products and the difference of
+`x·y − z·w` must satisfy `FloatSafe`'s conditions. -/
+theorem pipeline_det_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v) (env : Env)
+    (hs : FloatSafe toR i1 i2 env detEML) :
+    AbsEnc (u * (1 + 1 + u) * (abs (toR (env "x").toF * toR (env "y").toF)
+                              + abs (toR (env "z").toF * toR (env "w").toF)))
+      (toR (evalC r1 r2 env (emitC detEML)).toF)
+      (toR (env "x").toF * toR (env "y").toF - toR (env "z").toF * toR (env "w").toF) := by
+  rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 detEML env]
+  have h : (evalEML i1 i2 env detEML).toF
+      = ((env "x").toF * (env "y").toF) - ((env "z").toF * (env "w").toF) := rfl
+  rw [h]
+  have hs' : FloatSafe toR i1 i2 env
+      (.bin .sub (.bin .mul (.var "x") (.var "y")) (.bin .mul (.var "z") (.var "w"))) := hs
+  cases hs' with
+  | sub _ _ hxy hzw hd =>
+      cases hxy with
+      | mul _ _ _ _ hf1 hz1 =>
+          cases hzw with
+          | mul _ _ _ _ hf2 hz2 =>
+              exact absenc_sub_rounded (br.mul _ _ hf1 hz1) (br.mul _ _ hf2 hz2) (br.sub _ _ hd)
+
+/-- `pipeline_tr1_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions. -/
+theorem pipeline_tr1_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (f : MachLib.Real → MachLib.Real) (L Eround : MachLib.Real)
+    (hLnn : 0 ≤ L) (hL : ∀ p q : MachLib.Real, abs (f p - f q) ≤ L * abs (p - q))
+    (e : EML) (he : IsArith e) (hs : FloatSafe toR i1 i2 env e)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - f (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + L * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (f (exactR toR env e)) := by
+  rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 (tr1OfEML t e) env]
+  show AbsEnc (Eround + L * absErr toR env e)
+      (toR (i1 t (evalEML i1 i2 env e).toF)) (f (exactR toR env e))
+  exact absenc_lip hLnn hL (evalEML_absErr_finite br i1 i2 env e he hs) hround
+
 end Certcom

@@ -42,7 +42,11 @@ open MachLib.Real
 rounds the exact `Real` op within unit roundoff `u` (`RoundsW u`). This bundle is the honest trust
 connecting T2's exact-`Float` world to T3's `Real`+`Rounds` world — one rounding fact per operation.
 (Division, negation, and the primitive transcendentals extend it with the same shape,
-`RoundsW u (toR (mg_f x)) (Real.f (toR x))` — the T3 primitive specs, now viewed through `toR`.) -/
+`RoundsW u (toR (mg_f x)) (Real.f (toR x))` — the T3 primitive specs, now viewed through `toR`.)
+
+IEEE binary64 does NOT satisfy this interface: overflow and products below `DBL_MIN` break it. `FPBridgeFinite`
+below is what it does satisfy, and what `real_fpbridge` asserts since 2026-09-14. Theorems over `FPBridge` stay
+true; only `FPBridgeFinite` is instantiated at `realToR`. -/
 structure FPBridge (toR : Float → MachLib.Real) : Prop where
   add : ∀ a b : Float, RoundsW u (toR (a + b)) (toR a + toR b)
   sub : ∀ a b : Float, RoundsW u (toR (a - b)) (toR a - toR b)
@@ -61,6 +65,51 @@ example : FPBridge (fun _ => 0) := by
     exact ⟨0, neg_nonpos_of_nonneg u_nonneg, u_nonneg, by rw [he]; mach_ring⟩
   exact ⟨fun a b => hz _ (by mach_ring), fun a b => hz _ (by mach_ring),
          fun a b => hz _ (by mach_ring), fun _ => neg_zero.symm⟩
+
+/-- `DBL_MIN = 2⁻¹⁰²²`, the smallest positive normal binary64 value, as a `MachLib.Real`. -/
+noncomputable def dblMin : MachLib.Real := 1 / natCast (2 ^ 1022)
+
+/-- `DBL_MAX = (2⁵³ − 1)·2⁹⁷¹`, the largest finite binary64 value, as a `MachLib.Real`. -/
+noncomputable def dblMax : MachLib.Real := natCast ((2 ^ 53 - 1) * 2 ^ 971)
+
+/-- **The Float→Real bridge that IEEE binary64 actually satisfies** (since 2026-09-14). `FPBridge` asks every
+`+`, `−`, `×` to round within `u` for EVERY pair of floats, and binary64 does not do that: a result that
+overflows has no real value to be near, and a product whose exact value is a nonzero real below `DBL_MIN` in
+magnitude lands on the subnormal grid, where the relative error is unbounded (a product of two subnormals
+rounds to `0`). `tools/float_bridge/measure.py` found `FPBridge.mul` violated at every such product it tried
+and nowhere else. This structure asks for what round-to-nearest gives:
+
+  * `add`, `sub`: the computed result is finite. A sum or difference of finite doubles whose exact value is
+    below `DBL_MIN` in magnitude is a multiple of `2⁻¹⁰⁷⁴` smaller than `2⁻¹⁰²²`, so representable and exact;
+    otherwise rounding to nearest is within half an ulp, which is at most `u` relative.
+  * `mul`: the computed result is finite, and the EXACT product is `0` or at least `DBL_MIN` in magnitude. It
+    has to be the exact product: `(2⁵³ − 1)·2⁻¹⁰⁷⁵ = (6361·2⁻⁵⁰⁰)·(((2⁵³ − 1)/6361)·2⁻⁵⁷⁵)` is the midpoint
+    below `DBL_MIN`, rounds (ties to even) UP to `DBL_MIN`, and misses `u` by a factor `1/(1 − 2⁻⁵³)`, so "the
+    computed product is normal" would not be enough.
+  * `neg`: exact, for a finite float. Nothing is said about a non-finite one, whose `toR` value means nothing.
+
+`FPBridge.finite` shows `FPBridge` implies it, so everything proved over `FPBridge` still holds. The grounded
+certificates (`FPGrounding.lean`) go through this structure, and the side conditions it needs along an
+evaluation are their explicit hypothesis `FloatSafe` (`AbsoluteFold.lean`). -/
+structure FPBridgeFinite (toR : Float → MachLib.Real) : Prop where
+  add : ∀ a b : Float, (a + b).isFinite = true → RoundsW u (toR (a + b)) (toR a + toR b)
+  sub : ∀ a b : Float, (a - b).isFinite = true → RoundsW u (toR (a - b)) (toR a - toR b)
+  mul : ∀ a b : Float, (a * b).isFinite = true → (toR a * toR b = 0 ∨ dblMin ≤ abs (toR a * toR b)) →
+    RoundsW u (toR (a * b)) (toR a * toR b)
+  neg : ∀ a : Float, a.isFinite = true → toR (-a) = -(toR a)
+
+/-- `FPBridge` is the stronger interface: its fields are `FPBridgeFinite`'s without the hypotheses. -/
+theorem FPBridge.finite {toR : Float → MachLib.Real} (br : FPBridge toR) : FPBridgeFinite toR :=
+  ⟨fun a b _ => br.add a b, fun a b _ => br.sub a b, fun a b _ _ => br.mul a b, fun a _ => br.neg a⟩
+
+/-- **Consistency witness** for `FPBridgeFinite`: the degenerate zero map, as for `FPBridge` (NOT a real
+model). -/
+example : FPBridgeFinite (fun _ => 0) := by
+  have hz : ∀ e : MachLib.Real, e = 0 → RoundsW u (0 : MachLib.Real) e := by
+    intro e he
+    exact ⟨0, neg_nonpos_of_nonneg u_nonneg, u_nonneg, by rw [he]; mach_ring⟩
+  exact ⟨fun a b _ => hz _ (by mach_ring), fun a b _ => hz _ (by mach_ring),
+         fun a b _ _ => hz _ (by mach_ring), fun _ _ => neg_zero.symm⟩
 
 /-- **Worked bridge — the first load.** The *actual* Float computation `x·x + y·y`, viewed through
 `toR`, is within the standard relative forward-error `((1+u)²−1)·(X²+Y²)` (`X = toR x`) of the exact

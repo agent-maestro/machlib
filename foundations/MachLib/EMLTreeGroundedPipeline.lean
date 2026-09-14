@@ -47,7 +47,10 @@ E2]` for `log`'s. The formula is `absenc_lip_local` (Lipschitz-amplify + primiti
 twice, then `absenc_sub`'s cross term — the same shape `EMLCertcomGrounded.lean`'s
 `eml_var_var_pipeline_uniform_grounded` derives by hand for one fixed tree, here produced
 automatically for any tree — UNCHANGED from this file's `var`+`eml`-only version, since it's already
-generic in `E1`/`E2` regardless of where they came from. -/
+generic in `E1`/`E2` regardless of where they came from.
+
+Its `exp` rounding term is `2u · exp hi1` since 2026-09-14, when `real_exp_rounds`'s constant rose from `u`: glibc's
+`exp` exceeds `u` on some results just above a power of two. -/
 noncomputable def emlTreeErrorBound : EMLTree → Real → Real
   | .const c, _ => u * abs c
   | .var, _ => 0
@@ -57,7 +60,7 @@ noncomputable def emlTreeErrorBound : EMLTree → Real → Real
       let hi1 := t1.eval x + E1
       let lo2 := t2.eval x - E2
       let hi2 := t2.eval x + E2
-      let Ex := u * exp hi1 + exp hi1 * E1
+      let Ex := (u + u) * exp hi1 + exp hi1 * E1
       let Ey := u * (abs (log lo2) + abs (log hi2)) + (1 / lo2) * E2
       u * ((exp hi1 + Ex) + ((abs (log lo2) + abs (log hi2)) + Ey)) + (Ex + Ey)
 
@@ -71,6 +74,46 @@ inductive EMLTreeValid (x : Real) : EMLTree → Prop
   | var : EMLTreeValid x .var
   | eml (t1 t2 : EMLTree) (hmargin : emlTreeErrorBound t2 x < t2.eval x) :
       EMLTreeValid x t1 → EMLTreeValid x t2 → EMLTreeValid x (.eml t1 t2)
+
+/-- **The float side conditions of a grounded `EMLTree` evaluation** (since 2026-09-14), node by node, which
+`eml_tree_grounded` takes as a hypothesis alongside `EMLTreeValid`. The two are kept apart on purpose: validity
+is a fact about real numbers and error envelopes, and `EMLTreeValid.divisor_pos` and its neighbours reason about
+it alone; these are facts about floats, which nothing inside Lean can establish (`Float` is opaque).
+
+  * `const c`: `c` is `0` or at least `DBL_MIN` in magnitude, and at most `DBL_MAX`, so `real_round_bounds`
+    applies to its quantization `floatOfR c`.
+  * `eml t1 t2`: the float fed to `exp` is finite, `exp`'s float result is finite and its exact result is at
+    least `DBL_MIN` (`real_exp_rounds`), and the float difference `exp(…) − log(…)` is finite
+    (`real_fpbridge`). `log` needs nothing here that `EMLTreeValid` does not already give it. -/
+inductive EMLTreeFloatSafe (env : Env) : EMLTree → Prop
+  | const (c : Real) (hc : c = 0 ∨ dblMin ≤ abs c) (hcM : abs c ≤ dblMax) : EMLTreeFloatSafe env (.const c)
+  | var : EMLTreeFloatSafe env .var
+  | eml (t1 t2 : EMLTree)
+      (hin : (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (toCertcomEML t1)).toF.isFinite = true)
+      (hexp : (stdI1 leanPrims .exp
+        (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (toCertcomEML t1)).toF).isFinite = true)
+      (hnorm : dblMin ≤ exp (realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (toCertcomEML t1)).toF))
+      (hout : ((evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (.tr1 .exp (toCertcomEML t1))).toF
+        - (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (.tr1 .ln (toCertcomEML t2))).toF).isFinite = true) :
+      EMLTreeFloatSafe env t1 → EMLTreeFloatSafe env t2 → EMLTreeFloatSafe env (.eml t1 t2)
+
+/-- `EMLTreeFloatSafe` at an `eml` node, taken apart. -/
+theorem EMLTreeFloatSafe.eml_inv {env : Env} {t1 t2 : EMLTree} (h : EMLTreeFloatSafe env (.eml t1 t2)) :
+    (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (toCertcomEML t1)).toF.isFinite = true ∧
+    (stdI1 leanPrims .exp
+      (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (toCertcomEML t1)).toF).isFinite = true ∧
+    dblMin ≤ exp (realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (toCertcomEML t1)).toF) ∧
+    ((evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (.tr1 .exp (toCertcomEML t1))).toF
+      - (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (.tr1 .ln (toCertcomEML t2))).toF).isFinite = true ∧
+    EMLTreeFloatSafe env t1 ∧ EMLTreeFloatSafe env t2 := by
+  cases h with
+  | eml _ _ hin hexp hnorm hout h1 h2 => exact ⟨hin, hexp, hnorm, hout, h1, h2⟩
+
+/-- `EMLTreeFloatSafe` at a `const` leaf, taken apart. -/
+theorem EMLTreeFloatSafe.const_inv {env : Env} {c : Real} (h : EMLTreeFloatSafe env (.const c)) :
+    (c = 0 ∨ dblMin ≤ abs c) ∧ abs c ≤ dblMax := by
+  cases h with
+  | const _ hc hcM => exact ⟨hc, hcM⟩
 
 /-- `emlTreeErrorBound` is non-negative, GIVEN validity (the `1/lo2` term needs `lo2 > 0`, which only
 holds under `EMLTreeValid`'s positivity margin — not an unconditional fact about the raw formula).
@@ -86,9 +129,9 @@ theorem emlTreeErrorBound_nonneg {x : Real} : ∀ {t : EMLTree}, EMLTreeValid x 
       have hE1 : (0:Real) ≤ emlTreeErrorBound t1 x := ih1
       have hE2 : (0:Real) ≤ emlTreeErrorBound t2 x := ih2
       have hlo2pos : (0:Real) < t2.eval x - emlTreeErrorBound t2 x := sub_pos_of_lt hmargin
-      have hEx : (0:Real) ≤ u * exp (t1.eval x + emlTreeErrorBound t1 x)
+      have hEx : (0:Real) ≤ (u + u) * exp (t1.eval x + emlTreeErrorBound t1 x)
             + exp (t1.eval x + emlTreeErrorBound t1 x) * emlTreeErrorBound t1 x :=
-        add_nonneg (mul_nonneg u_nonneg (le_of_lt (exp_pos _)))
+        add_nonneg (mul_nonneg (add_nonneg u_nonneg u_nonneg) (le_of_lt (exp_pos _)))
           (mul_nonneg (le_of_lt (exp_pos _)) hE1)
       have hEy : (0:Real) ≤ u * (abs (log (t2.eval x - emlTreeErrorBound t2 x))
               + abs (log (t2.eval x + emlTreeErrorBound t2 x)))
@@ -96,14 +139,14 @@ theorem emlTreeErrorBound_nonneg {x : Real} : ∀ {t : EMLTree}, EMLTreeValid x 
         add_nonneg (mul_nonneg u_nonneg (add_nonneg (abs_nonneg _) (abs_nonneg _)))
           (mul_nonneg (le_of_lt (one_div_pos_of_pos hlo2pos)) hE2)
       show (0:Real) ≤ u * ((exp (t1.eval x + emlTreeErrorBound t1 x)
-              + (u * exp (t1.eval x + emlTreeErrorBound t1 x)
+              + ((u + u) * exp (t1.eval x + emlTreeErrorBound t1 x)
                 + exp (t1.eval x + emlTreeErrorBound t1 x) * emlTreeErrorBound t1 x))
             + ((abs (log (t2.eval x - emlTreeErrorBound t2 x))
                 + abs (log (t2.eval x + emlTreeErrorBound t2 x)))
               + (u * (abs (log (t2.eval x - emlTreeErrorBound t2 x))
                   + abs (log (t2.eval x + emlTreeErrorBound t2 x)))
                 + (1 / (t2.eval x - emlTreeErrorBound t2 x)) * emlTreeErrorBound t2 x)))
-          + ((u * exp (t1.eval x + emlTreeErrorBound t1 x)
+          + (((u + u) * exp (t1.eval x + emlTreeErrorBound t1 x)
                 + exp (t1.eval x + emlTreeErrorBound t1 x) * emlTreeErrorBound t1 x)
             + (u * (abs (log (t2.eval x - emlTreeErrorBound t2 x))
                   + abs (log (t2.eval x + emlTreeErrorBound t2 x)))
@@ -115,7 +158,8 @@ theorem emlTreeErrorBound_nonneg {x : Real} : ∀ {t : EMLTree}, EMLTreeValid x 
         (add_nonneg hEx hEy)
 
 /-- **The compositional Certcom handshake — the full grammar.** For ANY `EMLTree` `t`, valid at the
-point `x := realToR (env "x").toF` (`EMLTreeValid`): `toCertcomEML t` is in Certcom's own certified
+point `x := realToR (env "x").toF` (`EMLTreeValid`), and with the float side conditions
+`EMLTreeFloatSafe` (a hypothesis since 2026-09-14): `toCertcomEML t` is in Certcom's own certified
 nested-local fold fragment (`IsFoldLocal`), its exact real semantics are within `emlTreeErrorBound t
 x` of `t.eval x` (an equality only at the `var` leaf — every `const` anywhere in the tree contributes
 its own quantization error, amplified by whatever `exp`/`log` layers sit above it), and its COMPILED
@@ -127,7 +171,7 @@ primitive rounding — `exactRn` is a real-valued computation, not a floating on
 conjunct — building `IsFoldLocal` too, alongside, as a reusable witness for anyone who also wants the
 emitted-C connection via `pipeline_nested_local`/`emitC_correct`. -/
 theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
-    EMLTreeValid (realToR (env "x").toF) t →
+    EMLTreeValid (realToR (env "x").toF) t → EMLTreeFloatSafe env t →
       IsFoldLocal realToR (stdI1 leanPrims) (stdI2 leanPrims) realOfEML env (toCertcomEML t) ∧
       abs (exactRn realToR realOfEML env (toCertcomEML t) - t.eval (realToR (env "x").toF))
         ≤ emlTreeErrorBound t (realToR (env "x").toF) ∧
@@ -137,20 +181,25 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
   intro t hv
   induction hv with
   | const c =>
+      intro hfs
+      obtain ⟨hc, hcM⟩ := EMLTreeFloatSafe.const_inv hfs
       refine ⟨IsFoldLocal.lit (floatOfR c), ?_, ?_⟩
       · show abs (realToR (floatOfR c) - c) ≤ u * abs c
-        exact real_round_bounds (abs c) c (abs_nonneg c) (le_refl (abs c))
+        exact real_round_bounds (abs c) c (abs_nonneg c) hcM (le_refl (abs c)) hc
       · show abs (realToR (floatOfR c) - c) ≤ u * abs c
-        exact real_round_bounds (abs c) c (abs_nonneg c) (le_refl (abs c))
+        exact real_round_bounds (abs c) c (abs_nonneg c) hcM (le_refl (abs c)) hc
   | var =>
+      intro _
       refine ⟨IsFoldLocal.var "x", ?_, ?_⟩
       · show abs (realToR (env "x").toF - realToR (env "x").toF) ≤ 0
         rw [sub_self]; exact le_of_eq abs_zero
       · show abs (realToR (env "x").toF - realToR (env "x").toF) ≤ 0
         rw [sub_self]; exact le_of_eq abs_zero
   | eml t1 t2 hmargin hv1 hv2 ih1 ih2 =>
-      obtain ⟨hfold1, herr1_exact, herr1⟩ := ih1
-      obtain ⟨hfold2, herr2_exact, herr2⟩ := ih2
+      intro hfs
+      obtain ⟨hin, hexp, hnorm, hout, hfs1, hfs2⟩ := EMLTreeFloatSafe.eml_inv hfs
+      obtain ⟨hfold1, herr1_exact, herr1⟩ := ih1 hfs1
+      obtain ⟨hfold2, herr2_exact, herr2⟩ := ih2 hfs2
       have hE1nn : (0:Real) ≤ emlTreeErrorBound t1 (realToR (env "x").toF) :=
         emlTreeErrorBound_nonneg hv1
       have hE2nn : (0:Real) ≤ emlTreeErrorBound t2 (realToR (env "x").toF) :=
@@ -298,11 +347,11 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
           (exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF)))
           (t1.eval (realToR (env "x").toF) - emlTreeErrorBound t1 (realToR (env "x").toF))
           (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
-          (u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF)))
+          ((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF)))
           (le_of_lt (exp_pos _)) (exp_lip_local _ _)
-          h1lo h1hi h1xe_lo h1xe_hi (real_exp_rounds _ _ h1hi) hfold1
+          h1lo h1hi h1xe_lo h1xe_hi (real_exp_rounds _ _ hin hexp hnorm h1hi) hfold1
       have hEexp : AbsEnc
-          (u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+          ((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
             + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
               * emlTreeErrorBound t1 (realToR (env "x").toF))
           (realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env
@@ -311,7 +360,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
         show AbsEnc _ (realToR (stdI1 leanPrims .exp
             (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (toCertcomEML t1)).toF)) _
         exact absenc_lip_local (le_of_lt (exp_pos _)) (exp_lip_local _ _)
-          herr1 h1lo h1hi h1eval_lo h1eval_hi (real_exp_rounds _ _ h1hi)
+          herr1 h1lo h1hi h1eval_lo h1eval_hi (real_exp_rounds _ _ hin hexp hnorm h1hi)
       -- the ln node
       have hfoldlog : IsFoldLocal realToR (stdI1 leanPrims) (stdI2 leanPrims) realOfEML env
           (.tr1 .ln (toCertcomEML t2)) :=
@@ -359,7 +408,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
                 (.tr1 .exp (toCertcomEML t1))).toF
               - realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env
                 (.tr1 .ln (toCertcomEML t2))).toF)
-        exact real_fpbridge.sub _ _
+        exact real_fpbridge.sub _ _ hout
       have hcombined := absenc_sub hEexp hEln hsub
       -- loosen: exp(t1.eval x) → exp hi1, abs(log(t2.eval x)) → abs(log lo2)+abs(log hi2)
       have hexpabs : abs (exp (t1.eval (realToR (env "x").toF))) = exp (t1.eval (realToR (env "x").toF)) :=
@@ -431,7 +480,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
             le_add_of_nonneg_left h3
           exact le_trans h1 (le_trans h2 h4)
       have hloosen : u * ((abs (exp (t1.eval (realToR (env "x").toF)))
-              + (u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+              + ((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                 + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                   * emlTreeErrorBound t1 (realToR (env "x").toF)))
             + (abs (log (t2.eval (realToR (env "x").toF)))
@@ -442,7 +491,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
                 + (1 / (t2.eval (realToR (env "x").toF)
                     - emlTreeErrorBound t2 (realToR (env "x").toF)))
                   * emlTreeErrorBound t2 (realToR (env "x").toF))))
-          + ((u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+          + (((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                 + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                   * emlTreeErrorBound t1 (realToR (env "x").toF))
             + (u * (abs (log (t2.eval (realToR (env "x").toF)
@@ -454,7 +503,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
                 * emlTreeErrorBound t2 (realToR (env "x").toF)))
         ≤ emlTreeErrorBound (t1.eml t2) (realToR (env "x").toF) := by
         show _ ≤ u * ((exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
-              + (u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+              + ((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                 + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                   * emlTreeErrorBound t1 (realToR (env "x").toF)))
             + ((abs (log (t2.eval (realToR (env "x").toF)
@@ -468,7 +517,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
                 + (1 / (t2.eval (realToR (env "x").toF)
                     - emlTreeErrorBound t2 (realToR (env "x").toF)))
                   * emlTreeErrorBound t2 (realToR (env "x").toF))))
-          + ((u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+          + (((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                 + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                   * emlTreeErrorBound t1 (realToR (env "x").toF))
             + (u * (abs (log (t2.eval (realToR (env "x").toF)
@@ -532,7 +581,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
             * emlTreeErrorBound t2 (realToR (env "x").toF)
         ≤ emlTreeErrorBound (t1.eml t2) (realToR (env "x").toF) := by
         show _ ≤ u * ((exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
-              + (u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+              + ((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                 + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                   * emlTreeErrorBound t1 (realToR (env "x").toF)))
             + ((abs (log (t2.eval (realToR (env "x").toF)
@@ -546,7 +595,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
                 + (1 / (t2.eval (realToR (env "x").toF)
                     - emlTreeErrorBound t2 (realToR (env "x").toF)))
                   * emlTreeErrorBound t2 (realToR (env "x").toF))))
-          + ((u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+          + (((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                 + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                   * emlTreeErrorBound t1 (realToR (env "x").toF))
             + (u * (abs (log (t2.eval (realToR (env "x").toF)
@@ -558,7 +607,7 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
                 * emlTreeErrorBound t2 (realToR (env "x").toF)))
         have hbig : (0:Real) ≤ u * ((exp (t1.eval (realToR (env "x").toF)
                 + emlTreeErrorBound t1 (realToR (env "x").toF))
-              + (u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+              + ((u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                 + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                   * emlTreeErrorBound t1 (realToR (env "x").toF)))
             + ((abs (log (t2.eval (realToR (env "x").toF)
@@ -574,17 +623,17 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
                   * emlTreeErrorBound t2 (realToR (env "x").toF)))) :=
           mul_nonneg u_nonneg
             (add_nonneg (add_nonneg (le_of_lt (exp_pos _))
-                (add_nonneg (mul_nonneg u_nonneg (le_of_lt (exp_pos _)))
+                (add_nonneg (mul_nonneg (add_nonneg u_nonneg u_nonneg) (le_of_lt (exp_pos _)))
                   (mul_nonneg (le_of_lt (exp_pos _)) hE1nn)))
               (add_nonneg (add_nonneg (abs_nonneg _) (abs_nonneg _))
                 (add_nonneg (mul_nonneg u_nonneg (add_nonneg (abs_nonneg _) (abs_nonneg _)))
                   (mul_nonneg (le_of_lt (one_div_pos_of_pos hlo2pos)) hE2nn))))
         have hEx' : exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
               * emlTreeErrorBound t1 (realToR (env "x").toF)
-            ≤ u * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
+            ≤ (u + u) * exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
               + exp (t1.eval (realToR (env "x").toF) + emlTreeErrorBound t1 (realToR (env "x").toF))
                 * emlTreeErrorBound t1 (realToR (env "x").toF) :=
-          le_add_of_nonneg_left (mul_nonneg u_nonneg (le_of_lt (exp_pos _)))
+          le_add_of_nonneg_left (mul_nonneg (add_nonneg u_nonneg u_nonneg) (le_of_lt (exp_pos _)))
         have hEy' : (1 / (t2.eval (realToR (env "x").toF) - emlTreeErrorBound t2 (realToR (env "x").toF)))
               * emlTreeErrorBound t2 (realToR (env "x").toF)
             ≤ u * (abs (log (t2.eval (realToR (env "x").toF)
@@ -603,13 +652,15 @@ theorem eml_tree_grounded (env : Env) : ∀ (t : EMLTree),
 `EMLCertcomGrounded.lean`'s hand-built `eml_var_var_pipeline_uniform_grounded` was never built for
 (that file covers ONLY `eml var var`, depth 1). `eml_tree_grounded` applies to it directly, no new
 proof: this is the "one reusable primitive-grounding lemma, arbitrary trees inherit automatically"
-property stated as a working instance, not just a claim. `hv` (validity at depth 2) is taken as a
-hypothesis here — same status as every domain/range hypothesis elsewhere in this codebase
+property stated as a working instance, not just a claim. `hv` (validity at depth 2) and, since 2026-09-14,
+`hfs` (its float side conditions) are taken as hypotheses here — same status as every domain/range hypothesis
+elsewhere in this codebase
 (`pid_log_cosh_grounded`'s `hlo`, `EMLPfaffianValidOn`, …); discharging it CONCRETELY would need a
 numeric value for `u`, which this codebase deliberately never fixes. -/
 theorem eml_tree_grounded_depth2_instance (env : Env)
     (hv : EMLTreeValid (realToR (env "x").toF)
-      (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) EMLTree.var)) :
+      (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) EMLTree.var))
+    (hfs : EMLTreeFloatSafe env (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) EMLTree.var)) :
     IsFoldLocal realToR (stdI1 leanPrims) (stdI2 leanPrims) realOfEML env
         (toCertcomEML (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) EMLTree.var)) ∧
       abs (exactRn realToR realOfEML env
@@ -624,15 +675,19 @@ theorem eml_tree_grounded_depth2_instance (env : Env)
             (realToR (env "x").toF))
         ≤ emlTreeErrorBound (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) EMLTree.var)
           (realToR (env "x").toF) :=
-  eml_tree_grounded env _ hv
+  eml_tree_grounded env _ hv hfs
 
 /-- **Non-vacuity: a genuine `const` node, the whole point of this round.**
 `eml (const 1) var` — `exp(1) − log(x)` — the SAME kernel `eml_var_var_pipeline_uniform_grounded`
 (`EMLCertcomGrounded.lean`) covers, but reached here as an ordinary instance of the fully general
 theorem instead of a bespoke construction, confirming `const` genuinely composes through the same
-machinery as `var`/`eml`. -/
+machinery as `var`/`eml`.
+
+`hv` and, since 2026-09-14, `hfs` (the float side conditions, including that `c` is `0` or at least `DBL_MIN` and at
+most `DBL_MAX` in magnitude) are hypotheses, as in the depth-2 instance. -/
 theorem eml_tree_grounded_const_instance (env : Env) (c : Real)
-    (hv : EMLTreeValid (realToR (env "x").toF) (EMLTree.eml (EMLTree.const c) EMLTree.var)) :
+    (hv : EMLTreeValid (realToR (env "x").toF) (EMLTree.eml (EMLTree.const c) EMLTree.var))
+    (hfs : EMLTreeFloatSafe env (EMLTree.eml (EMLTree.const c) EMLTree.var)) :
     IsFoldLocal realToR (stdI1 leanPrims) (stdI2 leanPrims) realOfEML env
         (toCertcomEML (EMLTree.eml (EMLTree.const c) EMLTree.var)) ∧
       abs (exactRn realToR realOfEML env (toCertcomEML (EMLTree.eml (EMLTree.const c) EMLTree.var))
@@ -642,7 +697,7 @@ theorem eml_tree_grounded_const_instance (env : Env) (c : Real)
             (toCertcomEML (EMLTree.eml (EMLTree.const c) EMLTree.var))).toF
           - (EMLTree.eml (EMLTree.const c) EMLTree.var).eval (realToR (env "x").toF))
         ≤ emlTreeErrorBound (EMLTree.eml (EMLTree.const c) EMLTree.var) (realToR (env "x").toF) :=
-  eml_tree_grounded env _ hv
+  eml_tree_grounded env _ hv hfs
 
 /-! ## The degenerate-divisor question, answered at the TREE level
 

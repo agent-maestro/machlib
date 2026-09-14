@@ -138,13 +138,17 @@ decides what a certificate can claim.
   and in one named place instead of implicit in four unconstrained constants.
 * **`tools/float_bridge/measure.py` MEASURES every row here that states something measurable** (since
   2026-09-14; run by `tools/check_all.sh`, local only). Each bound is checked against a 256-bit reference
-  over dense, tiny, threshold, large and random inputs, with a sample of the runtime's floats checked bit
-  for bit against Lean's own evaluation. It found `real_tanh_rounds` false as stated, and that row is now
-  restated from the measurement. **These rows are VIOLATED as stated and have NOT been changed:**
-  `real_exp_rounds`, `real_sinh_rounds`, `real_cosh_rounds`, `real_log10_rounds`, `real_tan_rounds`,
-  `real_fpbridge` and `real_round_bounds`. `tools/float_bridge/registry.json` pins where and by how much,
-  and the gate fails if those numbers move or another row starts failing. Read that file before relying
-  on a certificate that cites one of them.
+  over dense, tiny, threshold, large, random and adversarial inputs (results just above a power of two,
+  products and reals straddling `DBL_MIN`, sums and products near overflow), with a sample of the runtime's
+  floats checked bit for bit against Lean's own evaluation. It found eight rows FALSE as stated:
+  `real_tanh_rounds`, `real_fpbridge`, `real_round_bounds`, `real_exp_rounds`, `real_sinh_rounds`,
+  `real_cosh_rounds`, `real_log10_rounds` and `real_tan_rounds`. **All eight are restated from the measurement
+  and hold now**: finite inputs or results, products and reals kept out of the subnormal range
+  (`FPBridgeFinite`), and constants glibc actually meets where it is not correctly rounded (`tanh` and `exp`
+  2u, `sinh` and `cosh` 4u, `log10` 3u, `tan` 2u). The grounded theorems that rest on them carry the matching
+  hypotheses in their statements. `tools/float_bridge/registry.json` pins every number and keeps each old
+  statement as a control that must still fail; the gate fails if a number moves or a row starts failing.
+  Read that file, and the axiom's docstring, before relying on a certificate that cites one of them.
 
 | axiom | class | statement | witness / reason |
 |---|---|---|---|"""]

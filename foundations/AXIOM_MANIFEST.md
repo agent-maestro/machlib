@@ -51,13 +51,17 @@ decides what a certificate can claim.
   and in one named place instead of implicit in four unconstrained constants.
 * **`tools/float_bridge/measure.py` MEASURES every row here that states something measurable** (since
   2026-09-14; run by `tools/check_all.sh`, local only). Each bound is checked against a 256-bit reference
-  over dense, tiny, threshold, large and random inputs, with a sample of the runtime's floats checked bit
-  for bit against Lean's own evaluation. It found `real_tanh_rounds` false as stated, and that row is now
-  restated from the measurement. **These rows are VIOLATED as stated and have NOT been changed:**
-  `real_exp_rounds`, `real_sinh_rounds`, `real_cosh_rounds`, `real_log10_rounds`, `real_tan_rounds`,
-  `real_fpbridge` and `real_round_bounds`. `tools/float_bridge/registry.json` pins where and by how much,
-  and the gate fails if those numbers move or another row starts failing. Read that file before relying
-  on a certificate that cites one of them.
+  over dense, tiny, threshold, large, random and adversarial inputs (results just above a power of two,
+  products and reals straddling `DBL_MIN`, sums and products near overflow), with a sample of the runtime's
+  floats checked bit for bit against Lean's own evaluation. It found eight rows FALSE as stated:
+  `real_tanh_rounds`, `real_fpbridge`, `real_round_bounds`, `real_exp_rounds`, `real_sinh_rounds`,
+  `real_cosh_rounds`, `real_log10_rounds` and `real_tan_rounds`. **All eight are restated from the measurement
+  and hold now**: finite inputs or results, products and reals kept out of the subnormal range
+  (`FPBridgeFinite`), and constants glibc actually meets where it is not correctly rounded (`tanh` and `exp`
+  2u, `sinh` and `cosh` 4u, `log10` 3u, `tan` 2u). The grounded theorems that rest on them carry the matching
+  hypotheses in their statements. `tools/float_bridge/registry.json` pins every number and keeps each old
+  statement as a control that must still fail; the gate fails if a number moves or a row starts failing.
+  Read that file, and the axiom's docstring, before relying on a certificate that cites one of them.
 
 | axiom | class | statement | witness / reason |
 |---|---|---|---|
@@ -71,17 +75,17 @@ decides what a certificate can claim.
 | `Certcom.real_atan_rounds` | float-bridge | `: ∀ a : Float, abs (realToR (stdI1 leanPrims .atan a) - atan (realToR a)) ≤ real_atan_eps` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_cos_eps` | float-bridge | `: MachLib.Real` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_cos_rounds` | float-bridge | `: ∀ a : Float, abs (realToR (stdI1 leanPrims .cos a) - cos (realToR a)) ≤ real_cos_eps` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
-| `Certcom.real_cosh_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ u * cosh R` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
-| `Certcom.real_exp_rounds` | float-bridge | `: ∀ (hi : MachLib.Real) (a : Float), realToR a ≤ hi → abs (realToR (stdI1 leanPrims .exp a) - exp (realToR a)) ≤ u * exp hi` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
-| `Certcom.real_fpbridge` | float-bridge | `: FPBridge realToR` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
-| `Certcom.real_log10_rounds` | float-bridge | `: ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .log10 a) - log10 (realToR a)) ≤ u * ` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_cosh_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .cosh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .cosh a) - cosh (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_exp_rounds` | float-bridge | `: ∀ (hi : MachLib.Real) (a : Float), a.isFinite = true → (stdI1 leanPrims .exp a).isFinite = true → dblMin ≤ exp (realToR a) → realToR a ≤ hi → abs (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_fpbridge` | float-bridge | `: FPBridgeFinite realToR` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_log10_rounds` | float-bridge | `: ∀ (lo hi : MachLib.Real) (a : Float), a.isFinite = true → 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .log10 a) - log10` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_log_rounds` | float-bridge | `: ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ u * (abs ` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
-| `Certcom.real_round_bounds` | float-bridge | `: ∀ M x : Real, 0 ≤ M → abs x ≤ M → abs (realToR (floatOfR x) - x) ≤ u * M` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_round_bounds` | float-bridge | `: ∀ M x : Real, 0 ≤ M → M ≤ dblMax → abs x ≤ M → (x = 0 ∨ dblMin ≤ abs x) → abs (realToR (floatOfR x) - x) ≤ u * M` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sin_eps` | float-bridge | `: MachLib.Real` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sin_rounds` | float-bridge | `: ∀ a : Float, abs (realToR (stdI1 leanPrims .sin a) - sin (realToR a)) ≤ real_sin_eps` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
-| `Certcom.real_sinh_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ u * cosh R` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_sinh_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .sinh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sqrt_rounds` | float-bridge | `: ∀ (hi : MachLib.Real) (a : Float), 0 ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .sqrt a) - sqrt (realToR a)) ≤ u * sqrt hi` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
-| `Certcom.real_tan_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), 0 ≤ R → R < pi / (1 + 1) → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .tan a) - tan (realToR a)) ≤ u * ta` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_tan_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), a.isFinite = true → 0 ≤ R → R < pi / (1 + 1) → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .tan a) - tan (` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_tanh_rounds` | float-bridge | `: ∀ (a : Float), a.isFinite = true → abs (realToR (stdI1 leanPrims .tanh a) - tanh (realToR a)) ≤ u + u` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Classical.choice` | standard | `` | Lean kernel axiom — sound by construction |
 | `MachLib.IsAnalyticOnReals` | mapped | `(f : Real → Real) (S : RealSet) : Prop` | carrier / function symbol, interpreted not witnessed |

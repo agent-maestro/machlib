@@ -118,66 +118,69 @@
     "Certcom.real_cosh_rounds": {
       "kind": "measured",
       "function": "cosh",
-      "domain": "finite",
-      "bound": "u_cosh_x",
-      "expect": "violated",
-      "statement": ": ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ u * cosh R",
+      "domain": "finite_result",
+      "bound": "c_u_cosh_x",
+      "c": "4",
+      "expect": "holds",
+      "statement": ": ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .cosh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ (u + u + u + u) * cosh R",
       "pinned": {
-        "inputs": 412660,
-        "examined": 387357,
-        "vacuous": 3,
-        "unmeasurable": 25300,
-        "violations": 20726,
-        "max": "2.902705e+00",
-        "argmax": "40862e8f5c1cf4b7"
+        "inputs": 776071,
+        "examined": 750768,
+        "vacuous": 25303,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "7.438538e-01",
+        "argmax": "40862e467bd86765"
       }
     },
     "Certcom.real_exp_rounds": {
       "kind": "measured",
       "function": "exp",
-      "domain": "finite",
-      "bound": "u_exp_x",
-      "expect": "violated",
-      "statement": ": ∀ (hi : MachLib.Real) (a : Float), realToR a ≤ hi → abs (realToR (stdI1 leanPrims .exp a) - exp (realToR a)) ≤ u * exp hi",
+      "domain": "finite_normal_exp",
+      "bound": "c_u_exp_x",
+      "c": "2",
+      "expect": "holds",
+      "statement": ": ∀ (hi : MachLib.Real) (a : Float), a.isFinite = true → (stdI1 leanPrims .exp a).isFinite = true → dblMin ≤ exp (realToR a) → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .exp a) - exp (realToR a)) ≤ (u + u) * exp hi",
       "pinned": {
-        "inputs": 323435,
-        "examined": 309969,
-        "vacuous": 3,
-        "unmeasurable": 13463,
-        "violations": 30654,
-        "max": "9.007199e+15",
-        "argmax": "c0874910d52d3052"
+        "inputs": 927010,
+        "examined": 780992,
+        "vacuous": 146018,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "5.013760e-01",
+        "argmax": "c07571b1a24485b8"
       }
     },
     "Certcom.real_fpbridge": {
       "kind": "bridge",
-      "expect": "violated",
-      "statement": ": FPBridge realToR",
+      "expect": "holds",
+      "statement": ": FPBridgeFinite realToR",
       "pinned": {
-        "inputs": 95000,
-        "examined": 274102,
-        "vacuous": 0,
-        "unmeasurable": 10898,
-        "violations": 28213,
-        "max": "9.007199e+15",
-        "argmax": "mul 000000000000000a 800000000000000a"
+        "inputs": 615001,
+        "examined": 1419906,
+        "vacuous": 425097,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "9.999989e-01",
+        "argmax": "mul 8863d0d7f67512d8 b799d68572f9e7df"
       }
     },
     "Certcom.real_log10_rounds": {
       "kind": "measured",
       "function": "log10",
       "domain": "positive",
-      "bound": "u_abs_log10_x",
-      "expect": "violated",
-      "statement": ": ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .log10 a) - log10 (realToR a)) ≤ u * (abs (log10 lo) + abs (log10 hi))",
+      "bound": "c_u_abs_log10_x",
+      "c": "3",
+      "expect": "holds",
+      "statement": ": ∀ (lo hi : MachLib.Real) (a : Float), a.isFinite = true → 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .log10 a) - log10 (realToR a)) ≤ (u + u + u) * (abs (log10 lo) + abs (log10 hi))",
       "pinned": {
-        "inputs": 400269,
-        "examined": 400257,
+        "inputs": 644015,
+        "examined": 644003,
         "vacuous": 12,
         "unmeasurable": 0,
-        "violations": 10636,
-        "max": "2.036102e+00",
-        "argmax": "3ffcafa1cc8a464f"
+        "violations": 0,
+        "max": "6.920265e-01",
+        "argmax": "3ff00000935d90bc"
       }
     },
     "Certcom.real_log_rounds": {
@@ -199,16 +202,16 @@
     },
     "Certcom.real_round_bounds": {
       "kind": "rounding",
-      "expect": "violated",
-      "statement": ": ∀ M x : Real, 0 ≤ M → abs x ≤ M → abs (realToR (floatOfR x) - x) ≤ u * M",
+      "expect": "holds",
+      "statement": ": ∀ M x : Real, 0 ≤ M → M ≤ dblMax → abs x ≤ M → (x = 0 ∨ dblMin ≤ abs x) → abs (realToR (floatOfR x) - x) ≤ u * M",
       "pinned": {
-        "inputs": 140000,
-        "examined": 140000,
-        "vacuous": 0,
+        "inputs": 260002,
+        "examined": 167118,
+        "vacuous": 92884,
         "unmeasurable": 0,
-        "violations": 22466,
-        "max": "9.007199e+15",
-        "argmax": "8007dbf69827a2608386ac7c1328338f5725e12b5742ece58a825cea97ae3abcp-1332"
+        "violations": 0,
+        "max": "9.999498e-01",
+        "argmax": "100000000000887ffe5ade49be630e16429d797caccf7f1781c99f9509fba48d5p-1278"
       }
     },
     "Certcom.real_sin_eps": {
@@ -236,18 +239,19 @@
     "Certcom.real_sinh_rounds": {
       "kind": "measured",
       "function": "sinh",
-      "domain": "finite",
-      "bound": "u_cosh_x",
-      "expect": "violated",
-      "statement": ": ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ u * cosh R",
+      "domain": "finite_result",
+      "bound": "c_u_cosh_x",
+      "c": "4",
+      "expect": "holds",
+      "statement": ": ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .sinh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ (u + u + u + u) * cosh R",
       "pinned": {
-        "inputs": 413640,
-        "examined": 388337,
-        "vacuous": 3,
-        "unmeasurable": 25300,
-        "violations": 20444,
-        "max": "2.902705e+00",
-        "argmax": "40862e8f5c1cf4b7"
+        "inputs": 776071,
+        "examined": 750768,
+        "vacuous": 25303,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "7.438538e-01",
+        "argmax": "40862e467bd86765"
       }
     },
     "Certcom.real_sqrt_rounds": {
@@ -271,16 +275,17 @@
       "kind": "measured",
       "function": "tan",
       "domain": "tan_open",
-      "bound": "u_abs_tan_x",
-      "expect": "violated",
-      "statement": ": ∀ (R : MachLib.Real) (a : Float), 0 ≤ R → R < pi / (1 + 1) → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .tan a) - tan (realToR a)) ≤ u * tan R",
+      "bound": "c_u_abs_tan_x",
+      "c": "2",
+      "expect": "holds",
+      "statement": ": ∀ (R : MachLib.Real) (a : Float), a.isFinite = true → 0 ≤ R → R < pi / (1 + 1) → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .tan a) - tan (realToR a)) ≤ (u + u) * tan R",
       "pinned": {
-        "inputs": 510848,
-        "examined": 500843,
-        "vacuous": 10005,
+        "inputs": 560284,
+        "examined": 550203,
+        "vacuous": 10081,
         "unmeasurable": 0,
-        "violations": 146,
-        "max": "1.042585e+00",
+        "violations": 0,
+        "max": "5.212924e-01",
         "argmax": "3ff826f9c023cdc3"
       }
     },
@@ -319,6 +324,57 @@
       "bound": "c_u_sqrt_x",
       "c": "0.25",
       "why": "sqrt is correctly rounded, so its error reaches about half an ulp, near u relative; a quarter of u must be exceeded"
+    },
+    "exp-as-stated-until-2026-09-14": {
+      "kind": "measured",
+      "function": "exp",
+      "domain": "finite",
+      "bound": "u_exp_x",
+      "why": "real_exp_rounds as stated until 2026-09-14, restated that day from this measurement; kept so the run keeps showing it fails (subnormal results, and results just above a power of two)"
+    },
+    "exp-at-u-on-its-restated-domain": {
+      "kind": "measured",
+      "function": "exp",
+      "domain": "finite_normal_exp",
+      "bound": "c_u_exp_x",
+      "c": "1",
+      "why": "real_exp_rounds's 2026-09-14 hypotheses with its old constant u: glibc misrounds some results just above a power of two, so u fails even with subnormal and overflowing results excluded"
+    },
+    "sinh-as-stated-until-2026-09-14": {
+      "kind": "measured",
+      "function": "sinh",
+      "domain": "finite",
+      "bound": "u_cosh_x",
+      "why": "real_sinh_rounds as stated until 2026-09-14, restated that day from this measurement; kept so the run keeps showing it fails"
+    },
+    "cosh-as-stated-until-2026-09-14": {
+      "kind": "measured",
+      "function": "cosh",
+      "domain": "finite",
+      "bound": "u_cosh_x",
+      "why": "real_cosh_rounds as stated until 2026-09-14, restated that day from this measurement; kept so the run keeps showing it fails"
+    },
+    "log10-as-stated-until-2026-09-14": {
+      "kind": "measured",
+      "function": "log10",
+      "domain": "positive",
+      "bound": "u_abs_log10_x",
+      "why": "real_log10_rounds as stated until 2026-09-14, restated that day from this measurement; kept so the run keeps showing it fails"
+    },
+    "tan-as-stated-until-2026-09-14": {
+      "kind": "measured",
+      "function": "tan",
+      "domain": "tan_open",
+      "bound": "u_abs_tan_x",
+      "why": "real_tan_rounds as stated until 2026-09-14, restated that day from this measurement; kept so the run keeps showing it fails"
+    },
+    "fpbridge-as-stated-until-2026-09-14": {
+      "kind": "bridge-unconditional",
+      "why": "real_fpbridge : FPBridge realToR as stated until 2026-09-14, restated that day from this measurement; kept so the run keeps showing it fails (products below DBL_MIN)"
+    },
+    "round-bounds-as-stated-until-2026-09-14": {
+      "kind": "rounding-unconditional",
+      "why": "real_round_bounds as stated until 2026-09-14, restated that day from this measurement; kept so the run keeps showing it fails (reals below DBL_MIN)"
     }
   }
 }

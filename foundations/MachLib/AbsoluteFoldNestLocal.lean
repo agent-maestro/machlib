@@ -149,6 +149,66 @@ theorem pipeline_nested_local {toR : Float → MachLib.Real} (br : FPBridge toR)
   rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 e env]
   exact nested_fold_local br realOf1 i1 i2 env e he
 
+/-- `nested_fold_local` over `FPBridgeFinite`: the same existential bound, given the tree's float side
+conditions (`FloatSafe`). -/
+theorem nested_fold_local_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (realOf1 : Trans1 → MachLib.Real → MachLib.Real)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float) (env : Env) :
+    ∀ e : EML, IsFoldLocal toR i1 i2 realOf1 env e → FloatSafe toR i1 i2 env e →
+      ∃ E, AbsEnc E (toR (evalEML i1 i2 env e).toF) (exactRn toR realOf1 env e) := by
+  intro e he
+  induction he with
+  | lit c => intro _; exact ⟨0, absenc_exact (toR c)⟩
+  | var s => intro _; exact ⟨0, absenc_exact (toR (env s).toF)⟩
+  | add a b _ _ iha ihb =>
+      intro hs
+      cases hs with
+      | add _ _ hsa hsb hf =>
+          obtain ⟨Ea, ha⟩ := iha hsa
+          obtain ⟨Eb, hb⟩ := ihb hsb
+          exact ⟨_, absenc_add ha hb (br.add _ _ hf)⟩
+  | sub a b _ _ iha ihb =>
+      intro hs
+      cases hs with
+      | sub _ _ hsa hsb hf =>
+          obtain ⟨Ea, ha⟩ := iha hsa
+          obtain ⟨Eb, hb⟩ := ihb hsb
+          exact ⟨_, absenc_sub ha hb (br.sub _ _ hf)⟩
+  | mul a b _ _ iha ihb =>
+      intro hs
+      cases hs with
+      | mul _ _ hsa hsb hf hz =>
+          obtain ⟨Ea, ha⟩ := iha hsa
+          obtain ⟨Eb, hb⟩ := ihb hsb
+          exact ⟨_, absenc_mul ha hb (br.mul _ _ hf hz)⟩
+  | neg a _ iha =>
+      intro hs
+      cases hs with
+      | neg _ hsa hf =>
+          obtain ⟨Ea, ha⟩ := iha hsa
+          refine ⟨Ea, ?_⟩
+          show AbsEnc Ea (toR (-(evalEML i1 i2 env a).toF)) (-(exactRn toR realOf1 env a))
+          rw [br.neg _ hf]
+          exact absenc_neg ha
+  | tr1 t a L lo hi Eround hLnn hLip hflx_lo hflx_hi hxe_lo hxe_hi hround _ iha =>
+      intro hs
+      cases hs with
+      | tr1 _ _ hsa =>
+          obtain ⟨Ea, ha⟩ := iha hsa
+          exact ⟨_, absenc_lip_local hLnn hLip ha hflx_lo hflx_hi hxe_lo hxe_hi hround⟩
+
+/-- `pipeline_nested_local` over `FPBridgeFinite`, with `FloatSafe`'s side conditions. -/
+theorem pipeline_nested_local_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (realOf1 : Trans1 → MachLib.Real → MachLib.Real)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v) (env : Env)
+    (e : EML) (he : IsFoldLocal toR i1 i2 realOf1 env e) (hs : FloatSafe toR i1 i2 env e) :
+    ∃ E, AbsEnc E (toR (evalC r1 r2 env (emitC e)).toF) (exactRn toR realOf1 env e) := by
+  rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 e env]
+  exact nested_fold_local_finite br realOf1 i1 i2 env e he hs
+
 /-! ## Bridges to the arithmetic fragment: lifting a plain `IsArith` kernel into the nested fold -/
 
 /-- **Every arithmetic tree is (trivially) in the nested-local fragment** — `IsArith`'s constructors

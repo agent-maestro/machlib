@@ -8,15 +8,15 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 111 `.lean` files** (797 top-level + 314 in subdirectories) /
-**253 977 lines** / **7 715 theorems**, re-exported through the aggregator
+**254 694 lines** / **7 737 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 715
-python3 tools/count_theorems.py --scope all           # 8 435
+python3 tools/count_theorems.py --scope core          # 7 737
+python3 tools/count_theorems.py --scope all           # 8 457
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -95,17 +95,23 @@ no IEEE-754 semantics, so they are validated by *measurement*, not by a model. *
 hardware certificate actually rests on** — anyone shown an atan/tan bench certificate should be
 pointed at that block first.
 
-**They are measured now, and several are false as stated.** `tools/float_bridge/measure.py` (in
+**They are measured now, and eight were false as stated.** `tools/float_bridge/measure.py` (in
 `check_all.sh`; local only, because its pins are this machine's glibc) measures every float-bridge axiom
 it can express against a 256-bit reference, checks the runtime's floats bit for bit against Lean's own
-`#eval`, carries two too-tight controls that must fail, and fails the run when a pinned number in
-`tools/float_bridge/registry.json` moves, a statement changes, or a new row fails. Its first run
-(2026-09-14) found `real_tanh_rounds` false, which was restated from the measurement (finite inputs,
-`2u`). **`real_exp_rounds`, `real_sinh_rounds`, `real_cosh_rounds`, `real_log10_rounds`,
-`real_tan_rounds`, `real_fpbridge` and `real_round_bounds` are violated as stated and were deliberately
-left unchanged** — the subnormal range for exp, mul and rounding, ordinary arguments too for sinh, cosh,
-log10 and tan. Every grounded certificate rests on `real_fpbridge`. Read the registry before citing a
-grounded bound.
+`#eval`, carries too-tight controls that must fail, and fails the run when a pinned number in
+`tools/float_bridge/registry.json` moves, a statement changes, or a row fails. On 2026-09-14 it found
+`real_tanh_rounds` false (restated: finite inputs, `2u`), and then, with inputs widened adversarially,
+`real_fpbridge`, `real_round_bounds`, `real_exp_rounds`, `real_sinh_rounds`, `real_cosh_rounds`,
+`real_log10_rounds` and `real_tan_rounds`. **All are restated from the measurement and none is
+acknowledged violated now**: `real_fpbridge` is `FPBridgeFinite` (finite results, and a product's exact
+value `0` or at least `DBL_MIN`), `real_round_bounds` excludes nonzero reals below `DBL_MIN` and above
+`DBL_MAX`, and the primitives need finite inputs or results (`exp` also an exact result of at least
+`DBL_MIN`) with constants glibc actually meets: `exp` 2u, `sinh` and `cosh` 4u, `log10` 3u, `tan` 2u. Each old
+statement is kept in the registry as a control that must still fail. The price is in the grounded theorems'
+statements, and it is deliberately visible there: they take `hsafe : FloatSafe …` (the float side
+conditions at each node of the kernel's evaluation) and, where a primitive needs one, a result-finiteness or
+`DBL_MIN` hypothesis. Nothing in Lean can discharge those for a concrete input. Read each axiom's docstring,
+and the registry, before citing a grounded bound.
 
 > **It went dark once, for 33 days, and nothing said so.** MachLib moved to Lean v4.32.2 on
 > 2026-07-31; `monogate-lean` stayed on v4.14.0. Because it requires MachLib *by path*, it was

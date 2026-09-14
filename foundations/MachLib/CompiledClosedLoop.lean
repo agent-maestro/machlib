@@ -119,16 +119,19 @@ possible certcom instance, with no residual arithmetic-fold term to carry throug
 
 The hypothesis and the constant are `real_tanh_rounds`'s (`FPGrounding.lean`), restated 2026-09-14 from a
 measurement. Until then this theorem took a bound `R` on `|realToR y|`, which every `y` satisfies, and
-concluded `u`, which the runtime's `tanh` does not meet: the measured maximum is `1.4996u`. -/
+concluded `u`, which the runtime's `tanh` does not meet: the measured maximum is `1.4996u`.
+
+The statement did not change when `real_fpbridge` was restated on 2026-09-14: a bare variable has no arithmetic
+node, so `FloatSafe` asks nothing of it. -/
 theorem pid_tanhVar_grounded (y : Float) (hfin : y.isFinite = true) :
     AbsEnc (u + u)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY y) (emitC tanhVarEML)).toF)
       (tanh (realToR y)) := by
-  have h := pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+  have h := pipeline_tr1_of_arith_finite real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     (envOfY y) .tanh tanh 1 (u + u)
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact tanh_lipschitz p q)
-    (.var "y") isArith_var_y (real_tanh_rounds _ hfin)
+    (.var "y") isArith_var_y (.var "y") (real_tanh_rounds _ hfin)
   have h1 : absErr realToR (envOfY y) (EML.var "y") = 0 := rfl
   have h2 : exactR realToR (envOfY y) (EML.var "y") = realToR y := rfl
   rw [h1, h2, mul_zero, add_zero] at h

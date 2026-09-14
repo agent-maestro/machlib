@@ -217,4 +217,197 @@ theorem pipeline_tan_of_arith {toR : Float → MachLib.Real} (br : FPBridge toR)
       (cos_pos_of_abs_lt_pi_div_two (by rw [abs_of_nonneg hR0]; exact hR)))))
     (tan_lip_local R hR0 hR) e he hflx_lo hflx_hi hxe_lo hxe_hi hround
 
+/-! ## The same pipelines over the bridge binary64 satisfies
+
+Each theorem below is its namesake above over `FPBridgeFinite` (`FloatRealBridge.lean`), with the arithmetic subtree's
+float side conditions as the explicit hypothesis `hs : FloatSafe …` (`AbsoluteFold.lean`). -/
+
+/-- `pipeline_tr1_of_arith_local` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_tr1_of_arith_local_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (f : MachLib.Real → MachLib.Real) (L Eround lo hi : MachLib.Real)
+    (hLnn : 0 ≤ L)
+    (hLip : ∀ p q : MachLib.Real, lo ≤ p → p ≤ hi → lo ≤ q → q ≤ hi →
+        abs (f p - f q) ≤ L * abs (p - q))
+    (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : lo ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ hi)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - f (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + L * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (f (exactR toR env e)) := by
+  rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 (tr1OfEML t e) env]
+  show AbsEnc (Eround + L * absErr toR env e)
+      (toR (i1 t (evalEML i1 i2 env e).toF)) (f (exactR toR env e))
+  exact absenc_lip_local hLnn hLip (evalEML_absErr_finite br i1 i2 env e he hs)
+    hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_exp_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_exp_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (lo hi Eround : MachLib.Real) (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : lo ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ hi)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - exp (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + exp hi * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (exp (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t exp (exp hi) Eround lo hi
+    (le_of_lt (exp_pos hi)) (exp_lip_local lo hi) e he hs hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_log_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_log_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (lo hi Eround : MachLib.Real) (hlo : 0 < lo) (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : lo ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ hi)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - log (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + (1 / lo) * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (log (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t log (1 / lo) Eround lo hi
+    (le_of_lt (one_div_pos_of_pos hlo)) (log_lip_local lo hi hlo) e he hs
+    hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_sqrt_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_sqrt_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (lo hi Eround : MachLib.Real) (hlo : 0 < lo) (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : lo ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ hi)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - sqrt (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + (1 / (sqrt lo + sqrt lo)) * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (sqrt (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t sqrt (1 / (sqrt lo + sqrt lo)) Eround lo hi
+    (le_of_lt (one_div_pos_of_pos (add_pos (sqrt_pos hlo) (sqrt_pos hlo))))
+    (sqrt_lip_local lo hi hlo) e he hs hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_log10_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_log10_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (lo hi Eround : MachLib.Real) (hlo : 0 < lo) (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : lo ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ hi)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - log10 (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + (1 / (lo * log (natCast 10))) * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (log10 (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t log10 (1 / (lo * log (natCast 10))) Eround lo hi
+    (le_of_lt (one_div_pos_of_pos (mul_pos hlo log_ten_pos)))
+    (log10_lip_local lo hi hlo) e he hs hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_arcsin_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_arcsin_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (R Eround : MachLib.Real) (hR : R < 1) (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : -R ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ R)
+    (hxe_lo : -R ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ R)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - arcsin (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + (1 / sqrt (1 - R * R)) * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (arcsin (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t arcsin (1 / sqrt (1 - R * R)) Eround (-R) R
+    (le_of_lt (one_div_pos_of_pos (sqrt_pos (sub_pos_of_lt
+      (sq_lt_one_of_abs_le_lt_one hR (abs_le_iff.mpr ⟨hxe_lo, hxe_hi⟩))))))
+    (arcsin_lip_local R hR) e he hs hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_arccos_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_arccos_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (R Eround : MachLib.Real) (hR : R < 1) (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : -R ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ R)
+    (hxe_lo : -R ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ R)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - arccos (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + (1 / sqrt (1 - R * R)) * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (arccos (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t arccos (1 / sqrt (1 - R * R)) Eround (-R) R
+    (le_of_lt (one_div_pos_of_pos (sqrt_pos (sub_pos_of_lt
+      (sq_lt_one_of_abs_le_lt_one hR (abs_le_iff.mpr ⟨hxe_lo, hxe_hi⟩))))))
+    (arccos_lip_local R hR) e he hs hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_sinh_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_sinh_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (R Eround : MachLib.Real) (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : -R ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ R)
+    (hxe_lo : -R ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ R)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - sinh (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + cosh R * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (sinh (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t sinh (cosh R) Eround (-R) R
+    (le_of_lt (cosh_pos R)) (sinh_lip_local R) e he hs hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_cosh_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_cosh_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (R Eround : MachLib.Real) (hR0 : 0 ≤ R) (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : -R ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ R)
+    (hxe_lo : -R ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ R)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - cosh (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + sinh R * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (cosh (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t cosh (sinh R) Eround (-R) R
+    (sinh_nonneg hR0) (cosh_lip_local R) e he hs hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- `pipeline_tan_of_arith` over `FPBridgeFinite`, with `FloatSafe`'s side conditions on
+the arithmetic subtree. -/
+theorem pipeline_tan_of_arith_finite {toR : Float → MachLib.Real} (br : FPBridgeFinite toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (R Eround : MachLib.Real) (hR0 : 0 ≤ R) (hR : R < pi / (1 + 1))
+    (e : EML) (he : IsArith e)
+    (hs : FloatSafe toR i1 i2 env e)
+    (hflx_lo : -R ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ R)
+    (hxe_lo : -R ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ R)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - tan (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + (1 / (cos R * cos R)) * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (tan (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local_finite br i1 i2 r1 r2 hrt1 hrt2 env t tan (1 / (cos R * cos R)) Eround (-R) R
+    (le_of_lt (one_div_pos_of_pos (mul_pos
+      (cos_pos_of_abs_lt_pi_div_two (by rw [abs_of_nonneg hR0]; exact hR))
+      (cos_pos_of_abs_lt_pi_div_two (by rw [abs_of_nonneg hR0]; exact hR)))))
+    (tan_lip_local R hR0 hR) e he hs hflx_lo hflx_hi hxe_lo hxe_hi hround
+
 end Certcom

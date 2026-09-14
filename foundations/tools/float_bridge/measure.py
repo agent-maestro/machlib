@@ -16,35 +16,49 @@ harness can read it, and the harness enforces that the registry and the corpus a
     (glibc, called through ctypes — the functions `Float.exp` & co. link), IEEE double arithmetic, the
     runtime's composite bodies, and `floatCopySign`'s bit definition. The real side is mpmath at 256 bits.
     Where the statement has free parameters (`R`, `hi`, `lo`), the harness uses the instantiation that makes
-    the bound TIGHTEST, because a ∀ over them is false if it fails at any one:
-      exp:   u·exp hi, hi ≥ x                    → u·exp x
-      log:   u·(|log lo| + |log hi|), lo ≤ x ≤ hi → u·|log x| (lo or hi at 1)      (log10 likewise)
-      sqrt:  u·sqrt hi, hi ≥ x                   → u·sqrt x
-      sinh, cosh:  u·cosh R, R ≥ |x|             → u·cosh x
-      tan:   u·tan R, |x| ≤ R < π/2              → u·|tan x|, and only |x| < π/2 is in the domain
-      asin, acos:  a constant, |x| ≤ R < 1       → only |x| < 1 is in the domain
-    An input outside a statement's hypotheses is VACUOUS (not counted). An input whose float result is
-    ±inf or NaN is UNMEASURABLE: `realToR` of a non-finite float has no real value, so nothing can be said,
-    and the count is reported rather than hidden. Non-finite INPUTS are likewise outside what can be
-    measured, whatever the statement quantifies over.
+    the bound TIGHTEST, because a ∀ over them is false if it fails at any one (`c` is the statement's
+    constant: `u + u` is 2):
+      exp:   c·u·exp hi, hi ≥ x                    → c·u·exp x
+      log:   c·u·(|log lo| + |log hi|), lo ≤ x ≤ hi → c·u·|log x| (lo or hi at 1)     (log10 likewise)
+      sqrt:  u·sqrt hi, hi ≥ x                     → u·sqrt x
+      sinh, cosh:  c·u·cosh R, R ≥ |x|             → c·u·cosh x
+      tan:   c·u·tan R, |x| ≤ R < π/2              → c·u·|tan x|, and only |x| < π/2 is in the domain
+      asin, acos:  a constant, |x| ≤ R < 1         → only |x| < 1 is in the domain
+    An input outside a statement's hypotheses is VACUOUS (not counted). Since 2026-09-14 some hypotheses are
+    about the RESULT: `(stdI1 leanPrims .f a).isFinite = true` (sinh, cosh, exp) makes an input with a
+    non-finite result vacuous, and exp's `dblMin ≤ exp (realToR a)` one whose exact result is below DBL_MIN.
+    Where no hypothesis excludes it, a non-finite float result is UNMEASURABLE: `realToR` of a non-finite
+    float has no real value, so nothing can be said, and the count is reported rather than hidden.
+    Non-finite INPUTS are likewise outside what can be measured, whatever the statement quantifies over.
   * `existential-eps` — `|… − f x| ≤ real_f_eps` for an opaque constant: satisfiable iff the error is
     bounded; the harness reports the supremum it found.
-  * `bridge` — `real_fpbridge`: `+`, `−`, `×` round within `u` relatively (`RoundsW`), negation is exact.
-  * `rounding` — `real_round_bounds`: round-to-nearest of a real `x` lands within `u·|x|` (floatOfR read as
-    IEEE round-to-nearest-even, which is what its docstring says it models).
+  * `bridge` — `real_fpbridge : FPBridgeFinite realToR`: `+`, `−`, `×` round within `u` relatively (`RoundsW`)
+    wherever the float result is finite and, for `×`, the exact product is 0 or at least DBL_MIN in magnitude;
+    negation of a finite float is exact. `bridge-unconditional` is `FPBridge`, every pair, as `real_fpbridge`
+    stated it until 2026-09-14: measured only as a control that must fail.
+  * `rounding` — `real_round_bounds`: round-to-nearest of a real `x` with `x = 0` or `DBL_MIN ≤ |x|`, and
+    `|x| ≤ DBL_MAX`, lands within `u·|x|` (floatOfR read as IEEE round-to-nearest-even, which is what its
+    docstring says it models). `rounding-unconditional` is the statement before 2026-09-14, a control.
   * `declaration` — a function symbol or an opaque constant, not a proposition.
 
 INPUTS, deterministic: a dense grid over each function's interesting range; log-spaced tiny |x| down to the
 denormals; consecutive doubles on both sides of every branch threshold and edge (identity cut-offs, the
 exp-overflow switch, the subnormal onset, ±1 for asin/acos, π/2 for tan); ±large magnitudes; random finite
-bit patterns; then a local search around the 25 worst points found, two rounds.
+bit patterns; then a local search around the 25 worst points found, two rounds. Since 2026-09-14 also the
+adversarial sets that found the restated rows' failures: inputs whose result sits just above a power of two
+(where a misrounding costs the most relative error: exp found 7 of them over u), exp's whole subnormal range,
+sinh and cosh's large branch densely, log10 on [0.5, 2) and at 10^(±2^j), tan at atan(2^k) and geometrically
+close to π/2; products straddling DBL_MIN (some rounding up to it, and the exact midpoint below it), sums
+landing either side of DBL_MIN, sums and products near overflow, subnormal operands; reals straddling DBL_MIN
+and DBL_MAX, zero, and ties on the subnormal grid.
 
 VERDICTS. Every `measured` axiom has an `expect`: `holds` fails on any violation; `violated` is an
 ACKNOWLEDGED failure whose numbers are pinned, and the run fails if they change or if a new failure appears.
 Each measured axiom also pins its examined count, maximum error and where it occurs, so a change in the
 libm, the runtime body or the input set cannot pass silently (`--record` re-pins, as a deliberate act).
 The run also fails if:
-  * a positive CONTROL — an axiom stated deliberately too tight — does not come out violated;
+  * a positive CONTROL — an axiom stated deliberately too tight — does not come out violated. Every statement
+    restated on 2026-09-14 is kept as a control in its old form, so the run keeps showing the old one fails;
   * any measured axiom examined fewer than MIN_EXAMINED inputs (a harness that measured nothing passes);
   * the registry and AXIOM_MANIFEST.md's float-bridge rows are not the same set of names;
   * an axiom's statement in the Lean source is not the one registered, OR the registry's reading of it (kind,
@@ -71,6 +85,7 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import functools
 import ctypes.util
 import json
 import math
@@ -96,6 +111,10 @@ TOP_K = 25
 
 DBL_MAX = sys.float_info.max
 DBL_MIN = sys.float_info.min
+DBL_MIN_F = Fraction(DBL_MIN)
+DBL_MAX_F = Fraction(DBL_MAX)
+#: Domains whose hypotheses are about the result, checked after the float is computed.
+RESULT_DOMAINS = ("finite_result", "finite_normal_exp")
 DENORM_MIN = 5e-324
 HALF_PI_DOUBLE = 1.5707963267948966
 
@@ -191,7 +210,7 @@ def reference(name: str):
 def in_domain(domain: str, x: float) -> bool:
     if not math.isfinite(x):
         return False
-    if domain == "finite":
+    if domain in ("finite",) + RESULT_DOMAINS:
         return True
     if domain == "positive":
         return x > 0
@@ -232,6 +251,14 @@ def bound_of(spec: dict, X):
         return u * abs(mp.tan(X))
     if kind == "u_cosh_x":
         return u * mp.cosh(X)
+    if kind == "c_u_cosh_x":
+        return mp.mpf(spec["c"]) * u * mp.cosh(X)
+    if kind == "c_u_exp_x":
+        return mp.mpf(spec["c"]) * u * mp.exp(X)
+    if kind == "c_u_abs_log10_x":
+        return mp.mpf(spec["c"]) * u * abs(mp.log10(X))
+    if kind == "c_u_abs_tan_x":
+        return mp.mpf(spec["c"]) * u * abs(mp.tan(X))
     raise ValueError(f"unknown bound {kind!r}")
 
 
@@ -281,6 +308,12 @@ SPECIALS = [0.0, -0.0, 1.0, -1.0, DBL_MIN, -DBL_MIN, DENORM_MIN, -DENORM_MIN, DB
 
 def inputs_for(function: str) -> list[float]:
     """The deterministic input set for a `measured`/`existential-eps` function."""
+    return list(_inputs_for(function))
+
+
+@functools.lru_cache(maxsize=None)
+def _inputs_for(function: str) -> tuple:
+    mp = _mp()
     if function == "tanh":
         xs = (steps(-30, 30, 1e-3) + steps(-1, 1, 1e-5) + logspace(DENORM_MIN, 1.0, 4000, True)
               + around(TANH_X_MAX, 2000) + around(-TANH_X_MAX, 2000) + around(18.715, 1000) + around(19.0615, 1000)
@@ -288,17 +321,37 @@ def inputs_for(function: str) -> list[float]:
               + random_bits(50_000, 11) + uniform(-40, 40, 100_000, 12))
     elif function in ("sinh", "cosh"):
         xs = (steps(-712, 712, 0.01) + steps(-30, 30, 1e-3) + logspace(DENORM_MIN, 1.0, 4000, True)
-              + around(709.78, 2000) + around(-709.78, 2000) + around(SINH_X_MAX, 2000) + around(-SINH_X_MAX, 2000) + around(710.4758, 500) + around(-710.4758, 500)
+              + around(709.78, 2000) + around(-709.78, 2000) + around(SINH_X_MAX, 2000) + around(-SINH_X_MAX, 2000)
+              + around(710.4758, 500) + around(-710.4758, 500)
               + random_bits(50_000, 21) + uniform(-711, 711, 100_000, 22) + denormals(500))
+        # the large branch densely, and results just above a power of two
+        xs += (uniform(709.78, 710.4758600739439, 100_000, 23) + logspace(SINH_X_MAX, 709.78, 100_000, True)
+               + uniform(19, 21, 20_000, 24))
+        for k in range(-25, 1024):
+            xs += around(float(mp.asinh(mp.mpf(2) ** k)), 20)
+        for k in range(1, 1024):
+            xs += around(float(mp.acosh(mp.mpf(2) ** k)), 20)
     elif function == "exp":
         xs = (steps(-750, 710, 0.01) + around(709.782712893384, 1000) + around(-708.3964185322641, 2000)
               + around(-744.4400719213812, 1000) + around(-745.1332191019412, 1000) + around(0.0, 1000)
               + logspace(DENORM_MIN, 1.0, 4000, True) + random_bits(50_000, 31) + uniform(-750, 710, 100_000, 32))
+        rng = random.Random(33)
+        for k in range(-1074, 1024):   # results just above 2^k
+            x0 = float(mp.log(mp.mpf(2) ** k))
+            xs += around(x0, 40) + [x0 + rng.uniform(0, 0.02) for _ in range(60)]
+        xs += uniform(-708.4, 709.78, 200_000, 34) + uniform(-745.2, -708.39, 100_000, 35)
     elif function in ("ln", "log10"):
         xs = (logspace(DENORM_MIN, DBL_MAX, 200_000, False) + around(1.0, 5000) + denormals(2000)
               + [y for k in range(-20, 23) for y in around(10.0 ** k, 50)]
               + [y for k in range(-1074, 1024, 7) for y in around(math.ldexp(1.0, k), 5)]
               + random_bits(50_000, 41, positive=True) + uniform(0.0, 10.0, 100_000, 42))
+        if function == "log10":
+            xs += uniform(0.5, 2.0, 200_000, 43) + around(1.0, 20_000)
+            for j in range(-52, 9):    # results just above 2^j in magnitude
+                for sgn in (1, -1):
+                    x0 = float(mp.mpf(10) ** (sgn * mp.mpf(2) ** j))
+                    if 0 < x0 < math.inf:
+                        xs += around(x0, 100)
     elif function == "sqrt":
         xs = (logspace(DENORM_MIN, DBL_MAX, 200_000, False) + denormals(2000)
               + [y for k in range(-537, 512, 3) for y in around(math.ldexp(1.0, 2 * k), 20)]
@@ -310,6 +363,11 @@ def inputs_for(function: str) -> list[float]:
         xs = (steps(-HALF_PI_DOUBLE, HALF_PI_DOUBLE, 1e-5) + around(HALF_PI_DOUBLE, 5000) + around(-HALF_PI_DOUBLE, 5000)
               + logspace(DENORM_MIN, 1.0, 20_000, True) + uniform(-1.5707, 1.5707, 100_000, 71)
               + around(math.pi / 4, 1000))
+        rng = random.Random(72)
+        for k in range(-30, 54):       # results just above 2^k
+            x0 = float(mp.atan(mp.mpf(2) ** k))
+            xs += around(x0, 100) + around(-x0, 20)
+        xs += [HALF_PI_DOUBLE * (1 - 10.0 ** rng.uniform(-16, 0)) for _ in range(50_000)]
     elif function in ("sin", "cos", "atan"):
         xs = (steps(-100, 100, 1e-3) + logspace(DENORM_MIN, DBL_MAX, 20_000, True) + random_bits(50_000, 81)
               + uniform(-1e6, 1e6, 50_000, 82) + [y for k in range(1, 101) for y in around(k * math.pi, 50)])
@@ -324,10 +382,11 @@ def inputs_for(function: str) -> list[float]:
         if b not in seen:
             seen.add(b)
             out.append(x)
-    return out
+    return tuple(out)
 
 
-def pairs_for_bridge() -> list[tuple[float, float]]:
+@functools.lru_cache(maxsize=None)
+def _pairs_for_bridge() -> tuple:
     rng, out = random.Random(101), []
     rand = random_bits(100_000, 102)
     out += list(zip(rand[::2], rand[1::2]))
@@ -341,7 +400,31 @@ def pairs_for_bridge() -> list[tuple[float, float]]:
         out.append((a, -a * (1 + rng.uniform(-1e-9, 1e-9))))
     for _ in range(5_000):  # exact small integers and halves
         out.append((rng.randint(-1000, 1000) / 2, rng.randint(-1000, 1000) / 4))
-    return out
+    for _ in range(40_000):  # exact products straddling DBL_MIN, some of which round UP to it
+        a = math.ldexp(rng.uniform(1.0, 2.0), rng.randint(-1000, -30)) * rng.choice((1, -1))
+        out += [(a, b) for b in around(float(DBL_MIN_F / Fraction(a)), 3)]
+    for _ in range(20_000):  # sums and differences landing just below or above DBL_MIN
+        a = math.ldexp(rng.uniform(1.0, 2.0), -1022)
+        out.append((a, -math.ldexp(rng.random(), rng.randint(-1074, -1022))))
+        out.append((a, math.ldexp(rng.random(), rng.randint(-1074, -1022))))
+    for _ in range(40_000):  # sums and products near overflow
+        a = DBL_MAX * (1 - rng.random() * 1e-15)
+        out.append((a, a * rng.random() * 2e-15))
+        out.append((a, -a * rng.random()))
+        out.append((math.ldexp(rng.uniform(1.0, 2.0), rng.randint(500, 1023)),
+                    math.ldexp(rng.uniform(1.0, 2.0), rng.randint(0, 523))))
+        c = math.sqrt(DBL_MAX) * (1 + rng.uniform(-1e-15, 1e-15))
+        out.append((c, c))
+    for _ in range(20_000):  # subnormal operands, with normal and with subnormal partners
+        out.append((math.ldexp(rng.random(), -1074 + rng.randint(0, 51)), math.ldexp(rng.uniform(1.0, 2.0), rng.randint(0, 1000))))
+        out.append((math.ldexp(rng.random(), -1074 + rng.randint(0, 51)), math.ldexp(rng.random(), -1074 + rng.randint(0, 51))))
+    m = (1 << 53) - 1  # (2^53 - 1)·2^-1075 exactly: the midpoint below DBL_MIN, which rounds UP to it
+    out.append((math.ldexp(6361.0, -500), math.ldexp(float(m // 6361), -575)))
+    return tuple(out)
+
+
+def pairs_for_bridge() -> list[tuple[float, float]]:
+    return list(_pairs_for_bridge())
 
 
 def reals_for_rounding() -> list[tuple[int, int]]:
@@ -355,6 +438,14 @@ def reals_for_rounding() -> list[tuple[int, int]]:
         d = rng.getrandbits(52) | 1 << 52
         e = rng.randint(-1074, 971)
         out.append((d << 204 | rng.getrandbits(204), e - 204))
+    for _ in range(50_000):  # straddling DBL_MIN within 2^-40 relative
+        out.append(((1 << 256) + rng.getrandbits(216) - (1 << 215), -1022 - 256))
+    top = ((1 << 53) - 1) << 203
+    for _ in range(50_000):  # straddling DBL_MAX: some round to it, some overflow
+        out.append((top + rng.getrandbits(204) * rng.choice((1, -1)), 971 - 203))
+    out += [(0, 0), ((1 << 53) - 1, -1075)]  # zero, and the midpoint below DBL_MIN
+    for _ in range(20_000):  # exact ties on the subnormal grid
+        out.append((2 * rng.randint(1, (1 << 52) - 1) + 1, -1075))
     return out
 
 
@@ -366,11 +457,16 @@ def _measure_chunk(args) -> dict:
     fn, ref, domain = FLOAT_FUNCS[spec["function"]], reference(spec["function"]), spec["domain"]
     res = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": []}
     worst = []
+    dbl_min = mp.mpf(2) ** -1022
     for x in xs:
         if not in_domain(domain, x):
             res["vacuous"] += 1
             continue
         y = fn(x)
+        if domain in RESULT_DOMAINS and (not math.isfinite(y)
+                                         or (domain == "finite_normal_exp" and mp.exp(mp.mpf(x)) < dbl_min)):
+            res["vacuous"] += 1
+            continue
         if not math.isfinite(y):
             res["unmeasurable"] += 1
             continue
@@ -437,9 +533,9 @@ def ieee_neg(v: float) -> float:
     return -v
 
 
-def _bridge_chunk(ps, neg=ieee_neg) -> dict:
-    """`FPBridge`'s fields over pairs. `neg` is a parameter so --self-test can hand it a negation that is not
-    IEEE's and require both negation checks to fire."""
+def _bridge_chunk(ps, neg=ieee_neg, conditional=True) -> dict:
+    """`FPBridgeFinite`'s fields over pairs (`conditional`), or `FPBridge`'s, every pair. `neg` is a parameter so
+    --self-test can hand it a negation that is not IEEE's and require both negation checks to fire."""
     res = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": [], "neg_inexact": 0,
            "neg_not_bitflip": 0}
     worst = []
@@ -453,7 +549,10 @@ def _bridge_chunk(ps, neg=ieee_neg) -> dict:
             res["neg_inexact"] += 1       # FPBridge.neg: toR (-a) = -(toR a)
         for op, y, e in (("add", a + b, fa + fb), ("sub", a - b, fa - fb), ("mul", a * b, fa * fb)):
             if not math.isfinite(y):
-                res["unmeasurable"] += 1
+                res["vacuous" if conditional else "unmeasurable"] += 1
+                continue
+            if conditional and op == "mul" and not (e == 0 or abs(e) >= DBL_MIN_F):
+                res["vacuous"] += 1
                 continue
             res["examined"] += 1
             err = abs(Fraction(y) - e)
@@ -470,12 +569,21 @@ def _bridge_chunk(ps, neg=ieee_neg) -> dict:
     return res
 
 
-def _rounding_chunk(items) -> dict:
+def _bridge_chunk_unconditional(ps) -> dict:
+    return _bridge_chunk(ps, conditional=False)
+
+
+def _rounding_chunk(items, conditional=True) -> dict:
+    """`real_round_bounds` as restated 2026-09-14 (`conditional`: `x = 0 ∨ DBL_MIN ≤ |x|`, `|x| ≤ DBL_MAX`), or as
+    stated before, every real."""
     res = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": []}
     worst = []
     two53 = 1 << 53
     for m, e in items:
         x = Fraction(m) * (Fraction(2) ** e)
+        if conditional and (abs(x) > DBL_MAX_F or (x != 0 and abs(x) < DBL_MIN_F)):
+            res["vacuous"] += 1
+            continue
         try:
             y = float(x)  # correctly rounded, ties to even, subnormals included
         except OverflowError:
@@ -489,7 +597,8 @@ def _rounding_chunk(items) -> dict:
         bound = abs(x) / two53
         if err > bound:
             res["violations"] += 1
-        worst.append((float(err / bound), f"{m:x}p{e}"))
+        score = (math.inf if err > 0 else 0.0) if bound == 0 else float(err / bound)
+        worst.append((score, f"{m:x}p{e}"))
         if len(worst) > 4 * TOP_K:
             worst.sort(key=lambda t: (-t[0], t[1]))
             del worst[TOP_K:]
@@ -498,15 +607,20 @@ def _rounding_chunk(items) -> dict:
     return res
 
 
+def _rounding_chunk_unconditional(items) -> dict:
+    return _rounding_chunk(items, conditional=False)
+
+
 def measure_axiom(spec: dict, pool) -> dict:
     kind = spec["kind"]
     if kind in ("measured", "existential-eps"):
         return measure_function_axiom(spec, pool)
-    if kind == "bridge":
+    if kind in ("bridge", "bridge-unconditional"):
+        chunk = _bridge_chunk if kind == "bridge" else _bridge_chunk_unconditional
         ps = pairs_for_bridge()
         total = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": [], "neg_inexact": 0,
                  "neg_not_bitflip": 0}
-        for part in pool.map(_bridge_chunk, [ps[i:i + 10_000] for i in range(0, len(ps), 10_000)]):
+        for part in pool.map(chunk, [ps[i:i + 10_000] for i in range(0, len(ps), 10_000)]):
             neg = total["neg_inexact"] + part["neg_inexact"]
             flip = total["neg_not_bitflip"] + part["neg_not_bitflip"]
             total = _merge(total, part)
@@ -515,10 +629,11 @@ def measure_axiom(spec: dict, pool) -> dict:
         if total["neg_inexact"]:
             total["violations"] += total["neg_inexact"]
         return total
-    if kind == "rounding":
+    if kind in ("rounding", "rounding-unconditional"):
+        chunk = _rounding_chunk if kind == "rounding" else _rounding_chunk_unconditional
         items = reals_for_rounding()
         total = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": []}
-        for part in pool.map(_rounding_chunk, [items[i:i + 10_000] for i in range(0, len(items), 10_000)]):
+        for part in pool.map(chunk, [items[i:i + 10_000] for i in range(0, len(items), 10_000)]):
             total = _merge(total, part)
         total["inputs"] = len(items)
         return total
@@ -550,22 +665,37 @@ CTOR_REAL = {"tanh": "tanh", "sinh": "sinh", "cosh": "cosh", "exp": "exp", "ln":
 
 _H = frozenset
 _POS = _H({"0 < lo", "lo ≤ realToR a", "realToR a ≤ hi"})
-#: (hypotheses, bound) -> (domain, bound kind, constant), each hypothesis and bound exactly as the normalised
-#: source spells it. This IS the "tightest instantiation" argument of the module docstring, made closed: a
+#: (hypotheses, bound) -> (domain, bound kind, constant, the one function it may be read for, or None), each
+#: hypothesis and bound exactly as the normalised source spells it, with `stdI1 leanPrims .<fn> a` written
+#: `stdI1 leanPrims .<f> a`. This IS the "tightest instantiation" argument of the module docstring, made closed: a
 #: hypothesis set or bound not listed here is unreadable, and the run fails rather than guessing.
 READINGS = {
-    (_H({"a.isFinite = true"}), "u + u"): ("finite", "c_u", "2"),
-    (_H({"a.isFinite = true"}), "u"): ("finite", "c_u", "1"),
-    (_H({"abs (realToR a) ≤ R"}), "u"): ("finite", "c_u", "1"),                       # R free: every finite a
-    (_H({"realToR a ≤ hi"}), "u * exp hi"): ("finite", "u_exp_x", None),              # hi = x
-    (_POS, "u * (abs (log lo) + abs (log hi))"): ("positive", "u_abs_log_x", None),   # lo or hi at 1
-    (_POS, "u * (abs (log10 lo) + abs (log10 hi))"): ("positive", "u_abs_log10_x", None),
-    (_H({"0 ≤ realToR a", "realToR a ≤ hi"}), "u * sqrt hi"): ("nonneg", "u_sqrt_x", None),
-    (_H({"R < 1", "abs (realToR a) ≤ R"}), "u * (pi / (1 + 1))"): ("open_unit", "u_pi_half", None),
-    (_H({"R < 1", "abs (realToR a) ≤ R"}), "u * pi"): ("open_unit", "u_pi", None),
-    (_H({"0 ≤ R", "R < pi / (1 + 1)", "abs (realToR a) ≤ R"}), "u * tan R"): ("tan_open", "u_abs_tan_x", None),
-    (_H({"abs (realToR a) ≤ R"}), "u * cosh R"): ("finite", "u_cosh_x", None),       # R = |x|
+    (_H({"a.isFinite = true"}), "u + u"): ("finite", "c_u", "2", None),
+    (_H({"a.isFinite = true"}), "u"): ("finite", "c_u", "1", None),
+    (_H({"abs (realToR a) ≤ R"}), "u"): ("finite", "c_u", "1", None),                       # R free: every finite a
+    (_H({"realToR a ≤ hi"}), "u * exp hi"): ("finite", "u_exp_x", None, None),              # hi = x
+    (_POS, "u * (abs (log lo) + abs (log hi))"): ("positive", "u_abs_log_x", None, None),   # lo or hi at 1
+    (_POS, "u * (abs (log10 lo) + abs (log10 hi))"): ("positive", "u_abs_log10_x", None, None),
+    (_H({"0 ≤ realToR a", "realToR a ≤ hi"}), "u * sqrt hi"): ("nonneg", "u_sqrt_x", None, None),
+    (_H({"R < 1", "abs (realToR a) ≤ R"}), "u * (pi / (1 + 1))"): ("open_unit", "u_pi_half", None, None),
+    (_H({"R < 1", "abs (realToR a) ≤ R"}), "u * pi"): ("open_unit", "u_pi", None, None),
+    (_H({"0 ≤ R", "R < pi / (1 + 1)", "abs (realToR a) ≤ R"}), "u * tan R"): ("tan_open", "u_abs_tan_x", None, None),
+    (_H({"abs (realToR a) ≤ R"}), "u * cosh R"): ("finite", "u_cosh_x", None, None),       # R = |x|
+    # restated 2026-09-14
+    (_H({"a.isFinite = true", "(stdI1 leanPrims .<f> a).isFinite = true", "dblMin ≤ exp (realToR a)", "realToR a ≤ hi"}),
+     "(u + u) * exp hi"): ("finite_normal_exp", "c_u_exp_x", "2", "exp"),
+    (_H({"(stdI1 leanPrims .<f> a).isFinite = true", "abs (realToR a) ≤ R"}), "(u + u + u + u) * cosh R"):
+        ("finite_result", "c_u_cosh_x", "4", None),
+    (_POS | {"a.isFinite = true"}, "(u + u + u) * (abs (log10 lo) + abs (log10 hi))"):
+        ("positive", "c_u_abs_log10_x", "3", None),
+    (_H({"a.isFinite = true", "0 ≤ R", "R < pi / (1 + 1)", "abs (realToR a) ≤ R"}), "(u + u) * tan R"):
+        ("tan_open", "c_u_abs_tan_x", "2", None),
 }
+
+#: `real_round_bounds` as stated since 2026-09-14, and before.
+ROUNDING_STATEMENT = (": ∀ M x : Real, 0 ≤ M → M ≤ dblMax → abs x ≤ M → (x = 0 ∨ dblMin ≤ abs x) → "
+                      "abs (realToR (floatOfR x) - x) ≤ u * M")
+ROUNDING_STATEMENT_UNTIL_2026_09_14 = ": ∀ M x : Real, 0 ≤ M → abs x ≤ M → abs (realToR (floatOfR x) - x) ≤ u * M"
 
 READING_KEYS = ("kind", "function", "domain", "bound", "c", "eps")
 
@@ -577,27 +707,32 @@ def derive_reading(statement: str | None) -> dict | None:
     s = " ".join(statement.split())
     if s in (": Float → MachLib.Real", ": Real → Float", ": MachLib.Real"):
         return {"kind": "declaration"}
-    if s == ": FPBridge realToR":
+    if s == ": FPBridgeFinite realToR":
         return {"kind": "bridge"}
-    if s == ": ∀ M x : Real, 0 ≤ M → abs x ≤ M → abs (realToR (floatOfR x) - x) ≤ u * M":
+    if s == ": FPBridge realToR":
+        return {"kind": "bridge-unconditional"}
+    if s == ROUNDING_STATEMENT:
         return {"kind": "rounding"}
+    if s == ROUNDING_STATEMENT_UNTIL_2026_09_14:
+        return {"kind": "rounding-unconditional"}
     m = re.fullmatch(r": ∀ (?:\([^)]*\) )*(?:\(a : Float\)|a : Float), (.*)", s)
     if m is None:
         return None
     parts = m.group(1).split(" → ")
-    concl, hyps = parts[-1], _H(parts[:-1])
+    concl = parts[-1]
     c = re.fullmatch(r"abs \(realToR \(stdI1 leanPrims \.(\w+) a\) - (\w+) \(realToR a\)\) ≤ (.+)", concl)
     if c is None or CTOR_REAL.get(c.group(1)) != c.group(2):
         return None
     fn, bound_text = c.group(1), c.group(3)
+    hyps = _H(h.replace(f"stdI1 leanPrims .{fn} a", "stdI1 leanPrims .<f> a") for h in parts[:-1])
     eps = re.fullmatch(r"real_\w+_eps", bound_text)
     if eps and not hyps:
         return {"kind": "existential-eps", "function": fn, "domain": "finite", "bound": "sup",
                 "eps": "Certcom." + bound_text}
     reading = READINGS.get((hyps, bound_text))
-    if reading is None:
+    if reading is None or reading[3] not in (None, fn):
         return None
-    domain, bound, const = reading
+    domain, bound, const, _only = reading
     out = {"kind": "measured", "function": fn, "domain": domain, "bound": bound}
     if const is not None:
         out["c"] = const
@@ -610,7 +745,14 @@ EXPECTED_DEFINITIONS = {
                  "sub : ∀ a b : Float, RoundsW u (toR (a - b)) (toR a - toR b) | "
                  "mul : ∀ a b : Float, RoundsW u (toR (a * b)) (toR a * toR b) | "
                  "neg : ∀ a : Float, toR (-a) = -(toR a)"),
+    "FPBridgeFinite": ("add : ∀ a b : Float, (a + b).isFinite = true → RoundsW u (toR (a + b)) (toR a + toR b) | "
+                       "sub : ∀ a b : Float, (a - b).isFinite = true → RoundsW u (toR (a - b)) (toR a - toR b) | "
+                       "mul : ∀ a b : Float, (a * b).isFinite = true → (toR a * toR b = 0 ∨ dblMin ≤ abs (toR a * toR b)) "
+                       "→ RoundsW u (toR (a * b)) (toR a * toR b) | "
+                       "neg : ∀ a : Float, a.isFinite = true → toR (-a) = -(toR a)"),
     "RoundsW": "(w fl e : Real) : Prop := ∃ δ : Real, -w ≤ δ ∧ δ ≤ w ∧ fl = e * (1 + δ)",
+    "dblMin": ": MachLib.Real := 1 / natCast (2 ^ 1022)",
+    "dblMax": ": MachLib.Real := natCast ((2 ^ 53 - 1) * 2 ^ 971)",
 }
 
 
@@ -633,19 +775,39 @@ def _strip_lean_comments(text: str) -> str:
     return "".join(out)
 
 
+def _structure_fields(text: str, name: str) -> str | None:
+    """A `structure <name> (toR …) : Prop where` block's fields, one per `|`, a field's continuation lines joined."""
+    m = re.search(rf"^structure {name} \(toR : Float → MachLib\.Real\) : Prop where\n((?:[ \t]*\n|[ \t]+\S.*\n)+)",
+                  text, re.MULTILINE)
+    if m is None:
+        return None
+    fields, indent = [], None
+    for line in m.group(1).splitlines():
+        if not line.strip():
+            continue
+        depth = len(line) - len(line.lstrip())
+        indent = depth if indent is None else indent
+        if depth > indent and fields:
+            fields[-1] += " " + " ".join(line.split())
+        else:
+            fields.append(" ".join(line.split()))
+    return " | ".join(fields)
+
+
 def source_definitions(foundations: pathlib.Path) -> dict[str, str | None]:
-    out: dict[str, str | None] = {"FPBridge": None, "RoundsW": None}
+    out: dict[str, str | None] = {k: None for k in EXPECTED_DEFINITIONS}
     bridge = _strip_lean_comments((foundations / "MachLib" / "FloatRealBridge.lean").read_text(encoding="utf-8"))
-    m = re.search(r"^structure FPBridge \(toR : Float → MachLib\.Real\) : Prop where\n((?:[ \t]*\n|[ \t]+\S.*\n)+)",
-                  bridge, re.MULTILINE)
-    if m:
-        out["FPBridge"] = " | ".join(" ".join(line.split()) for line in m.group(1).splitlines() if line.strip())
+    out["FPBridge"] = _structure_fields(bridge, "FPBridge")
+    out["FPBridgeFinite"] = _structure_fields(bridge, "FPBridgeFinite")
+    for name in ("dblMin", "dblMax"):
+        m = re.search(rf"^noncomputable def {name} (.*?)(?=\n\s*\n|\Z)", bridge, re.MULTILINE | re.DOTALL)
+        if m:
+            out[name] = " ".join(m.group(1).split())
     model = _strip_lean_comments((foundations / "MachLib" / "FPModel.lean").read_text(encoding="utf-8"))
     m = re.search(r"^def RoundsW (.*?)(?=\n\s*\n|\Z)", model, re.MULTILINE | re.DOTALL)
     if m:
         out["RoundsW"] = " ".join(m.group(1).split())
     return out
-
 
 # ── the corpus: manifest names, source statements ────────────────────────────────────────────────
 
@@ -954,6 +1116,47 @@ def self_test() -> int:
         failures.append("canary 'a negation that is not exact' did not fire")
     if not failures:
         print("  canary fires: a negation that is not a bit flip, and one that is not exact")
+    # the 2026-09-14 shapes read as their hypotheses say, and a dropped hypothesis is not read the same
+    sinh_st = (": ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .sinh a).isFinite = true → abs (realToR a) ≤ R → "
+               "abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ (u + u + u + u) * cosh R")
+    exp_st = (": ∀ (hi : MachLib.Real) (a : Float), a.isFinite = true → (stdI1 leanPrims .exp a).isFinite = true → "
+              "dblMin ≤ exp (realToR a) → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .exp a) - exp (realToR a)) "
+              "≤ (u + u) * exp hi")
+    got = [derive_reading(sinh_st), derive_reading(exp_st)]
+    want = [("finite_result", "c_u_cosh_x", "4"), ("finite_normal_exp", "c_u_exp_x", "2")]
+    for r, w in zip(got, want):
+        if r is None or (r["domain"], r["bound"], r.get("c")) != w:
+            failures.append(f"a 2026-09-14 statement read as {r}, not {w}")
+    for label, bad in (("sinh without its finite-result hypothesis",
+                        sinh_st.replace("(stdI1 leanPrims .sinh a).isFinite = true → ", "")),
+                       ("exp's DBL_MIN hypothesis on log10",
+                        exp_st.replace(".exp a", ".log10 a").replace("exp (realToR a)) ≤", "log10 (realToR a)) ≤"))):
+        if derive_reading(bad) is not None:
+            failures.append(f"canary '{label}' is readable: {derive_reading(bad)}")
+        else:
+            print(f"  canary fires: {label} is unreadable")
+    if derive_reading(ROUNDING_STATEMENT) != {"kind": "rounding"}:
+        failures.append("the restated real_round_bounds does not read as rounding")
+    # the bridge's and rounding's hypotheses are load-bearing: excluded inputs are vacuous, and fail without them
+    tiny = [(1e-200, 1e-200)]
+    b1, b0 = _bridge_chunk(tiny), _bridge_chunk_unconditional(tiny)
+    if not (b1["vacuous"] >= 1 and b1["violations"] == 0 and b0["violations"] >= 1):
+        failures.append(f"a subnormal product: FPBridgeFinite {b1['vacuous']} vacuous/{b1['violations']} violated, "
+                        f"FPBridge {b0['violations']} violated")
+    else:
+        print("  canary fires: a subnormal product is vacuous for FPBridgeFinite and violates FPBridge")
+    sub = [(3, -1076)]  # 0.75·2^-1074 rounds to 2^-1074
+    r1, r0 = _rounding_chunk(sub), _rounding_chunk_unconditional(sub)
+    if not (r1["vacuous"] == 1 and r0["violations"] == 1):
+        failures.append(f"a subnormal real: restated {r1}, old {r0}")
+    else:
+        print("  canary fires: a subnormal real is vacuous for the restated real_round_bounds and violates the old")
+    spec = {"function": "exp", "domain": "finite_normal_exp", "bound": "c_u_exp_x", "c": "2"}
+    ex = _measure_chunk((spec, [-745.0, 800.0, 1.0]))
+    if not (ex["vacuous"] == 2 and ex["examined"] == 1):
+        failures.append(f"exp's result hypotheses: {ex['vacuous']} vacuous, {ex['examined']} examined of 3")
+    else:
+        print("  canary fires: exp at -745 (subnormal result) and 800 (overflow) is vacuous on its new domain")
     # a real registry must be readable row by row, or the gate would fail on every run
     real = json.loads(REGISTRY.read_text(encoding="utf-8"))
     unreadable = [n for n, sp in real["axioms"].items() if derive_reading(sp["statement"]) is None]

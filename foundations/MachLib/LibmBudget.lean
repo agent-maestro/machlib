@@ -108,34 +108,41 @@ theorem absenc_mono {E E' fl e : MachLib.Real} (h : AbsEnc E fl e) (hle : E ≤ 
 /-! ### The join, on the grounded kernels
 
 Each theorem below is the corresponding `FPGrounding` headline with its opaque epsilon replaced by
-the budget. The bound is now a NUMBER as soon as `B` and `u` are instantiated (`B = 4u`,
-`u = 2⁻⁵³`), which is what a certificate reader needs and what the symbolic form could not give. -/
+the budget, and takes the headline's `hsafe` (since 2026-09-14). The bound is now a NUMBER as soon as `B` and
+`u` are instantiated (`B = 4u`, `u = 2⁻⁵³`), which is what a certificate reader needs and what the symbolic
+form could not give. -/
 
 /-- `sin(PID law)`, at the budget: within `B + absErr` of the exact ℝ value. -/
-theorem pid_sin_at_budget (env : Env) {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
+theorem pid_sin_at_budget (env : Env)
+    (hsafe : FloatSafe realToR (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML)
+    {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
     AbsEnc (B + 1 * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env
         (emitC (tr1OfEML .sin pidRawEML))).toF)
       (sin (exactR realToR env pidRawEML)) :=
-  absenc_mono (pid_sin_grounded env)
+  absenc_mono (pid_sin_grounded env hsafe)
     (add_le_add_both hb.sin (le_refl _))
 
 /-- `cos(PID law)`, at the budget. -/
-theorem pid_cos_at_budget (env : Env) {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
+theorem pid_cos_at_budget (env : Env)
+    (hsafe : FloatSafe realToR (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML)
+    {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
     AbsEnc (B + 1 * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env
         (emitC (tr1OfEML .cos pidRawEML))).toF)
       (cos (exactR realToR env pidRawEML)) :=
-  absenc_mono (pid_cos_grounded env)
+  absenc_mono (pid_cos_grounded env hsafe)
     (add_le_add_both hb.cos (le_refl _))
 
 /-- `atan(PID law)`, at the budget. -/
-theorem pid_atan_at_budget (env : Env) {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
+theorem pid_atan_at_budget (env : Env)
+    (hsafe : FloatSafe realToR (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML)
+    {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
     AbsEnc (B + 1 * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env
         (emitC (tr1OfEML .atan pidRawEML))).toF)
       (atan (exactR realToR env pidRawEML)) :=
-  absenc_mono (pid_atan_grounded env)
+  absenc_mono (pid_atan_grounded env hsafe)
     (add_le_add_both hb.atan (le_refl _))
 
 /-- **`abs(PID law)`, at the budget — and the libm term is GONE.**
@@ -151,12 +158,14 @@ conclusion. A field no theorem reads is a claim the corpus makes to itself and n
 
 Takes the full `RuntimeLibmBudget` for uniformity with its three neighbours even though only
 `abs_exact` is used, so that a reader instantiating the budget once gets all four kernels. -/
-theorem pid_abs_at_budget (env : Env) {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
+theorem pid_abs_at_budget (env : Env)
+    (hsafe : FloatSafe realToR (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML)
+    {B : MachLib.Real} (hb : RuntimeLibmBudget B) :
     AbsEnc (absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env
         (emitC (tr1OfEML .abs pidRawEML))).toF)
       (abs (exactR realToR env pidRawEML)) := by
-  have h := pid_abs_grounded env
+  have h := pid_abs_grounded env hsafe
   rw [hb.abs_exact] at h
   exact absenc_mono h (le_of_eq (by rw [one_mul_thm, zero_add]))
 
