@@ -134,6 +134,8 @@ def lean_copysign(x: float, y: float) -> float:
 
 #: `stdI1 leanPrims .tanh`'s small-argument threshold. The Lean cross-check below holds this copy to Lean.
 TANH_X_MAX = 1.3538603431225864e-8
+#: `stdI1 leanPrims .sinh`'s (forge's `MG_SINH_X_MAX`, 2026-09-14), held to Lean the same way.
+SINH_X_MAX = 2.149119332890821e-8
 
 
 def lean_tanh(x: float) -> float:
@@ -146,6 +148,8 @@ def lean_tanh(x: float) -> float:
 
 def lean_sinh(x: float) -> float:
     a = FABS(x)
+    if a <= SINH_X_MAX:
+        return x
     if a > 709.78:
         w = EXP(0.5 * a)
         r = (0.5 * w) * w
@@ -284,7 +288,7 @@ def inputs_for(function: str) -> list[float]:
               + random_bits(50_000, 11) + uniform(-40, 40, 100_000, 12))
     elif function in ("sinh", "cosh"):
         xs = (steps(-712, 712, 0.01) + steps(-30, 30, 1e-3) + logspace(DENORM_MIN, 1.0, 4000, True)
-              + around(709.78, 2000) + around(-709.78, 2000) + around(710.4758, 500) + around(-710.4758, 500)
+              + around(709.78, 2000) + around(-709.78, 2000) + around(SINH_X_MAX, 2000) + around(-SINH_X_MAX, 2000) + around(710.4758, 500) + around(-710.4758, 500)
               + random_bits(50_000, 21) + uniform(-711, 711, 100_000, 22) + denormals(500))
     elif function == "exp":
         xs = (steps(-750, 710, 0.01) + around(709.782712893384, 1000) + around(-708.3964185322641, 2000)
@@ -727,7 +731,7 @@ def crosscheck_samples(registry: dict, results: dict) -> list[tuple[str, float, 
     functions = sorted({spec["function"] for spec in registry["axioms"].values() if "function" in spec})
     for f in functions:
         xs = inputs_for(f)
-        pick = rng.sample(xs, 200) + around(TANH_X_MAX, 5) + around(709.78, 5) + SPECIALS
+        pick = rng.sample(xs, 200) + around(TANH_X_MAX, 5) + around(SINH_X_MAX, 5) + around(709.78, 5) + SPECIALS
         for name, spec in registry["axioms"].items():
             if spec.get("function") == f and name in results:
                 pick += [from_bits(b) for _, b in results[name]["worst"][:10]]
@@ -960,6 +964,8 @@ def self_test() -> int:
                  (lean_tanh(1000.0) == 1.0, "tanh(1000) is 1"),
                  (bits(lean_tanh(-0.0)) == bits(-0.0), "tanh(-0.0) keeps its sign"),
                  (math.isfinite(lean_sinh(710.0)), "sinh(710) is finite"),
+                 (lean_sinh(1e-300) == 1e-300, "sinh(1e-300) is 1e-300"),
+                 (bits(lean_sinh(-0.0)) == bits(-0.0), "sinh(-0.0) keeps its sign"),
                  (EXP(1.0) == math.exp(1.0), "ctypes exp is libm exp")]
     failures += [f"specimen failed: {why}" for ok, why in specimens if not ok]
     if failures:

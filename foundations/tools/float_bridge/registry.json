@@ -123,8 +123,8 @@
       "expect": "violated",
       "statement": ": ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ u * cosh R",
       "pinned": {
-        "inputs": 404658,
-        "examined": 379355,
+        "inputs": 412660,
+        "examined": 387357,
         "vacuous": 3,
         "unmeasurable": 25300,
         "violations": 20726,
@@ -241,8 +241,8 @@
       "expect": "violated",
       "statement": ": ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ u * cosh R",
       "pinned": {
-        "inputs": 405638,
-        "examined": 380335,
+        "inputs": 413640,
+        "examined": 388337,
         "vacuous": 3,
         "unmeasurable": 25300,
         "violations": 20444,

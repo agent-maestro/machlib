@@ -21,7 +21,8 @@ The `mg_*` functions split into two honest classes there:
     `|x| ≤ 1.3538603431225864e-8`, where `x` is the float nearest `tanh x` (since forge's
     `MG_TANH_X_MAX`, 2026-09-13; `mg_tanh_route` is now `mg_tanh`); `mg_sinh` and `mg_cosh` take
     `(eᵃ ∓ e⁻ᵃ)·½` at `a = |x| ≤ 709.78` and `(½·w)·w` with `w = exp(a/2)` above it, and `mg_sinh`
-    then takes `x`'s sign.
+    then takes `x`'s sign, except that it returns `x` itself for `|x| ≤ 2.149119332890821e-8`, where `x` is
+    the float nearest `sinh x` (forge's `MG_SINH_X_MAX`, 2026-09-14).
 
 The move: build BOTH the runtime (`stdR1`/`stdR2`) and the EML interpretation (`stdI1`/`stdI2`) from
 one shared **primitive basis** `Prims`. The composites are then written once on each side — the
@@ -41,8 +42,9 @@ hyperbolics call. The alternative, three more trusted transcendentals, is argued
 `ln` quotient no C function computes; `stdI1` says why it is a field.
 
 **Where this copy comes from, and what checks it.** `stdR1`/`stdR2` transcribe forge's
-`software/runtime/c/libmonogate.h` as changed on forge branch `fix/certcom-runtime-model` (2026-09-13:
-`MG_TANH_X_MAX`, and `mg_tanh_route` defined as `mg_tanh`). The hyperbolic bodies changed before that in
+`software/runtime/c/libmonogate.h` as changed on forge branch `fix/sinh-tiny-and-grounding` (2026-09-14:
+`MG_SINH_X_MAX`, `mg_sinh`'s small-argument branch), after forge branch `fix/certcom-runtime-model`
+(2026-09-13: `MG_TANH_X_MAX`, and `mg_tanh_route` defined as `mg_tanh`). The hyperbolic bodies changed before that in
 forge `51337a3` (2026-09-13); until that day's machlib change this file transcribed the bodies before
 it. **PyPI `monogate-forge` 0.14.4**, which is what `pip install` gives a reader, still ships those
 OLD bodies (`(exp(x) ± exp(-x)) * 0.5` and the quotient of the two), so C emitted by that release
@@ -114,7 +116,10 @@ branch computes `eᵃ/2` and drops `e⁻ᵃ/2`, a relative change below `e^−14
 (`a > 709.78`). `tanh`'s small-argument branch (since 2026-09-13) is not exact over the reals: it
 returns `x`, which differs from `tanh x` by less than `x³/3 ≤ 8.3·10⁻²⁵`. It returns the float nearest
 `tanh x`, which the exp form there did not (`tanh 1e-300` was `0`; forge's `libmonogate.h` records the
-mpmath check of the threshold). The float results differ, which is the point.
+mpmath check of the threshold). `sinh`'s small-argument branch (since 2026-09-14) is the same move: `x`
+differs from `sinh x` by less than `x³/6 ≤ 1.7·10⁻²⁴` for `|x| ≤ 2.149119332890821e-8`, and is the float
+nearest `sinh x` there, where the exp difference cancelled (`sinh 1e-300` was `0`). The float results
+differ, which is the point.
 
 **`log10` is a primitive, `p.log10`, since 2026-09-13.** It was `p.ln x / p.ln 10`, the real identity
 `log10 x = log x / log 10` (`Log10Lipschitz.lean`), and `stdR1` keyed that quotient on `"mg_log10"`. No
@@ -139,7 +144,8 @@ def stdI1 (p : Prims) : Trans1 → Float → Float
   | .atan => p.atan
   | .sinh => fun x =>
       let a := p.abs x;
-      p.copysign (if a > 709.78 then (let w := p.exp (0.5 * a); (0.5 * w) * w)
+      if a ≤ 2.149119332890821e-8 then x
+      else p.copysign (if a > 709.78 then (let w := p.exp (0.5 * a); (0.5 * w) * w)
         else (p.exp a - p.exp (-a)) * 0.5) x
   | .cosh => fun x =>
       let a := p.abs x;
@@ -153,8 +159,9 @@ def stdI1 (p : Prims) : Trans1 → Float → Float
 
 /-- The C runtime keyed by the name emitted C calls — a transcription of `libmonogate.h` (the module
 docstring says which revision and what checks it). Composite bodies are the C bodies over the basis: a
-C local is a `let`, `if (a > MG_EXP_ARG_MAX)` is `if a > 709.78` and `if (a <= MG_TANH_X_MAX)` is
-`if a ≤ 1.3538603431225864e-8` (the macros' values, whose bits are pinned at the end of this file),
+C local is a `let`, `if (a > MG_EXP_ARG_MAX)` is `if a > 709.78`, `if (a <= MG_SINH_X_MAX)` is
+`if a ≤ 2.149119332890821e-8` and `if (a <= MG_TANH_X_MAX)` is `if a ≤ 1.3538603431225864e-8` (the macros'
+values, whose bits are pinned at the end of this file),
 `fabs` is `p.abs` and `copysign` is `p.copysign`. `mg_tanh_route` is the header's `return mg_tanh(x);`
 with `mg_tanh`'s body in place of the call. A name that is itself a libm function is its field:
 `log10`, and `asin`/`acos`/`atan` as the builtin calls `arcsin`/`arccos`/`arctan` spell them. Write a
@@ -174,7 +181,8 @@ def stdR1 (p : Prims) (name : String) : Float → Float :=
   else if name = "mg_atan" then p.atan
   else if name = "mg_sinh" then fun x =>
       let a := p.abs x;
-      p.copysign (if a > 709.78 then (let w := p.exp (0.5 * a); (0.5 * w) * w)
+      if a ≤ 2.149119332890821e-8 then x
+      else p.copysign (if a > 709.78 then (let w := p.exp (0.5 * a); (0.5 * w) * w)
         else (p.exp a - p.exp (-a)) * 0.5) x
   else if name = "mg_cosh" then fun x =>
       let a := p.abs x;
@@ -382,6 +390,37 @@ example : (stdI1 leanPrims .tanh 1.3538603431225864e-8).toBits = 0x3E4D12ED0AF1A
 example : (let t := leanPrims.exp ((-2.0) * leanPrims.abs 1e-300);
     leanPrims.copysign ((1.0 - t) / (1.0 + t)) 1e-300).toBits = 0 := by native_decide
 
+/-! ## `sinh` at small arguments — where the exp difference cancelled
+
+Until forge's `MG_SINH_X_MAX` (2026-09-14) the runtime computed `copysign((eᵃ − e⁻ᵃ)·½, x)` at every
+`|x| ≤ 709.78`, and `eᵃ − e⁻ᵃ` cancels as `a → 0`: `sinh 1e-300` was `0`. Up to `2.149119332890821e-8` it
+now returns `x`, the float nearest `sinh x` (forge's `libmonogate.h` records how the threshold was found).
+The first example was run against this file's previous definition (machlib `ae59d0e8`) and fails there. -/
+
+/-- `sinh(1e-300) = 1e-300`, bit for bit. -/
+example : (stdI1 leanPrims .sinh 1e-300).toBits = (1e-300 : Float).toBits := by native_decide
+
+/-- The smallest subnormal comes back unchanged, and so does its negation; `-0.0` keeps its sign. -/
+example : (stdI1 leanPrims .sinh (Float.ofBits 1)).toBits = 1 ∧
+    (stdI1 leanPrims .sinh (Float.ofBits 0x8000000000000001)).toBits = 0x8000000000000001 ∧
+    (stdI1 leanPrims .sinh (-0.0)).toBits = 0x8000000000000000 := by
+  native_decide
+
+/-- At the threshold `x` comes back; at the next double up the exp form takes over and does not return
+`x`. -/
+example : (stdI1 leanPrims .sinh 2.149119332890821e-8).toBits = 0x3E57137449123EF6 ∧
+    (stdI1 leanPrims .sinh (Float.ofBits 0x3E57137449123EF7)).toBits ≠ 0x3E57137449123EF7 := by
+  native_decide
+
+/-- The same on the emitted-C side, through the transcription `stdR1` itself. -/
+example : (runProgC (stdR1 leanPrims) (stdR2 leanPrims) (emitProg sinhProg) 5 "sinhFn"
+    [.scalar 1e-300]).toF.toBits = (1e-300 : Float).toBits := by native_decide
+
+/-- For contrast, the body before 2026-09-14 over the same basis: `sinh(1e-300)` is `+0.0`. -/
+example : (let a := leanPrims.abs 1e-300;
+    leanPrims.copysign ((leanPrims.exp a - leanPrims.exp (-a)) * 0.5) 1e-300).toBits = 0 := by
+  native_decide
+
 /-! ## The second spellings — a HIGH-drift `tanh` -/
 
 /-- What forge's C backend emits for `tanhFn` when the function's drift risk is HIGH: a call to
@@ -425,5 +464,8 @@ example : (709.78 : Float).toBits = 0x40862E3D70A3D70A := by native_decide
 
 /-- `MG_TANH_X_MAX = 1.3538603431225864e-8` as Lean elaborates the literal, pinned the same way. -/
 example : (1.3538603431225864e-8 : Float).toBits = 0x3E4D12ED0AF1A27F := by native_decide
+
+/-- `MG_SINH_X_MAX = 2.149119332890821e-8` as Lean elaborates the literal, pinned the same way. -/
+example : (2.149119332890821e-8 : Float).toBits = 0x3E57137449123EF6 := by native_decide
 
 end Certcom
