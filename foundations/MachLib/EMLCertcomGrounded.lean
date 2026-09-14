@@ -93,6 +93,20 @@ keeps the old statement as a control. -/
 axiom real_round_bounds : ∀ M x : Real, 0 ≤ M → M ≤ dblMax → abs x ≤ M → (x = 0 ∨ dblMin ≤ abs x) →
     abs (realToR (floatOfR x) - x) ≤ u * M
 
+/-- **A real in range quantizes to a finite float** (added 2026-09-14, owner-approved). For every real `x` with
+`|x| ≤ DBL_MAX`, `floatOfR x` is finite. That is `floatOfR` read, as `real_round_bounds` reads it, as IEEE-754
+round-to-nearest-even: the reals between `DBL_MAX` and the tie `DBL_MAX + 2^970` round down to `DBL_MAX`, and the tie
+itself is the first to round up to infinity, so `|x| ≤ DBL_MAX` is inside the finite range with half an ulp to spare.
+`real_round_bounds` says how close `floatOfR x` reads back; this says it is a finite float at all. Un-witnessable in Lean
+(`Float` is opaque).
+
+**Measured before it was added.** `tools/float_bridge/measure.py` over 536 008 reals (256-bit mantissas across the range
+and the subnormal range, both signs, and reals at, just below and just above the tie, between `DBL_MAX` and the tie, and
+at and just below `DBL_MAX`): no violation at the 474 186 its hypothesis admits (61 822 excluded). The range widened to
+include the tie fails at exactly two reals, `±(DBL_MAX + 2^970)`, and no range fails at 41 412.
+`tools/float_bridge/registry.json` pins these numbers. -/
+axiom real_round_finite : ∀ x : Real, abs x ≤ dblMax → (floatOfR x).isFinite = true
+
 /-- **Part 1, grounded.** `eml_var_var_pipeline_uniform`, with the abstract `u`-relative `hround_exp`/
 `hround_ln` hypotheses replaced by the REAL, already-disclosed `real_exp_rounds`/`real_log_rounds`
 axioms against the concrete `leanPrims` runtime basis — no `∀`-primitive rounding hypothesis.

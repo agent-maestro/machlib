@@ -10,26 +10,26 @@ hypotheses on single floats besides. A conditional theorem is not evidence until
 This module instantiates what the disclosed axioms allow, shows why nothing else can be instantiated from ANY
 assumption about the inputs, and names the missing fact.
 
-## Nothing here concludes that a float is finite
+## Only the range axioms conclude that a float is finite
 
-Read off the environment after `import MachLib`, not grepped. The disclosed axioms that mention `Float.isFinite`
-(`real_exp_rounds`, `real_sinh_rounds`, `real_cosh_rounds`, `real_log10_rounds`, `real_tan_rounds`,
-`real_tanh_rounds`, and the fields of `FPBridgeFinite`, which `real_fpbridge` asserts) all have it as a PREMISE.
-The only theorems with it in a conclusion are projections out of a `FloatSafe` or `EMLTreeFloatSafe` premise.
-Lean core proves nothing about it: `Float.isFinite` is an `@[extern]` opaque, so `decide` and `rfl` get stuck,
-`exact?` closes no finiteness goal, and `native_decide` proves one only by adding an axiom of its own for each
-use. `real_round_bounds` says how close `floatOfR x` reads back, never that it is finite.
+This module was written when nothing in the environment concluded that a float is finite. Every disclosed axiom that
+mentions `Float.isFinite` had it as a PREMISE, the only theorems with it in a conclusion were projections out of a
+`FloatSafe` or `EMLTreeFloatSafe` premise, and Lean core proves nothing about it: `Float.isFinite` is an `@[extern]`
+opaque, so `decide` and `rfl` get stuck, `exact?` closes no finiteness goal, and `native_decide` proves one only by adding
+an axiom of its own for each use. So `FloatSafe` of a tree with a `+`, `−`, `×` or negation node could not be established
+for any input, however it was bounded, and only the constant leaf below was instantiated.
 
-So `FloatSafe` of a tree with a `+`, `−`, `×` or negation node, and `EMLTreeFloatSafe` of an `eml` node, cannot be
-established for any input, however it is bounded. That is a property of the axiom set, not of these proofs. No flat
-certificate in `FPGrounding.lean`, and no `eml`-node instance of `eml_tree_grounded`, is instantiated.
-`no-float-finiteness-producer` in `tools/absence_claims.json` is an environment scan that fires when anything starts
-concluding finiteness, including an axiom stated as a structure and a `native_decide` theorem.
+On 2026-09-14 the owner approved two axioms that do conclude finiteness, `real_fpfinite` (`FPGrounding.lean`) and
+`real_round_finite` (`EMLCertcomGrounded.lean`), together with `u_lt_one` (`FPModel.lean`). `FloatSafeInstances.lean` uses
+them to instantiate `pipeline_det_grounded` and `pipeline_arith_grounded` on explicit domains, with specimens. Nothing
+else concludes that a float is finite: `no-other-float-finiteness-producer` in `tools/absence_claims.json` scans the
+environment and fires when any axiom or theorem does so without resting on one of those two.
 
 ## `FloatSafe` is two conditions of different kinds
 
 `floatSafe_of_split`, `FloatSafe.floatFinite` and `FloatSafe.productsNormal`: `FloatSafe` holds exactly when both
-`FloatFinite` (every node's computed float is finite, a property of the run and the half nothing can supply) and
+`FloatFinite` (every node's computed float is finite, a property of the run, and since 2026-09-14 supplied only by the
+range axioms, from a bound on the inputs) and
 `ProductsNormal` (every product's exact real value is `0` or at least `DBL_MIN`, a property of real numbers) hold.
 
 The second half discharges from a real domain (`mul_normal_of_floors`, `productsNormal_detEML`,
@@ -41,29 +41,26 @@ where `κ` bounds the gains' real values `realToR 1.5`, `realToR 0.4` and `realT
 anything about the real value of a `Float` literal.
 
 `pipeline_det_grounded_of_floor` composes both halves with `pipeline_det_grounded`: given the floor on its four
-inputs, that certificate needs only `FloatFinite` of its three computed floats. It is a REDUCTION, not an instance,
-since nothing can supply that hypothesis.
+inputs, that certificate needs only `FloatFinite` of its three computed floats. It is a REDUCTION, not an instance, on
+its own; `pipeline_det_grounded_instantiated` (`FloatSafeInstances.lean`) supplies that hypothesis from a bound on the
+inputs with `real_fpfinite`.
 
-## The instance that exists: a constant leaf
+## The instance that existed before the range axioms: a constant leaf
 
 `eml_tree_grounded_const_leaf` is `eml_tree_grounded` at `EMLTree.const c`, for every real `c` that is `0` or has
 `DBL_MIN ≤ |c| ≤ DBL_MAX`: the compiled constant, read back through `realToR`, is within `u·|c|` of `c`. A constant
 leaf's float side conditions are conditions on the real `c` alone, so they discharge.
 `eml_tree_grounded_const_one_specimen` (`c = 1`, within `u`) and `eml_tree_grounded_const_zero_specimen` (`c = 0`,
 exact) take both branches of `c = 0 ∨ DBL_MIN ≤ |c|`. It is depth 0: it rests on `real_round_bounds`, and it certifies
-no arithmetic node and no primitive. It is all that the current axioms instantiate.
+no arithmetic node and no primitive. Until 2026-09-14 it was all that the axioms instantiated.
 
-## What would change that, and why it is not added here
+## What the range axioms changed, and what they did not
 
-The missing fact is round-to-nearest's overflow rule over `realToR`: for finite `a` and `b`, if the exact real value
-of `a + b`, `a − b` or `a * b` is at most `DBL_MAX` in magnitude then the float result is finite, and `-a` is finite.
-A specimen also needs one float known to be finite, for instance `floatOfR x` for `|x| ≤ DBL_MAX`. The PID kernels
-need the real values of their literal gains as well, and `exp`, `sinh` and `cosh` need a finite result from a bounded
-argument. Each is a new disclosed axiom, and each needs the owner's approval; none is added here.
-
-One obstacle survives all of them. `u` is constrained only by `0 ≤ u ≤ 1`, so `real_round_bounds` places
-`realToR (floatOfR x)` in an interval containing `0` for every `x`. No float is provably nonzero, so no specimen can
-reach the `DBL_MIN ≤ |X·Y|` branch of a product while `u < 1` is not known.
+The overflow rule over `realToR`, a finite `floatOfR x` for `|x| ≤ DBL_MAX`, and `u < 1` are now disclosed axioms, and
+the instances they allow are in `FloatSafeInstances.lean`. The PID kernels still need the finiteness and real values of
+their literal gains, and `exp`, `sinh` and `cosh` a finite result from a bounded argument; those were not approved and are
+not added. `u < 1` makes a float read back from a nonzero real provably nonzero, but it gives no lower bound on `1 − u`, so
+no specimen reaches the `DBL_MIN ≤ |X·Y|` branch of a product; `FloatSafeInstances.lean` says why.
 -/
 
 namespace Certcom
@@ -255,9 +252,10 @@ theorem productsNormal_pidRawEML {toR : Float → MachLib.Real} {i1 : Trans1 →
     (ProductsNormal.mul _ _ (.lit 0.05) (.var "d") (mul_normal_of_floors hκ hδ hκδ hkd hd))
 
 /-- **A reduction of `pipeline_det_grounded`, NOT an instance of it.** Given a floor on the four inputs, the
-certificate's `hsafe` comes down to `hfin`: the two products and the difference compute finite floats. Nothing in this
-corpus can supply `hfin` for a concrete input (module docstring), so this theorem is exactly as conditional as the
-certificate it calls, on a smaller and purely float-valued hypothesis. -/
+certificate's `hsafe` comes down to `hfin`: the two products and the difference compute finite floats. On its own this
+theorem is exactly as conditional as the certificate it calls, on a smaller and purely float-valued hypothesis. Since
+2026-09-14 `real_fpfinite` supplies `hfin` from a bound on the inputs: `pipeline_det_grounded_instantiated`
+(`FloatSafeInstances.lean`) does that and calls this. -/
 theorem pipeline_det_grounded_of_floor (env : Env) {α : MachLib.Real}
     (hfin : FloatFinite (fun _ _ => 0) (fun _ _ _ => 0) env detEML)
     (hα : 0 ≤ α) (hαα : dblMin ≤ α * α)

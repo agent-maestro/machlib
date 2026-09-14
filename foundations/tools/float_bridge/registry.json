@@ -165,6 +165,21 @@
         "argmax": "mul 8863d0d7f67512d8 b799d68572f9e7df"
       }
     },
+    "Certcom.real_fpfinite": {
+      "kind": "finite-of-range",
+      "expect": "holds",
+      "min_examined": 2000000,
+      "statement": ": FPFiniteOfRange realToR",
+      "pinned": {
+        "inputs": 629091,
+        "examined": 2299615,
+        "vacuous": 216749,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "1.000000e+00",
+        "argmax": "add 7feffffffffffc17 7d3f400000000000"
+      }
+    },
     "Certcom.real_log10_rounds": {
       "kind": "measured",
       "function": "log10",
@@ -212,6 +227,21 @@
         "violations": 0,
         "max": "9.999498e-01",
         "argmax": "100000000000887ffe5ade49be630e16429d797caccf7f1781c99f9509fba48d5p-1278"
+      }
+    },
+    "Certcom.real_round_finite": {
+      "kind": "round-finite",
+      "expect": "holds",
+      "min_examined": 400000,
+      "statement": ": ∀ x : Real, abs x ≤ dblMax → (floatOfR x).isFinite = true",
+      "pinned": {
+        "inputs": 536008,
+        "examined": 474186,
+        "vacuous": 61822,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "1.000000e+00",
+        "argmax": "-1ffffffffffffeffffffffffffffffffffff830p871"
       }
     },
     "Certcom.real_sin_eps": {
@@ -375,6 +405,28 @@
     "round-bounds-as-stated-until-2026-09-14": {
       "kind": "rounding-unconditional",
       "why": "real_round_bounds as stated until 2026-09-14, restated that day from this measurement; kept so the run keeps showing it fails (reals below DBL_MIN)"
+    },
+    "fpfinite-tie-inclusive": {
+      "kind": "finite-of-range-tie-inclusive",
+      "only_at_tie": true,
+      "inputs_of": "Certcom.real_fpfinite",
+      "why": "real_fpfinite with its range widened to |exact result| <= DBL_MAX + 2^970: round-to-nearest-even rounds that tie up to infinity, so this must fail at the tie and nowhere else"
+    },
+    "fpfinite-no-range": {
+      "kind": "finite-of-range-unconditional",
+      "inputs_of": "Certcom.real_fpfinite",
+      "why": "real_fpfinite with no range at all: finite operands overflow"
+    },
+    "round-finite-tie-inclusive": {
+      "kind": "round-finite-tie-inclusive",
+      "only_at_tie": true,
+      "inputs_of": "Certcom.real_round_finite",
+      "why": "real_round_finite with its range widened to |x| <= DBL_MAX + 2^970: the tie rounds up to infinity, so this must fail at the tie and nowhere else"
+    },
+    "round-finite-no-range": {
+      "kind": "round-finite-unconditional",
+      "inputs_of": "Certcom.real_round_finite",
+      "why": "real_round_finite with no range at all: a real far above DBL_MAX overflows"
     }
   }
 }

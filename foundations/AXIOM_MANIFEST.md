@@ -9,20 +9,20 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-156 of them and they are all listed below.
+159 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 119 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 120 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
-| float-bridge | 22 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
+| float-bridge | 24 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
 | GAP | 0 | witnessable, not yet witnessed — reason given per row |
 | **UNACCOUNTED** | 0 | must be 0; gate 13 fails otherwise |
 
 **The float-bridge rows are a different kind of trust and are deliberately not averaged in.**
 No Mathlib witness can discharge "the machine `atan` rounds to within ε of `Real.arctan`" —
-Mathlib has no IEEE-754 semantics. Those 22 axioms are what a hardware
+Mathlib has no IEEE-754 semantics. Those 24 axioms are what a hardware
 certificate actually rests on, so anyone reading an atan/tan bench certificate should read that
 block first.
 
@@ -62,6 +62,12 @@ decides what a certificate can claim.
   hypotheses in their statements. `tools/float_bridge/registry.json` pins every number and keeps each old
   statement as a control that must still fail; the gate fails if a number moves or a row starts failing.
   Read that file, and the axiom's docstring, before relying on a certificate that cites one of them.
+* **Two rows conclude that a float is FINITE rather than how close it reads back** (added 2026-09-14, owner-approved):
+  `real_fpfinite` (round-to-nearest's overflow rule: finite operands and an exact result at most `DBL_MAX` in
+  magnitude give a finite `+`, `−` or `×`) and `real_round_finite` (`floatOfR x` is finite for `|x| ≤ DBL_MAX`). They
+  are what lets a grounded certificate's float side conditions be discharged from a bound on its inputs
+  (`MachLib/FloatSafeInstances.lean`). The harness measured both before they were added, with controls that must fail
+  exactly at the overflow tie `DBL_MAX + 2^970`. `u_lt_one`, added the same day, is a witnessed row, not one of these.
 
 | axiom | class | statement | witness / reason |
 |---|---|---|---|
@@ -78,9 +84,11 @@ decides what a certificate can claim.
 | `Certcom.real_cosh_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .cosh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .cosh a) - cosh (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_exp_rounds` | float-bridge | `: ∀ (hi : MachLib.Real) (a : Float), a.isFinite = true → (stdI1 leanPrims .exp a).isFinite = true → dblMin ≤ exp (realToR a) → realToR a ≤ hi → abs (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_fpbridge` | float-bridge | `: FPBridgeFinite realToR` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_fpfinite` | float-bridge | `: FPFiniteOfRange realToR` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_log10_rounds` | float-bridge | `: ∀ (lo hi : MachLib.Real) (a : Float), a.isFinite = true → 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .log10 a) - log10` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_log_rounds` | float-bridge | `: ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ u * (abs ` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_round_bounds` | float-bridge | `: ∀ M x : Real, 0 ≤ M → M ≤ dblMax → abs x ≤ M → (x = 0 ∨ dblMin ≤ abs x) → abs (realToR (floatOfR x) - x) ≤ u * M` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_round_finite` | float-bridge | `: ∀ x : Real, abs x ≤ dblMax → (floatOfR x).isFinite = true` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sin_eps` | float-bridge | `: MachLib.Real` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sin_rounds` | float-bridge | `: ∀ a : Float, abs (realToR (stdI1 leanPrims .sin a) - sin (realToR a)) ≤ real_sin_eps` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sinh_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .sinh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
@@ -203,8 +211,9 @@ decides what a certificate can claim.
 | `MachLib.Real.tanh` | witnessed | `: Real → Real` | Real.tanh |
 | `MachLib.Real.tanh_eq_sinh_div_cosh` | witnessed | `(x : Real) : tanh x = sinh x / cosh x` | fun x => Real.tanh_eq_sinh_div_cosh x |
 | `MachLib.Real.tanh_lt_one` | witnessed | `(x : Real) : tanh x < 1` | fun x => by rw [Real.tanh_eq_sinh_div_cosh x, div_lt_one (Real.cosh_pos x)]; exact Real.sinh_lt_cosh x |
-| `MachLib.Real.u` | witnessed | `: Real` | (0 : ℝ) |
-| `MachLib.Real.u_nonneg` | witnessed | `: (0 : Real) ≤ u` | le_refl (0 : ℝ) |
+| `MachLib.Real.u` | witnessed | `: Real` | ((1 : ℝ) / 2 ^ 53) |
+| `MachLib.Real.u_lt_one` | witnessed | `: u < 1` | (by norm_num : (1 : ℝ) / 2 ^ 53 < 1) |
+| `MachLib.Real.u_nonneg` | witnessed | `: (0 : Real) ≤ u` | le_of_lt (by norm_num : (0 : ℝ) < 1 / 2 ^ 53) |
 | `MachLib.Real.zeroR` | witnessed | `: Real` | (0 : ℝ) |
 | `MachLib.Real.zero_lt_one_ax` | witnessed | `: (0 : Real) < 1` | zero_lt_one |
 | `MachLib.Real.zero_ne_one_ax` | witnessed | `: (0 : Real) ≠ 1` | zero_ne_one |

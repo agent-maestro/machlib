@@ -111,6 +111,22 @@ example : FPBridgeFinite (fun _ => 0) := by
   exact ⟨fun a b _ => hz _ (by mach_ring), fun a b _ => hz _ (by mach_ring),
          fun a b _ _ => hz _ (by mach_ring), fun _ _ => neg_zero.symm⟩
 
+/-- **When a float result is finite: round-to-nearest's overflow rule, over a denotation `toR`** (since 2026-09-14).
+`FPBridgeFinite` rounds `+`, `−` and `×` WHERE the float result is finite and says nothing about when it is. This
+structure says when. For finite operands, if the exact real result of the operation on `toR a` and `toR b` is at most
+`DBL_MAX` in magnitude, the float result is finite; and negating a finite float gives a finite float. Round-to-nearest-
+even overflows from `DBL_MAX + 2^970` upward, the midpoint between `DBL_MAX` and `2^1024`, which rounds up to infinity;
+so a range of `DBL_MAX` sits inside the finite range with half an ulp to spare, and the same rule with the tie included is
+false exactly at the tie. `real_fpfinite` (`FPGrounding.lean`) asserts it at `realToR`.
+
+Unlike `FPBridgeFinite` it has no in-Lean consistency witness: every field concludes a `Float.isFinite` fact, and Lean
+proves none for any float because `Float` is opaque. It is validated by measurement (`tools/float_bridge/measure.py`). -/
+structure FPFiniteOfRange (toR : Float → MachLib.Real) : Prop where
+  add : ∀ a b : Float, a.isFinite = true → b.isFinite = true → abs (toR a + toR b) ≤ dblMax → (a + b).isFinite = true
+  sub : ∀ a b : Float, a.isFinite = true → b.isFinite = true → abs (toR a - toR b) ≤ dblMax → (a - b).isFinite = true
+  mul : ∀ a b : Float, a.isFinite = true → b.isFinite = true → abs (toR a * toR b) ≤ dblMax → (a * b).isFinite = true
+  neg : ∀ a : Float, a.isFinite = true → (-a).isFinite = true
+
 /-- **Worked bridge — the first load.** The *actual* Float computation `x·x + y·y`, viewed through
 `toR`, is within the standard relative forward-error `((1+u)²−1)·(X²+Y²)` (`X = toR x`) of the exact
 real `X²+Y²`, GIVEN the bridge. This is a one-line composition of the bridge's `mul`/`add` roundings

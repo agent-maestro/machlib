@@ -149,6 +149,12 @@ decides what a certificate can claim.
   hypotheses in their statements. `tools/float_bridge/registry.json` pins every number and keeps each old
   statement as a control that must still fail; the gate fails if a number moves or a row starts failing.
   Read that file, and the axiom's docstring, before relying on a certificate that cites one of them.
+* **Two rows conclude that a float is FINITE rather than how close it reads back** (added 2026-09-14, owner-approved):
+  `real_fpfinite` (round-to-nearest's overflow rule: finite operands and an exact result at most `DBL_MAX` in
+  magnitude give a finite `+`, `−` or `×`) and `real_round_finite` (`floatOfR x` is finite for `|x| ≤ DBL_MAX`). They
+  are what lets a grounded certificate's float side conditions be discharged from a bound on its inputs
+  (`MachLib/FloatSafeInstances.lean`). The harness measured both before they were added, with controls that must fail
+  exactly at the overflow tie `DBL_MAX + 2^970`. `u_lt_one`, added the same day, is a witnessed row, not one of these.
 
 | axiom | class | statement | witness / reason |
 |---|---|---|---|"""]

@@ -39,6 +39,15 @@ harness can read it, and the harness enforces that the registry and the corpus a
   * `rounding` — `real_round_bounds`: round-to-nearest of a real `x` with `x = 0` or `DBL_MIN ≤ |x|`, and
     `|x| ≤ DBL_MAX`, lands within `u·|x|` (floatOfR read as IEEE round-to-nearest-even, which is what its
     docstring says it models). `rounding-unconditional` is the statement before 2026-09-14, a control.
+  * `finite-of-range` — `real_fpfinite : FPFiniteOfRange realToR` (added 2026-09-14): for finite doubles `a`, `b`, the
+    float `a + b`, `a − b`, `a × b` is finite whenever the EXACT real result is at most DBL_MAX in magnitude, and `−a`
+    is finite. An operation whose exact result is above DBL_MAX is vacuous. Round-to-nearest-even rounds the overflow
+    tie DBL_MAX + 2^970 UP to infinity, so two controls must fail: `finite-of-range-tie-inclusive` (the range widened
+    to `≤ DBL_MAX + 2^970`, which must fail at the tie and nowhere else) and `finite-of-range-unconditional` (no range).
+  * `round-finite` — `real_round_finite` (added 2026-09-14): round-to-nearest-even of a real `x` with `|x| ≤ DBL_MAX` is
+    finite. Controls `round-finite-tie-inclusive` (must fail at the tie and nowhere else) and
+    `round-finite-unconditional`. A finiteness row pins the largest `|exact result| / DBL_MAX` it examined, so an input
+    set that stopped reaching the boundary moves a pin. It may also carry `min_examined`, a floor above MIN_EXAMINED.
   * `declaration` — a function symbol or an opaque constant, not a proposition.
 
 INPUTS, deterministic: a dense grid over each function's interesting range; log-spaced tiny |x| down to the
@@ -59,7 +68,10 @@ libm, the runtime body or the input set cannot pass silently (`--record` re-pins
 The run also fails if:
   * a positive CONTROL — an axiom stated deliberately too tight — does not come out violated. Every statement
     restated on 2026-09-14 is kept as a control in its old form, so the run keeps showing the old one fails;
-  * any measured axiom examined fewer than MIN_EXAMINED inputs (a harness that measured nothing passes);
+  * any measured axiom examined fewer than MIN_EXAMINED inputs (a harness that measured nothing passes), or fewer
+    than its row's own `min_examined`;
+  * a control marked `only_at_tie` fails anywhere other than at the overflow tie DBL_MAX + 2^970, which would mean
+    something other than the range decides it;
   * the registry and AXIOM_MANIFEST.md's float-bridge rows are not the same set of names;
   * an axiom's statement in the Lean source is not the one registered, OR the registry's reading of it (kind,
     function, domain, bound, constant) is not what the statement's own text determines. `derive_reading`
@@ -117,6 +129,13 @@ DBL_MAX_F = Fraction(DBL_MAX)
 RESULT_DOMAINS = ("finite_result", "finite_normal_exp")
 DENORM_MIN = 5e-324
 HALF_PI_DOUBLE = 1.5707963267948966
+#: DBL_MAX + 2^970, the midpoint between DBL_MAX and 2^1024. Round-to-nearest-even rounds it UP, to infinity: it is the
+#: smallest exact result that overflows, so a finiteness range that includes it is false there and nowhere else.
+OVERFLOW_TIE_F = DBL_MAX_F + Fraction(2) ** 970
+#: The finiteness kinds and the range each puts on the exact result (`None`: no range at all).
+FINITE_RANGES = {"finite-of-range": DBL_MAX_F, "finite-of-range-tie-inclusive": OVERFLOW_TIE_F,
+                 "finite-of-range-unconditional": None, "round-finite": DBL_MAX_F,
+                 "round-finite-tie-inclusive": OVERFLOW_TIE_F, "round-finite-unconditional": None}
 
 
 # ── floats, bit for bit ──────────────────────────────────────────────────────────────────────────
@@ -427,6 +446,30 @@ def pairs_for_bridge() -> list[tuple[float, float]]:
     return list(_pairs_for_bridge())
 
 
+@functools.lru_cache(maxsize=None)
+def _pairs_for_finite() -> tuple:
+    """The bridge's pairs, plus the pairs where a finiteness range decides the verdict: exact sums, differences and
+    products AT the overflow tie (they round up to infinity), between DBL_MAX and the tie (they round down to DBL_MAX),
+    and exactly at DBL_MAX. Every operand below is exactly representable, so each exact result is what its comment says."""
+    out = list(_pairs_for_bridge())
+    two969, two970, two971 = math.ldexp(1.0, 969), math.ldexp(1.0, 970), math.ldexp(1.0, 971)
+    below_max = math.nextafter(DBL_MAX, 0.0)
+    for s in (1.0, -1.0):
+        for i in range(1000):
+            step = math.ldexp(float(i), 971)
+            out += [(s * (DBL_MAX - step), s * (two970 + step)),     # a + b is the tie
+                    (s * (DBL_MAX - step), -s * (two970 + step)),    # a − b is the tie
+                    (s * (DBL_MAX - step), s * (two969 + step)),     # a + b is DBL_MAX + 2^969, below the tie
+                    (s * (below_max - step), s * (two971 + step))]   # a + b is DBL_MAX
+        for k in range(-26, 997):      # (2^27 − 1)(2^27 + 1) = 2^54 − 1, so a · b is the tie
+            out.append((s * math.ldexp(134217727.0, k), math.ldexp(134217729.0, 970 - k)))
+        for k in range(0, 1000):       # 5 · 7205759403792793 = 2^55 − 3, so a · b is DBL_MAX + 2^969
+            out.append((s * math.ldexp(5.0, k), math.ldexp(7205759403792793.0, 969 - k)))
+        for j in range(-50, 972):      # (2^53 − 1) · 2^971 is DBL_MAX
+            out.append((s * math.ldexp(float(2 ** 53 - 1), j), math.ldexp(1.0, 971 - j)))
+    return tuple(out)
+
+
 def reals_for_rounding() -> list[tuple[int, int]]:
     """(mantissa, exponent) pairs: x = m · 2^e, exact, 256-bit mantissas."""
     rng, out = random.Random(111), []
@@ -446,6 +489,20 @@ def reals_for_rounding() -> list[tuple[int, int]]:
     out += [(0, 0), ((1 << 53) - 1, -1075)]  # zero, and the midpoint below DBL_MIN
     for _ in range(20_000):  # exact ties on the subnormal grid
         out.append((2 * rng.randint(1, (1 << 52) - 1) + 1, -1075))
+    return out
+
+
+def reals_for_round_finite() -> list[tuple[int, int]]:
+    """`reals_for_rounding` with both signs, plus reals AT the overflow tie, just below it (they round to DBL_MAX), just
+    above it (they overflow), between DBL_MAX and the tie, and at and just below DBL_MAX."""
+    out = reals_for_rounding()
+    out += [(-m, e) for m, e in out]
+    tie, top = (1 << 54) - 1, (1 << 53) - 1      # tie · 2^970 and top · 2^971 = DBL_MAX
+    for s in (1, -1):
+        out += [(s * tie, 970), (s * top, 971)]
+        for i in range(1, 2001):
+            out += [(s * ((tie << 100) - i), 870), (s * ((tie << 100) + i), 870),
+                    (s * ((top << 100) + i), 871), (s * ((top << 100) - i), 871)]
     return out
 
 
@@ -611,6 +668,70 @@ def _rounding_chunk_unconditional(items) -> dict:
     return _rounding_chunk(items, conditional=False)
 
 
+def _finite_score(e: Fraction) -> float:
+    """`|e| / DBL_MAX`, capped at 2 so that a huge exact result cannot overflow the conversion."""
+    return 2.0 if abs(e) > 2 * DBL_MAX_F else float(abs(e) / DBL_MAX_F)
+
+
+def _finite_chunk(args) -> dict:
+    """`FPFiniteOfRange`'s fields over pairs of finite doubles, with the range `bound` on the exact result (`None`: no
+    range). An operation the range admits is examined, and a non-finite float result is a violation; `off_tie` counts
+    violations whose exact result is not the overflow tie. `neg` has no range: its hypothesis is only a finite operand."""
+    ps, bound = args
+    res = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": [], "off_tie": 0}
+    worst = []
+    for a, b in ps:
+        if not (math.isfinite(a) and math.isfinite(b)):
+            res["vacuous"] += 4
+            continue
+        fa, fb = Fraction(a), Fraction(b)
+        for op, y, e in (("add", a + b, fa + fb), ("sub", a - b, fa - fb), ("mul", a * b, fa * fb), ("neg", -a, -fa)):
+            if op != "neg" and bound is not None and abs(e) > bound:
+                res["vacuous"] += 1
+                continue
+            res["examined"] += 1
+            if not math.isfinite(y):
+                res["violations"] += 1
+                if abs(e) != OVERFLOW_TIE_F:
+                    res["off_tie"] += 1
+            worst.append((_finite_score(e), f"{op} {hex_bits(a)} {hex_bits(b)}"))
+        if len(worst) > 4 * TOP_K:
+            worst.sort(key=lambda t: (-t[0], t[1]))
+            del worst[TOP_K:]
+    worst.sort(key=lambda t: (-t[0], t[1]))
+    res["worst"] = worst[:TOP_K]
+    return res
+
+
+def _round_finite_chunk(args) -> dict:
+    """`real_round_finite` over reals `m · 2^e`, with the range `bound` (`None`: no range): round-to-nearest-even of an
+    admitted real must be finite. `off_tie` as in `_finite_chunk`."""
+    items, bound = args
+    res = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": [], "off_tie": 0}
+    worst = []
+    for m, e in items:
+        x = Fraction(m) * (Fraction(2) ** e)
+        if bound is not None and abs(x) > bound:
+            res["vacuous"] += 1
+            continue
+        res["examined"] += 1
+        try:
+            finite = math.isfinite(float(x))  # correctly rounded, ties to even; OverflowError from the tie up
+        except OverflowError:
+            finite = False
+        if not finite:
+            res["violations"] += 1
+            if abs(x) != OVERFLOW_TIE_F:
+                res["off_tie"] += 1
+        worst.append((_finite_score(x), f"{m:x}p{e}"))
+        if len(worst) > 4 * TOP_K:
+            worst.sort(key=lambda t: (-t[0], t[1]))
+            del worst[TOP_K:]
+    worst.sort(key=lambda t: (-t[0], t[1]))
+    res["worst"] = worst[:TOP_K]
+    return res
+
+
 def measure_axiom(spec: dict, pool) -> dict:
     kind = spec["kind"]
     if kind in ("measured", "existential-eps"):
@@ -636,6 +757,19 @@ def measure_axiom(spec: dict, pool) -> dict:
         for part in pool.map(chunk, [items[i:i + 10_000] for i in range(0, len(items), 10_000)]):
             total = _merge(total, part)
         total["inputs"] = len(items)
+        return total
+    if kind in FINITE_RANGES:
+        bound = FINITE_RANGES[kind]
+        if kind.startswith("finite-of-range"):
+            data, chunk = list(_pairs_for_finite()), _finite_chunk
+        else:
+            data, chunk = reals_for_round_finite(), _round_finite_chunk
+        total = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": [], "off_tie": 0}
+        for part in pool.map(chunk, [(data[i:i + 10_000], bound) for i in range(0, len(data), 10_000)]):
+            off = total["off_tie"] + part["off_tie"]
+            total = _merge(total, part)
+            total["off_tie"] = off
+        total["inputs"] = len(data)
         return total
     raise ValueError(kind)
 
@@ -696,6 +830,9 @@ READINGS = {
 ROUNDING_STATEMENT = (": ∀ M x : Real, 0 ≤ M → M ≤ dblMax → abs x ≤ M → (x = 0 ∨ dblMin ≤ abs x) → "
                       "abs (realToR (floatOfR x) - x) ≤ u * M")
 ROUNDING_STATEMENT_UNTIL_2026_09_14 = ": ∀ M x : Real, 0 ≤ M → abs x ≤ M → abs (realToR (floatOfR x) - x) ≤ u * M"
+#: `real_fpfinite` and `real_round_finite`, as stated when they were added (2026-09-14).
+FINITE_OF_RANGE_STATEMENT = ": FPFiniteOfRange realToR"
+ROUND_FINITE_STATEMENT = ": ∀ x : Real, abs x ≤ dblMax → (floatOfR x).isFinite = true"
 
 READING_KEYS = ("kind", "function", "domain", "bound", "c", "eps")
 
@@ -715,6 +852,10 @@ def derive_reading(statement: str | None) -> dict | None:
         return {"kind": "rounding"}
     if s == ROUNDING_STATEMENT_UNTIL_2026_09_14:
         return {"kind": "rounding-unconditional"}
+    if s == FINITE_OF_RANGE_STATEMENT:
+        return {"kind": "finite-of-range"}
+    if s == ROUND_FINITE_STATEMENT:
+        return {"kind": "round-finite"}
     m = re.fullmatch(r": ∀ (?:\([^)]*\) )*(?:\(a : Float\)|a : Float), (.*)", s)
     if m is None:
         return None
@@ -750,6 +891,13 @@ EXPECTED_DEFINITIONS = {
                        "mul : ∀ a b : Float, (a * b).isFinite = true → (toR a * toR b = 0 ∨ dblMin ≤ abs (toR a * toR b)) "
                        "→ RoundsW u (toR (a * b)) (toR a * toR b) | "
                        "neg : ∀ a : Float, a.isFinite = true → toR (-a) = -(toR a)"),
+    "FPFiniteOfRange": ("add : ∀ a b : Float, a.isFinite = true → b.isFinite = true → abs (toR a + toR b) ≤ dblMax → "
+                        "(a + b).isFinite = true | "
+                        "sub : ∀ a b : Float, a.isFinite = true → b.isFinite = true → abs (toR a - toR b) ≤ dblMax → "
+                        "(a - b).isFinite = true | "
+                        "mul : ∀ a b : Float, a.isFinite = true → b.isFinite = true → abs (toR a * toR b) ≤ dblMax → "
+                        "(a * b).isFinite = true | "
+                        "neg : ∀ a : Float, a.isFinite = true → (-a).isFinite = true"),
     "RoundsW": "(w fl e : Real) : Prop := ∃ δ : Real, -w ≤ δ ∧ δ ≤ w ∧ fl = e * (1 + δ)",
     "dblMin": ": MachLib.Real := 1 / natCast (2 ^ 1022)",
     "dblMax": ": MachLib.Real := natCast ((2 ^ 53 - 1) * 2 ^ 971)",
@@ -799,6 +947,7 @@ def source_definitions(foundations: pathlib.Path) -> dict[str, str | None]:
     bridge = _strip_lean_comments((foundations / "MachLib" / "FloatRealBridge.lean").read_text(encoding="utf-8"))
     out["FPBridge"] = _structure_fields(bridge, "FPBridge")
     out["FPBridgeFinite"] = _structure_fields(bridge, "FPBridgeFinite")
+    out["FPFiniteOfRange"] = _structure_fields(bridge, "FPFiniteOfRange")
     for name in ("dblMin", "dblMax"):
         m = re.search(rf"^noncomputable def {name} (.*?)(?=\n\s*\n|\Z)", bridge, re.MULTILINE | re.DOTALL)
         if m:
@@ -842,6 +991,8 @@ def fbEval (f : String) (x y : Float) : Float :=
   | "asin" => stdI1 leanPrims .asin x | "acos" => stdI1 leanPrims .acos x | "atan" => stdI1 leanPrims .atan x
   | "sqrt" => stdI1 leanPrims .sqrt x | "abs" => stdI1 leanPrims .abs x
   | "add" => x + y | "sub" => x - y | "mul" => x * y | "neg" => -x
+  | "addfin" => if (x + y).isFinite then 1.0 else 0.0 | "subfin" => if (x - y).isFinite then 1.0 else 0.0
+  | "mulfin" => if (x * y).isFinite then 1.0 else 0.0 | "negfin" => if (-x).isFinite then 1.0 else 0.0
   | _ => 0.0 / 0.0
 
 #eval show IO Unit from do
@@ -856,6 +1007,9 @@ def fbEval (f : String) (x y : Float) : Float :=
 def python_eval(f: str, x: float, y: float) -> float:
     if f in FLOAT_FUNCS:
         return FLOAT_FUNCS[f](x)
+    finite_of = {"addfin": lambda: x + y, "subfin": lambda: x - y, "mulfin": lambda: x * y, "negfin": lambda: -x}
+    if f in finite_of:
+        return 1.0 if math.isfinite(finite_of[f]()) else 0.0
     return {"add": lambda: x + y, "sub": lambda: x - y, "mul": lambda: x * y, "neg": lambda: -x}[f]()
 
 
@@ -900,6 +1054,11 @@ def crosscheck_samples(registry: dict, results: dict) -> list[tuple[str, float, 
         samples += [(f, x, 0.0) for x in pick]
     for a, b in rng.sample(pairs_for_bridge(), 300):
         samples += [("add", a, b), ("sub", a, b), ("mul", a, b), ("neg", a, 0.0)]
+    # the finiteness rows: Lean's own `Float.isFinite` at the overflow boundary, including the tie
+    boundary = list(_pairs_for_finite())[len(_pairs_for_bridge()):]
+    for a, b in rng.sample(boundary, 200) + [(DBL_MAX, math.ldexp(1.0, 970))]:
+        samples += [("add", a, b), ("sub", a, b), ("mul", a, b),
+                    ("addfin", a, b), ("subfin", a, b), ("mulfin", a, b), ("negfin", a, 0.0)]
     return samples
 
 
@@ -950,10 +1109,18 @@ def verdicts(registry: dict, results: dict, control_results: dict, manifest: set
                             "neg field was measured on the wrong function")
         if s["examined"] < MIN_EXAMINED:
             problems.append(f"{name}: examined {s['examined']} inputs, fewer than {MIN_EXAMINED}: it measured nothing")
+        elif s["examined"] < int(spec.get("min_examined", 0)):
+            problems.append(f"{name}: examined {s['examined']} inputs, fewer than its row's min_examined "
+                            f"{spec['min_examined']}: the input set shrank")
         line = (f"  {name}: {s['examined']} examined of {s['inputs']} ({s['vacuous']} outside its hypotheses, "
                 f"{s['unmeasurable']} with a non-finite result); ")
         if kind == "existential-eps":
             line += f"sup |error| = {s['max']} at {describe_argmax(s)}: bounded, so an eps exists"
+        elif kind in FINITE_RANGES:
+            line += (f"{s['violations']} violation(s) (a non-finite result its range admits); largest |exact result| "
+                     f"/ DBL_MAX examined = {s['max']} at {describe_argmax(s)}; expected {spec['expect']}")
+            if spec["expect"] == "holds" and s["violations"]:
+                problems.append(f"{name} is VIOLATED at {s['violations']} input(s) and the registry says it holds")
         else:
             line += (f"{s['violations']} violation(s); max error/bound = {s['max']} at {describe_argmax(s)}; "
                      f"expected {spec['expect']}")
@@ -976,6 +1143,9 @@ def verdicts(registry: dict, results: dict, control_results: dict, manifest: set
         if not s["violations"]:
             problems.append(f"control {name} ({spec['why']}) was NOT violated: the harness cannot see a violation, "
                             "so no verdict above means anything")
+        if spec.get("only_at_tie") and res.get("off_tie"):
+            problems.append(f"control {name} ({spec['why']}) fails at {res['off_tie']} exact result(s) other than the "
+                            "overflow tie DBL_MAX + 2^970: something other than the range decides it")
         report.append(f"  control {name}: {s['violations']} violation(s) of {s['examined']} (max {s['max']} at "
                       f"{describe_argmax(s)}) — must be violated")
     return problems, report
@@ -1171,6 +1341,50 @@ def self_test() -> int:
                  (bits(lean_sinh(-0.0)) == bits(-0.0), "sinh(-0.0) keeps its sign"),
                  (EXP(1.0) == math.exp(1.0), "ctypes exp is libm exp")]
     failures += [f"specimen failed: {why}" for ok, why in specimens if not ok]
+    # the finiteness rows (2026-09-14): both statements read, a changed range does not, and the tie decides
+    if derive_reading(FINITE_OF_RANGE_STATEMENT) != {"kind": "finite-of-range"}:
+        failures.append(f"real_fpfinite's statement reads as {derive_reading(FINITE_OF_RANGE_STATEMENT)}")
+    if derive_reading(ROUND_FINITE_STATEMENT) != {"kind": "round-finite"}:
+        failures.append(f"real_round_finite's statement reads as {derive_reading(ROUND_FINITE_STATEMENT)}")
+    for label, bad_st in (("real_round_finite with a strict range", ROUND_FINITE_STATEMENT.replace("≤ dblMax", "< dblMax")),
+                          ("real_round_finite with no range", ": ∀ x : Real, (floatOfR x).isFinite = true"),
+                          ("real_fpfinite over another denotation", ": FPFiniteOfRange (fun _ => 0)")):
+        if derive_reading(bad_st) is not None:
+            failures.append(f"canary '{label}' is readable: {derive_reading(bad_st)}")
+        else:
+            print(f"  canary fires: {label} is unreadable")
+    tie_pair, far_pair = [(DBL_MAX, math.ldexp(1.0, 970))], [(DBL_MAX, DBL_MAX)]
+    in_range = _finite_chunk((tie_pair, DBL_MAX_F))
+    tie_incl = _finite_chunk((tie_pair, OVERFLOW_TIE_F))
+    tie_incl_far = _finite_chunk((far_pair, OVERFLOW_TIE_F))
+    no_range = _finite_chunk((tie_pair + far_pair, None))
+    if not (in_range["violations"] == 0 and in_range["vacuous"] == 2 and tie_incl["violations"] == 1
+            and tie_incl["off_tie"] == 0 and tie_incl_far["violations"] == 0 and no_range["off_tie"] >= 2):
+        failures.append(f"finiteness at the overflow tie: in range {in_range}, tie-inclusive {tie_incl} and "
+                        f"{tie_incl_far}, no range {no_range}")
+    else:
+        print("  canary fires: DBL_MAX + 2^970 is outside real_fpfinite's range, violates the tie-inclusive range "
+              "exactly there, and a far overflow violates only with no range")
+    tie_real, below_tie = [((1 << 54) - 1, 970)], [((((1 << 54) - 1) << 100) - 1, 870)]
+    r_in, r_tie = _round_finite_chunk((tie_real, DBL_MAX_F)), _round_finite_chunk((tie_real, OVERFLOW_TIE_F))
+    r_below, r_none = _round_finite_chunk((below_tie, OVERFLOW_TIE_F)), _round_finite_chunk(([((1 << 55), 970)], None))
+    if not (r_in["vacuous"] == 1 and r_tie["violations"] == 1 and r_tie["off_tie"] == 0 and r_below["examined"] == 1
+            and r_below["violations"] == 0 and r_none["off_tie"] == 1):
+        failures.append(f"round-finite at the overflow tie: {r_in}, {r_tie}, {r_below}, {r_none}")
+    else:
+        print("  canary fires: the real at the overflow tie overflows, one just below it does not, and one far above "
+              "violates only with no range")
+    if not any("min_examined" in pr for pr in problems_of(with_row(min_examined=60_000))):
+        failures.append("canary 'a row that examined fewer than its min_examined' did not fire")
+    else:
+        print("  canary fires: a row that examined fewer than its min_examined")
+    tie_ctl = dict(base, controls={"too-tight": {"kind": "finite-of-range-tie-inclusive", "only_at_tie": True,
+                                                 "why": "specimen"}})
+    if not any("other than the overflow tie" in pr
+               for pr in problems_of(reg=tie_ctl, ctl={"too-tight": dict(fake, violations=7, off_tie=3)})):
+        failures.append("canary 'a tie-inclusive control failing away from the tie' did not fire")
+    else:
+        print("  canary fires: a tie-inclusive control failing away from the tie")
     if failures:
         print("FLOAT-BRIDGE SELFTEST FAIL:\n  - " + "\n  - ".join(failures))
         return 1

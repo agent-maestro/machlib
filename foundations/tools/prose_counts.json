@@ -296,8 +296,9 @@
   {
    "id": "claude.axioms_pinned_status",
    "file": "CLAUDE.md",
-   "pattern": "\\*\\*([0-9 \\u202f]+) axioms pinned — unchanged",
-   "source": "axioms_pinned"
+   "pattern": "\\*\\*([0-9 \\u202f]+) axioms pinned\\*\\* — 243 across",
+   "source": "axioms_pinned",
+   "_note": "Re-anchored 2026-09-14: the sentence said the count was unchanged across the 2026-08 arc, which stopped being true of the current figure when three axioms were added; the historical 243 stays in the prose, unregistered."
   },
   {
    "id": "claude.reachable_gotcha",

@@ -42,8 +42,10 @@ theorem that rests on one carries the difference in its statement:
     `3u`; `real_tan_rounds` a finite input, at `2u`. The kernels take the result conditions as hypotheses
     (`hexp` and `hnorm`, `hsinh`, `hcosh`); a finite input is inside `hsafe`.
 
-Nothing in Lean can discharge these for a concrete input, because `Float` is opaque. They are conditions a caller
-checks at run time or guarantees by bounding its inputs, like the range hypotheses these theorems already took.
+Lean itself proves none of these for a concrete input, because `Float` is opaque. They are conditions a caller checks at
+run time or guarantees by bounding its inputs, like the range hypotheses these theorems already took. Since 2026-09-14
+two disclosed axioms turn such a bound into the finiteness conditions of `+`, `−`, `×`, negation and `floatOfR`:
+`real_fpfinite` below and `real_round_finite` (`EMLCertcomGrounded.lean`). `FloatSafeInstances.lean` uses them.
 -/
 
 namespace Certcom
@@ -72,6 +74,22 @@ every one a product below `DBL_MIN`. The restated one holds at all 1 419 906 ope
 `python3 tools/float_bridge/measure.py`; `tools/float_bridge/registry.json` pins these numbers and keeps the old
 statement as a control that must still fail. -/
 axiom real_fpbridge : FPBridgeFinite realToR
+
+/-- **Round-to-nearest's overflow rule, at `realToR`** (added 2026-09-14, owner-approved). For finite floats `a` and `b`,
+the float `a + b`, `a − b` or `a * b` is finite whenever the EXACT real result of the operation on their real values is
+at most `DBL_MAX` in magnitude, and negating a finite float gives a finite float (`FPFiniteOfRange`,
+`FloatRealBridge.lean`, which says why this is what round-to-nearest-even does). Un-witnessable in Lean (`Float` is
+opaque); disclosed like `real_fpbridge`. It is what lets `FloatSafe`'s finiteness half, `FloatFinite`, be discharged from
+a bound on the inputs (`FloatSafeInstances.lean`).
+
+**Measured before it was added.** `tools/float_bridge/measure.py` over 629 091 pairs of finite doubles (the pairs that
+measure `real_fpbridge`, plus sums, differences and products exactly at `DBL_MAX`, exactly at the overflow tie
+`DBL_MAX + 2^970`, and between the two): no violation at the 2 299 615 operations its hypotheses admit (216 749 excluded),
+the largest exact result examined being `DBL_MAX` itself. Two controls must fail, and do: the range widened to include
+the tie fails at 6 046 operations, every one exactly at the tie, and the rule with no range fails at 211 671. A sample of
+the floats and of their finiteness is checked bit for bit against Lean's own `#eval`, the tie included.
+`tools/float_bridge/registry.json` pins these numbers. -/
+axiom real_fpfinite : FPFiniteOfRange realToR
 
 /-- **Keystone — a forward-error certificate on real `Float` bytes.**
 
