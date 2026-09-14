@@ -58,7 +58,12 @@ hi` uniformizes a per-point Lipschitz bound over a whole interval), valid for `x
 representable range implied by `M`. NOT claimed unconditionally over all reals — outside a bounded
 range, round-to-nearest either loses this relative-error guarantee or overflows, and no fixed bound
 holds. Un-witnessable in Lean (`Float` is opaque); the terminal floor of this direction of the
-Float↔Real bridge, disclosed exactly like `real_fpbridge`. -/
+Float↔Real bridge, disclosed exactly like `real_fpbridge`.
+
+**MEASURED VIOLATED as stated (2026-09-14, `tools/float_bridge/measure.py`), and left unchanged**, reading
+`floatOfR` as IEEE round-to-nearest-even: every violation is a real with `|x| < DBL_MIN`, where the subnormal
+grid cannot keep the relative error within `u · |x|`, the tightest `M`. Every other real tried met it.
+`tools/float_bridge/registry.json` pins the numbers. -/
 axiom real_round_bounds : ∀ M x : Real, 0 ≤ M → abs x ≤ M → abs (realToR (floatOfR x) - x) ≤ u * M
 
 /-- **Part 1, grounded.** `eml_var_var_pipeline_uniform`, with the abstract `u`-relative `hround_exp`/

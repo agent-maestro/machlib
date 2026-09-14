@@ -8,15 +8,15 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 111 `.lean` files** (797 top-level + 314 in subdirectories) /
-**253 601 lines** / **7 704 theorems**, re-exported through the aggregator
+**253 977 lines** / **7 715 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 704
-python3 tools/count_theorems.py --scope all           # 8 424
+python3 tools/count_theorems.py --scope core          # 7 715
+python3 tools/count_theorems.py --scope all           # 8 435
 ```
 
 The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
@@ -95,6 +95,18 @@ no IEEE-754 semantics, so they are validated by *measurement*, not by a model. *
 hardware certificate actually rests on** — anyone shown an atan/tan bench certificate should be
 pointed at that block first.
 
+**They are measured now, and several are false as stated.** `tools/float_bridge/measure.py` (in
+`check_all.sh`; local only, because its pins are this machine's glibc) measures every float-bridge axiom
+it can express against a 256-bit reference, checks the runtime's floats bit for bit against Lean's own
+`#eval`, carries two too-tight controls that must fail, and fails the run when a pinned number in
+`tools/float_bridge/registry.json` moves, a statement changes, or a new row fails. Its first run
+(2026-09-14) found `real_tanh_rounds` false, which was restated from the measurement (finite inputs,
+`2u`). **`real_exp_rounds`, `real_sinh_rounds`, `real_cosh_rounds`, `real_log10_rounds`,
+`real_tan_rounds`, `real_fpbridge` and `real_round_bounds` are violated as stated and were deliberately
+left unchanged** — the subnormal range for exp, mul and rounding, ordinary arguments too for sinh, cosh,
+log10 and tan. Every grounded certificate rests on `real_fpbridge`. Read the registry before citing a
+grounded bound.
+
 > **It went dark once, for 33 days, and nothing said so.** MachLib moved to Lean v4.32.2 on
 > 2026-07-31; `monogate-lean` stayed on v4.14.0. Because it requires MachLib *by path*, it was
 > compiling MachLib's current source under the old toolchain and could not build — while the
@@ -123,7 +135,7 @@ bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "243 axioms pinned; 57 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 506 claims resolve against #print axioms"
+python3 tools/claim_audit/claim_audit.py       # "all 510 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 

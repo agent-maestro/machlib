@@ -58,7 +58,7 @@ run() {
   # `tail -n 3` window silently dropped them. Cosmetic — SUMMARY decides pass/fail from the captured
   # rc, never from this text — but a comment that overstates what it does is how a gate's scope
   # drifts from its description.
-  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|check-[a-z]+\]|AxiomLedger" \
+  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|check-[a-z]+\]|AxiomLedger" \
     "$OUT/$name.log" | tail -n 2 || true
 }
 
@@ -126,6 +126,13 @@ else
   run "prose-counts" python3 tools/prose_counts_check.py
   run "prose-counts-selftest" python3 tools/prose_counts_check.py --self-test
   run "sorry"        lake env lean tools/sorry_audit.lean
+  # The float-bridge axioms are "validated by measurement" (AXIOM_MANIFEST.md) and nothing measured them
+  # until 2026-09-14, when real_tanh_rounds turned out false. This measures every one it can express against a
+  # 256-bit reference and pins what it found, acknowledged violations included. LOCAL ONLY: the pins are this
+  # machine's libm, and on another platform it reports UNAVAILABLE (rc 2). It writes only to a temp dir, so it
+  # is safe inside a fingerprinted run; its Lean cross-check goes through capped_lean.sh.
+  run "float-bridge" python3 tools/float_bridge/measure.py
+  run "float-bridge-selftest" python3 tools/float_bridge/measure.py --self-test
 fi
 
 FP_END="$(tree_fingerprint)"

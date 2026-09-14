@@ -136,6 +136,15 @@ decides what a certificate can claim.
   kernels restate with a numeric bound. What it does not do — and cannot, `Float` being opaque — is
   establish that the runtime meets any particular `B`. That stays empirical; it is now quantitative
   and in one named place instead of implicit in four unconstrained constants.
+* **`tools/float_bridge/measure.py` MEASURES every row here that states something measurable** (since
+  2026-09-14; run by `tools/check_all.sh`, local only). Each bound is checked against a 256-bit reference
+  over dense, tiny, threshold, large and random inputs, with a sample of the runtime's floats checked bit
+  for bit against Lean's own evaluation. It found `real_tanh_rounds` false as stated, and that row is now
+  restated from the measurement. **These rows are VIOLATED as stated and have NOT been changed:**
+  `real_exp_rounds`, `real_sinh_rounds`, `real_cosh_rounds`, `real_log10_rounds`, `real_tan_rounds`,
+  `real_fpbridge` and `real_round_bounds`. `tools/float_bridge/registry.json` pins where and by how much,
+  and the gate fails if those numbers move or another row starts failing. Read that file before relying
+  on a certificate that cites one of them.
 
 | axiom | class | statement | witness / reason |
 |---|---|---|---|"""]

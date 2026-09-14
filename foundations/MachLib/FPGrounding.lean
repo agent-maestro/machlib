@@ -39,7 +39,12 @@ axiom realToR : Float → MachLib.Real
 /-- **The disclosed IEEE-754 model.** Under `realToR`, every basic float op is correctly rounded
 (relative error ≤ `u`) and negation is exact — the standard model of floating-point arithmetic
 (Higham, *Accuracy and Stability*, §2.2). Structurally un-witnessable in Lean (`Float` is opaque);
-the terminal trust of certcom Theorem A, disclosed exactly like `erf`. -/
+the terminal trust of certcom Theorem A, disclosed exactly like `erf`.
+
+**MEASURED VIOLATED as stated (2026-09-14, `tools/float_bridge/measure.py`), and left unchanged.** `mul`
+fails when the exact product is below `DBL_MIN`: rounding to the subnormal grid loses the relative accuracy
+`RoundsW u` asks for, and a product that underflows to `0` misses it entirely. `add`, `sub` and `neg` met it on
+every input tried (sums of subnormals are exact). `tools/float_bridge/registry.json` pins the numbers. -/
 axiom real_fpbridge : FPBridge realToR
 
 /-- **Keystone — an UNCONDITIONAL forward-error certificate on real `Float` bytes.**
@@ -108,49 +113,55 @@ rounding, the "irreducible trust" the T2/T3 work isolated. `tanh` is globally `1
 enters the fold with no domain hypothesis; and `tanh`-saturation is a real control primitive (a smooth
 alternative to the hard `clamp`, and — unlike `clamp` — inside the certified `+/−/×/tr1` fragment). -/
 
-/-- **The disclosed libm rounding bound for the runtime `tanh`, domain-restricted.** For any `R` and
-`a : Float` with `abs (realToR a) ≤ R`, `stdI1 leanPrims .tanh`, through `realToR`, is within `u` of the
-exact `Real.tanh` — a CONSTANT bound (not scaled by `R`): `tanh`'s output lies in `[-1,1]` regardless of
-domain, so `R` does not calibrate the bound's size. **Not claimed unconditionally** (erratum-driven
-design, 2026-07-22, matching `real_exp_rounds`).
+/-- **The disclosed libm rounding bound for the runtime `tanh`: within `2u` of `Real.tanh` at every FINITE
+`a`.** `stdI1 leanPrims .tanh` is the runtime's own composition (`EMLToCRuntime.lean`): `x` itself for
+`|x| ≤ 1.3538603431225864e-8`, else `copysign((1−t)/(1+t), x)` with `t = exp(−2|x|)`. Un-witnessable in
+Lean (`Float` opaque), disclosed like `real_fpbridge`; the residual libm trust for this primitive.
 
-**The reason recorded for `R` then no longer holds.** `R` guarded the runtime's exp-QUOTIENT
-`(p.exp x - p.exp (-x))/(p.exp x + p.exp (-x))`: from `|a| = 710` one `Float.exp` overflows to `+inf`,
-giving `inf/inf = NaN`, and `realToR (NaN)` is unconstrained by any axiom. Since forge `51337a3`
-(2026-09-13), `libmonogate.h` — and so `stdI1 leanPrims .tanh` (`EMLToCRuntime.lean`) — computes
-`copysign((1−t)/(1+t), x)` with `t = exp(−2|x|) ∈ [0,1]`, which is finite and in `[-1,1]` for every
-non-NaN input (`tanh 1000 = 1.0` is a `native_decide` example there). The statement is unchanged, so
-`R` is now a hypothesis the current runtime does not need.
+**Restated 2026-09-14 from a measurement, because the statement before it was false.** It read
+`∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → … ≤ u`. The hypothesis constrained nothing (every
+`a` has some `R`), and the bound does not hold. `tools/float_bridge/measure.py` computes the composite exactly
+as `leanPrims` does (glibc 2.39's `exp` on aarch64 through ctypes, IEEE doubles, `floatCopySign`'s bits),
+checks a sample of those floats against Lean's own `#eval` bit for bit, and compares with mpmath's `tanh` at
+256 bits. Its inputs: `[-30, 30]` in steps of `10⁻³` and `[-1, 1]` in steps of `10⁻⁵`; `|x|` log-spaced down to
+the smallest subnormal; 2 000 consecutive doubles on each side of the small-argument threshold, and runs
+around `18.715`, `19.06` and `20`; magnitudes up to `DBL_MAX`; random finite bit patterns; and a local
+search around the 25 worst points. Against `u` the error exceeds the bound at 25 535 of 470 235 finite
+inputs, at most `1.4996u`, at `x = −7.834942349654755`. Against `2u` there is no violation; the largest error
+is `0.7498` of the bound.
 
-**Measured the same day, the bound `u` itself does not hold of either runtime.** Against a 200-bit
-`tanh` (mpmath), with glibc 2.39's `exp` on aarch64 (the `exp` Lean's `Float.exp` calls there), the
-current composite's error exceeds `u = 2⁻⁵³` at 2 318 of the 60 001 points of `[-30, 30]` in steps of
-`10⁻³` (max `1.65·10⁻¹⁶ ≈ 1.48u`, at `x = −5.581`); the old quotient exceeded it at 10 224 (max
-`2.65·10⁻¹⁶ ≈ 2.39u`, at `x = −15.271`). Nothing here was changed for that. Un-witnessable in Lean
-(`Float` opaque), disclosed like `real_fpbridge`; the residual libm trust for this primitive. -/
-axiom real_tanh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
-    abs (realToR (stdI1 leanPrims .tanh a) - tanh (realToR a)) ≤ u
+**Why `2u`, not tighter.** The worst case sits where `t` is tiny and the rounding of `1 − t`, of `1 + t` and
+of their quotient line up; a first-order error estimate puts that at `1.5u`, which is what was measured.
+Over all `t` the same estimate, with glibc's documented `exp` error of at most `0.511` ulp, stays under
+about `1.9u`. That is an estimate, not a proof; `2u` is a third above the measured maximum.
+
+**The domain is the honest one: finite `a`.** `realToR` of `±inf` or `NaN` has no real value to compare,
+so nothing was measured there and nothing is claimed; the old `R` excluded neither.
+
+Command, from `foundations/`: `python3 tools/float_bridge/measure.py`. Its registry pins these numbers, and
+`tools/check_all.sh` fails if they move. -/
+axiom real_tanh_rounds : ∀ (a : Float), a.isFinite = true →
+    abs (realToR (stdI1 leanPrims .tanh a) - tanh (realToR a)) ≤ u + u
 
 /-- **A grounded transcendental control kernel.** The emitted C for `tanh(1.5·e + 0.4·i + 0.05·d)` — a
-soft-saturated PID — read through `realToR`, is within `u + absErr` of the exact ℝ value `tanh(PID
-law)`, GIVEN a bound `R` on the PID law's own value (both computed and exact — the one new hypothesis
-this theorem needs beyond the erratum-free version; it was added to keep the runtime's exp-quotient
-from overflowing, which the runtime since forge `51337a3` no longer does, and it stays because
-`real_tanh_rounds` still takes it). `FPBridge` is discharged by `real_fpbridge`, the runtime
-correspondence by the proven `std_hrt` at Lean's libm basis, and the one `tanh` rounding by the
-disclosed, domain-restricted `real_tanh_rounds`. First grounded certificate reaching a transcendental
-layer over real `Float` bytes. `1`-Lipschitz `tanh` (`globLip_lipschitz`) amplifies the arithmetic fold's
-`absErr` by `1`. -/
-theorem pid_tanh_grounded (env : Env) (R : MachLib.Real)
-    (hflx : abs (realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF) ≤ R) :
-    AbsEnc (u + 1 * absErr realToR env pidRawEML)
+soft-saturated PID — read through `realToR`, is within `2u + absErr` of the exact ℝ value `tanh(PID law)`,
+GIVEN that the PID law's computed value is a finite float. That is `real_tanh_rounds`'s hypothesis and its
+constant since 2026-09-14. Until then this theorem took a bound `R` on that value, which every value
+satisfies, and concluded `u + absErr` from an axiom measured false. `FPBridge` is discharged by
+`real_fpbridge`, the runtime correspondence by the proven `std_hrt` at Lean's libm basis, and the one `tanh`
+rounding by the disclosed `real_tanh_rounds`. First grounded certificate reaching a transcendental layer over
+real `Float` bytes. `1`-Lipschitz `tanh` (`globLip_lipschitz`) amplifies the arithmetic fold's `absErr` by
+`1`. -/
+theorem pid_tanh_grounded (env : Env)
+    (hfin : (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF.isFinite = true) :
+    AbsEnc ((u + u) + 1 * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .tanh pidRawEML))).toF)
       (tanh (exactR realToR env pidRawEML)) :=
   pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .tanh tanh 1 u
+    env .tanh tanh 1 (u + u)
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact tanh_lipschitz p q)
-    pidRawEML isArith_pidRawEML (real_tanh_rounds R _ hflx)
+    pidRawEML isArith_pidRawEML (real_tanh_rounds _ hfin)
 
 /-! ### Grounding a second libm primitive: `exp`, LOCALLY Lipschitz
 
@@ -171,7 +182,12 @@ unconstrained by any existing axiom and NO fixed bound holds — an unconditiona
 asserts something no runtime satisfies. `hi` is exactly the same bound every caller (`pid_exp_grounded`
 and Track C's `eml_var_var_*_grounded`) already carries for the Lipschitz part, so this costs no new
 hypothesis at any existing call site. Un-witnessable in Lean (`Float` opaque); the residual libm trust
-for this primitive. -/
+for this primitive.
+
+**MEASURED VIOLATED as stated (2026-09-14, `tools/float_bridge/measure.py`), and left unchanged.** Every
+violation found is an input whose result is subnormal or underflows to `0` (`x` below about `−708.40`): the
+subnormal grid cannot give the relative accuracy `u · exp hi` asks for. Results in the normal range met the
+bound. `tools/float_bridge/registry.json` pins the numbers as an acknowledged failure. -/
 axiom real_exp_rounds : ∀ (hi : MachLib.Real) (a : Float), realToR a ≤ hi →
     abs (realToR (stdI1 leanPrims .exp a) - exp (realToR a)) ≤ u * exp hi
 
@@ -417,18 +433,24 @@ theorem pid_sqrt_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
 
 /-! ### Grounding a ninth libm primitive: `log10`, LOCALLY Lipschitz on a positive domain
 
-Same shape as `log`/`sqrt` — one-sided domain, `lo > 0`, `L = 1/(lo·log 10)`. Unlike every other
-primitive here, `leanPrims`'s own interpretation of `.log10` is ITSELF a composite built from `ln`
-(`fun x => p.ln x / p.ln 10`, `EMLToCRuntime.lean`), not a distinct native runtime call — the disclosed
-rounding bound covers that whole composite, same honest posture as everywhere else. -/
+Same shape as `log`/`sqrt` — one-sided domain, `lo > 0`, `L = 1/(lo·log 10)`. Until 2026-09-13
+`leanPrims`'s interpretation of `.log10` was a composite built from `ln` (`fun x => p.ln x / p.ln 10`); it is
+now the `Prims` field `log10`, libm's `log10`, because that is the call emitted C makes
+(`EMLToCRuntime.lean`, `stdI1`). -/
 
 /-- **The disclosed libm rounding bound for the runtime `log10`, domain-restricted.** For any
 `0 < lo ≤ hi` and `a : Float` with `lo ≤ realToR a ≤ hi`, `leanPrims.log10`, through `realToR`, is
 within `u · (abs (log10 lo) + abs (log10 hi))` of the exact `Real.log10` — same two-sided shape as
 `real_log_rounds` (`log10` is `log`'s monotone rescaling, so the same argument applies). **Not
-claimed unconditionally** (erratum-driven design, 2026-07-22): same positivity failure as `log` (the
-composite is `ln x / ln 10`). Un-witnessable in Lean (`Float` opaque); the residual libm trust for
-this primitive. -/
+claimed unconditionally** (erratum-driven design, 2026-07-22): same positivity failure as `log`.
+Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive.
+
+**Since 2026-09-13 the runtime `log10` is libm `log10`, not `ln x / ln 10`** (`EMLToCRuntime.lean`: emitted
+C calls libm `log10`, and no function computes the quotient). The statement did not change, so its subject
+did. **MEASURED VIOLATED as stated either way (2026-09-14, `tools/float_bridge/measure.py`), and left
+unchanged**: glibc's `log10` is not correctly rounded, and the relative bound `u · |log10 x|` (the tightest
+`lo`/`hi`) fails, most often near `x = 1`. Over the same inputs the old quotient failed about fifteen times as
+often. `tools/float_bridge/registry.json` pins the numbers as an acknowledged failure. -/
 axiom real_log10_rounds : ∀ (lo hi : MachLib.Real) (a : Float),
     0 < lo → lo ≤ realToR a → realToR a ≤ hi →
     abs (realToR (stdI1 leanPrims .log10 a) - log10 (realToR a)) ≤ u * (abs (log10 lo) + abs (log10 hi))
@@ -529,7 +551,11 @@ overflows to `inf`, as `real_exp_rounds`'s erratum note describes for `exp`. Bef
 the difference `exp x − exp (−x)` was already `inf` from `|x| > 709.78`; the composite since then is
 finite on `(709.78, 710.4758]` as well (forge `51337a3`'s sweep; `sinh 710` is a `native_decide`
 example in `EMLToCRuntime.lean`) and `inf` only beyond, where `sinh` itself exceeds the largest double.
-Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
+Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive.
+
+**MEASURED VIOLATED as stated (2026-09-14, `tools/float_bridge/measure.py`), and left unchanged**: the
+composite's relative error exceeds `u` in both branches, `|x| ≤ 709.78` as well as above it. The
+tightest `R` is `|x|`. `tools/float_bridge/registry.json` pins the numbers as an acknowledged failure. -/
 axiom real_sinh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
     abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ u * cosh R
 
@@ -563,7 +589,10 @@ the exact `Real.cosh` (`cosh` monotonic in `abs ·`, so `cosh x ≤ cosh R` for 
 SAME `cosh R`/`sinh R` shape `pid_cosh_grounded` already needs. **Not claimed unconditionally**
 (erratum-driven design, 2026-07-22): the same exp-composite overflow as `sinh`/`real_sinh_rounds`,
 with the same boundary since forge `51337a3` (`cosh 710` is finite; `inf` beyond `|x| = 710.4758`).
-Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
+Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive.
+
+**MEASURED VIOLATED as stated (2026-09-14, `tools/float_bridge/measure.py`), and left unchanged**, the same
+way as `real_sinh_rounds`: in both branches. `tools/float_bridge/registry.json` pins the numbers. -/
 axiom real_cosh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
     abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ u * cosh R
 
@@ -594,7 +623,12 @@ The one primitive needing genuinely new math (`TanLipschitz.lean`, one new axiom
 ≤ tan R` for `abs x ≤ R < π/2`) — reusing the SAME `R` `pid_tan_grounded` already carries. **Not
 claimed unconditionally** (erratum-driven design, 2026-07-22): `tan` has poles at `±π/2 + kπ`, where
 it is genuinely unbounded — no fixed constant, and no `R`-independent bound, holds past that point.
-Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
+Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive.
+
+**MEASURED VIOLATED as stated (2026-09-14, `tools/float_bridge/measure.py`), and left unchanged**: at a
+small fraction of the inputs measured (the registry pins how many) glibc's `tan` misses the relative bound
+`u · tan R` at the tightest `R = |x|`, by a few percent of it at most. `tools/float_bridge/registry.json`
+pins the numbers. -/
 axiom real_tan_rounds : ∀ (R : MachLib.Real) (a : Float), 0 ≤ R → R < pi / (1 + 1) →
     abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .tan a) - tan (realToR a)) ≤ u * tan R
 

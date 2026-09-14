@@ -113,24 +113,22 @@ theorem isArith_var_y : IsArith (EML.var "y") := .var "y"
 /-- The environment reading a single float into `"y"`. -/
 def envOfY (y : Float) : Env := fun name => if name = "y" then .scalar y else .scalar 0.0
 
-/-- **`tanh(y)`, grounded.** Since `.var "y"` carries no arithmetic, `absErr` is exactly `0`
-(`absErr`'s own `.var` case) and `exactR` is exactly `realToR y` — the cleanest possible certcom
-instance, with no residual arithmetic-fold term to carry through the tracking argument.
+/-- **`tanh(y)`, grounded: within `2u` for a finite float `y`.** Since `.var "y"` carries no arithmetic,
+`absErr` is exactly `0` (`absErr`'s own `.var` case) and `exactR` is exactly `realToR y` — the cleanest
+possible certcom instance, with no residual arithmetic-fold term to carry through the tracking argument.
 
-Domain-restricted since the 2026-07-22 erratum-driven redesign of `real_tanh_rounds`
-(`FPGrounding.lean`): the caller now supplies `R`/`hflx`, exactly mirroring `pid_tanh_grounded`'s
-own fix for the identical issue (the same file, same day) -- `tanh` is genuinely globally
-Lipschitz, but the DISCLOSED rounding axiom still needs a stated range on its input, so this
-theorem is honestly conditional rather than unconditional. -/
-theorem pid_tanhVar_grounded (y : Float) (R : MachLib.Real) (hflx : abs (realToR y) ≤ R) :
-    AbsEnc u
+The hypothesis and the constant are `real_tanh_rounds`'s (`FPGrounding.lean`), restated 2026-09-14 from a
+measurement. Until then this theorem took a bound `R` on `|realToR y|`, which every `y` satisfies, and
+concluded `u`, which the runtime's `tanh` does not meet: the measured maximum is `1.4996u`. -/
+theorem pid_tanhVar_grounded (y : Float) (hfin : y.isFinite = true) :
+    AbsEnc (u + u)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY y) (emitC tanhVarEML)).toF)
       (tanh (realToR y)) := by
   have h := pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    (envOfY y) .tanh tanh 1 u
+    (envOfY y) .tanh tanh 1 (u + u)
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact tanh_lipschitz p q)
-    (.var "y") isArith_var_y (real_tanh_rounds R _ hflx)
+    (.var "y") isArith_var_y (real_tanh_rounds _ hfin)
   have h1 : absErr realToR (envOfY y) (EML.var "y") = 0 := rfl
   have h2 : exactR realToR (envOfY y) (EML.var "y") = realToR y := rfl
   rw [h1, h2, mul_zero, add_zero] at h
@@ -142,29 +140,29 @@ fixed low-error gain stage separate from the transcendental's own rounding, a na
 for a first worked instance, not a limitation of `clamp_guarded_tracking` itself (which accepts ANY
 certcom-grounded `(C, L, E)` triple, gain-scaled or not).
 
-Takes the same `R`/`hflx` `pid_tanhVar_grounded` needs — see that theorem's docstring. -/
-theorem tanhVar_gain_error (κ : MachLib.Real) (y : Float) (R : MachLib.Real)
-    (hflx : abs (realToR y) ≤ R) :
+Takes the finiteness hypothesis `pid_tanhVar_grounded` needs — see that theorem's docstring. -/
+theorem tanhVar_gain_error (κ : MachLib.Real) (y : Float) (hfin : y.isFinite = true) :
     abs (κ * realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY y) (emitC tanhVarEML)).toF
-      - κ * tanh (realToR y)) ≤ abs κ * u := by
+      - κ * tanh (realToR y)) ≤ abs κ * (u + u) := by
   rw [gain_scale_helper κ
         (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY y) (emitC tanhVarEML)).toF)
         (tanh (realToR y)),
       abs_mul]
-  exact mul_le_mul_of_nonneg_left (pid_tanhVar_grounded y R hflx) (abs_nonneg κ)
+  exact mul_le_mul_of_nonneg_left (pid_tanhVar_grounded y hfin) (abs_nonneg κ)
 
 /-- **Worked instance: the compiled, gain-`κ`-scaled `tanh` controller tracks its ideal
 infinite-precision counterpart.** For any plant gain `a` and controller gain `κ` with `|a|+|κ| < 1`,
 the compiled closed loop's state tracks the ideal `κ·tanh(y)`-controlled loop's state within
-`|κ|·u / (1 − |a| − |κ|)` in the long run — a concrete, disclosed-axiom-backed instance
+`|κ|·2u / (1 − |a| − |κ|)` in the long run — a concrete, disclosed-axiom-backed instance
 of `clamp_guarded_tracking`.
 
-`hyf` is the same `R`-bound `pid_tanhVar_grounded` needs, now uniform over the whole compiled
-trajectory `yf` rather than a single point — the honest cost of `real_tanh_rounds`'s 2026-07-22
-domain restriction reaching a theorem about an unbounded sequence. -/
+`hyf` says every float of the compiled trajectory `yf` is finite: `pid_tanhVar_grounded`'s hypothesis, now
+uniform over the whole sequence. Since 2026-09-14 that is `real_tanh_rounds`'s domain, and `2u` its
+constant. Until then `hyf` was a bound `R` on `|realToR (yf k)|`, which every trajectory satisfies, and the
+bound read `|κ|·u`, from an axiom measured false. -/
 theorem tanhVar_controller_tracking {x xf : Nat → MachLib.Real} {yf : Nat → Float}
-    {vc w : Nat → MachLib.Real} {a κ U R : MachLib.Real}
-    (hyf : ∀ k, abs (realToR (yf k)) ≤ R)
+    {vc w : Nat → MachLib.Real} {a κ U : MachLib.Real}
+    (hyf : ∀ k, (yf k).isFinite = true)
     (hxf : ∀ k, xf k = realToR (yf k))
     (hvc : ∀ k, vc k = κ * realToR
       (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY (yf k)) (emitC tanhVarEML)).toF)
@@ -172,13 +170,13 @@ theorem tanhVar_controller_tracking {x xf : Nat → MachLib.Real} {yf : Nat → 
     (hplantxf : ∀ k, xf (k + 1) = a * xf k + clamp (vc k) (-U) U + w k) :
     ∀ n, abs (xf n - x n)
       ≤ npow n (abs a + abs κ) * abs (xf 0 - x 0)
-        + (abs κ * u) * geom (abs a + abs κ) n := by
+        + (abs κ * (u + u)) * geom (abs a + abs κ) n := by
   refine clamp_guarded_tracking (C := fun y => κ * tanh y)
-    (abs_nonneg κ) (mul_nonneg (abs_nonneg κ) u_nonneg)
+    (abs_nonneg κ) (mul_nonneg (abs_nonneg κ) (add_nonneg_ea u_nonneg u_nonneg))
     (fun p q => by
       rw [gain_scale_helper κ (tanh p) (tanh q), abs_mul]
       exact mul_le_mul_of_nonneg_left (tanh_lipschitz p q) (abs_nonneg κ))
-    (fun k => by rw [hvc k, hxf k]; exact tanhVar_gain_error κ (yf k) R (hyf k))
+    (fun k => by rw [hvc k, hxf k]; exact tanhVar_gain_error κ (yf k) (hyf k))
     hplantx hplantxf
 
 end Certcom
