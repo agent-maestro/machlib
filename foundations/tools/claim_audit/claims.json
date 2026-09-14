@@ -10128,6 +10128,75 @@
         "zero_count_bound_classical",
         "analytic_finite_zeros"
       ]
+    },
+    {
+      "id": "runprog-correct-std-footprint-scoping-doc",
+      "source_file": "foundations/CERTCOM_THEOREM_A_SCOPING.md",
+      "claim_text": [
+        "`Certcom.runProg_correct_std` (EMLToCRuntime) | `[propext, Classical.choice, Quot.sound]`"
+      ],
+      "module": "MachLib.EMLToCRuntime",
+      "theorem": "Certcom.runProg_correct_std",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "axioms_exact": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "id": "runprog-correct-std-footprint-docstring",
+      "source_file": "foundations/MachLib/EMLToCRuntime.lean",
+      "claim_text": [
+        "`#print axioms` reports",
+        "`[propext, Classical.choice, Quot.sound]` (measured 2026-09-13"
+      ],
+      "module": "MachLib.EMLToCRuntime",
+      "theorem": "Certcom.runProg_correct_std",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "axioms_exact": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "id": "runprog-correct-footprint-emltoc-docstring",
+      "source_file": "foundations/MachLib/EMLToC.lean",
+      "claim_text": [
+        "`runProg_correct` on `[propext, Classical.choice, Quot.sound]`"
+      ],
+      "module": "MachLib.EMLToC",
+      "theorem": "Certcom.runProg_correct",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "axioms_exact": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "id": "emitc-correct-footprint-emltoc-docstring",
+      "source_file": "foundations/MachLib/EMLToC.lean",
+      "claim_text": [
+        "`emitC_correct` rests on",
+        "`[propext, Classical.choice]`"
+      ],
+      "module": "MachLib.EMLToC",
+      "theorem": "Certcom.emitC_correct",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "axioms_exact": [
+        "propext",
+        "Classical.choice"
+      ]
     }
   ]
 }

@@ -16,7 +16,7 @@ the `FPBridge` grounding and instantiate the already-proved tower on a real kern
 | Layer | Certificate | Footprint |
 |---|---|---|
 | **T1** translation validation | `Certcom.runProg_correct` (EMLToC) | emitted C ≡ EML source through calls/while/state |
-| **T2** runtime discharge | `Certcom.runProg_correct_std` (EMLToCRuntime) | `[propext, Quot.sound]` — exact Float, no rounding; `mg_*` reduced to a shared primitive basis |
+| **T2** runtime discharge | `Certcom.runProg_correct_std` (EMLToCRuntime) | `[propext, Classical.choice, Quot.sound]` — exact Float, no rounding; `mg_*` reduced to a shared primitive basis (this row said `[propext, Quot.sound]` until 2026-09-13; `claim_audit` now pins it with `axioms_exact`) |
 | **T3** composite error | `cosh/eml_fwd_reduces_to_*` (CompositeRuntimeError) | composites inherit ULP error from primitives |
 | **Fold: arithmetic** | `Certcom.pipeline_arith` (AbsoluteFold) | **every** lit/var/+/−/× tree, **cancellation included, no sign hypothesis** |
 | **Fold: cancelling kernel** | `Certcom.pipeline_det` (AbsoluteBridge) | the 2×2 determinant `x·y − z·w` |
@@ -95,8 +95,10 @@ target" section never got updated to say so, and neither the arithmetic-fragment
 instantiation, not just the lever) until a later session did both:
 
 - **`pid_grounded`** (arithmetic fragment on the real `pid.eml` datapath) and **`pid_tanh_grounded`**
-  (first grounded transcendental kernel, `tanh`-saturated PID — globally `1`-Lipschitz, so
-  unconditional) — `Certcom.real_tanh_eps`/`real_tanh_rounds`, `MachLib/FPGrounding.lean`.
+  (first grounded transcendental kernel, `tanh`-saturated PID — globally `1`-Lipschitz, so no range
+  hypothesis) — `Certcom.real_tanh_rounds`, `MachLib/FPGrounding.lean`. That axiom was restated on
+  2026-09-14 from a measurement (finite inputs, within `2u`; as stated before, within `u`, it was false),
+  and `real_tanh_eps` was retired on 2026-07-22.
 - **`pid_exp_grounded`** (this update) — the SECOND grounded transcendental, and the first through the
   *local*-Lipschitz lever (`pipeline_exp_of_arith`, `AbsoluteFoldLocal.lean`): `exp(PID law)`,
   conditional on the PID's computed AND exact values landing in a caller-supplied `[lo,hi]` (the

@@ -295,6 +295,25 @@ def parsed_axioms(text: str) -> set:
     return {a.strip() for a in m.group(1).split(",") if a.strip()}
 
 
+def axioms_exact_problems(c: dict, names: set, text: str) -> list:
+    """`axioms_exact`: the theorem's footprint must be EXACTLY the listed set, in both directions.
+
+    For prose that LISTS a footprint ("rests on `[propext, Classical.choice, Quot.sound]`"). A forbid
+    catches an axiom arriving; it cannot catch a list that names too few. That is how
+    CERTCOM_THEOREM_A_SCOPING.md, and `runProg_correct_std`'s own docstring before it, said
+    `[propext, Quot.sound]` while the footprint also held `Classical.choice` (found 2026-09-13).
+    An unparseable footprint is a problem, never an empty set that happens to match `[]`.
+    """
+    want = c.get("axioms_exact")
+    if want is None:
+        return []
+    if not names and "does not depend on any axioms" not in text:
+        return [f"`axioms_exact` on {c['theorem']}: no axiom list could be read from its footprint"]
+    if set(want) != set(names):
+        return [f"footprint of {c['theorem']} is {sorted(names)}, and the prose lists exactly {sorted(want)}"]
+    return []
+
+
 # ── Level 5: relation integrity ─────────────────────────────────────────────────────────────────
 #
 # The rungs above are all string questions about a printed form. "Does the statement assert THIS
@@ -600,6 +619,7 @@ def check_claim(c: dict) -> list:
         for ax in c.get("forbid_axioms_exact", []):
             if ax in names:
                 problems.append(f"FORBIDDEN axiom `{ax}` (exact) present in footprint of {c['theorem']}")
+        problems.extend(axioms_exact_problems(c, names, text))
 
     # (C) statement-drift: a claim that names an artifact must be backed by a theorem whose
     # STATEMENT mentions it. Catches "G is derived from A" where the theorem never mentions A.
@@ -1084,6 +1104,27 @@ def self_test() -> int:
           f"BOTH sides, so the commonest case \u2014 an edit to an already-dirty\n           file, "
           f"which does not move HEAD \u2014 announced a change above two identical lines. Found by "
           f"reading\n           a PASSING gate's output, not by it failing.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 17: a LISTED footprint must be the footprint, both ways …{RST}")
+    ftext = axiom_footprint("MachLib.EMLToCRuntime", "Certcom.runProg_correct_std")
+    if not resolved(ftext):
+        print(f"{RED}[self-test] BROKEN: could not resolve runProg_correct_std's footprint.{RST}")
+        return 1
+    fnames = parsed_axioms(ftext)
+    thm = "Certcom.runProg_correct_std"
+    too_few = {"theorem": thm, "axioms_exact": ["propext", "Quot.sound"]}   # the scoping doc's old row
+    too_many = {"theorem": thm, "axioms_exact": sorted(fnames | {"sorryAx"})}
+    exact = {"theorem": thm, "axioms_exact": sorted(fnames)}
+    unread = axioms_exact_problems(exact, set(), "error: unknown constant")
+    if (not fnames or axioms_exact_problems(exact, fnames, ftext) or not unread
+            or not axioms_exact_problems(too_few, fnames, ftext)
+            or not axioms_exact_problems(too_many, fnames, ftext)):
+        print(f"{RED}[self-test] FAILED: axioms_exact does not discriminate on {sorted(fnames)} "
+              f"(exact passes, too few / too many / unreadable must each fail).{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 17 fires: {thm}'s footprint {sorted(fnames)} passes as listed, and "
+          f"the old two-axiom row, a list with an extra axiom and an unreadable footprint are each "
+          f"REJECTED. \u2713{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"

@@ -38,6 +38,11 @@ For each entry in `claims.json`:
      **`forbid_axioms_exact`**, which matches whole tokens. It is not in the skeleton below
      because it is the exception, but it is the only correct tool for that shape.
 
+   **`axioms_exact`** is for prose that *lists* a footprint (`rests on [propext, Classical.choice,
+   Quot.sound]`): the parsed footprint must equal the list exactly. A forbid cannot catch a list that
+   names too few, which is how `runProg_correct_std`'s footprint was documented as `[propext,
+   Quot.sound]` in two places while it carried `Classical.choice` too (2026-09-13). Self-test canary 17.
+
 ## Run
 
 ```bash
