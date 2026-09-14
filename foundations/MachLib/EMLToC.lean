@@ -14,11 +14,14 @@ Vectors are now first-class values, so vector variables and `VECLIT` results (`[
 supported alongside the reductions `INDEX`/`VSUM`/`DOT`.
 
 **Fragment covered:** scalar arithmetic (`LITERAL`/`VAR`/`BINOP`/`UNARYOP -`), comparison/boolean
-`BINOP`s, `let`, transcendental/operator builtins (`EXP`/… → `mg_*`, `EML`/`POW` → `mg_eml`/`mg_pow`),
-`COND` (→ ternary), fixed-shape vectors — literals (`VECLIT`), variables, and the reductions
+`BINOP`s, `let`, transcendental/operator builtins (`EXP`/… → `mg_*`, `EML`/`POW` → `mg_eml`/`mg_pow`,
+the builtin call `log10` → libm `log10`, and the second spellings `Trans1.canonName` lists), `COND`
+(→ ternary), fixed-shape vectors — literals (`VECLIT`), variables, and the reductions
 `INDEX`/`VSUM`/`DOT` (which `c_backend` UNROLLS) — and functions (`_emit_function`). The `mg_*`
 correspondence is T1's explicit trust (`hrt1`/`hrt2`). `emitC_correct` / `emitFunc_correct` are the
-translation-validation certificates. No axioms beyond `propext`.
+translation-validation certificates. `#print axioms` (2026-09-13): `emitC_correct` rests on
+`[propext, Classical.choice]` and `runProg_correct` on `[propext, Classical.choice, Quot.sound]`, Lean's own
+three; this line said "no axioms beyond `propext`" until then.
 -/
 
 namespace Certcom
@@ -50,21 +53,45 @@ inductive Trans1 where
   | exp | ln | sin | cos | tan | sqrt | abs | asin | acos | atan | sinh | cosh | tanh | log10
 deriving DecidableEq, Repr
 
-/-- `mg_*` C runtime name of each unary builtin (verbatim from `c_backend._BUILTIN_TO_C`). -/
+/-- The C name forge's C backend (`software/backends/c_backend.py`) calls for each unary builtin.
+
+Thirteen come from `_BUILTIN_TO_C`, keyed by the NodeKind of the same name. `log10` is not a NodeKind:
+it is a builtin CALL, spelled by `_STDLIB_TO_C` as libm `log10(x)`. Until 2026-09-13 this table said
+`"mg_log10"` and called itself verbatim from `_BUILTIN_TO_C`, a table with no `LOG10` in it; no C
+function of that name exists. `_BUILTIN_TO_C` also has `POW` and `EML` (they are `Trans2`) and `CLAMP`
+(`mg_clamp`, outside this fragment). forge's `tests/test_machlib_emitted_names.py` compares this table,
+`Trans2.cName` and `Trans1.canonName` with the backend's own tables. -/
 def Trans1.cName : Trans1 → String
   | .exp => "mg_exp" | .ln => "mg_ln" | .sin => "mg_sin" | .cos => "mg_cos" | .tan => "mg_tan"
   | .sqrt => "mg_sqrt" | .abs => "mg_abs" | .asin => "mg_asin" | .acos => "mg_acos"
   | .atan => "mg_atan" | .sinh => "mg_sinh" | .cosh => "mg_cosh" | .tanh => "mg_tanh"
-  | .log10 => "mg_log10"
+  | .log10 => "log10"
 
 /-- Binary builtins: `eml(x,y)` and `pow(x,y)`. -/
 inductive Trans2 where
   | eml | pow
 deriving DecidableEq, Repr
 
-/-- `mg_*` C runtime name of each binary builtin. -/
+/-- The C name forge's C backend calls for each binary builtin (`_BUILTIN_TO_C`'s `EML` and `POW`). -/
 def Trans2.cName : Trans2 → String
   | .eml => "mg_eml" | .pow => "mg_pow"
+
+/-- The OTHER C name forge's C backend can call for a unary builtin, mapped to `cName`; every other
+string to itself. Emitted C may use either spelling at any call site:
+
+  * `mg_tanh_route` is `tanh` in a function whose drift risk is HIGH (`_BUILTIN_TO_C_HIGH_DRIFT`);
+  * `asin`, `acos` and `atan` are libm, emitted for the builtin CALLs `arcsin`, `arccos` and `arctan`
+    (`_STDLIB_TO_C`), while `asin(x)` itself parses to the NodeKind `ASIN` and emits `mg_asin`.
+
+`emitC` uses `cName` only, so on its own `runProg_correct` says nothing about a program that calls one
+of these. `respellProg` and `cexecCall_respell` below close that: renaming through a map the runtime
+cannot see changes nothing. No binary builtin has a second spelling. -/
+def Trans1.canonName (f : String) : String :=
+  if f = "mg_tanh_route" then Trans1.tanh.cName
+  else if f = "asin" then Trans1.asin.cName
+  else if f = "acos" then Trans1.acos.cName
+  else if f = "atan" then Trans1.atan.cName
+  else f
 
 /-- Runtime values: a scalar float or a fixed-shape float vector. -/
 inductive Val where
@@ -566,6 +593,186 @@ theorem runProg_correct
     (prog : Prog) (fuel : Nat) (entry : String) (args : List Val) :
     runProgC r1 r2 (emitProg prog) fuel entry args = runProgEML i1 i2 prog fuel entry args :=
   execCall_correct i1 i2 r1 r2 hrt1 hrt2 prog fuel entry args
+
+/-! ## Spelling — the same program under another name for a runtime call
+
+`respellC κ` renames every unary runtime call (`ucall`) through `κ` and leaves everything else alone,
+user-function calls (`ccall`) included. When the runtime gives `κ f` and `f` the same function, a renamed
+program runs exactly as the original: `cexecCall_respell`. With `κ := Trans1.canonName`, a program that
+renames to `emitProg prog` is `prog`'s emission up to which spelling each call site uses, and
+`runProg_correct_std_respelled` (`EMLToCRuntime`) certifies it. -/
+
+mutual
+  /-- Rename every unary runtime call of an expression through `κ`. -/
+  def respellC (κ : String → String) : CExpr → CExpr
+    | .lit c      => .lit c
+    | .var x      => .var x
+    | .bin op a b => .bin op (respellC κ a) (respellC κ b)
+    | .neg a      => .neg (respellC κ a)
+    | .clet x e body => .clet x (respellC κ e) (respellC κ body)
+    | .ucall f a  => .ucall (κ f) (respellC κ a)
+    | .bcall f a b => .bcall f (respellC κ a) (respellC κ b)
+    | .tern c t e => .tern (respellC κ c) (respellC κ t) (respellC κ e)
+    | .cvlit cs   => .cvlit (respellCs κ cs)
+    | .cidx v n   => .cidx (respellC κ v) n
+    | .csum v     => .csum (respellC κ v)
+    | .cdot a b   => .cdot (respellC κ a) (respellC κ b)
+  /-- `respellC` over a vector literal's elements. -/
+  def respellCs (κ : String → String) : List CExpr → List CExpr
+    | []      => []
+    | c :: cs => respellC κ c :: respellCs κ cs
+end
+
+mutual
+  /-- Rename every unary runtime call of a statement through `κ`. -/
+  def respellStmt (κ : String → String) : CStmt → CStmt
+    | .cdecl x e      => .cdecl x (respellC κ e)
+    | .cassign x e    => .cassign x (respellC κ e)
+    | .cwhile c body  => .cwhile (respellC κ c) (respellStmts κ body)
+    | .cexpr e        => .cexpr (respellC κ e)
+    | .ccall x f args => .ccall x f (args.map (respellC κ))
+  /-- `respellStmt` over a block. -/
+  def respellStmts (κ : String → String) : List CStmt → List CStmt
+    | []      => []
+    | s :: ss => respellStmt κ s :: respellStmts κ ss
+end
+
+/-- Rename every unary runtime call of a function: its `state` initialisers, body and return. -/
+def respellFunc (κ : String → String) (f : CStmtFunc) : CStmtFunc :=
+  ⟨f.params, f.states.map (fun q => (q.1, respellC κ q.2)), respellStmts κ f.body, respellC κ f.ret⟩
+
+/-- Rename every unary runtime call of every function of a program. -/
+def respellProg (κ : String → String) (cprog : CProg) : CProg := fun name => (cprog name).map (respellFunc κ)
+
+section
+variable (r1 : String → Float → Float) (r2 : String → Float → Float → Float) (κ : String → String)
+variable (hκ : ∀ f, r1 (κ f) = r1 f)
+include hκ
+
+/- Renaming through a `κ` the runtime cannot see leaves an expression's value unchanged. -/
+set_option linter.unusedSectionVars false in
+mutual
+  theorem evalC_respell : ∀ (e : CExpr) (env : Env), evalC r1 r2 env (respellC κ e) = evalC r1 r2 env e
+    | .lit c, env => rfl
+    | .var x, env => rfl
+    | .bin op a b, env => by
+        show Val.scalar (op.apply (evalC r1 r2 env (respellC κ a)).toF (evalC r1 r2 env (respellC κ b)).toF)
+           = Val.scalar (op.apply (evalC r1 r2 env a).toF (evalC r1 r2 env b).toF)
+        rw [evalC_respell a env, evalC_respell b env]
+    | .neg a, env => by
+        show Val.scalar (-(evalC r1 r2 env (respellC κ a)).toF) = Val.scalar (-(evalC r1 r2 env a).toF)
+        rw [evalC_respell a env]
+    | .clet x e body, env => by
+        show evalC r1 r2 (env.update x (evalC r1 r2 env (respellC κ e))) (respellC κ body)
+           = evalC r1 r2 (env.update x (evalC r1 r2 env e)) body
+        rw [evalC_respell e env, evalC_respell body (env.update x (evalC r1 r2 env e))]
+    | .ucall f a, env => by
+        show Val.scalar (r1 (κ f) (evalC r1 r2 env (respellC κ a)).toF)
+           = Val.scalar (r1 f (evalC r1 r2 env a).toF)
+        rw [evalC_respell a env, hκ]
+    | .bcall f a b, env => by
+        show Val.scalar (r2 f (evalC r1 r2 env (respellC κ a)).toF (evalC r1 r2 env (respellC κ b)).toF)
+           = Val.scalar (r2 f (evalC r1 r2 env a).toF (evalC r1 r2 env b).toF)
+        rw [evalC_respell a env, evalC_respell b env]
+    | .tern c t e, env => by
+        show (bif isTrue (evalC r1 r2 env (respellC κ c)).toF then evalC r1 r2 env (respellC κ t)
+                else evalC r1 r2 env (respellC κ e))
+           = bif isTrue (evalC r1 r2 env c).toF then evalC r1 r2 env t else evalC r1 r2 env e
+        rw [evalC_respell c env, evalC_respell t env, evalC_respell e env]
+    | .cvlit cs, env => by
+        show Val.vec (evalCs r1 r2 env (respellCs κ cs)) = Val.vec (evalCs r1 r2 env cs)
+        rw [evalCs_respell cs env]
+    | .cidx v n, env => by
+        show Val.scalar ((evalC r1 r2 env (respellC κ v)).toV.getD n 0.0)
+           = Val.scalar ((evalC r1 r2 env v).toV.getD n 0.0)
+        rw [evalC_respell v env]
+    | .csum v, env => by
+        show Val.scalar ((evalC r1 r2 env (respellC κ v)).toV.foldr (· + ·) 0.0)
+           = Val.scalar ((evalC r1 r2 env v).toV.foldr (· + ·) 0.0)
+        rw [evalC_respell v env]
+    | .cdot a b, env => by
+        show Val.scalar ((List.zipWith (· * ·) (evalC r1 r2 env (respellC κ a)).toV
+                (evalC r1 r2 env (respellC κ b)).toV).foldr (· + ·) 0.0)
+           = Val.scalar ((List.zipWith (· * ·) (evalC r1 r2 env a).toV (evalC r1 r2 env b).toV).foldr (· + ·) 0.0)
+        rw [evalC_respell a env, evalC_respell b env]
+  theorem evalCs_respell : ∀ (cs : List CExpr) (env : Env), evalCs r1 r2 env (respellCs κ cs) = evalCs r1 r2 env cs
+    | [], env => rfl
+    | c :: cs, env => by
+        show (evalC r1 r2 env (respellC κ c)).toF :: evalCs r1 r2 env (respellCs κ cs)
+           = (evalC r1 r2 env c).toF :: evalCs r1 r2 env cs
+        rw [evalC_respell c env, evalCs_respell cs env]
+end
+
+/-- Renamed call arguments evaluate to the same values. -/
+theorem mapEvalC_respell (env : Env) :
+    ∀ (args : List CExpr), (args.map (respellC κ)).map (evalC r1 r2 env) = args.map (evalC r1 r2 env)
+  | []      => rfl
+  | e :: es => by
+      simp only [List.map_cons]
+      rw [evalC_respell r1 r2 κ hκ e env, mapEvalC_respell env es]
+
+/-- Renamed `state` initialisers install the same store. -/
+theorem bindStatesC_respell :
+    ∀ (states : List (String × CExpr)) (env : Env),
+      bindStatesC r1 r2 (states.map (fun q => (q.1, respellC κ q.2))) env = bindStatesC r1 r2 states env
+  | [],           env => rfl
+  | (x, e) :: rs, env => by
+      simp only [List.map, bindStatesC]
+      rw [evalC_respell r1 r2 κ hκ e env, bindStatesC_respell rs (env.update x (evalC r1 r2 env e))]
+
+/- **Renaming a whole program.** Every statement, loop and call of the renamed program drives the store
+exactly as the original's, at every fuel, calls resolving in the renamed program on one side and the
+original on the other. -/
+set_option linter.unusedSectionVars false in
+mutual
+  theorem cexecStmt_respell : ∀ (cprog : CProg) (fuel : Nat) (env : Env) (s : CStmt),
+      cexecStmt r1 r2 (respellProg κ cprog) fuel env (respellStmt κ s) = cexecStmt r1 r2 cprog fuel env s
+    | cprog, fuel, env, .cdecl x e => by
+        simp only [respellStmt, cexecStmt]
+        rw [evalC_respell r1 r2 κ hκ e env]
+    | cprog, fuel, env, .cassign x e => by
+        simp only [respellStmt, cexecStmt]
+        rw [evalC_respell r1 r2 κ hκ e env]
+    | cprog, fuel, env, .cwhile c body => by
+        simp only [respellStmt, cexecStmt]
+        exact cexecWhile_respell cprog fuel c body env
+    | cprog, fuel, env, .cexpr e => by
+        simp only [respellStmt, cexecStmt]
+    | cprog, fuel, env, .ccall x f args => by
+        simp only [respellStmt, cexecStmt]
+        rw [mapEvalC_respell r1 r2 κ hκ env args,
+            cexecCall_respell cprog fuel f (args.map (evalC r1 r2 env))]
+  theorem cexecStmts_respell : ∀ (cprog : CProg) (fuel : Nat) (env : Env) (ss : List CStmt),
+      cexecStmts r1 r2 (respellProg κ cprog) fuel env (respellStmts κ ss) = cexecStmts r1 r2 cprog fuel env ss
+    | cprog, fuel, env, [] => by simp only [respellStmts, cexecStmts]
+    | cprog, fuel, env, s :: ss => by
+        simp only [respellStmts, cexecStmts]
+        rw [cexecStmt_respell cprog fuel env s,
+            cexecStmts_respell cprog fuel (cexecStmt r1 r2 cprog fuel env s) ss]
+  theorem cexecWhile_respell : ∀ (cprog : CProg) (fuel : Nat) (c : CExpr) (body : List CStmt) (env : Env),
+      cexecWhile r1 r2 (respellProg κ cprog) fuel (respellC κ c) (respellStmts κ body) env
+        = cexecWhile r1 r2 cprog fuel c body env
+    | cprog, 0, c, body, env => by simp only [cexecWhile]
+    | cprog, fuel + 1, c, body, env => by
+        simp only [cexecWhile]
+        rw [evalC_respell r1 r2 κ hκ c env, cexecStmts_respell cprog fuel env body,
+            cexecWhile_respell cprog fuel c body (cexecStmts r1 r2 cprog fuel env body)]
+  theorem cexecCall_respell : ∀ (cprog : CProg) (fuel : Nat) (fname : String) (argvals : List Val),
+      cexecCall r1 r2 (respellProg κ cprog) fuel fname argvals = cexecCall r1 r2 cprog fuel fname argvals
+    | cprog, 0, fname, argvals => by simp only [cexecCall]
+    | cprog, fuel + 1, fname, argvals => by
+        simp only [cexecCall, respellProg]
+        cases h : cprog fname with
+        | none => simp only [Option.map]
+        | some fn =>
+            simp only [Option.map, respellFunc]
+            rw [bindStatesC_respell r1 r2 κ hκ fn.states (bindArgs fn.params argvals emptyEnv),
+                cexecStmts_respell cprog fuel
+                  (bindStatesC r1 r2 fn.states (bindArgs fn.params argvals emptyEnv)) fn.body,
+                evalC_respell r1 r2 κ hκ fn.ret _]
+end
+
+end
 
 /-! ## Worked examples — non-vacuity + regression smoke-test -/
 
