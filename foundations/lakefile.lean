@@ -11,3 +11,9 @@ package «MachLib» where
 @[default_target]
 lean_lib «MachLib» where
   roots := #[`MachLib]
+
+-- C library functions Lean core does not bind (`expm1`), compiled to a shared library so that `#eval` and
+-- `native_decide` can run them. `CertcomLibm.lean` says why, and what `lake env lean` then cannot evaluate.
+lean_lib «CertcomLibm» where
+  roots := #[`CertcomLibm]
+  precompileModules := true

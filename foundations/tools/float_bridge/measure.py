@@ -13,8 +13,9 @@ harness can read it, and the harness enforces that the registry and the corpus a
 
   * `measured` — a bound on the value `leanPrims` computes. Each input `a` is a finite double, so
     `realToR a` is its exact value `x`. The float side is computed EXACTLY as `leanPrims` does: the same libm
-    (glibc, called through ctypes — the functions `Float.exp` & co. link), IEEE double arithmetic, the
-    runtime's composite bodies, and `floatCopySign`'s bit definition. The real side is mpmath at 256 bits.
+    (glibc, called through ctypes — the functions `Float.exp` & co. link, and `expm1`, which `leanPrims` reaches
+    through CertcomLibm's compiled library since 2026-09-15), IEEE double arithmetic, the runtime's composite
+    bodies, and `floatCopySign`'s bit definition. The real side is mpmath at 256 bits.
     Where the statement has free parameters (`R`, `hi`, `lo`), the harness uses the instantiation that makes
     the bound TIGHTEST, because a ∀ over them is false if it fails at any one (`c` is the statement's
     constant: `u + u` is 2):
@@ -101,8 +102,10 @@ The run also fails if:
     derives that reading mechanically from a closed table of statement shapes (`READINGS`); a statement no
     entry matches is UNREADABLE and fails, never guessed. `FPBridge`'s four fields and `RoundsW`, which the
     bridge row's reading depends on, are fingerprinted the same way;
-  * a sample of the harness's float values differs from Lean's own `#eval` of `stdI1 leanPrims` and
-    `Float` arithmetic, bit for bit — so the harness cannot be measuring a different function.
+  * a sample of the harness's float values differs from Lean's own `#eval` of `stdI1 leanPrims`, of
+    `leanPrims.expm1` and of `Float` arithmetic, bit for bit — so the harness cannot be measuring a different
+    function. Lean runs under `lake lean`, which loads CertcomLibm's library; under `lake env lean` the interpreter
+    aborts at the first call that reaches `expm1` (CertcomLibm.lean), and the run would be UNAVAILABLE.
 Exit 0 all green, 1 a failure, 2 UNAVAILABLE (mpmath or Lean missing, or a different platform) — never a pass.
 
 LOCAL ONLY, NOT CI. The pinned numbers are properties of THIS libm (glibc 2.39, aarch64): another glibc or
@@ -186,6 +189,7 @@ def _c1(name: str):
 
 EXP, LOG, LOG10, SIN, COS, TAN = (_c1(n) for n in ("exp", "log", "log10", "sin", "cos", "tan"))
 ASIN, ACOS, ATAN, SQRT, FABS = (_c1(n) for n in ("asin", "acos", "atan", "sqrt", "fabs"))
+EXPM1 = _c1("expm1")
 
 
 def lean_copysign(x: float, y: float) -> float:
@@ -200,22 +204,33 @@ SINH_X_MAX = 2.149119332890821e-8
 
 
 def lean_tanh(x: float) -> float:
+    """`stdI1 leanPrims .tanh`: over `expm1` since 2026-09-15 (forge's `libmonogate.h`)."""
     a = FABS(x)
     if a <= TANH_X_MAX:
         return x
-    t = EXP(-2.0 * a)
-    return lean_copysign((1.0 - t) / (1.0 + t), x)
+    if a < 0.5:
+        t = EXPM1(-2.0 * a)
+        return lean_copysign(-t / (t + 2.0), x)
+    t = EXPM1(2.0 * a)
+    return lean_copysign(1.0 - 2.0 / (t + 2.0), x)
 
 
 def lean_sinh(x: float) -> float:
+    """`stdI1 leanPrims .sinh`: over `expm1` below 22 since 2026-09-15 (forge's `libmonogate.h`)."""
     a = FABS(x)
     if a <= SINH_X_MAX:
         return x
     if a > 709.78:
         w = EXP(0.5 * a)
         r = (0.5 * w) * w
+    elif a < 1.0:
+        t = EXPM1(a)
+        r = 0.5 * (2.0 * t - t * t / (t + 1.0))
+    elif a < 22.0:
+        t = EXPM1(a)
+        r = 0.5 * (t + t / (t + 1.0))
     else:
-        r = (EXP(a) - EXP(-a)) * 0.5
+        r = 0.5 * EXP(a)
     return lean_copysign(r, x)
 
 
@@ -445,6 +460,20 @@ def _inputs_for(function: str) -> tuple:
               + around(TANH_X_MAX, 2000) + around(-TANH_X_MAX, 2000) + around(18.715, 1000) + around(19.0615, 1000)
               + around(20.0, 500) + logspace(1.0, DBL_MAX, 2000, True) + denormals(1000)
               + random_bits(50_000, 11) + uniform(-40, 40, 100_000, 12))
+        # Added 2026-09-15 with the expm1 body: both sides of its split at 0.5 (and of glibc's, at 1), twice the
+        # small-argument threshold, [0.3, 1) densely, where the absolute error peaks, and where t = expm1(-+2|x|)
+        # crosses a power of two.
+        xs += (around(0.5, 2000) + around(-0.5, 2000) + around(1.0, 2000) + around(-1.0, 2000)
+               + around(2 * TANH_X_MAX, 500) + logspace(TANH_X_MAX, 1.0, 20_000, True) + uniform(0.3, 1.0, 100_000, 13))
+        # the largest absolute errors of this body that forge's tools/scripts/measure_runtime_hyperbolics.py found
+        # against binary128 tanhl and re-computed with mpmath (2026-09-15; 1.425u and below), and their neighbours
+        for x0 in (0.5506776059956597, 0.5495662343428278, 0.5756036256003714,
+                   0.550098328643078, 0.5493522641618762, 0.5752913400833064):
+            xs += around(x0, 50) + around(-x0, 50)
+        for k in range(1, 60):
+            xs += around(float(-mp.log1p(-(mp.mpf(2) ** -k)) / 2), 20)
+        for k in range(-30, 1024):
+            xs += around(float(mp.log1p(mp.mpf(2) ** k) / 2), 10)
     elif function in ("sinh", "cosh"):
         xs = (steps(-712, 712, 0.01) + steps(-30, 30, 1e-3) + logspace(DENORM_MIN, 1.0, 4000, True)
               + around(709.78, 2000) + around(-709.78, 2000) + around(SINH_X_MAX, 2000) + around(-SINH_X_MAX, 2000)
@@ -457,6 +486,12 @@ def _inputs_for(function: str) -> tuple:
             xs += around(float(mp.asinh(mp.mpf(2) ** k)), 20)
         for k in range(1, 1024):
             xs += around(float(mp.acosh(mp.mpf(2) ** k)), 20)
+        if function == "sinh":
+            # Added 2026-09-15 with sinh's expm1 body (cosh's inputs are unchanged): both sides of its splits at 1
+            # and 22, and where t = expm1(|x|) crosses a power of two.
+            xs += around(1.0, 2000) + around(-1.0, 2000) + around(22.0, 2000) + around(-22.0, 2000)
+            for k in range(-25, 1024):
+                xs += around(float(mp.log1p(mp.mpf(2) ** k)), 10)
     elif function == "exp":
         xs = (steps(-750, 710, 0.01) + around(709.782712893384, 1000) + around(-708.3964185322641, 2000)
               + around(-744.4400719213812, 1000) + around(-745.1332191019412, 1000) + around(0.0, 1000)
@@ -1322,7 +1357,7 @@ def fbEval (f : String) (x y : Float) : Float :=
   | "exp" => stdI1 leanPrims .exp x | "ln" => stdI1 leanPrims .ln x | "log10" => stdI1 leanPrims .log10 x
   | "sin" => stdI1 leanPrims .sin x | "cos" => stdI1 leanPrims .cos x | "tan" => stdI1 leanPrims .tan x
   | "asin" => stdI1 leanPrims .asin x | "acos" => stdI1 leanPrims .acos x | "atan" => stdI1 leanPrims .atan x
-  | "sqrt" => stdI1 leanPrims .sqrt x | "abs" => stdI1 leanPrims .abs x
+  | "sqrt" => stdI1 leanPrims .sqrt x | "abs" => stdI1 leanPrims .abs x | "expm1" => leanPrims.expm1 x
   | "add" => x + y | "sub" => x - y | "mul" => x * y | "neg" => -x
   | "addfin" => if (x + y).isFinite then 1.0 else 0.0 | "subfin" => if (x - y).isFinite then 1.0 else 0.0
   | "mulfin" => if (x * y).isFinite then 1.0 else 0.0 | "negfin" => if (-x).isFinite then 1.0 else 0.0
@@ -1342,6 +1377,8 @@ def fbEval (f : String) (x y : Float) : Float :=
 
 
 def python_eval(f: str, x: float, y: float) -> float:
+    if f == "expm1":
+        return EXPM1(x)
     if f in FLOAT_FUNCS:
         return FLOAT_FUNCS[f](x)
     finite_of = {"addfin": lambda: x + y, "subfin": lambda: x - y, "mulfin": lambda: x * y, "negfin": lambda: -x,
@@ -1359,11 +1396,13 @@ def lean_crosscheck(samples: list[tuple[str, float, float]]) -> tuple[list[str],
         inputs.write_text("".join(f"{f} {hex_bits(x)} {hex_bits(y)}\n" for f, x, y in samples))
         lean = pathlib.Path(tmp) / "crosscheck.lean"
         lean.write_text(LEAN_TEMPLATE.replace("@@INPUTS@@", str(inputs)))
-        proc = subprocess.run(["bash", str(FOUNDATIONS / "tools" / "capped_lean.sh"), "lake", "env", "lean", str(lean)],
+        # `lake lean`, not `lake env lean`: only `lake lean` loads CertcomLibm's shared library, and without it the
+        # interpreter aborts at the first call that reaches `leanPrims.expm1` (CertcomLibm.lean).
+        proc = subprocess.run(["bash", str(FOUNDATIONS / "tools" / "capped_lean.sh"), "lake", "lean", str(lean)],
                               cwd=FOUNDATIONS, capture_output=True, text=True, timeout=900)
     rows = [line.split() for line in proc.stdout.splitlines() if line.startswith("FB ")]
     if proc.returncode != 0 or len(rows) != len(samples):
-        return [], 0, (f"lake env lean exited {proc.returncode} with {len(rows)} of {len(samples)} values: "
+        return [], 0, (f"lake lean exited {proc.returncode} with {len(rows)} of {len(samples)} values: "
                        + (proc.stderr.strip().splitlines() or proc.stdout.strip().splitlines() or ["no output"])[-1][:300])
     bad = []
     for (f, x, y), row in zip(samples, rows):
@@ -1386,11 +1425,17 @@ def crosscheck_samples(registry: dict, results: dict) -> list[tuple[str, float, 
     functions = sorted({spec["function"] for spec in registry["axioms"].values() if "function" in spec})
     for f in functions:
         xs = inputs_for(f)
-        pick = rng.sample(xs, 200) + around(TANH_X_MAX, 5) + around(SINH_X_MAX, 5) + around(709.78, 5) + SPECIALS
+        pick = (rng.sample(xs, 200) + around(TANH_X_MAX, 5) + around(SINH_X_MAX, 5) + around(709.78, 5) + SPECIALS
+                + around(0.5, 5) + around(-0.5, 5) + around(1.0, 5) + around(-1.0, 5) + around(22.0, 5) + around(-22.0, 5)
+                + [2 * TANH_X_MAX, 1e-6, -1e-6, 0.5])
         for name, spec in registry["axioms"].items():
             if spec.get("function") == f and name in results:
                 pick += [from_bits(b) for _, b in results[name]["worst"][:10]]
         samples += [(f, x, 0.0) for x in pick]
+    # the primitive the hyperbolics call since 2026-09-15, which Lean evaluates only through CertcomLibm's library
+    expm1_xs = (rng.sample(random_bits(20_000, 131), 300) + [(-1.0) ** i * 10.0 ** e for i, e in enumerate(range(-320, 309, 7))]
+                + around(709.782712893384, 5) + around(-38.816242111356935, 5) + around(1e-10, 5) + SPECIALS)
+    samples += [("expm1", x, 0.0) for x in expm1_xs]
     for a, b in rng.sample(pairs_for_bridge(), 300):
         samples += [("add", a, b), ("sub", a, b), ("mul", a, b), ("neg", a, 0.0)]
     # the finiteness rows: Lean's own `Float.isFinite` at the overflow boundary, including the tie
@@ -1451,14 +1496,14 @@ def lean_literal_crosscheck(registry: dict) -> tuple[list[str], int, str | None]
         inputs.write_text("".join(f"{i} {m} {1 if s else 0} {e}\n" for i, (m, s, e) in enumerate(sci)))
         lean = pathlib.Path(tmp) / "literals.lean"
         lean.write_text(LEAN_LITERAL_TEMPLATE.replace("@@INPUTS@@", str(inputs)).replace("@@SYNTAX@@", syntax))
-        proc = subprocess.run(["bash", str(FOUNDATIONS / "tools" / "capped_lean.sh"), "lake", "env", "lean", str(lean)],
+        proc = subprocess.run(["bash", str(FOUNDATIONS / "tools" / "capped_lean.sh"), "lake", "lean", str(lean)],
                               cwd=FOUNDATIONS, capture_output=True, text=True, timeout=900)
     out = proc.stdout.splitlines()
     got_sci = {int(line.split()[1]): int(line.split()[2]) for line in out if line.startswith("FBS ")}
     got_lit = {line.split()[1]: int(line.split()[2]) for line in out if line.startswith("FBLIT ")}
     pid = [line.split()[1:] for line in out if line.startswith("FBPID")]
     if proc.returncode != 0 or len(got_sci) != len(sci) or len(got_lit) != len(rows) or len(pid) != 1:
-        return [], 0, (f"lake env lean exited {proc.returncode} with {len(got_sci)} of {len(sci)} scientific values and "
+        return [], 0, (f"lake lean exited {proc.returncode} with {len(got_sci)} of {len(sci)} scientific values and "
                        f"{len(got_lit)} of {len(rows)} literals: "
                        + (proc.stderr.strip().splitlines() or proc.stdout.strip().splitlines() or ["no output"])[-1][:300])
     bad = []
@@ -1815,7 +1860,10 @@ def self_test() -> int:
                  (math.isfinite(lean_sinh(710.0)), "sinh(710) is finite"),
                  (lean_sinh(1e-300) == 1e-300, "sinh(1e-300) is 1e-300"),
                  (bits(lean_sinh(-0.0)) == bits(-0.0), "sinh(-0.0) keeps its sign"),
-                 (EXP(1.0) == math.exp(1.0), "ctypes exp is libm exp")]
+                 (EXP(1.0) == math.exp(1.0), "ctypes exp is libm exp"),
+                 (EXPM1(1e-10) != math.exp(1e-10) - 1.0, "ctypes expm1 is not exp(x) - 1"),
+                 (lean_sinh(1e-6) == math.sinh(1e-6), "sinh(1e-6) is glibc's: the expm1 body does not cancel"),
+                 (lean_tanh(1e-6) == math.tanh(1e-6), "tanh(1e-6) is glibc's: the expm1 body does not cancel")]
     failures += [f"specimen failed: {why}" for ok, why in specimens if not ok]
     # the finiteness rows (2026-09-14): both statements read, a changed range does not, and the tie decides
     if derive_reading(FINITE_OF_RANGE_STATEMENT) != {"kind": "finite-of-range"}:

@@ -1,4 +1,5 @@
 import MachLib.EMLToC
+import CertcomLibm
 
 /-!
 # certcom Theorem A — tier T2 step: discharging the `mg_*` runtime hypothesis
@@ -15,14 +16,17 @@ The `mg_*` functions split into two honest classes there:
     `mg_sqrt=sqrt`, `mg_abs=fabs`, `mg_pow=pow`, and libm `log10`, which emitted C calls by that name.
     These are the irreducible trust.
   * **Composite** — defined *from* the primitives in `libmonogate.h`: `mg_eml(x,y)=exp(x)−log(y)` (the
-    EML primitive itself), and the hyperbolics. Since forge `51337a3` those are built from `exp`,
-    `fabs` and `copysign` so that they do not overflow before the answer does:
-    `mg_tanh(x) = copysign((1−t)/(1+t), x)` with `t = exp(−2|x|)`, and `x` itself for
-    `|x| ≤ 1.3538603431225864e-8`, where `x` is the float nearest `tanh x` (since forge's
-    `MG_TANH_X_MAX`, 2026-09-13; `mg_tanh_route` is now `mg_tanh`); `mg_sinh` and `mg_cosh` take
-    `(eᵃ ∓ e⁻ᵃ)·½` at `a = |x| ≤ 709.78` and `(½·w)·w` with `w = exp(a/2)` above it, and `mg_sinh`
-    then takes `x`'s sign, except that it returns `x` itself for `|x| ≤ 2.149119332890821e-8`, where `x` is
-    the float nearest `sinh x` (forge's `MG_SINH_X_MAX`, 2026-09-14).
+    EML primitive itself), and the hyperbolics. Since forge `51337a3` those are built from the basis so
+    that they do not overflow before the answer does, and since 2026-09-15 `mg_sinh` and `mg_tanh` call
+    `expm1` so that they do not cancel either. With `a = |x|`: `mg_tanh(x)` is `x` itself for
+    `a ≤ 1.3538603431225864e-8`, where `x` is the float nearest `tanh x` (forge's `MG_TANH_X_MAX`,
+    2026-09-13; `mg_tanh_route` is `mg_tanh`), then `copysign(−t/(t+2), x)` with `t = expm1(−2a)` below `0.5`
+    and `copysign(1 − 2/(t+2), x)` with `t = expm1(2a)` from `0.5` (glibc's forms; glibc splits them at `1`, and
+    forge measured its split further from `tanh` in absolute error, the unit `real_tanh_rounds` bounds). `mg_sinh(x)` is `x` itself for
+    `a ≤ 2.149119332890821e-8`, the float nearest `sinh x` (forge's `MG_SINH_X_MAX`, 2026-09-14), then, with
+    `t = expm1(a)`, `½(2t − t·t/(t+1))` below `1`, `½(t + t/(t+1))` below `22`, `½·exp a` up to `709.78` and
+    `(½·w)·w` with `w = exp(a/2)` above it, with `x`'s sign. `mg_cosh` takes `(eᵃ + e⁻ᵃ)·½` at `a ≤ 709.78`
+    and `(½·w)·w` above.
 
 The move: build BOTH the runtime (`stdR1`/`stdR2`) and the EML interpretation (`stdI1`/`stdI2`) from
 one shared **primitive basis** `Prims`. The composites are then written once on each side — the
@@ -32,17 +36,20 @@ is PROVEN for every basis, sorryAx-free. So the composites drop out of the trust
 `runProg_correct_std` is the T1 certificate with the runtime hypothesis discharged: its trust is
 reduced to the enumerable primitive basis `Prims`.
 
-**What remains trusted (the honest T3 boundary):** the 13 `Prims` fields model the corresponding C
+**What remains trusted (the honest T3 boundary):** the 14 `Prims` fields model the corresponding C
 library calls. That is a statement about C execution, not provable in Lean; grounding it is offline
 libm/Flocq validation (`sqrt`, `abs` and `copysign` are IEEE-754-exact and the strongest; the
 transcendentals carry a ULP gap). But it is a SHORT, NAMED list, and every COMPOSITE is discharged.
 **The basis grew by one exact operation on 2026-09-13: `copysign`**, which the overflow-safe
 hyperbolics call. The alternative, three more trusted transcendentals, is argued against at `stdI1`.
 **It grew by `log10` the same day**, a function emitted C had always called while this file modeled an
-`ln` quotient no C function computes; `stdI1` says why it is a field.
+`ln` quotient no C function computes; `stdI1` says why it is a field. **It grew by `expm1` on
+2026-09-15**, which `mg_sinh` and `mg_tanh` call so that they do not cancel: a transcendental with a ULP
+gap, like `exp`, and one field where the hyperbolics themselves would be three (`stdI1`).
 
 **Where this copy comes from, and what checks it.** `stdR1`/`stdR2` transcribe forge's
-`software/runtime/c/libmonogate.h` as changed on forge branch `fix/sinh-tiny-and-grounding` (2026-09-14:
+`software/runtime/c/libmonogate.h` as changed on forge branch `feat/expm1-hyperbolics` (2026-09-15:
+`mg_sinh` and `mg_tanh` from `expm1`), after forge branch `fix/sinh-tiny-and-grounding` (2026-09-14:
 `MG_SINH_X_MAX`, `mg_sinh`'s small-argument branch), after forge branch `fix/certcom-runtime-model`
 (2026-09-13: `MG_TANH_X_MAX`, and `mg_tanh_route` defined as `mg_tanh`). The hyperbolic bodies changed before that in
 forge `51337a3` (2026-09-13); until that day's machlib change this file transcribed the bodies before
@@ -91,13 +98,19 @@ structure Prims where
   is the call emitted C makes. The thirteenth field, added 2026-09-13; `stdI1` says why it is a field
   and not `ln x / ln 10`. -/
   log10 : Float → Float
+  /-- C `expm1(x)`: `eˣ − 1`, computed without the cancellation of `exp x − 1`. forge's `mg_sinh` and `mg_tanh` call
+  it since 2026-09-15: built from `exp` alone, `eᵃ − e⁻ᵃ` and `1 − e⁻²ᵃ` cancel as `a → 0`, and the old `sinh` was up
+  to 3.9·10⁵ ulp from glibc's on `[10⁻⁶, 10⁻³)`. The fourteenth field. Like `exp` it carries a ULP gap: forge's
+  `tools/scripts/measure_runtime_hyperbolics.py` measured glibc's at most 0.852 ulp from the correctly rounded
+  value. `leanPrims` binds it to `floatExpm1` (`CertcomLibm.lean`), which Lean core does not provide. -/
+  expm1 : Float → Float
 
 /-- EML's intended unary-builtin interpretation over a primitive basis.
 
 **For `sinh`/`cosh`/`tanh` this is a FLOAT ALGORITHM, and it is deliberately the runtime's own.** A
 float `tanh` has no canonical definition; an interpretation has to pick one. This picks the
-overflow-safe composition `libmonogate.h` ships since forge `51337a3`, written exactly as `stdR1`
-transcribes it. Of the ways to keep a certificate:
+composition `libmonogate.h` ships, overflow-safe since forge `51337a3` and built on `expm1` since
+2026-09-15, written exactly as `stdR1` transcribes it. Of the ways to keep a certificate:
 
   * **Keep a textbook form**, `(eˣ−e⁻ˣ)/(eˣ+e⁻ˣ)`, which this definition used until 2026-09-13. The
     interpretation then disagrees with the runtime: at `1000` the quotient is NaN over `leanPrims`
@@ -108,12 +121,15 @@ transcribes it. Of the ways to keep a certificate:
     the new fields with the `exp`-composites. That weakens `runProg_correct_std`, and it adds three
     transcendentals with ULP gaps to the trust set.
   * **Adopt the runtime's composition (chosen).** The trust set grows by one IEEE-exact field,
-    `copysign`; every composite stays discharged by `rfl`; `runProg_correct_std` is unchanged.
+    `copysign`; every composite stays discharged by `rfl`; `runProg_correct_std` is unchanged. On
+    2026-09-15 it grew again, by `expm1`, when the composition stopped cancelling: one transcendental,
+    where moving the hyperbolics in would still be three.
 
-Over the reals the forms agree. Multiplying the numerator and denominator of `(eˣ−e⁻ˣ)/(eˣ+e⁻ˣ)` by
-`e^−|x|` gives `sgn(x)·(1−t)/(1+t)` with `t = e^−2|x|`, exactly. The large-argument `sinh`/`cosh`
-branch computes `eᵃ/2` and drops `e⁻ᵃ/2`, a relative change below `e^−1419` wherever it is taken
-(`a > 709.78`). `tanh`'s small-argument branch (since 2026-09-13) is not exact over the reals: it
+Over the reals the forms agree. With `a = |x|`, `tanh a = (1−e^−2a)/(1+e^−2a)`, which is `−t/(t+2)` for
+`t = e^−2a − 1` and `1 − 2/(t+2)` for `t = e^2a − 1`, exactly; and `eᵃ − e⁻ᵃ = 2t − t·t/(t+1) = t + t/(t+1)`
+for `t = eᵃ − 1`, exactly. `sinh`'s `½·exp a` from `22` drops `½e⁻ᵃ`, a relative change below `e^−44`, and
+the large-argument `sinh`/`cosh` branch computes `eᵃ/2` and drops `e⁻ᵃ/2`, a relative change below
+`e^−1419` wherever it is taken (`a > 709.78`). `tanh`'s small-argument branch (since 2026-09-13) is not exact over the reals: it
 returns `x`, which differs from `tanh x` by less than `x³/3 ≤ 8.3·10⁻²⁵`. It returns the float nearest
 `tanh x`, which the exp form there did not (`tanh 1e-300` was `0`; forge's `libmonogate.h` records the
 mpmath check of the threshold). `sinh`'s small-argument branch (since 2026-09-14) is the same move: `x`
@@ -146,7 +162,9 @@ def stdI1 (p : Prims) : Trans1 → Float → Float
       let a := p.abs x;
       if a ≤ 2.149119332890821e-8 then x
       else p.copysign (if a > 709.78 then (let w := p.exp (0.5 * a); (0.5 * w) * w)
-        else (p.exp a - p.exp (-a)) * 0.5) x
+        else if a < 1.0 then (let t := p.expm1 a; 0.5 * (2.0 * t - t * t / (t + 1.0)))
+        else if a < 22.0 then (let t := p.expm1 a; 0.5 * (t + t / (t + 1.0)))
+        else 0.5 * p.exp a) x
   | .cosh => fun x =>
       let a := p.abs x;
       if a > 709.78 then (let w := p.exp (0.5 * a); (0.5 * w) * w)
@@ -154,7 +172,8 @@ def stdI1 (p : Prims) : Trans1 → Float → Float
   | .tanh => fun x =>
       let a := p.abs x;
       if a ≤ 1.3538603431225864e-8 then x
-      else (let t := p.exp ((-2.0) * a); p.copysign ((1.0 - t) / (1.0 + t)) x)
+      else if a < 0.5 then (let t := p.expm1 ((-2.0) * a); p.copysign (-t / (t + 2.0)) x)
+      else (let t := p.expm1 (2.0 * a); p.copysign (1.0 - 2.0 / (t + 2.0)) x)
   | .log10 => p.log10
 
 /-- The C runtime keyed by the name emitted C calls — a transcription of `libmonogate.h` (the module
@@ -183,7 +202,9 @@ def stdR1 (p : Prims) (name : String) : Float → Float :=
       let a := p.abs x;
       if a ≤ 2.149119332890821e-8 then x
       else p.copysign (if a > 709.78 then (let w := p.exp (0.5 * a); (0.5 * w) * w)
-        else (p.exp a - p.exp (-a)) * 0.5) x
+        else if a < 1.0 then (let t := p.expm1 a; 0.5 * (2.0 * t - t * t / (t + 1.0)))
+        else if a < 22.0 then (let t := p.expm1 a; 0.5 * (t + t / (t + 1.0)))
+        else 0.5 * p.exp a) x
   else if name = "mg_cosh" then fun x =>
       let a := p.abs x;
       if a > 709.78 then (let w := p.exp (0.5 * a); (0.5 * w) * w)
@@ -191,11 +212,13 @@ def stdR1 (p : Prims) (name : String) : Float → Float :=
   else if name = "mg_tanh" then fun x =>
       let a := p.abs x;
       if a ≤ 1.3538603431225864e-8 then x
-      else (let t := p.exp ((-2.0) * a); p.copysign ((1.0 - t) / (1.0 + t)) x)
+      else if a < 0.5 then (let t := p.expm1 ((-2.0) * a); p.copysign (-t / (t + 2.0)) x)
+      else (let t := p.expm1 (2.0 * a); p.copysign (1.0 - 2.0 / (t + 2.0)) x)
   else if name = "mg_tanh_route" then fun x =>
       let a := p.abs x;
       if a ≤ 1.3538603431225864e-8 then x
-      else (let t := p.exp ((-2.0) * a); p.copysign ((1.0 - t) / (1.0 + t)) x)
+      else if a < 0.5 then (let t := p.expm1 ((-2.0) * a); p.copysign (-t / (t + 2.0)) x)
+      else (let t := p.expm1 (2.0 * a); p.copysign (1.0 - 2.0 / (t + 2.0)) x)
   else if name = "log10" then p.log10
   else if name = "asin" then p.asin
   else if name = "acos" then p.acos
@@ -227,7 +250,8 @@ theorem std_hrt2 (p : Prims) : ∀ (t : Trans2) (u v : Float), stdR2 p t.cName u
 runtime hypothesis**: the `mg_*` correspondence is now the proven `std_hrt`, and the whole result's
 trust is reduced to the primitive basis `p`. sorryAx-free; `#print axioms` reports
 `[propext, Classical.choice, Quot.sound]` (measured 2026-09-13, before and after `copysign` joined
-the basis, and again after `log10` did; this docstring said `[propext, Quot.sound]` until then). -/
+the basis, and again after `log10` did, and on 2026-09-15 after `expm1` did; this docstring said
+`[propext, Quot.sound]` until then). -/
 theorem runProg_correct_std
     (p : Prims) (prog : Prog) (fuel : Nat) (entry : String) (args : List Val) :
     runProgC (stdR1 p) (stdR2 p) (emitProg prog) fuel entry args
@@ -308,6 +332,7 @@ def leanPrims : Prims where
   pow  := Float.pow
   copysign := floatCopySign
   log10 := Float.log10
+  expm1 := floatExpm1
 
 /-- `coshFn(x) = cosh(x)`, a program whose return uses a COMPOSITE transcendental. -/
 def coshProg : Prog := fun name =>
@@ -380,10 +405,12 @@ example : (stdI1 leanPrims .tanh (Float.ofBits 1)).toBits = 1 ∧
     (stdI1 leanPrims .tanh (Float.ofBits 0x8000000000000001)).toBits = 0x8000000000000001 := by
   native_decide
 
-/-- At the threshold `x` comes back; at the next double up the exp form takes over and does not return
-`x`. -/
+/-- At the threshold `x` comes back. Above it the `expm1` form takes over, and at twice the threshold, where `tanh`
+lies two ulps below `x`, it does not return `x`. At the next double up it does return `x`, as glibc's `tanh` does:
+`tanh` is `0.5000` ulp below `x` there, and both first leave `x` 5 835 838 doubles above the threshold (measured
+2026-09-15 with forge's `libmonogate.h`). Until that day's `expm1` body this example checked the next double. -/
 example : (stdI1 leanPrims .tanh 1.3538603431225864e-8).toBits = 0x3E4D12ED0AF1A27F ∧
-    (stdI1 leanPrims .tanh (Float.ofBits 0x3E4D12ED0AF1A280)).toBits ≠ 0x3E4D12ED0AF1A280 := by
+    (stdI1 leanPrims .tanh (Float.ofBits 0x3E5D12ED0AF1A27F)).toBits ≠ 0x3E5D12ED0AF1A27F := by
   native_decide
 
 /-- For contrast, the body before 2026-09-13 over the same basis: `tanh(1e-300)` is `+0.0`. -/
@@ -406,7 +433,7 @@ example : (stdI1 leanPrims .sinh (Float.ofBits 1)).toBits = 1 ∧
     (stdI1 leanPrims .sinh (-0.0)).toBits = 0x8000000000000000 := by
   native_decide
 
-/-- At the threshold `x` comes back; at the next double up the exp form takes over and does not return
+/-- At the threshold `x` comes back; at the next double up the `expm1` form takes over and does not return
 `x`. -/
 example : (stdI1 leanPrims .sinh 2.149119332890821e-8).toBits = 0x3E57137449123EF6 ∧
     (stdI1 leanPrims .sinh (Float.ofBits 0x3E57137449123EF7)).toBits ≠ 0x3E57137449123EF7 := by
@@ -420,6 +447,29 @@ example : (runProgC (stdR1 leanPrims) (stdR2 leanPrims) (emitProg sinhProg) 5 "s
 example : (let a := leanPrims.abs 1e-300;
     leanPrims.copysign ((leanPrims.exp a - leanPrims.exp (-a)) * 0.5) 1e-300).toBits = 0 := by
   native_decide
+
+/-! ## Between the small-argument threshold and `1` — where the exp forms cancelled until 2026-09-15
+
+Above `MG_SINH_X_MAX` and `MG_TANH_X_MAX` the exp forms still cancelled, all the way up to `1`: forge measured the old
+`sinh` up to 3.9·10⁵ ulp from glibc's on `[10⁻⁶, 10⁻³)`. The `expm1` bodies do not cancel. At `x = 10⁻⁶`, `sinh x` lies
+787.06 ulps of `x` above `x`, and `tanh x` 1 574.12 below it. These examples evaluate `leanPrims.expm1`, which Lean core
+does not provide, through `CertcomLibm`'s compiled library. -/
+
+/-- `sinh(1e-6) − 1e-6` is within `10⁻²¹`, 4.72 ulps of `x`, of `x³/6`, spelt `1.6666666666666667e-19`. The subtraction
+is exact. -/
+example : (let s := stdI1 leanPrims .sinh 1e-6;
+    decide (Float.abs ((s - 1e-6) - 1.6666666666666667e-19) < 1e-21)) = true := by native_decide
+
+/-- The same for `tanh(1e-6)`, `x³/3` below `x`. -/
+example : (let s := stdI1 leanPrims .tanh 1e-6;
+    decide (Float.abs ((s - 1e-6) + 3.3333333333333335e-19) < 1e-21)) = true := by native_decide
+
+/-- For contrast, the `sinh` body before 2026-09-15 over the same basis misses `x + x³/6` by more than `10⁻¹⁸`, whatever
+`exp` returns in `[1, 2)` and `[½, 1)`: those grids have spacings `2⁻⁵²` and `2⁻⁵³`, so half the difference of the two
+is a multiple of `2⁻⁵⁴`, and `sinh(10⁻⁶)` is 0.485 of that spacing, 2.69·10⁻¹⁷, from the nearest multiple. -/
+example : (let a := leanPrims.abs 1e-6;
+    let o := leanPrims.copysign ((leanPrims.exp a - leanPrims.exp (-a)) * 0.5) 1e-6;
+    decide (Float.abs ((o - 1e-6) - 1.6666666666666667e-19) > 1e-18)) = true := by native_decide
 
 /-! ## The second spellings — a HIGH-drift `tanh` -/
 

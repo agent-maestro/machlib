@@ -139,16 +139,19 @@ axiom real_exp_finite : ∀ a : Float, a.isFinite = true → realToR a ≤ natCa
     (stdI1 leanPrims .exp a).isFinite = true
 
 /-- **The runtime `sinh` of a finite float at most `710` in magnitude is finite** (added 2026-09-14, owner-approved).
-`stdI1 leanPrims .sinh` is the runtime's composite (`x` itself below `MG_SINH_X_MAX`, `(eᵃ − e⁻ᵃ)·½` for `a = |x| ≤ 709.78`,
-`(½·w)·w` with `w = exp(a/2)` above, then `x`'s sign). Its result overflows only for `|x|` above `710.4758600739439`, the
-largest double whose `sinh` is finite; `710` sits `0.47` inside that. Un-witnessable in Lean (`Float` is opaque).
+`stdI1 leanPrims .sinh` is the runtime's composite (`EMLToCRuntime.lean`): `x` itself below `MG_SINH_X_MAX`; with `a = |x|`
+and `t = expm1 a`, `½(2t − t·t/(t+1))` below `1` and `½(t + t/(t+1))` below `22` (since 2026-09-15), `½·exp a` up to
+`709.78`, and `(½·w)·w` with `w = exp(a/2)` above; then `x`'s sign. Its result overflows only for `|x|` above
+`710.4758600739439`, the largest double whose `sinh` is finite; `710` sits `0.47` inside that. Un-witnessable in Lean
+(`Float` is opaque).
 
-**Measured before it was added.** `tools/float_bridge/measure.py` computes the composite as `leanPrims` does, over 779 473
-doubles: dense steps on `[−712, 712]`, the large branch densely, results just above every power of two, and 3 000
-consecutive doubles on each side of `±710`, `±710.4758600739439` and `±711`. No non-finite result at the 653 480 its
-hypotheses admit (125 993 excluded), the largest being `710` itself. The control with the bound widened to `711` fails at
-12 172 inputs, every one at `|x| ≥ 710.475860073944`, so the bound sits `0.4758` inside the measured boundary.
-`tools/float_bridge/registry.json` pins these numbers. -/
+**Measured before it was added, and again on 2026-09-15 on the `expm1` body.** `tools/float_bridge/measure.py` computes the
+composite as `leanPrims` does, over 796 928 doubles: dense steps on `[−712, 712]`, the large branch densely, results just
+above every power of two, both sides of the splits at `1` and `22`, and 3 000 consecutive doubles on each side of `±710`,
+`±710.4758600739439` and `±711`. No non-finite result at the 670 935 its hypotheses admit (125 993 excluded), the largest
+being `710` itself. The control with the bound widened to `711` fails at 12 172 inputs, every one at
+`|x| ≥ 710.475860073944`, so the bound sits `0.4758` inside the measured boundary. `tools/float_bridge/registry.json` pins
+these numbers. -/
 axiom real_sinh_finite : ∀ a : Float, a.isFinite = true → abs (realToR a) ≤ natCast 710 →
     (stdI1 leanPrims .sinh a).isFinite = true
 
@@ -258,25 +261,32 @@ alternative to the hard `clamp`, and — unlike `clamp` — inside the certified
 
 /-- **The disclosed libm rounding bound for the runtime `tanh`: within `2u` of `Real.tanh` at every FINITE
 `a`.** `stdI1 leanPrims .tanh` is the runtime's own composition (`EMLToCRuntime.lean`): `x` itself for
-`|x| ≤ 1.3538603431225864e-8`, else `copysign((1−t)/(1+t), x)` with `t = exp(−2|x|)`. Un-witnessable in
-Lean (`Float` opaque), disclosed like `real_fpbridge`; the residual libm trust for this primitive.
+`|x| ≤ 1.3538603431225864e-8`; else, with `a = |x|`, `copysign(−t/(t+2), x)` with `t = expm1(−2a)` below `0.5` and
+`copysign(1 − 2/(t+2), x)` with `t = expm1(2a)` from `0.5` (since 2026-09-15; until then `copysign((1−t)/(1+t), x)`
+with `t = exp(−2a)`, which cancelled below `1`). Un-witnessable in Lean (`Float` opaque), disclosed like
+`real_fpbridge`; the residual libm trust for this primitive.
 
 **Restated 2026-09-14 from a measurement, because the statement before it was false.** It read
 `∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → … ≤ u`. The hypothesis constrained nothing (every
 `a` has some `R`), and the bound does not hold. `tools/float_bridge/measure.py` computes the composite exactly
-as `leanPrims` does (glibc 2.39's `exp` on aarch64 through ctypes, IEEE doubles, `floatCopySign`'s bits),
-checks a sample of those floats against Lean's own `#eval` bit for bit, and compares with mpmath's `tanh` at
-256 bits. Its inputs: `[-30, 30]` in steps of `10⁻³` and `[-1, 1]` in steps of `10⁻⁵`; `|x|` log-spaced down to
-the smallest subnormal; 2 000 consecutive doubles on each side of the small-argument threshold, and runs
-around `18.715`, `19.06` and `20`; magnitudes up to `DBL_MAX`; random finite bit patterns; and a local
-search around the 25 worst points. Against `u` the error exceeds the bound at 25 535 of 470 235 finite
-inputs, at most `1.4996u`, at `x = −7.834942349654755`. Against `2u` there is no violation; the largest error
-is `0.7498` of the bound.
+as `leanPrims` does (glibc 2.39's `exp` and `expm1` on aarch64 through ctypes, IEEE doubles, `floatCopySign`'s
+bits), checks a sample of those floats against Lean's own `#eval` bit for bit, and compares with mpmath's `tanh` at
+256 bits. On the body before 2026-09-15 the error exceeded `u` at 25 535 of 470 235 finite inputs, at most `1.4996u`
+(`x = −7.834942349654755`), and stayed within `2u`, at most `0.7498` of the bound.
 
-**Why `2u`, not tighter.** The worst case sits where `t` is tiny and the rounding of `1 − t`, of `1 + t` and
-of their quotient line up; a first-order error estimate puts that at `1.5u`, which is what was measured.
-Over all `t` the same estimate, with glibc's documented `exp` error of at most `0.511` ulp, stays under
-about `1.9u`. That is an estimate, not a proof; `2u` is a third above the measured maximum.
+**Re-measured 2026-09-15 on the `expm1` body.** Its inputs: `[-30, 30]` in steps of `10⁻³` and `[-1, 1]` in steps of
+`10⁻⁵`; `|x|` log-spaced down to the smallest subnormal; 2 000 consecutive doubles on each side of the small-argument
+threshold, of the split at `0.5` and of `1`, and runs around `18.715`, `19.06` and `20`; `[0.3, 1)` densely; points
+where `t` crosses a power of two; the largest absolute errors forge's `tools/scripts/measure_runtime_hyperbolics.py`
+found against binary128 `tanhl`; magnitudes up to `DBL_MAX`; random finite bit patterns; and a local search around the
+25 worst points: 647 367 finite inputs. Against `u` the error exceeds the bound at 3 519 of them. Against `2u` there is
+no violation; the largest error is `0.7160` of the bound (`1.4319u`, at `x = 0.550098328643078`).
+
+**Why `2u`, not tighter, and why the split is at `0.5`.** A first-order error estimate, every operation at its worst
+at once with glibc's measured `expm1` error, stays under `1.499u` for the small form below `0.5` and `1.631u` for the
+large form from `0.5`. Kept up to glibc's own split at `1`, the small form's estimate reaches `2.335u` as `a → 1`, past
+the bound, and forge's harness measures that split at `1.739u`. That is an estimate, not a proof; `2u` is `0.369u`
+above it and `0.568u` above the measured maximum.
 
 **The domain is the honest one: finite `a`.** `realToR` of `±inf` or `NaN` has no real value to compare,
 so nothing was measured there and nothing is claimed; the old `R` excluded neither.
@@ -784,17 +794,18 @@ theorem pid_acos_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
 /-! ### Grounding a twelfth libm primitive: `sinh`, SYMMETRIC domain, unconditional on `R`
 
 `sinh` needs a domain (unlike globally-Lipschitz `tanh`) but, like `exp`, no extra sign hypothesis:
-`L = cosh R > 0` for every `R`. `stdI1 leanPrims .sinh` is itself a composite of `exp`, not a distinct
-native call: since forge `51337a3`, `copysign` of `(eᵃ − e⁻ᵃ)·½` for `a = |x| ≤ 709.78` and of
-`(½·w)·w` with `w = exp(a/2)` above that (`EMLToCRuntime.lean`). -/
+`L = cosh R > 0` for every `R`. `stdI1 leanPrims .sinh` is itself a composite of `expm1` and `exp`, not a
+distinct native call (`EMLToCRuntime.lean`; `real_sinh_rounds` below lists its branches). -/
 
 /-- **The disclosed libm rounding bound for the runtime `sinh`, domain-restricted.** For any `R` and `a : Float` with
 `abs (realToR a) ≤ R` whose float `sinh` is finite, `leanPrims.sinh`, through `realToR`, is within `4u · cosh R` of
 the exact `Real.sinh`, with `cosh R` as the magnitude bound (`abs (sinh x) ≤ cosh x ≤ cosh R`), the SAME quantity
-`pid_sinh_grounded` uses as its Lipschitz constant. `stdI1 leanPrims .sinh` is an exp-composite
-(`EMLToCRuntime.lean`): `x` itself for `|x| ≤ 2.149119332890821e-8` (forge's `MG_SINH_X_MAX`, since 2026-09-14),
-`(eᵃ − e⁻ᵃ)·½` for `a = |x| ≤ 709.78`, `(½·w)·w` with `w = exp(a/2)` above that, then `x`'s sign. Un-witnessable in
-Lean (`Float` opaque); the residual libm trust for this primitive.
+`pid_sinh_grounded` uses as its Lipschitz constant. `stdI1 leanPrims .sinh` is a composite of `expm1` and `exp`
+(`EMLToCRuntime.lean`): `x` itself for `|x| ≤ 2.149119332890821e-8` (forge's `MG_SINH_X_MAX`, since 2026-09-14); with
+`a = |x|` and `t = expm1 a`, `½(2t − t·t/(t+1))` below `1` and `½(t + t/(t+1))` below `22` (since 2026-09-15; the exp
+difference `(eᵃ − e⁻ᵃ)·½` until then, which cancelled below `1`), `½·exp a` up to `709.78`, `(½·w)·w` with
+`w = exp(a/2)` above that; then `x`'s sign. Un-witnessable in Lean (`Float` opaque); the residual libm trust for this
+primitive.
 
 **Restated 2026-09-14 from a measurement, because the statement before it was false.** It read
 `∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R → … ≤ u * cosh R`. Each branch rounds more than once:
@@ -807,7 +818,10 @@ packed at `709.78`, `710.4758` and the small-argument threshold, and doubles who
 the old statement fails at 63 940 of 750 768. The restated one holds at all 750 768 its hypothesis admits (25 303
 non-finite results excluded), at most `0.744` of `4u` (`2.975u`, at `x = 709.7844159037164`). `4u` is above the
 analysis bound and a third above the measured maximum. `tools/float_bridge/registry.json` pins these numbers and
-keeps the old statement as a control. -/
+keeps the old statement as a control. **Re-measured 2026-09-15 on the `expm1` body**, with both sides of its splits at
+`1` and `22` and the points where `t` crosses a power of two added: 793 526 inputs; all 768 223 its hypothesis admits
+hold, at most `0.744` of `4u`, still at `x = 709.7844159037164` in the large branch, which that change left alone; the old
+statement fails at 65 329 of them. -/
 axiom real_sinh_rounds : ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .sinh a).isFinite = true →
     abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ (u + u + u + u) * cosh R
 

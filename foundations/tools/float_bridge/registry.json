@@ -392,8 +392,8 @@
       "min_examined": 600000,
       "statement": ": ∀ a : Float, a.isFinite = true → abs (realToR a) ≤ natCast 710 → (stdI1 leanPrims .sinh a).isFinite = true",
       "pinned": {
-        "inputs": 779473,
-        "examined": 653480,
+        "inputs": 796928,
+        "examined": 670935,
         "vacuous": 125993,
         "unmeasurable": 0,
         "violations": 0,
@@ -410,8 +410,8 @@
       "expect": "holds",
       "statement": ": ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .sinh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ (u + u + u + u) * cosh R",
       "pinned": {
-        "inputs": 776071,
-        "examined": 750768,
+        "inputs": 793526,
+        "examined": 768223,
         "vacuous": 25303,
         "unmeasurable": 0,
         "violations": 0,
@@ -463,13 +463,13 @@
       "c": "2",
       "statement": ": ∀ (a : Float), a.isFinite = true → abs (realToR (stdI1 leanPrims .tanh a) - tanh (realToR a)) ≤ u + u",
       "pinned": {
-        "inputs": 470238,
-        "examined": 470235,
+        "inputs": 647370,
+        "examined": 647367,
         "vacuous": 3,
         "unmeasurable": 0,
         "violations": 0,
-        "max": "7.497816e-01",
-        "argmax": "c01f56fb20974012"
+        "max": "7.159611e-01",
+        "argmax": "3fe19a67cf6366a5"
       }
     }
   },

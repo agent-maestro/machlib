@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 080 `.lean` files** (805 top-level + 275 in subdirectories) /
-**255 029 lines** / **7 870 theorems**, re-exported through the aggregator
+**255 093 lines** / **7 870 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -127,6 +127,15 @@ but on glibc's values at `+∞` they forced `realToR (+∞) ≤ −1`, `real_abs
 derives `False` from their old statements and three runtime equations Lean cannot prove. All now take `a.isFinite = true`
 (narrowing only), and the harness refuses to read a statement that admits a non-finite input. **Narrow a bound over
 `Float` to finite inputs before pinning any constant in it.**
+**Since 2026-09-15 the runtime `sinh` and `tanh` call `expm1`** (forge's `libmonogate.h`), which stopped their
+cancellation below `1`; `Prims` gained its fourteenth field. Lean core has no `Float.expm1`, so `leanPrims` binds
+`Certcom.floatExpm1`, an `@[extern "expm1"]` in `foundations/CertcomLibm.lean`, a `lean_lib` of its own with
+`precompileModules := true`: Lake compiles it with the toolchain's bundled `clang` and loads the library under `lake build`
+and `lake lean`, so `native_decide` and the harness's Lean cross-check evaluate it (the cross-check compares it with C
+`expm1` bit for bit). `real_sinh_rounds`, `real_sinh_finite` and `real_tanh_rounds` were re-measured on the new bodies
+with their statements unchanged. `tanh` splits its two `expm1` forms at `0.5`, not at glibc's `1`, because glibc's split
+rounds further from `tanh` in absolute error, the unit `real_tanh_rounds` bounds (forge's
+`tools/scripts/measure_runtime_hyperbolics.py` prints both).
 **Checked on 2026-09-14, then changed three times the same day by approved axioms.** Nothing in the environment concluded that
 a float is finite, so only a constant leaf of `eml_tree_grounded` was instantiated. The owner approved the range axioms
 `real_fpfinite` and `real_round_finite` with `u_lt_one` (`MachLib/FloatSafeInstances.lean`: the determinant and `x + y`),
@@ -169,7 +178,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 818 jobs, ~3 s warm
+lake build                                     # 821 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
@@ -286,6 +295,12 @@ behind it is missing — registration is still a human act.
   fires if that ever changes. It also searches only what is imported: nothing unreachable from
   `MachLib.lean`, nothing in `Discovered/`.
 - **`lake` from `foundations/`.** From the repo root it silently resolves the wrong toolchain (v4.14).
+- **`lake env lean` cannot EVALUATE `expm1`; `lake lean` can.** Only `lake build` and `lake lean <file>` load
+  `CertcomLibm`'s shared library. A file run under `lake env lean` that evaluates a call reaching `Certcom.floatExpm1` (the
+  runtime `sinh` or `tanh` over `leanPrims`, by `#eval` or `native_decide`) aborts with exit 134, "Could not find native
+  implementation of external declaration 'Certcom.floatExpm1'" (measured 2026-09-15). Elaborating, `#print axioms`, and
+  evaluating anything that never calls it (`stdI1 leanPrims .cosh`) still work: the interpreter resolves an extern only
+  when it is called.
 - **Stale `.olean`s.** `lake env lean Foo.lean` typechecks against *old* dependencies; run
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
