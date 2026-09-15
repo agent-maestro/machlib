@@ -46,10 +46,10 @@ export default function CheckIt() {
         <div className="eyebrow">// check it yourself</div>
         <h2>Three ways in, each ending in a command.</h2>
         <p className="section-lede">
-          Nothing on this page asks to be believed. On 2026-09-15 a cold build
-          from a fresh clone took 13 minutes on GitHub&apos;s hosted runner,
-          which times one on every push to master that touches the library,
-          and the full gate run took just under 20 minutes on a 20-core
+          Nothing on this page asks to be believed. GitHub&apos;s hosted runner
+          times a cold build from a fresh clone on every push to master that
+          touches the library; on 2026-09-15 two runs took 7 and 13 minutes.
+          The full gate run took just under 20 minutes on a 20-core
           workstation.
         </p>
 
