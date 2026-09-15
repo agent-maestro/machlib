@@ -655,8 +655,10 @@ proof: this is the "one reusable primitive-grounding lemma, arbitrary trees inhe
 property stated as a working instance, not just a claim. `hv` (validity at depth 2) and, since 2026-09-14,
 `hfs` (its float side conditions) are taken as hypotheses here — same status as every domain/range hypothesis
 elsewhere in this codebase
-(`pid_log_cosh_grounded`'s `hlo`, `EMLPfaffianValidOn`, …); discharging it CONCRETELY would need a
-numeric value for `u`, which this codebase deliberately never fixes. -/
+(`pid_log_cosh_grounded`'s `hlo`, `EMLPfaffianValidOn`, …). This docstring said that discharging them
+concretely would need a numeric value for `u`; it does not. `eml_tree_grounded_depth2_instantiated`
+(`GroundedEMLInstances.lean`, 2026-09-14) discharges both for every finite `x` with `0.5 ≤ realToR x ≤ 2`, on `u + u ≤ 1` and
+the libm finiteness axioms. -/
 theorem eml_tree_grounded_depth2_instance (env : Env)
     (hv : EMLTreeValid (realToR (env "x").toF)
       (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) EMLTree.var))

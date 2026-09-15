@@ -53,6 +53,14 @@ costs. Witnessed against Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, 
 `u_le_one` is left as it was: it follows from this, and every use of it is unchanged. -/
 axiom u_lt_one : u < 1
 
+/-- **`u` is at most one half, stated `u + u ≤ 1`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit
+roundoff `2⁻⁵³`, and `2⁻⁵³ + 2⁻⁵³ = 2⁻⁵² ≤ 1`. `u_lt_one` makes `1 − u` positive and says nothing about how small it is,
+so a float read back from a nonzero real had no positive lower bound on its magnitude and no product of two such values
+could be shown to be at least `DBL_MIN`. This gives `1 − u ≥ 1/2`: a value within `u·|x|` of `x` is at least `|x|/2` in
+magnitude. It is written without division because `OfNat Real` has no `2`. Witnessed against Mathlib in `monogate-lean`
+(`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`). `u_lt_one` follows from it and is left as it was. -/
+axiom u_le_half : u + u ≤ 1
+
 /-- The standard model of floating-point arithmetic: `fl` is a valid
 rounding of the exact real `e` when `fl = e·(1+δ)` for some relative
 perturbation `|δ| ≤ u` (written `-u ≤ δ ≤ u`). -/

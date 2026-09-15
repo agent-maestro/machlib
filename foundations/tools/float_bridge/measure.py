@@ -48,6 +48,19 @@ harness can read it, and the harness enforces that the registry and the corpus a
     finite. Controls `round-finite-tie-inclusive` (must fail at the tie and nowhere else) and
     `round-finite-unconditional`. A finiteness row pins the largest `|exact result| / DBL_MAX` it examined, so an input
     set that stopped reaching the boundary moves a pin. It may also carry `min_examined`, a floor above MIN_EXAMINED.
+  * `literal` — `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05` (added 2026-09-14): `(L : Float) = floatOfR L` for one
+    decimal spelling `L`. Lean's value for the literal is computed as `Float.ofScientific` computes it
+    (`lean_of_scientific`, a transcription of Lean v4.32.2's `Init/Data/OfScientific.lean`) and compared bit for bit with
+    round-to-nearest-even of the decimal in exact integer arithmetic. A second Lean run checks the transcription against
+    Lean's own `Float.ofScientific`, each registered literal in literal SYNTAX, and the gains inside `pidRawEML`. Lean's
+    `Float.ofScientific` truncates to 64 bits before rounding, so it is NOT correctly rounded in general: the control
+    `literal-every-decimal` (kind `literal-generic`) measures "every decimal literal is `floatOfR` of its decimal" over an
+    adversarial population and must fail, and `literal-0.05109` is a four-digit literal Lean misrounds by one ulp.
+  * `prim-finite` — `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite`, `real_log_finite` (added 2026-09-14): the
+    runtime primitive (`stdI1 leanPrims`, as above) of a finite double in the row's range is finite. Controls widen the
+    range (`exp` to 710, `sinh`/`cosh` to 711, `log` to `0 ≤ x`) and must fail, and only beyond the axiom's own range
+    (`only_beyond_axiom_bound`) or only at zero (`only_at_zero`). Lean's own `Float.isFinite` of each primitive is
+    cross-checked at the boundaries.
   * `declaration` — a function symbol or an opaque constant, not a proposition.
 
 INPUTS, deterministic: a dense grid over each function's interesting range; log-spaced tiny |x| down to the
@@ -202,6 +215,86 @@ def lean_cosh(x: float) -> float:
         w = EXP(0.5 * a)
         return (0.5 * w) * w
     return (EXP(a) + EXP(-a)) * 0.5
+
+
+# ── Float literals, as Lean evaluates them and as correct rounding would ─────────────────────────
+
+def _nat_log2(n: int) -> int:
+    """`Nat.log2`: floor of log2 for n > 0, and 0 for n = 0."""
+    return n.bit_length() - 1 if n > 0 else 0
+
+
+def lean_of_binary_scientific(m: int, e: int) -> float:
+    """`Float.ofBinaryScientific` (Lean v4.32.2, Init/Data/OfScientific.lean): keep the top 64 bits of `m` by TRUNCATION,
+    round them once to a double (`UInt64.toFloat`, round to nearest, ties to even), then `scaleB`."""
+    s = max(_nat_log2(m) - 63, 0)
+    top = (m >> s) % (1 << 64)
+    try:
+        return math.ldexp(float(top), e + s)
+    except OverflowError:
+        return math.inf
+
+
+def lean_of_scientific(m: int, s: bool, e: int) -> float:
+    """`Float.ofScientific m s e`, which a `Float` literal elaborates to (`OfScientific.ofScientific m s e`). The division
+    `/ 5^e` is FLOOR division, so a value within 2^-11 ulp above a binary64 midpoint truncates onto the midpoint and ties
+    to even: this is not correct rounding, and `tools/float_bridge/registry.json`'s `literal-every-decimal` control shows it."""
+    if s:
+        sh = max(64 - _nat_log2(m), 0)
+        return lean_of_binary_scientific((m << (3 * e + sh)) // (5 ** e), -4 * e - sh)
+    return lean_of_binary_scientific(m * 5 ** e, e)
+
+
+def _scaled(num: int, den: int) -> tuple[int, int, int, int]:
+    """(q, k, r, d) with num/den = (q + r/d)·2^k, q in [2^52, 2^53) or k = -1074 (the subnormal grid), exactly."""
+    k = num.bit_length() - den.bit_length() - 53
+    while True:
+        n2, d2 = (num, den << k) if k >= 0 else (num << -k, den)
+        q = n2 // d2
+        if q >= 1 << 53:
+            k += 1
+        elif q < 1 << 52:
+            k -= 1
+        else:
+            break
+    if k < -1074:
+        k, n2, d2 = -1074, num << 1074, den
+        q = n2 // d2
+    return q, k, n2 - q * d2, d2
+
+
+def correct_round(num: int, den: int) -> float:
+    """binary64 round-to-nearest-even of the non-negative rational num/den, in exact integer arithmetic (subnormals and
+    overflow included). It is how `floatOfR` is read, as `real_round_bounds`'s row reads it."""
+    if num == 0:
+        return 0.0
+    q, k, r, d = _scaled(num, den)
+    if 2 * r > d or (2 * r == d and q & 1):
+        q += 1
+    try:
+        return math.ldexp(float(q), k)
+    except OverflowError:
+        return math.inf
+
+
+def tie_distance(num: int, den: int) -> float:
+    """How far num/den lies from the nearest binary64 midpoint, in ulps: 0 is a tie, 0.5 a representable value."""
+    if num == 0:
+        return 0.5
+    _, _, r, d = _scaled(num, den)
+    return abs(2 * r - d) / (2 * d)
+
+
+def decode_decimal_literal(text: str) -> tuple[int, bool, int] | None:
+    """Lean's `Syntax.decodeScientificLitVal?` for a literal `digits.digits`: `1.5` is (15, true, 1), `0.05` (5, true, 2)."""
+    m = re.fullmatch(r"(\d+)\.(\d+)", text)
+    if m is None:
+        return None
+    return int(m.group(1) + m.group(2)), True, len(m.group(2))
+
+
+def decimal_value(m: int, s: bool, e: int) -> tuple[int, int]:
+    return (m, 10 ** e) if s else (m * 10 ** e, 1)
 
 
 #: `stdI1 leanPrims .<f>` in Python, keyed by the `Trans1` constructor.
@@ -470,6 +563,74 @@ def _pairs_for_finite() -> tuple:
     return tuple(out)
 
 
+@functools.lru_cache(maxsize=None)
+def decimals_for_literals() -> tuple:
+    """Decimal literals (m, s, e), deterministic, for the control that every decimal literal is correctly rounded: all
+    decimals of 1 to 4 digits at exponents 10^0 .. 10^-8 and of 1 to 3 digits to 10^-25 and 10^22; the shortest
+    round-trip spelling of random doubles, normal and subnormal; random decimals of 1 to 40 digits across the whole range;
+    and the hard cases, decimals within 2^-3 .. 2^-70 ulp of a binary64 midpoint (exact ties among them), written with
+    17 to 45 digits, where a 64-bit truncation lands on the midpoint."""
+    rng, out = random.Random(20260914), []
+    out += [(m, True, e) for e in range(0, 9) for m in range(1, 10_000)]
+    out += [(m, True, e) for e in range(9, 26) for m in range(1, 1000)]
+    out += [(m, False, e) for e in range(0, 23) for m in range(1, 1000)]
+
+    def spell(M: int, E: int) -> tuple[int, bool, int]:
+        return (M, True, -E) if E < 0 else (M, False, E)
+
+    for i in range(60_000):
+        x = from_bits(rng.getrandbits(52) | 1) if i % 6 == 0 else from_bits(rng.getrandbits(63))
+        if x == 0.0 or not math.isfinite(x):
+            continue
+        mant, _, ex = repr(x).partition("e")
+        a, _, b = mant.partition(".")
+        b = b.rstrip("0")
+        if int(a + b) > 0:
+            out.append(spell(int(a + b), (int(ex) if ex else 0) - len(b)))
+    for _ in range(80_000):
+        d = rng.randint(1, 40)
+        out.append(spell(rng.randint(10 ** (d - 1), 10 ** d - 1), rng.randint(-345 - d, 309 - d)))
+    for i in range(4_000):
+        mant = rng.getrandbits(52) | (1 if i % 5 == 0 else 1 << 52)
+        p = -1075 if i % 5 == 0 else rng.randint(-1074, 971) - 1
+        n = 2 * mant + 1                                     # the midpoint n·2^p
+        exact = (n * 5 ** -p, True, -p) if p < 0 else (n << p, False, 0)
+        if len(str(exact[0])) <= 800:
+            out.append(exact)
+        for j in (3, 8, 11, 12, 20, 40, 70):
+            for sgn in (1, -1):
+                nn, pp = (n << (j + 1)) + sgn, p - j - 1
+                M, E = (nn * 5 ** -pp, pp) if pp < 0 else (nn << pp, 0)
+                for D in (17, 20, 25, 30, 45):
+                    cut = len(str(M)) - D
+                    if cut <= 0:
+                        out.append(spell(M, E))
+                    else:
+                        out += [spell(M // 10 ** cut, E + cut), spell(M // 10 ** cut + 1, E + cut)]
+    seen, uniq = set(), []
+    for t in out:
+        if t not in seen:
+            seen.add(t)
+            uniq.append(t)
+    return tuple(uniq)
+
+
+def prim_finite_inputs(function: str) -> list[float]:
+    """`inputs_for(function)` plus the boundaries a finiteness row is decided at: the row's own bound, the largest input
+    with a finite result, and a bound one wider; for `ln`, zeros, negatives and the denormals."""
+    xs = list(inputs_for(function))
+    if function == "exp":
+        xs += around(709.0, 5000) + around(709.782712893384, 5000) + around(710.0, 5000)
+    elif function in ("sinh", "cosh"):
+        for c in (710.0, 710.4758600739439, 711.0):
+            xs += around(c, 3000) + around(-c, 3000)
+    elif function == "ln":
+        xs += [-x for x in xs[:50_000]] + [0.0, -0.0] + denormals(2000)
+    else:
+        raise ValueError(function)
+    return xs
+
+
 def reals_for_rounding() -> list[tuple[int, int]]:
     """(mantissa, exponent) pairs: x = m · 2^e, exact, 256-bit mantissas."""
     rng, out = random.Random(111), []
@@ -732,10 +893,98 @@ def _round_finite_chunk(args) -> dict:
     return res
 
 
+def _literal_chunk(items) -> dict:
+    """Decimal literals (m, s, e): Lean's value (`lean_of_scientific`) against round-to-nearest-even of the decimal. A
+    literal whose bits differ is a violation; the score is how close the decimal lies to a binary64 midpoint."""
+    res = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": []}
+    worst = []
+    for m, s, e in items:
+        num, den = decimal_value(m, s, e)
+        mine, want = lean_of_scientific(m, s, e), correct_round(num, den)
+        res["examined"] += 1
+        if bits(mine) != bits(want):
+            res["violations"] += 1
+        worst.append((1.0 - 2 * tie_distance(num, den), f"{hex_bits(mine)} {m}{'e-' if s else 'e'}{e}"[:80]))
+        if len(worst) > 4 * TOP_K:
+            worst.sort(key=lambda t: (-t[0], t[1]))
+            del worst[TOP_K:]
+    worst.sort(key=lambda t: (-t[0], t[1]))
+    res["worst"] = worst[:TOP_K]
+    return res
+
+
+def _prim_finite_admits(domain: str, bound: float | None, x: float) -> bool:
+    if domain == "le":
+        return x <= bound
+    if domain == "abs_le":
+        return abs(x) <= bound
+    if domain == "positive":
+        return x > 0
+    if domain == "nonneg":
+        return x >= 0
+    raise ValueError(domain)
+
+
+def _prim_finite_chunk(args) -> dict:
+    """A finiteness row for a runtime primitive: every finite input its hypothesis admits must give a finite result. The
+    score is how far toward the boundary an admitted input reaches: `x / bound` (`le`), `|x| / bound` (`abs_le`), or
+    `DENORM_MIN / x` (`positive`, `nonneg`), so a pin of 1.0 says the input set reached the edge. `min_violation` and
+    `max_violation` are the smallest and largest |x| that violate."""
+    spec, xs = args
+    fn, domain = FLOAT_FUNCS[spec["function"]], spec["domain"]
+    bound = float(spec["bound"]) if "bound" in spec else None
+    res = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": [], "min_violation": math.inf,
+           "max_violation": -math.inf}
+    worst = []
+    for x in xs:
+        if not math.isfinite(x) or not _prim_finite_admits(domain, bound, x):
+            res["vacuous"] += 1
+            continue
+        res["examined"] += 1
+        if not math.isfinite(fn(x)):
+            res["violations"] += 1
+            res["min_violation"] = min(res["min_violation"], abs(x))
+            res["max_violation"] = max(res["max_violation"], abs(x))
+        if domain == "le":
+            score = x / bound
+        elif domain == "abs_le":
+            score = abs(x) / bound
+        else:
+            score = DENORM_MIN / x if x > 0 else 2.0
+        worst.append((score, bits(x)))
+        if len(worst) > 4 * TOP_K:
+            worst.sort(key=lambda t: (-t[0], t[1]))
+            del worst[TOP_K:]
+    worst.sort(key=lambda t: (-t[0], t[1]))
+    res["worst"] = worst[:TOP_K]
+    return res
+
+
 def measure_axiom(spec: dict, pool) -> dict:
     kind = spec["kind"]
     if kind in ("measured", "existential-eps"):
         return measure_function_axiom(spec, pool)
+    if kind == "literal":
+        res = _literal_chunk([decode_decimal_literal(spec["literal"])])
+        res["inputs"] = 1
+        return res
+    if kind == "literal-generic":
+        data = decimals_for_literals()
+        total = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": []}
+        for part in pool.map(_literal_chunk, [data[i:i + 20_000] for i in range(0, len(data), 20_000)]):
+            total = _merge(total, part)
+        total["inputs"] = len(data)
+        return total
+    if kind == "prim-finite":
+        xs = prim_finite_inputs(spec["function"])
+        total = {"examined": 0, "vacuous": 0, "unmeasurable": 0, "violations": 0, "worst": [], "min_violation": math.inf,
+                 "max_violation": -math.inf}
+        for part in pool.map(_prim_finite_chunk, [(spec, xs[i:i + 20_000]) for i in range(0, len(xs), 20_000)]):
+            lo, hi = min(total["min_violation"], part["min_violation"]), max(total["max_violation"], part["max_violation"])
+            total = _merge(total, part)
+            total["min_violation"], total["max_violation"] = lo, hi
+        total["inputs"] = len(xs)
+        return total
     if kind in ("bridge", "bridge-unconditional"):
         chunk = _bridge_chunk if kind == "bridge" else _bridge_chunk_unconditional
         ps = pairs_for_bridge()
@@ -834,7 +1083,17 @@ ROUNDING_STATEMENT_UNTIL_2026_09_14 = ": ∀ M x : Real, 0 ≤ M → abs x ≤ M
 FINITE_OF_RANGE_STATEMENT = ": FPFiniteOfRange realToR"
 ROUND_FINITE_STATEMENT = ": ∀ x : Real, abs x ≤ dblMax → (floatOfR x).isFinite = true"
 
-READING_KEYS = ("kind", "function", "domain", "bound", "c", "eps")
+READING_KEYS = ("kind", "function", "domain", "bound", "c", "eps", "literal")
+
+#: A `Float` literal equated with `floatOfR` of the SAME decimal spelling (`float_lit_1_5` and siblings, 2026-09-14).
+LITERAL_STATEMENT = re.compile(r": \((\d+\.\d+) : Float\) = floatOfR (\d+\.\d+)")
+#: A runtime primitive of a finite float in a stated range is finite (`real_exp_finite` and siblings, 2026-09-14). The
+#: range hypothesis, exactly as spelt, and what it reads as.
+PRIM_FINITE_STATEMENT = re.compile(
+    r": ∀ a : Float, a\.isFinite = true → (.+) → \(stdI1 leanPrims \.(\w+) a\)\.isFinite = true")
+PRIM_FINITE_HYPOTHESES = ((re.compile(r"realToR a ≤ natCast (\d+)"), "le"),
+                          (re.compile(r"abs \(realToR a\) ≤ natCast (\d+)"), "abs_le"),
+                          (re.compile(r"0 < realToR a"), "positive"))
 
 
 def derive_reading(statement: str | None) -> dict | None:
@@ -842,6 +1101,23 @@ def derive_reading(statement: str | None) -> dict | None:
     if statement is None:
         return None
     s = " ".join(statement.split())
+    lit = LITERAL_STATEMENT.fullmatch(s)
+    if lit is not None:
+        if lit.group(1) != lit.group(2) or decode_decimal_literal(lit.group(1)) is None:
+            return None
+        return {"kind": "literal", "literal": lit.group(1)}
+    pf = PRIM_FINITE_STATEMENT.fullmatch(s)
+    if pf is not None:
+        if pf.group(2) not in FLOAT_FUNCS:
+            return None
+        for pattern, domain in PRIM_FINITE_HYPOTHESES:
+            h = pattern.fullmatch(pf.group(1))
+            if h is not None:
+                out = {"kind": "prim-finite", "function": pf.group(2), "domain": domain}
+                if h.groups():
+                    out["bound"] = h.group(1)
+                return out
+        return None
     if s in (": Float → MachLib.Real", ": Real → Float", ": MachLib.Real"):
         return {"kind": "declaration"}
     if s == ": FPBridgeFinite realToR":
@@ -993,6 +1269,10 @@ def fbEval (f : String) (x y : Float) : Float :=
   | "add" => x + y | "sub" => x - y | "mul" => x * y | "neg" => -x
   | "addfin" => if (x + y).isFinite then 1.0 else 0.0 | "subfin" => if (x - y).isFinite then 1.0 else 0.0
   | "mulfin" => if (x * y).isFinite then 1.0 else 0.0 | "negfin" => if (-x).isFinite then 1.0 else 0.0
+  | "expfin" => if (stdI1 leanPrims .exp x).isFinite then 1.0 else 0.0
+  | "sinhfin" => if (stdI1 leanPrims .sinh x).isFinite then 1.0 else 0.0
+  | "coshfin" => if (stdI1 leanPrims .cosh x).isFinite then 1.0 else 0.0
+  | "lnfin" => if (stdI1 leanPrims .ln x).isFinite then 1.0 else 0.0
   | _ => 0.0 / 0.0
 
 #eval show IO Unit from do
@@ -1007,7 +1287,9 @@ def fbEval (f : String) (x y : Float) : Float :=
 def python_eval(f: str, x: float, y: float) -> float:
     if f in FLOAT_FUNCS:
         return FLOAT_FUNCS[f](x)
-    finite_of = {"addfin": lambda: x + y, "subfin": lambda: x - y, "mulfin": lambda: x * y, "negfin": lambda: -x}
+    finite_of = {"addfin": lambda: x + y, "subfin": lambda: x - y, "mulfin": lambda: x * y, "negfin": lambda: -x,
+                 "expfin": lambda: EXP(x), "sinhfin": lambda: lean_sinh(x), "coshfin": lambda: lean_cosh(x),
+                 "lnfin": lambda: LOG(x)}
     if f in finite_of:
         return 1.0 if math.isfinite(finite_of[f]()) else 0.0
     return {"add": lambda: x + y, "sub": lambda: x - y, "mul": lambda: x * y, "neg": lambda: -x}[f]()
@@ -1059,7 +1341,84 @@ def crosscheck_samples(registry: dict, results: dict) -> list[tuple[str, float, 
     for a, b in rng.sample(boundary, 200) + [(DBL_MAX, math.ldexp(1.0, 970))]:
         samples += [("add", a, b), ("sub", a, b), ("mul", a, b),
                     ("addfin", a, b), ("subfin", a, b), ("mulfin", a, b), ("negfin", a, 0.0)]
+    # the libm finiteness rows: Lean's own `Float.isFinite` of the runtime primitive, at the boundaries that decide them
+    edges = {"exp": around(709.0, 5) + around(709.782712893384, 5) + around(710.0, 3),
+             "sinh": [y for c in (710.0, 710.4758600739439) for y in around(c, 5) + around(-c, 5)],
+             "cosh": [y for c in (710.0, 710.4758600739439) for y in around(c, 5) + around(-c, 5)],
+             "ln": [0.0, -0.0, DENORM_MIN, -DENORM_MIN, DBL_MIN, DBL_MAX, -1.0]}
+    for name, spec in sorted(registry["axioms"].items()):
+        if spec["kind"] == "prim-finite":
+            f = spec["function"]
+            samples += [(f"{'ln' if f == 'ln' else f}fin", x, 0.0)
+                        for x in rng.sample(prim_finite_inputs(f), 300) + edges[f]]
     return samples
+
+
+LEAN_LITERAL_TEMPLATE = """import MachLib.FPGrounding
+open Certcom
+
+#eval show IO Unit from do
+  let text ← IO.FS.readFile "@@INPUTS@@"
+  for line in text.splitOn "\\n" do
+    match line.splitOn " " with
+    | [i, m, s, e] => IO.println s!"FBS {i} {(Float.ofScientific m.toNat! (s == "1") e.toNat!).toBits}"
+    | _ => pure ()
+
+#eval match pidRawEML with
+  | .bin .add (.bin .add (.bin .mul (.lit a) (.var "e")) (.bin .mul (.lit b) (.var "i"))) (.bin .mul (.lit c) (.var "d")) =>
+      IO.println s!"FBPID {a.toBits} {b.toBits} {c.toBits}"
+  | _ => IO.println "FBPID shape-changed"
+@@SYNTAX@@
+"""
+
+#: The literal gains of `pidRawEML`, in the order `FBPID` prints them.
+PID_GAIN_LITERALS = ("1.5", "0.4", "0.05")
+
+
+def lean_literal_crosscheck(registry: dict) -> tuple[list[str], int, str | None]:
+    """Lean's own values for decimal literals, three ways, against the harness's `lean_of_scientific`: `Float.ofScientific`
+    over a sample of `decimals_for_literals` (every sampled literal the replica misrounds among them), each registered
+    literal written in literal SYNTAX, and the three gains as `pidRawEML` carries them. (mismatches, compared, unavailable)."""
+    rows = [spec for spec in list(registry["axioms"].values()) + list(registry.get("controls", {}).values())
+            if spec["kind"] == "literal"]
+    rng = random.Random(131)
+    data = decimals_for_literals()
+    sample = rng.sample(data, 20_000)
+    wrong = [t for t in sample if bits(lean_of_scientific(*t)) != bits(correct_round(*decimal_value(*t)))]
+    wrong_set = set(wrong)
+    right = [t for t in sample if t not in wrong_set]
+    sci = [decode_decimal_literal(r["literal"]) for r in rows] + wrong[:1000] + right[:1000]
+    syntax = "\n".join(f'#eval IO.println s!"FBLIT {r["literal"]} {{({r["literal"]} : Float).toBits}}"' for r in rows)
+    with tempfile.TemporaryDirectory(prefix="float_bridge_lit_") as tmp:
+        inputs = pathlib.Path(tmp) / "inputs.txt"
+        inputs.write_text("".join(f"{i} {m} {1 if s else 0} {e}\n" for i, (m, s, e) in enumerate(sci)))
+        lean = pathlib.Path(tmp) / "literals.lean"
+        lean.write_text(LEAN_LITERAL_TEMPLATE.replace("@@INPUTS@@", str(inputs)).replace("@@SYNTAX@@", syntax))
+        proc = subprocess.run(["bash", str(FOUNDATIONS / "tools" / "capped_lean.sh"), "lake", "env", "lean", str(lean)],
+                              cwd=FOUNDATIONS, capture_output=True, text=True, timeout=900)
+    out = proc.stdout.splitlines()
+    got_sci = {int(line.split()[1]): int(line.split()[2]) for line in out if line.startswith("FBS ")}
+    got_lit = {line.split()[1]: int(line.split()[2]) for line in out if line.startswith("FBLIT ")}
+    pid = [line.split()[1:] for line in out if line.startswith("FBPID")]
+    if proc.returncode != 0 or len(got_sci) != len(sci) or len(got_lit) != len(rows) or len(pid) != 1:
+        return [], 0, (f"lake env lean exited {proc.returncode} with {len(got_sci)} of {len(sci)} scientific values and "
+                       f"{len(got_lit)} of {len(rows)} literals: "
+                       + (proc.stderr.strip().splitlines() or proc.stdout.strip().splitlines() or ["no output"])[-1][:300])
+    bad = []
+    for i, t in enumerate(sci):
+        if got_sci[i] != bits(lean_of_scientific(*t)):
+            bad.append(f"Float.ofScientific {t}: Lean {got_sci[i]:016x}, harness {hex_bits(lean_of_scientific(*t))}")
+    for r in rows:
+        mine = bits(lean_of_scientific(*decode_decimal_literal(r["literal"])))
+        if got_lit[r["literal"]] != mine:
+            bad.append(f"literal {r['literal']}: Lean {got_lit[r['literal']]:016x}, harness {mine:016x}")
+    if pid[0] == ["shape-changed"] or len(pid[0]) != 3:
+        bad.append("pidRawEML no longer has the shape the gain check reads")
+    else:
+        for text, lean_bits in zip(PID_GAIN_LITERALS, pid[0]):
+            if int(lean_bits) != bits(lean_of_scientific(*decode_decimal_literal(text))):
+                bad.append(f"pidRawEML's gain {text}: Lean {int(lean_bits):016x}")
+    return bad, len(sci) + len(rows) + 3, None
 
 
 # ── verdicts ─────────────────────────────────────────────────────────────────────────────────────
@@ -1107,7 +1466,10 @@ def verdicts(registry: dict, results: dict, control_results: dict, manifest: set
         if res.get("neg_not_bitflip"):
             problems.append(f"{name}: the harness's negation is not IEEE's at {res['neg_not_bitflip']} input(s), so the "
                             "neg field was measured on the wrong function")
-        if s["examined"] < MIN_EXAMINED:
+        if kind == "literal":
+            if s["examined"] != 1:
+                problems.append(f"{name}: a literal row examines exactly its one literal, and examined {s['examined']}")
+        elif s["examined"] < MIN_EXAMINED:
             problems.append(f"{name}: examined {s['examined']} inputs, fewer than {MIN_EXAMINED}: it measured nothing")
         elif s["examined"] < int(spec.get("min_examined", 0)):
             problems.append(f"{name}: examined {s['examined']} inputs, fewer than its row's min_examined "
@@ -1116,6 +1478,17 @@ def verdicts(registry: dict, results: dict, control_results: dict, manifest: set
                 f"{s['unmeasurable']} with a non-finite result); ")
         if kind == "existential-eps":
             line += f"sup |error| = {s['max']} at {describe_argmax(s)}: bounded, so an eps exists"
+        elif kind == "literal":
+            line = (f"  {name}: Lean's `({spec['literal']} : Float)` is {s['argmax'].split()[0]}; {s['violations']} "
+                    f"violation(s) against round-to-nearest-even of the decimal (1 - 2 x distance to the nearest "
+                    f"midpoint = {s['max']}); expected {spec['expect']}")
+            if spec["expect"] == "holds" and s["violations"]:
+                problems.append(f"{name} is VIOLATED: Lean's literal is not the correctly rounded double of its decimal")
+        elif kind == "prim-finite":
+            line += (f"{s['violations']} violation(s) (a non-finite result its hypothesis admits); the admitted inputs "
+                     f"reach {s['max']} of the boundary, at {describe_argmax(s)}; expected {spec['expect']}")
+            if spec["expect"] == "holds" and s["violations"]:
+                problems.append(f"{name} is VIOLATED at {s['violations']} input(s) and the registry says it holds")
         elif kind in FINITE_RANGES:
             line += (f"{s['violations']} violation(s) (a non-finite result its range admits); largest |exact result| "
                      f"/ DBL_MAX examined = {s['max']} at {describe_argmax(s)}; expected {spec['expect']}")
@@ -1146,8 +1519,22 @@ def verdicts(registry: dict, results: dict, control_results: dict, manifest: set
         if spec.get("only_at_tie") and res.get("off_tie"):
             problems.append(f"control {name} ({spec['why']}) fails at {res['off_tie']} exact result(s) other than the "
                             "overflow tie DBL_MAX + 2^970: something other than the range decides it")
+        if s["examined"] < int(spec.get("min_examined", 0)):
+            problems.append(f"control {name}: examined {s['examined']}, fewer than its min_examined "
+                            f"{spec['min_examined']}: the input set shrank")
+        extra = ""
+        if spec["kind"] == "prim-finite" and s["violations"]:
+            extra = f"; violating |x| from {res['min_violation']!r} to {res['max_violation']!r}"
+            if spec.get("only_beyond_axiom_bound"):
+                edge = float(axioms[spec["inputs_of"]]["bound"])
+                if res["min_violation"] <= edge:
+                    problems.append(f"control {name} ({spec['why']}) fails at |x| = {res['min_violation']!r}, inside "
+                                    f"{spec['inputs_of']}'s own bound {edge}: the axiom's range would not be safe")
+                extra += f" (the axiom's bound {edge} is {res['min_violation'] - edge:.6g} inside)"
+            if spec.get("only_at_zero") and res["max_violation"] != 0.0:
+                problems.append(f"control {name} ({spec['why']}) fails at |x| = {res['max_violation']!r}, not only at 0")
         report.append(f"  control {name}: {s['violations']} violation(s) of {s['examined']} (max {s['max']} at "
-                      f"{describe_argmax(s)}) — must be violated")
+                      f"{describe_argmax(s)}{extra}) — must be violated")
     return problems, report
 
 
@@ -1199,6 +1586,17 @@ def main_gate(record: bool) -> int:
     if compared < 1000:
         problems.append(f"the Lean cross-check compared only {compared} values")
     problems += [f"Lean cross-check: {b}" for b in bad[:20]]
+    if any(s["kind"] == "literal" for s in list(registry["axioms"].values()) + list(registry.get("controls", {}).values())):
+        lbad, lcompared, lunavailable = lean_literal_crosscheck(registry)
+        if lunavailable:
+            print(f"FLOAT-BRIDGE UNAVAILABLE: the Lean literal cross-check could not run: {lunavailable}")
+            return 2
+        print(f"  Lean literal cross-check: {lcompared - len(lbad)} of {lcompared} literal values bit-identical to Lean's "
+              "own evaluation (Float.ofScientific, literal syntax, pidRawEML's gains)")
+        if lcompared < 1000:
+            problems.append(f"the Lean literal cross-check compared only {lcompared} values")
+        problems += [f"Lean literal cross-check: {b}" for b in lbad[:20]]
+        compared += lcompared
     measured = [n for n, s in registry["axioms"].items() if s["kind"] != "declaration"]
     violated = sorted(n for n, s in registry["axioms"].items() if s.get("expect") == "violated")
     if problems:
@@ -1385,6 +1783,70 @@ def self_test() -> int:
         failures.append("canary 'a tie-inclusive control failing away from the tie' did not fire")
     else:
         print("  canary fires: a tie-inclusive control failing away from the tie")
+    # the literal rows (2026-09-14): the statement shape reads, a mismatched spelling does not
+    lit_st = ": (1.5 : Float) = floatOfR 1.5"
+    if derive_reading(lit_st) != {"kind": "literal", "literal": "1.5"}:
+        failures.append(f"a literal statement reads as {derive_reading(lit_st)}")
+    for label, bad_st in (("a literal equated with another spelling's floatOfR", ": (1.5 : Float) = floatOfR 1.50"),
+                          ("a literal equated with a quotient", ": (1.5 : Float) = floatOfR (natCast 3 / natCast 2)")):
+        if derive_reading(bad_st) is not None:
+            failures.append(f"canary '{label}' is readable: {derive_reading(bad_st)}")
+        else:
+            print(f"  canary fires: {label} is unreadable")
+    # Lean's literal algorithm: the gains are correctly rounded, 0.05109 is not, and the exact reference agrees with
+    # CPython's correctly rounded division on subnormal, midpoint and overflow values
+    for (m, s, e), want in (((15, True, 1), "3ff8000000000000"), ((4, True, 1), "3fd999999999999a"),
+                            ((5, True, 2), "3fa999999999999a")):
+        if hex_bits(lean_of_scientific(m, s, e)) != want or hex_bits(correct_round(*decimal_value(m, s, e))) != want:
+            failures.append(f"specimen failed: the literal {m}e-{e} is not {want} both ways")
+    if (hex_bits(lean_of_scientific(5109, True, 5)), hex_bits(correct_round(5109, 10 ** 5))) != ("3faa2877ee4e26d4",
+                                                                                              "3faa2877ee4e26d5"):
+        failures.append("specimen failed: 0.05109 is not the literal Lean misrounds by one ulp")
+    else:
+        print("  canary fires: 0.05109 is misrounded by Lean's algorithm and correctly rounded by the reference")
+    for num, den in ((1, 3 * 2 ** 1070), (3, 2 ** 1076), (5, 2 ** 1076), (2 ** 1024 - 2 ** 970 - 1, 1),
+                     (2 ** 1024 - 2 ** 970, 1), (10 ** 400, 3), (7, 10 ** 330)):
+        try:
+            py = num / den
+        except OverflowError:
+            py = math.inf
+        if bits(py) != bits(correct_round(num, den)):
+            failures.append(f"correct_round({num}, {den}) is {correct_round(num, den)!r}, CPython says {py!r}")
+    lit_res = {"examined": 1, "inputs": 1, "vacuous": 0, "unmeasurable": 0, "violations": 1,
+               "worst": [(0.0, "3ff8000000000000 15e-1")]}
+    lit_reg = {"platform": platform_id(), "controls": {}, "axioms": {"Certcom.float_lit_x": {
+        "kind": "literal", "literal": "1.5", "expect": "holds", "statement": lit_st, "pinned": summary(lit_res)}}}
+    if not any("VIOLATED" in p for p in verdicts(lit_reg, {"Certcom.float_lit_x": lit_res}, {}, {"Certcom.float_lit_x"},
+                                                  {"float_lit_x": lit_st}, dict(EXPECTED_DEFINITIONS))[0]):
+        failures.append("canary 'a literal row whose bits differ' did not fire")
+    else:
+        print("  canary fires: a literal row whose bits differ from correct rounding")
+    # the libm finiteness rows: the statement shapes read, a dropped or respelt hypothesis does not, the range decides
+    exp_fin = (": ∀ a : Float, a.isFinite = true → realToR a ≤ natCast 709 → "
+               "(stdI1 leanPrims .exp a).isFinite = true")
+    if derive_reading(exp_fin) != {"kind": "prim-finite", "function": "exp", "domain": "le", "bound": "709"}:
+        failures.append(f"real_exp_finite's shape reads as {derive_reading(exp_fin)}")
+    log_fin = ": ∀ a : Float, a.isFinite = true → 0 < realToR a → (stdI1 leanPrims .ln a).isFinite = true"
+    if derive_reading(log_fin) != {"kind": "prim-finite", "function": "ln", "domain": "positive"}:
+        failures.append(f"real_log_finite's shape reads as {derive_reading(log_fin)}")
+    for label, bad_st in (("exp finiteness without its finite-input hypothesis",
+                           exp_fin.replace("a.isFinite = true → ", "")),
+                          ("exp finiteness with a decimal bound", exp_fin.replace("natCast 709", "709.0")),
+                          ("log finiteness at a non-strict bound", log_fin.replace("0 < realToR a", "0 ≤ realToR a"))):
+        if derive_reading(bad_st) is not None:
+            failures.append(f"canary '{label}' is readable: {derive_reading(bad_st)}")
+        else:
+            print(f"  canary fires: {label} is unreadable")
+    e709 = _prim_finite_chunk(({"function": "exp", "domain": "le", "bound": "709"}, [709.0, 709.79, 800.0, -1e308]))
+    e710 = _prim_finite_chunk(({"function": "exp", "domain": "le", "bound": "710"}, [709.0, 709.79]))
+    lpos = _prim_finite_chunk(({"function": "ln", "domain": "positive"}, [0.0, -0.0, 1.0]))
+    lnn = _prim_finite_chunk(({"function": "ln", "domain": "nonneg"}, [0.0, -0.0, 1.0]))
+    if not (e709["examined"] == 2 and e709["violations"] == 0 and e710["violations"] == 1
+            and e710["min_violation"] == 709.79 and lpos["vacuous"] == 2 and lpos["violations"] == 0
+            and lnn["violations"] == 2 and lnn["max_violation"] == 0.0):
+        failures.append(f"finiteness at the boundaries: {e709}, {e710}, {lpos}, {lnn}")
+    else:
+        print("  canary fires: exp(709.79) is outside 709 and violates 710; log(0) is outside x > 0 and violates x >= 0")
     if failures:
         print("FLOAT-BRIDGE SELFTEST FAIL:\n  - " + "\n  - ".join(failures))
         return 1

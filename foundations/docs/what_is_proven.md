@@ -484,11 +484,11 @@ correct (see §6), and grounding of the analytic base in a construction of ℝ
 MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the
 things Mathlib would prove as theorems — the real-number field/order axioms, the
 definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
-model — are **axioms** here. As of 2026-09-14 the ledger pins **246 axioms**
-(`lake env lean AxiomLedger.lean`: 222 `MachLib.*` plus 24 `Certcom.*`), of which
-**159** form the trusted footprint of the headline theorems, and every one of those 159 is
-modeled: 120 witnessed by a kernel-checked Mathlib term, 12 interpreted carrier and function
-symbols, 3 standard, 24 IEEE-754 float-bridge facts validated by measurement — see
+model — are **axioms** here. As of 2026-09-14 the ledger pins **254 axioms**
+(`lake env lean AxiomLedger.lean`: 223 `MachLib.*` plus 31 `Certcom.*`), of which
+**167** form the trusted footprint of the headline theorems, and every one of those 167 is
+modeled: 121 witnessed by a kernel-checked Mathlib term, 12 interpreted carrier and function
+symbols, 3 standard, 31 IEEE-754 float-bridge facts validated by measurement — see
 [`AXIOM_MANIFEST.md`](../AXIOM_MANIFEST.md), which is generated, and **(d)** below. (This
 section said **260** from 2026-06-27 until 2026-09-05; that figure was a different count over a
 different tree, and it is the reason `tools/prose_counts_check.py` now exists.) But a single
@@ -558,10 +558,10 @@ earned and what is cited never share a count.
 
 **(d) Every trusted axiom has a model, checked outside this library.** Nothing Mathlib-free
 can show its own axioms are satisfiable, so the check lives in the sibling project
-`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 159 trusted axioms,
+`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 167 trusted axioms,
 verifies in the kernel that a Mathlib term inhabits the axiom's *interpreted* type
 (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The result is a certificate *about* MachLib, never a
-dependency *of* it. The 24 float-bridge axioms are the exception by nature — Mathlib has no
+dependency *of* it. The 31 float-bridge axioms are the exception by nature — Mathlib has no
 IEEE-754 semantics — and they are kept in their own class rather than averaged in, because a
 hardware certificate rests on exactly those. The honest headline is therefore **zero unmodeled
 axioms**, never "zero axioms". Gate 13 (`tools/soundness_witness_audit.py`) fails if the witness
@@ -605,9 +605,11 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   we do not build ℝ. We prove the load-bearing closure consistent and minimise
   the rest.
 - **A grounded floating-point certificate is evidence about a computation only on the domain it is instantiated on.**
-  Two certificates with arithmetic nodes are instantiated, on domains of bounded finite inputs, and they rest on the
-  range axioms added on 2026-09-14. The PID and `exp`/`log` families are not instantiated. §7, "Grounded
-  floating-point certificates", says what each instance covers and what the rest need.
+  The determinant, the sum, `pid_grounded` with fourteen of its fifteen primitive forms, `eml_tree_grounded` at three `eml`
+  trees and two of the three `eml_var_var` forms are instantiated, on stated domains of bounded finite inputs, and they
+  rest on float-bridge axioms added and measured on 2026-09-14. `pid_log_cosh_grounded`, the `LibmBudget` restatements and
+  `eml_var_var_certcom_witness_grounded` are not. §7, "Grounded floating-point certificates", says what each instance
+  covers and what the rest need.
 - **Not a Mathlib replacement**, and not a general theorem library.
 - **Coverage / close-rate numbers are per-release snapshots**, regenerable from
   source; treat any single number as snapshot-specific.
@@ -908,48 +910,86 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   and it means this proof does **not** explain the positive/negative asymmetry of `d(x + c)`; the
   asymmetry recorded in `EMLDepthTameness` §4 stands, now with one more of its branches closed.
 
-- **Grounded floating-point certificates: two instantiated on the range axioms, and the facts that block the rest
+- **Grounded floating-point certificates: which are instantiated, on which axioms and domains, and which are not
   (2026-09-14).** Since the float-bridge axioms were restated from a measurement, every grounded
   forward-error certificate (`FPGrounding.lean`, `EMLCertcomGrounded.lean`,
   `EMLTreeGroundedPipeline.lean`) takes float side conditions: `FloatSafe` or `EMLTreeFloatSafe`, and
-  for some primitives the finiteness of one float besides. `MachLib/FloatSafeDischarge.lean` splits them, and
-  `MachLib/FloatSafeInstances.lean` instantiates what the axioms allow.
+  for some primitives the finiteness of one float besides. `MachLib/FloatSafeDischarge.lean` splits them;
+  `MachLib/FloatSafeInstances.lean`, `MachLib/GroundedPIDInstances.lean` and `MachLib/GroundedEMLInstances.lean` instantiate
+  what the axioms allow. Every instance below has a specimen that discharges its domain at a concrete input, and all of them
+  are pinned in `AxiomLedger.lean`'s headlines.
 
-  - **The range axioms.** Until the same day no theorem or axiom here concluded that a float is finite, so `FloatSafe`
-    of an arithmetic node could not be established for any input. Three axioms were then approved by the owner and
-    added: `real_fpfinite` (finite operands and an exact result at most `DBL_MAX` in magnitude give a finite `+`, `−`
-    or `×`, and negation keeps a float finite), `real_round_finite` (`floatOfR x` is finite for `|x| ≤ DBL_MAX`) and
-    `u_lt_one` (`u < 1`). The first two are float-bridge axioms, measured by `tools/float_bridge/measure.py` before they
-    were added, with controls that must fail exactly at the overflow tie `DBL_MAX + 2^970`; the third is witnessed
-    against Mathlib at `u = 2⁻⁵³`. Now nothing but `real_fpfinite` and `real_round_finite` concludes that a float is
-    finite, and `no-other-float-finiteness-producer` in `tools/absence_claims.json` scans the environment and fires if
-    that changes.
+  - **The axioms, all owner-approved on 2026-09-14 and measured or witnessed before they were added.** The range axioms
+    `real_fpfinite` (finite operands and an exact result at most `DBL_MAX` in magnitude give a finite `+`, `−` or `×`, and
+    negation keeps a float finite) and `real_round_finite` (`floatOfR x` is finite for `|x| ≤ DBL_MAX`), with `u_lt_one`.
+    Later the same day: the literal axioms `float_lit_1_5`, `float_lit_0_4` and `float_lit_0_05` (each PID gain's `Float`
+    literal is `floatOfR` of its decimal, so `real_round_bounds` and `real_round_finite` give its value and finiteness); the
+    libm finiteness axioms `real_exp_finite` (`exp` of a finite float at most `709`), `real_sinh_finite` and
+    `real_cosh_finite` (at most `710` in magnitude) and `real_log_finite` (`log` of a finite positive float); and
+    `u_le_half` (`u + u ≤ 1`). `tools/float_bridge/measure.py` measures every float-bridge one, with controls that must
+    fail: the literal axioms against Lean's own evaluation of each literal, the finiteness axioms with their ranges widened
+    (failing only beyond the measured overflow boundary, `709.7827…` for `exp` and `710.4758…` for `sinh` and `cosh`).
+    `u_lt_one` and `u_le_half` are witnessed against Mathlib at `u = 2⁻⁵³`. The literal axioms are narrow on purpose:
+    Lean's `Float.ofScientific` truncates to 64 bits before it rounds, and the generic statement, that every decimal
+    literal is `floatOfR` of its decimal, fails at 81 210 of 631 326 decimals.
+    Now nothing but `real_fpfinite` and `real_round_finite` concludes that a float is finite from premises that assume none,
+    and no axiom but those two and `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite` and `real_log_finite` concludes
+    that a float is finite; `no-other-float-finiteness-producer` in `tools/absence_claims.json` scans the environment and
+    fires if either changes.
   - **Instantiated: `pipeline_det_grounded`**, as `pipeline_det_grounded_instantiated`, on the domain "each of the four
     inputs is a finite float whose real value is at most `B` in magnitude and is `0` or at least `α` in magnitude, with
     `DBL_MIN ≤ α·α` and `4·(B·B) ≤ DBL_MAX`". There the cancelling determinant's computed value is within
     `u·(2+u)·(|X·Y| + |Z·W|)` of `X·Y − Z·W`. Its specimen, `pipeline_det_grounded_specimen`, takes `α = 2⁻⁵¹¹`,
     `B = 2⁵¹⁰` and the inputs `floatOfR 0`, and the computed determinant reads back as exactly `0`.
+    A second specimen, `pipeline_det_grounded_nonzero_specimen`, takes `α = 0.5`, `B = 10`, `x = y = floatOfR 5.0` and
+    `z = w = floatOfR 1.0`: both exact products are at least `DBL_MIN`, so `ProductsNormal` is met through its `DBL_MIN`
+    branch, and the exact determinant is positive. That branch needs `u + u ≤ 1`, because every lower bound on a nonzero
+    float's real value carries a factor `1 − u`.
   - **Instantiated: `pipeline_arith_grounded` at `x + y`**, as `pipeline_arith_grounded_sum_instantiated`, on the domain
     "both inputs are finite floats whose real values are at most `B` in magnitude, with `B + B ≤ DBL_MAX`". Its specimen,
     `pipeline_arith_grounded_sum_specimen`, takes `B = 2¹⁰²²` and the inputs `floatOfR 1`, which read back as a positive
     real, so the exact sum it bounds the computation against is not `0`.
+  - **Instantiated: `pid_grounded` and fourteen of the fifteen `pid_<prim>_grounded`**, on `PIDInputDomain env B δ`: "the
+    channels `e`, `i`, `d` are finite floats whose real values are at most `B` in magnitude and each `0` or at least `δ` in
+    magnitude, with `DBL_MIN ≤ 0.025·δ` and `60·B ≤ DBL_MAX`". There `FloatSafe` of the PID law holds and its computed and
+    exact values are at most `60·B`. `pid_grounded_instantiated`, `pid_tanh_grounded_instantiated`,
+    `pid_sin_grounded_instantiated`, `pid_cos_grounded_instantiated`, `pid_atan_grounded_instantiated` and
+    `pid_abs_grounded_instantiated` need nothing more. `pid_exp_grounded_instantiated` takes `R` with `60·B ≤ R ≤ 500`;
+    `pid_sinh_grounded_instantiated` and `pid_cosh_grounded_instantiated` `60·B ≤ R ≤ 710`;
+    `pid_asin_grounded_instantiated` and `pid_acos_grounded_instantiated` `60·B ≤ R < 1`; and
+    `pid_tan_grounded_instantiated` `60·B ≤ R ≤ 0.5`. `pid_log_grounded_instantiated`, `pid_sqrt_grounded_instantiated`
+    and `pid_log10_grounded_instantiated` take `PIDPositiveDomain`, every channel at least `δ > 0`, on `[0.0125·δ, 60·B]`.
+    Every one has a specimen at `pidSpecimenEnv`, where every input is `floatOfR 0.004` (in the positive domain at
+    `B = 0.008` and `δ = 0.002`, with `R = 0.5`); the inputs are nonzero, so each `gain × input` product is met through the
+    `DBL_MIN` branch, and `pid_grounded_specimen` shows that the exact PID law there is positive.
+  - **Instantiated: `eml_tree_grounded` at `eml` nodes, and two of the `eml_var_var` family.**
+    `eml_tree_grounded_eml_var_var_instantiated` (`exp x − log x`) and `eml_tree_grounded_eml_const_one_instantiated`
+    (`exp 1 − log x`, the constant quantized by `floatOfR`) on "`x` is a finite float with `0.5 ≤ realToR x ≤ 500`";
+    `eml_tree_grounded_depth2_instantiated` (`exp(exp x − log x) − log x`) on `0.5 ≤ realToR x ≤ 2`;
+    `eml_var_var_pipeline_uniform_instantiated` on "`x` a finite float in `[A, B]` with `1 ≤ A` and `B ≤ 500`"; and
+    `eml_var_var_quantized_pointwise_instantiated` on "a real `x` in `(A, B)` with `0 ≤ B ≤ 200` and `2 + B ≤ 2A`". Their
+    specimens take `x = floatOfR 2.0` or `floatOfR 1.0`, or `x = 3.5` in `(3.0, 4.0)`. The `exp − log` difference needs an
+    upper bound on `exp`, which no trusted axiom states; `exp n ≤ 4ⁿ` is derived from `1 + x ≤ exp x`, and it is why the
+    domains stop at `500`.
   - **Instantiated before the range axioms: `eml_tree_grounded` at a constant leaf.**
     `eml_tree_grounded_const_leaf`: for every real `c` that is `0` or has `DBL_MIN ≤ |c| ≤ DBL_MAX`,
     the compiled constant reads back within `u·|c|` of `c`. Its specimens take both branches of that
     domain, `c = 1` (within `u`) and `c = 0` (exact). It is depth 0 and rests on `real_round_bounds`;
     it certifies no arithmetic node and no primitive.
-  - **No specimen reaches the `DBL_MIN` branch of a product.** `FloatSafe` is exactly `FloatFinite` (the computed floats
-    are finite) together with `ProductsNormal` (each exact product is `0` or at least `DBL_MIN`), and the second half
-    follows from a magnitude floor on the operands (`productsNormal_detEML`). A bound alone is not enough, and that is
-    proved: `bounded_inputs_can_have_subnormal_product`. The determinant specimen meets the floor with zero inputs,
-    because every lower bound on a nonzero float's real value carries a factor `1 − u`, and `u < 1` says nothing about
-    how small `1 − u` is. A quantitative bound such as `u ≤ 1/2`, which `2⁻⁵³` meets, would reach the `DBL_MIN` branch;
-    none was approved or added.
-  - **Not instantiated, and what each needs.** `pid_grounded`, the `pid_<prim>_grounded` family and the `LibmBudget`
-    restatements multiply the PID law's literal gains, and no axiom says that a `Float` literal is finite or what its
-    real value is. `pid_exp_grounded`, `pid_sinh_grounded`, `pid_cosh_grounded` and `pid_log_cosh_grounded` also need a
-    finite `exp`, `sinh` or `cosh` result. `eml_tree_grounded` at an `eml` node, and the `eml_var_var` family, need
-    finite `exp` and `log` results. None of those facts was approved, and no axiom for them has been added.
+  - **`FloatSafe` is two conditions, and the second needs a floor.** `FloatSafe` is exactly `FloatFinite` (the computed
+    floats are finite) together with `ProductsNormal` (each exact product is `0` or at least `DBL_MIN`), and the second half
+    follows from a magnitude floor on the operands (`productsNormal_detEML`, `productsNormal_pidRawEML`). A bound alone is
+    not enough, and that is proved: `bounded_inputs_can_have_subnormal_product`. Every lower bound on a nonzero float's real
+    value carries a factor `1 − u`, so on `u < 1` alone the determinant specimen could meet the floor only through the zero
+    branch; with `u + u ≤ 1`, `pipeline_det_grounded_nonzero_specimen` and every PID specimen meet it through the `DBL_MIN`
+    branch.
+  - **Not instantiated, and what each needs.** `pid_log_cosh_grounded` needs a positive lower bound on the read-back value
+    of the runtime `cosh`, and `real_cosh_rounds` gives only `cosh x − 4u·cosh R`, which `u + u ≤ 1` does not keep
+    positive: it needs a smaller bound on `u` or a measured lower bound on that value. The `LibmBudget` restatements
+    (`pid_sin_at_budget` and siblings) now have their `hsafe`, but `RuntimeLibmBudget B` needs `real_abs_eps = 0`, and no
+    axiom constrains `real_abs_eps`. `eml_var_var_certcom_witness_grounded` needs its explicit error, which contains
+    `u·exp (B + u·B)`, below `ε < 1`, which `u + u ≤ 1` cannot give; it needs a numeric bound on `u`. None of these facts
+    was approved, and no axiom for them has been added.
 
 ---
 

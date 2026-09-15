@@ -7,7 +7,7 @@ owed. It is kept because its value does not depend on a reader: **§5 is an hone
 where we think this is weakest.**
 
 If a reviewer does appear, this is the packet to hand them — one mechanism, not the corpus, not the
-compiler, self-contained enough that nobody need read 255 311 lines of Lean.
+compiler, self-contained enough that nobody need read 256 703 lines of Lean.
 
 **The question we would ask, stated so it can be answered "no":**
 
@@ -30,7 +30,7 @@ Answers that would be useful, including the dismissive ones:
 
 **MachLib** is a Lean 4 corpus that does not depend on Mathlib. `MachLib.Real` is an *axiomatised*
 ordered field with `exp`, `log`, `sin`, derivatives, and so on — declared, not constructed. The
-corpus is ≈ 7 763 theorems outside its generated sub-corpus.
+corpus is ≈ 7 850 theorems outside its generated sub-corpus.
 
 Why no Mathlib: the corpus ships proof certificates alongside generated engineering artifacts
 (C, Verilog, VHDL…), and we wanted the trusted base to be small, enumerable and auditable rather
@@ -45,11 +45,11 @@ The live figures, all of which this document's own build gate pins to the corpus
 
 | class | n | meaning |
 |---|---|---|
-| trusted footprint | 159 | axioms any shipped theorem is allowed to touch |
-| witnessed | 120 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| trusted footprint | 167 | axioms any shipped theorem is allowed to touch |
+| witnessed | 121 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
-| float-bridge | 24 | about IEEE-754 floats — **unwitnessable in principle**, see §5 |
+| float-bridge | 31 | about IEEE-754 floats — **unwitnessable in principle**, see §5 |
 | unmodeled | 0 | a gate fails if this is ever nonzero |
 
 ## 2. The mechanism
@@ -71,8 +71,8 @@ interpreted type raises `logError`.
 teeth-verified in the negative direction too: deliberately pairing `rolle_ct` with `Real.exp_pos`,
 or `add_comm` with `mul_comm`, is rejected.
 
-A cross-repo note, since you will hit it immediately: the registry holds **122** witnesses, the
-audit reports **120**. Both are right — two witnesses cover axioms that are no longer in the trusted
+A cross-repo note, since you will hit it immediately: the registry holds **123** witnesses, the
+audit reports **121**. Both are right — two witnesses cover axioms that are no longer in the trusted
 footprint. The audit says so explicitly rather than silently taking the larger number.
 
 ## 3. Prior art, as we understand it — please correct this
@@ -122,9 +122,9 @@ an outside reader agrees or thinks it argues for something else entirely (e.g. "
    `Nodup` list drawn from the set. Witnessing `analytic_finite_zeros_compact` therefore needs the
    analysis *and* a conversion. That conversion is proved; but it is an example of the interpreted
    statement and the original being related by more than renaming.
-3. **24 float-bridge axioms cannot be witnessed even in principle.** Most assert that a concrete
-   IEEE-754 `exp`/`atan`/`sqrt` rounds within ε of the real function, and two (added 2026-09-14) that a
-   float result is finite. Mathlib has no IEEE-754
+3. **31 float-bridge axioms cannot be witnessed even in principle.** Most assert that a concrete
+   IEEE-754 `exp`/`atan`/`sqrt` rounds within ε of the real function, six (added 2026-09-14) that a
+   float result is finite, and three (added the same day) what a `Float` literal is. Mathlib has no IEEE-754
    semantics, so these are validated by *measurement*, not by a model. We deliberately do not
    average them into the "witnessed" figure. Anyone shown a hardware certificate should be pointed
    at this row first.
@@ -144,8 +144,8 @@ $EDITOR monogate-lean/MonogateEML/AxiomWitnessBridge.lean
 
 # the classification, live, from machlib/foundations:
 python3 tools/soundness_witness_audit.py
-#   trusted footprint (live ledger) : 159
-#   witnessed against Mathlib       : 120
+#   trusted footprint (live ledger) : 167
+#   witnessed against Mathlib       : 121
 #   UNMODELED (no witness at all)   : 0
 ```
 

@@ -149,12 +149,22 @@ decides what a certificate can claim.
   hypotheses in their statements. `tools/float_bridge/registry.json` pins every number and keeps each old
   statement as a control that must still fail; the gate fails if a number moves or a row starts failing.
   Read that file, and the axiom's docstring, before relying on a certificate that cites one of them.
-* **Two rows conclude that a float is FINITE rather than how close it reads back** (added 2026-09-14, owner-approved):
+* **Six rows conclude that a float is FINITE rather than how close it reads back** (added 2026-09-14, owner-approved):
   `real_fpfinite` (round-to-nearest's overflow rule: finite operands and an exact result at most `DBL_MAX` in
-  magnitude give a finite `+`, `−` or `×`) and `real_round_finite` (`floatOfR x` is finite for `|x| ≤ DBL_MAX`). They
+  magnitude give a finite `+`, `−` or `×`), `real_round_finite` (`floatOfR x` is finite for `|x| ≤ DBL_MAX`), and
+  `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite` and `real_log_finite` (the runtime primitive of a finite
+  float is finite: `exp` at most `709`, `sinh` and `cosh` at most `710` in magnitude, `log` of a positive float). They
   are what lets a grounded certificate's float side conditions be discharged from a bound on its inputs
-  (`MachLib/FloatSafeInstances.lean`). The harness measured both before they were added, with controls that must fail
-  exactly at the overflow tie `DBL_MAX + 2^970`. `u_lt_one`, added the same day, is a witnessed row, not one of these.
+  (`MachLib/FloatSafeInstances.lean`, `GroundedPIDInstances.lean`, `GroundedEMLInstances.lean`). The harness measured
+  each before it was added, with controls that must fail: the first two exactly at the overflow tie `DBL_MAX + 2^970`,
+  the primitive rows with their range widened (`exp` to `710`, `sinh` and `cosh` to `711`) only beyond their own bound,
+  and `log` at `0 ≤ x` only at zero.
+* **Three rows say what a `Float` literal IS** (added 2026-09-14, owner-approved): `float_lit_1_5`, `float_lit_0_4` and
+  `float_lit_0_05`, the PID law's gains, each `floatOfR` of its own decimal. They are narrow on purpose. Lean's
+  `Float.ofScientific` truncates to 64 bits before it rounds once, so it is not correctly rounded in general; the harness
+  measures the generic statement, "every decimal literal is `floatOfR` of its decimal", as a control that must fail, and
+  checks each registered literal against Lean's own evaluation in literal syntax and inside `pidRawEML`.
+  `u_lt_one` and `u_le_half`, added the same day, are witnessed rows, not float-bridge ones.
 
 | axiom | class | statement | witness / reason |
 |---|---|---|---|"""]

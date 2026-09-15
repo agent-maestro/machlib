@@ -167,12 +167,12 @@ type. The honest headline is **zero unmodeled axioms**, never "zero axioms":
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 120 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 121 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier or function symbol, interpreted rather than asserted |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
-| float-bridge | 24 | IEEE-754 facts with no model in ℝ, validated by measurement |
+| float-bridge | 31 | IEEE-754 facts with no model in ℝ, validated by measurement |
 
-The 24 float-bridge axioms are a different kind of trust and are not averaged in; a hardware
+The 31 float-bridge axioms are a different kind of trust and are not averaged in; a hardware
 certificate rests on exactly those, and a reader of one should read that block of the manifest
 first. Gate 13 fails if the witness project stops running, because it did once, silently, for
 33 days.
@@ -200,17 +200,17 @@ gate: the Forge `@verify(lean)` corpus auto-closes **79.9 %** of its obligations
 ## Numbers, measured
 
 Every count below is the output of a command, not a memory, and `tools/prose_counts_check.py`
-fails if the text drifts from the corpus. Measured 2026-09-07:
+fails if the text drifts from the corpus. Measured 2026-09-14:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 763 | `python3 tools/count_theorems.py --scope core` |
+| theorems outside `Discovered/` | 7 850 | `python3 tools/count_theorems.py --scope core` |
 | theorems in the Forge `@verify` corpus | 720 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 113 | `find MachLib -name '*.lean' \| wc -l` |
-| axioms pinned by the ledger | 246 | `lake env lean AxiomLedger.lean` |
-| trusted axioms, all modeled | 159 | `AXIOM_MANIFEST.md` |
+| `.lean` files under `MachLib/` | 1 116 | `find MachLib -name '*.lean' \| wc -l` |
+| axioms pinned by the ledger | 254 | `lake env lean AxiomLedger.lean` |
+| trusted axioms, all modeled | 167 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 809 of 1 113 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 812 of 1 116 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

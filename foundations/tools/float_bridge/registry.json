@@ -10,6 +10,51 @@
       "reason": "rounds a real to a Float: a function symbol. real_round_bounds reads it as IEEE round-to-nearest-even, as its docstring says",
       "statement": ": Real → Float"
     },
+    "Certcom.float_lit_0_05": {
+      "kind": "literal",
+      "literal": "0.05",
+      "expect": "holds",
+      "statement": ": (0.05 : Float) = floatOfR 0.05",
+      "pinned": {
+        "inputs": 1,
+        "examined": 1,
+        "vacuous": 0,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "8.000000e-01",
+        "argmax": "3fa999999999999a 5e-2"
+      }
+    },
+    "Certcom.float_lit_0_4": {
+      "kind": "literal",
+      "literal": "0.4",
+      "expect": "holds",
+      "statement": ": (0.4 : Float) = floatOfR 0.4",
+      "pinned": {
+        "inputs": 1,
+        "examined": 1,
+        "vacuous": 0,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "8.000000e-01",
+        "argmax": "3fd999999999999a 4e-1"
+      }
+    },
+    "Certcom.float_lit_1_5": {
+      "kind": "literal",
+      "literal": "1.5",
+      "expect": "holds",
+      "statement": ": (1.5 : Float) = floatOfR 1.5",
+      "pinned": {
+        "inputs": 1,
+        "examined": 1,
+        "vacuous": 0,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "0.000000e+00",
+        "argmax": "3ff8000000000000 15e-1"
+      }
+    },
     "Certcom.realToR": {
       "kind": "declaration",
       "reason": "the real value a Float denotes: a function symbol, not a proposition. Every row here reads it as the exact value of a finite double; a non-finite float has none",
@@ -115,6 +160,24 @@
         "argmax": "c0465a3d70a3d61e"
       }
     },
+    "Certcom.real_cosh_finite": {
+      "kind": "prim-finite",
+      "function": "cosh",
+      "domain": "abs_le",
+      "bound": "710",
+      "expect": "holds",
+      "min_examined": 600000,
+      "statement": ": ∀ a : Float, a.isFinite = true → abs (realToR a) ≤ natCast 710 → (stdI1 leanPrims .cosh a).isFinite = true",
+      "pinned": {
+        "inputs": 779473,
+        "examined": 653480,
+        "vacuous": 125993,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "1.000000e+00",
+        "argmax": "4086300000000000"
+      }
+    },
     "Certcom.real_cosh_rounds": {
       "kind": "measured",
       "function": "cosh",
@@ -131,6 +194,24 @@
         "violations": 0,
         "max": "7.438538e-01",
         "argmax": "40862e467bd86765"
+      }
+    },
+    "Certcom.real_exp_finite": {
+      "kind": "prim-finite",
+      "function": "exp",
+      "domain": "le",
+      "bound": "709",
+      "expect": "holds",
+      "min_examined": 800000,
+      "statement": ": ∀ a : Float, a.isFinite = true → realToR a ≤ natCast 709 → (stdI1 leanPrims .exp a).isFinite = true",
+      "pinned": {
+        "inputs": 941513,
+        "examined": 901678,
+        "vacuous": 39835,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "1.000000e+00",
+        "argmax": "4086280000000000"
       }
     },
     "Certcom.real_exp_rounds": {
@@ -196,6 +277,23 @@
         "violations": 0,
         "max": "6.920265e-01",
         "argmax": "3ff00000935d90bc"
+      }
+    },
+    "Certcom.real_log_finite": {
+      "kind": "prim-finite",
+      "function": "ln",
+      "domain": "positive",
+      "expect": "holds",
+      "min_examined": 350000,
+      "statement": ": ∀ a : Float, a.isFinite = true → 0 < realToR a → (stdI1 leanPrims .ln a).isFinite = true",
+      "pinned": {
+        "inputs": 428492,
+        "examined": 378478,
+        "vacuous": 50014,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "1.000000e+00",
+        "argmax": "0000000000000001"
       }
     },
     "Certcom.real_log_rounds": {
@@ -264,6 +362,24 @@
         "violations": 0,
         "max": "5.582725e-17",
         "argmax": "c053dad0e5604189"
+      }
+    },
+    "Certcom.real_sinh_finite": {
+      "kind": "prim-finite",
+      "function": "sinh",
+      "domain": "abs_le",
+      "bound": "710",
+      "expect": "holds",
+      "min_examined": 600000,
+      "statement": ": ∀ a : Float, a.isFinite = true → abs (realToR a) ≤ natCast 710 → (stdI1 leanPrims .sinh a).isFinite = true",
+      "pinned": {
+        "inputs": 779473,
+        "examined": 653480,
+        "vacuous": 125993,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "1.000000e+00",
+        "argmax": "4086300000000000"
       }
     },
     "Certcom.real_sinh_rounds": {
@@ -427,6 +543,51 @@
       "kind": "round-finite-unconditional",
       "inputs_of": "Certcom.real_round_finite",
       "why": "real_round_finite with no range at all: a real far above DBL_MAX overflows"
+    },
+    "literal-every-decimal": {
+      "kind": "literal-generic",
+      "min_examined": 600000,
+      "why": "every decimal literal is floatOfR of its decimal, the generic statement the literal axioms deliberately do not make: Lean's Float.ofScientific truncates to 64 bits before rounding once, so a decimal within 2^-11 ulp above a binary64 midpoint rounds down to even"
+    },
+    "literal-0.05109": {
+      "kind": "literal",
+      "literal": "0.05109",
+      "why": "a four-digit decimal literal Lean evaluates to 0x3faa2877ee4e26d4 where round-to-nearest-even gives 0x3faa2877ee4e26d5: the literal check must see a one-ulp difference"
+    },
+    "exp-finite-at-710": {
+      "kind": "prim-finite",
+      "function": "exp",
+      "domain": "le",
+      "bound": "710",
+      "inputs_of": "Certcom.real_exp_finite",
+      "only_beyond_axiom_bound": true,
+      "why": "real_exp_finite with its bound widened to 710: glibc's exp overflows above 709.782712893384, so this must fail, and only above 709"
+    },
+    "sinh-finite-at-711": {
+      "kind": "prim-finite",
+      "function": "sinh",
+      "domain": "abs_le",
+      "bound": "711",
+      "inputs_of": "Certcom.real_sinh_finite",
+      "only_beyond_axiom_bound": true,
+      "why": "real_sinh_finite with its bound widened to 711: the runtime sinh overflows above 710.4758600739439 in magnitude, so this must fail, and only above 710"
+    },
+    "cosh-finite-at-711": {
+      "kind": "prim-finite",
+      "function": "cosh",
+      "domain": "abs_le",
+      "bound": "711",
+      "inputs_of": "Certcom.real_cosh_finite",
+      "only_beyond_axiom_bound": true,
+      "why": "real_cosh_finite with its bound widened to 711: the runtime cosh overflows above 710.4758600739439 in magnitude, so this must fail, and only above 710"
+    },
+    "log-finite-at-nonneg": {
+      "kind": "prim-finite",
+      "function": "ln",
+      "domain": "nonneg",
+      "inputs_of": "Certcom.real_log_finite",
+      "only_at_zero": true,
+      "why": "real_log_finite with 0 <= x in place of 0 < x: log of zero is -inf, so this must fail, and only at zero"
     }
   }
 }

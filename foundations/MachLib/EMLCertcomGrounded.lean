@@ -107,6 +107,34 @@ include the tie fails at exactly two reals, `±(DBL_MAX + 2^970)`, and no range 
 `tools/float_bridge/registry.json` pins these numbers. -/
 axiom real_round_finite : ∀ x : Real, abs x ≤ dblMax → (floatOfR x).isFinite = true
 
+/-- **The `Float` literal `1.5` is the correctly rounded double of the real `1.5`** (added 2026-09-14, owner-approved). The
+left side is the term `pidRawEML` carries for the proportional gain (`OfScientific.ofScientific 15 true 1` at `Float`), the
+right side `floatOfR` of the decimal `1.5` at `MachLib.Real`, so `real_round_bounds` and `real_round_finite` give the
+literal's real value and its finiteness. `1.5` is exactly representable, so its bits are `0x3FF8000000000000`.
+
+**Narrow on purpose.** Lean's own `Float.ofScientific` (v4.32.2, `Init/Data/OfScientific.lean`) truncates to 64 bits before
+rounding once, so it is NOT correctly rounded in general, and "every decimal literal is `floatOfR` of its decimal" is false.
+
+**Measured before it was added.** Lean evaluates `(1.5 : Float)`, `(0.4 : Float)` and `(0.05 : Float)` to
+`0x3FF8000000000000`, `0x3FD999999999999A` and `0x3FA999999999999A`, in literal syntax and inside `pidRawEML`, and those are
+the doubles round-to-nearest-even gives for `1.5`, `0.4` and `0.05` in exact rational arithmetic (`1.5` is exact; `0.4` and
+`0.05` lie `0.1` ulp from the nearest midpoint). The generic statement fails: `tools/float_bridge/measure.py` transcribes
+`Float.ofScientific`, checks the transcription bit for bit against Lean's own evaluation on 2 000 sampled decimals (1 000 of
+them misrounded), and finds that it misrounds 81 210 of 631 326 decimals, among them the four-digit `0.05109`
+(`0x3FAA2877EE4E26D4`, where correct rounding gives `0x3FAA2877EE4E26D5`). `tools/float_bridge/registry.json` pins the three
+literals and keeps the generic statement and `0.05109` as controls that must fail. -/
+axiom float_lit_1_5 : (1.5 : Float) = floatOfR 1.5
+
+/-- **The `Float` literal `0.4` is the correctly rounded double of the real `0.4`** (added 2026-09-14, owner-approved). The
+integral gain of `pidRawEML`. `0.4` is not representable; its correctly rounded double is `0x3FD999999999999A`, which is
+what Lean's literal evaluates to. Narrow on purpose, as `float_lit_1_5` says. -/
+axiom float_lit_0_4 : (0.4 : Float) = floatOfR 0.4
+
+/-- **The `Float` literal `0.05` is the correctly rounded double of the real `0.05`** (added 2026-09-14, owner-approved).
+The derivative gain of `pidRawEML`. Its correctly rounded double is `0x3FA999999999999A`, which is what Lean's literal
+evaluates to. Narrow on purpose, as `float_lit_1_5` says. -/
+axiom float_lit_0_05 : (0.05 : Float) = floatOfR 0.05
+
 /-- **Part 1, grounded.** `eml_var_var_pipeline_uniform`, with the abstract `u`-relative `hround_exp`/
 `hround_ln` hypotheses replaced by the REAL, already-disclosed `real_exp_rounds`/`real_log_rounds`
 axioms against the concrete `leanPrims` runtime basis — no `∀`-primitive rounding hypothesis.

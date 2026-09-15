@@ -45,7 +45,11 @@ theorem that rests on one carries the difference in its statement:
 Lean itself proves none of these for a concrete input, because `Float` is opaque. They are conditions a caller checks at
 run time or guarantees by bounding its inputs, like the range hypotheses these theorems already took. Since 2026-09-14
 two disclosed axioms turn such a bound into the finiteness conditions of `+`, `−`, `×`, negation and `floatOfR`:
-`real_fpfinite` below and `real_round_finite` (`EMLCertcomGrounded.lean`). `FloatSafeInstances.lean` uses them.
+`real_fpfinite` below and `real_round_finite` (`EMLCertcomGrounded.lean`). `FloatSafeInstances.lean` uses them. Later the
+same day four more turn a bound on an argument into a finite `exp`, `sinh`, `cosh` or `log` result (`real_exp_finite` and
+its siblings, below), and three say what the PID gains' `Float` literals are (`float_lit_1_5` and its siblings,
+`EMLCertcomGrounded.lean`). With `u_le_half` they let `GroundedPIDInstances.lean` and `GroundedEMLInstances.lean`
+instantiate most of the certificates below; those modules' docstrings name the ones that are still not instantiated.
 -/
 
 namespace Certcom
@@ -90,6 +94,59 @@ the tie fails at 6 046 operations, every one exactly at the tie, and the rule wi
 the floats and of their finiteness is checked bit for bit against Lean's own `#eval`, the tie included.
 `tools/float_bridge/registry.json` pins these numbers. -/
 axiom real_fpfinite : FPFiniteOfRange realToR
+
+/-- **The runtime `exp` of a finite float at most `709` is finite** (added 2026-09-14, owner-approved). `stdI1 leanPrims
+.exp` is glibc's `exp`, whose result overflows only for inputs above `709.782712893384`, the largest double whose `exp` is
+finite; `709` sits `0.78` inside that. Below, `exp` of a very negative input underflows to a subnormal or to `0`, which is
+finite. Un-witnessable in Lean (`Float` is opaque). It is what lets a certificate's `hexp` hypothesis be discharged from a
+bound on the argument.
+
+**Measured before it was added.** `tools/float_bridge/measure.py` computes `leanPrims`'s `exp` as the runtime does (glibc
+2.39 on aarch64, through ctypes, checked against Lean's own `#eval`, `Float.isFinite` included) over 941 513 doubles: dense
+steps on `[−750, 710]`, results just above every power of two, the whole subnormal range, and 5 000 consecutive doubles on
+each side of `709`, of `709.782712893384` and of `710`. No non-finite result at the 901 678 its hypotheses admit (39 835
+excluded), the largest being `709` itself. The control with the bound widened to `710` fails at 11 037 inputs, every one at
+or above `709.7827128933841`, so the bound sits `0.7827` inside the measured boundary. `tools/float_bridge/registry.json`
+pins these numbers. -/
+axiom real_exp_finite : ∀ a : Float, a.isFinite = true → realToR a ≤ natCast 709 →
+    (stdI1 leanPrims .exp a).isFinite = true
+
+/-- **The runtime `sinh` of a finite float at most `710` in magnitude is finite** (added 2026-09-14, owner-approved).
+`stdI1 leanPrims .sinh` is the runtime's composite (`x` itself below `MG_SINH_X_MAX`, `(eᵃ − e⁻ᵃ)·½` for `a = |x| ≤ 709.78`,
+`(½·w)·w` with `w = exp(a/2)` above, then `x`'s sign). Its result overflows only for `|x|` above `710.4758600739439`, the
+largest double whose `sinh` is finite; `710` sits `0.47` inside that. Un-witnessable in Lean (`Float` is opaque).
+
+**Measured before it was added.** `tools/float_bridge/measure.py` computes the composite as `leanPrims` does, over 779 473
+doubles: dense steps on `[−712, 712]`, the large branch densely, results just above every power of two, and 3 000
+consecutive doubles on each side of `±710`, `±710.4758600739439` and `±711`. No non-finite result at the 653 480 its
+hypotheses admit (125 993 excluded), the largest being `710` itself. The control with the bound widened to `711` fails at
+12 172 inputs, every one at `|x| ≥ 710.475860073944`, so the bound sits `0.4758` inside the measured boundary.
+`tools/float_bridge/registry.json` pins these numbers. -/
+axiom real_sinh_finite : ∀ a : Float, a.isFinite = true → abs (realToR a) ≤ natCast 710 →
+    (stdI1 leanPrims .sinh a).isFinite = true
+
+/-- **The runtime `cosh` of a finite float at most `710` in magnitude is finite** (added 2026-09-14, owner-approved).
+`stdI1 leanPrims .cosh` is `(eᵃ + e⁻ᵃ)·½` for `a = |x| ≤ 709.78` and `(½·w)·w` with `w = exp(a/2)` above. Its result
+overflows only for `|x|` above `710.4758600739439`, as `sinh`'s does; `710` sits `0.47` inside that. Un-witnessable in Lean
+(`Float` is opaque).
+
+**Measured before it was added**, over the same 779 473 doubles as `real_sinh_finite`: no non-finite result at the
+653 480 its hypotheses admit (125 993 excluded), the largest being `710` itself; the control widened to `711` fails at 12 172
+inputs, every one at `|x| ≥ 710.475860073944`. `tools/float_bridge/registry.json` pins these numbers. -/
+axiom real_cosh_finite : ∀ a : Float, a.isFinite = true → abs (realToR a) ≤ natCast 710 →
+    (stdI1 leanPrims .cosh a).isFinite = true
+
+/-- **The runtime `log` of a finite positive float is finite** (added 2026-09-14, owner-approved). `stdI1 leanPrims .ln`
+is glibc's `log`. For a positive finite double its result lies between `log (2⁻¹⁰⁷⁴) ≈ −744.44` and
+`log DBL_MAX ≈ 709.78`; at `0` it is `−∞` and below `0` it is NaN, which is why the hypothesis is strict. Un-witnessable in
+Lean (`Float` is opaque).
+
+**Measured before it was added.** `tools/float_bridge/measure.py` over 428 492 doubles: log-spaced over the whole
+positive range, the denormals, powers of ten and of two, random positive bit patterns, and negatives and zeros. No non-finite
+result at the 378 478 its hypotheses admit (50 014 excluded), the smallest being `5e-324`. The control with `0 ≤ realToR a`
+in place of `0 < realToR a` fails at 4 inputs, every one a zero. `tools/float_bridge/registry.json` pins these numbers. -/
+axiom real_log_finite : ∀ a : Float, a.isFinite = true → 0 < realToR a →
+    (stdI1 leanPrims .ln a).isFinite = true
 
 /-- **Keystone — a forward-error certificate on real `Float` bytes.**
 

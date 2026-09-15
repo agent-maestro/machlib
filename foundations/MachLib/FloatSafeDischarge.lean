@@ -10,7 +10,7 @@ hypotheses on single floats besides. A conditional theorem is not evidence until
 This module instantiates what the disclosed axioms allow, shows why nothing else can be instantiated from ANY
 assumption about the inputs, and names the missing fact.
 
-## Only the range axioms conclude that a float is finite
+## What concludes that a float is finite
 
 This module was written when nothing in the environment concluded that a float is finite. Every disclosed axiom that
 mentions `Float.isFinite` had it as a PREMISE, the only theorems with it in a conclusion were projections out of a
@@ -21,9 +21,10 @@ for any input, however it was bounded, and only the constant leaf below was inst
 
 On 2026-09-14 the owner approved two axioms that do conclude finiteness, `real_fpfinite` (`FPGrounding.lean`) and
 `real_round_finite` (`EMLCertcomGrounded.lean`), together with `u_lt_one` (`FPModel.lean`). `FloatSafeInstances.lean` uses
-them to instantiate `pipeline_det_grounded` and `pipeline_arith_grounded` on explicit domains, with specimens. Nothing
-else concludes that a float is finite: `no-other-float-finiteness-producer` in `tools/absence_claims.json` scans the
-environment and fires when any axiom or theorem does so without resting on one of those two.
+them to instantiate `pipeline_det_grounded` and `pipeline_arith_grounded` on explicit domains, with specimens. Four more
+axioms, approved later that day, conclude a runtime `exp`, `sinh`, `cosh` or `log` result finite from a finite input
+(`real_exp_finite` and its siblings). `no-other-float-finiteness-producer` in `tools/absence_claims.json` scans the
+environment and fires when a finiteness fact arrives that none of those six supplies.
 
 ## `FloatSafe` is two conditions of different kinds
 
@@ -37,8 +38,8 @@ The second half discharges from a real domain (`mul_normal_of_floors`, `products
 `bounded_inputs_can_have_subnormal_product` exhibits two nonzero reals of magnitude at most `1` (both `DBL_MIN`)
 whose product violates it. For a product of two inputs, each `0` or at least `α` in magnitude, `DBL_MIN ≤ α·α` is
 enough; `α = 2⁻⁵¹¹` makes it an equality. For the `gain × input` products of `pidRawEML` the floor is on `κ·δ`,
-where `κ` bounds the gains' real values `realToR 1.5`, `realToR 0.4` and `realToR 0.05` from below, and no axiom says
-anything about the real value of a `Float` literal.
+where `κ` bounds the gains' real values `realToR 1.5`, `realToR 0.4` and `realToR 0.05` from below, and until the literal
+axioms of 2026-09-14 (`float_lit_1_5` and its siblings) no axiom said anything about the real value of a `Float` literal.
 
 `pipeline_det_grounded_of_floor` composes both halves with `pipeline_det_grounded`: given the floor on its four
 inputs, that certificate needs only `FloatFinite` of its three computed floats. It is a REDUCTION, not an instance, on
@@ -54,13 +55,14 @@ leaf's float side conditions are conditions on the real `c` alone, so they disch
 exact) take both branches of `c = 0 ∨ DBL_MIN ≤ |c|`. It is depth 0: it rests on `real_round_bounds`, and it certifies
 no arithmetic node and no primitive. Until 2026-09-14 it was all that the axioms instantiated.
 
-## What the range axioms changed, and what they did not
+## What the range axioms changed, and what came after
 
-The overflow rule over `realToR`, a finite `floatOfR x` for `|x| ≤ DBL_MAX`, and `u < 1` are now disclosed axioms, and
-the instances they allow are in `FloatSafeInstances.lean`. The PID kernels still need the finiteness and real values of
-their literal gains, and `exp`, `sinh` and `cosh` a finite result from a bounded argument; those were not approved and are
-not added. `u < 1` makes a float read back from a nonzero real provably nonzero, but it gives no lower bound on `1 − u`, so
-no specimen reaches the `DBL_MIN ≤ |X·Y|` branch of a product; `FloatSafeInstances.lean` says why.
+The overflow rule over `realToR`, a finite `floatOfR x` for `|x| ≤ DBL_MAX`, and `u < 1` are disclosed axioms, and the
+instances they allow are in `FloatSafeInstances.lean`. They did not give the PID kernels the finiteness and real values of
+their literal gains, nor `exp`, `sinh` and `cosh` a finite result from a bounded argument, nor any lower bound on `1 − u`.
+Later on 2026-09-14 the owner approved exactly those facts (`float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`,
+`real_exp_finite`, `real_sinh_finite`, `real_cosh_finite`, `real_log_finite`, `u_le_half`), each measured or witnessed
+first, and `GroundedPIDInstances.lean` and `GroundedEMLInstances.lean` instantiate what they allow.
 -/
 
 namespace Certcom
@@ -235,7 +237,8 @@ theorem productsNormal_detEML {toR : Float → MachLib.Real} {i1 : Trans1 → Fl
 
 /-- `ProductsNormal` for the PID law `1.5·e + 0.4·i + 0.05·d`, from a floor `δ` on the three inputs and a floor `κ`
 on the three gains' real values, with `DBL_MIN ≤ κ·δ`. The gain hypotheses are about `toR` at `Float` literals; at
-`realToR` no axiom constrains those values, so this lemma does not discharge `pidRawEML`'s real half on its own. -/
+`realToR` the literal axioms of 2026-09-14 supply them (`gain_1_5_facts` and its siblings, `GroundedInstanceArith.lean`), and
+`GroundedPIDInstances.lean` discharges `pidRawEML`'s real half that way. -/
 theorem productsNormal_pidRawEML {toR : Float → MachLib.Real} {i1 : Trans1 → Float → Float}
     {i2 : Trans2 → Float → Float → Float} (env : Env) {κ δ : MachLib.Real}
     (hκ : 0 ≤ κ) (hδ : 0 ≤ δ) (hκδ : dblMin ≤ κ * δ)

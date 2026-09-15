@@ -9,20 +9,20 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-159 of them and they are all listed below.
+167 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 120 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 121 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
-| float-bridge | 24 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
+| float-bridge | 31 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
 | GAP | 0 | witnessable, not yet witnessed — reason given per row |
 | **UNACCOUNTED** | 0 | must be 0; gate 13 fails otherwise |
 
 **The float-bridge rows are a different kind of trust and are deliberately not averaged in.**
 No Mathlib witness can discharge "the machine `atan` rounds to within ε of `Real.arctan`" —
-Mathlib has no IEEE-754 semantics. Those 24 axioms are what a hardware
+Mathlib has no IEEE-754 semantics. Those 31 axioms are what a hardware
 certificate actually rests on, so anyone reading an atan/tan bench certificate should read that
 block first.
 
@@ -62,16 +62,29 @@ decides what a certificate can claim.
   hypotheses in their statements. `tools/float_bridge/registry.json` pins every number and keeps each old
   statement as a control that must still fail; the gate fails if a number moves or a row starts failing.
   Read that file, and the axiom's docstring, before relying on a certificate that cites one of them.
-* **Two rows conclude that a float is FINITE rather than how close it reads back** (added 2026-09-14, owner-approved):
+* **Six rows conclude that a float is FINITE rather than how close it reads back** (added 2026-09-14, owner-approved):
   `real_fpfinite` (round-to-nearest's overflow rule: finite operands and an exact result at most `DBL_MAX` in
-  magnitude give a finite `+`, `−` or `×`) and `real_round_finite` (`floatOfR x` is finite for `|x| ≤ DBL_MAX`). They
+  magnitude give a finite `+`, `−` or `×`), `real_round_finite` (`floatOfR x` is finite for `|x| ≤ DBL_MAX`), and
+  `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite` and `real_log_finite` (the runtime primitive of a finite
+  float is finite: `exp` at most `709`, `sinh` and `cosh` at most `710` in magnitude, `log` of a positive float). They
   are what lets a grounded certificate's float side conditions be discharged from a bound on its inputs
-  (`MachLib/FloatSafeInstances.lean`). The harness measured both before they were added, with controls that must fail
-  exactly at the overflow tie `DBL_MAX + 2^970`. `u_lt_one`, added the same day, is a witnessed row, not one of these.
+  (`MachLib/FloatSafeInstances.lean`, `GroundedPIDInstances.lean`, `GroundedEMLInstances.lean`). The harness measured
+  each before it was added, with controls that must fail: the first two exactly at the overflow tie `DBL_MAX + 2^970`,
+  the primitive rows with their range widened (`exp` to `710`, `sinh` and `cosh` to `711`) only beyond their own bound,
+  and `log` at `0 ≤ x` only at zero.
+* **Three rows say what a `Float` literal IS** (added 2026-09-14, owner-approved): `float_lit_1_5`, `float_lit_0_4` and
+  `float_lit_0_05`, the PID law's gains, each `floatOfR` of its own decimal. They are narrow on purpose. Lean's
+  `Float.ofScientific` truncates to 64 bits before it rounds once, so it is not correctly rounded in general; the harness
+  measures the generic statement, "every decimal literal is `floatOfR` of its decimal", as a control that must fail, and
+  checks each registered literal against Lean's own evaluation in literal syntax and inside `pidRawEML`.
+  `u_lt_one` and `u_le_half`, added the same day, are witnessed rows, not float-bridge ones.
 
 | axiom | class | statement | witness / reason |
 |---|---|---|---|
 | `Certcom.floatOfR` | float-bridge | `: Real → Float` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.float_lit_0_05` | float-bridge | `: (0.05 : Float) = floatOfR 0.05` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.float_lit_0_4` | float-bridge | `: (0.4 : Float) = floatOfR 0.4` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.float_lit_1_5` | float-bridge | `: (1.5 : Float) = floatOfR 1.5` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.realToR` | float-bridge | `: Float → MachLib.Real` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_abs_eps` | float-bridge | `: MachLib.Real` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_abs_rounds` | float-bridge | `: ∀ a : Float, abs (realToR (stdI1 leanPrims .abs a) - abs (realToR a)) ≤ real_abs_eps` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
@@ -81,16 +94,20 @@ decides what a certificate can claim.
 | `Certcom.real_atan_rounds` | float-bridge | `: ∀ a : Float, abs (realToR (stdI1 leanPrims .atan a) - atan (realToR a)) ≤ real_atan_eps` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_cos_eps` | float-bridge | `: MachLib.Real` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_cos_rounds` | float-bridge | `: ∀ a : Float, abs (realToR (stdI1 leanPrims .cos a) - cos (realToR a)) ≤ real_cos_eps` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_cosh_finite` | float-bridge | `: ∀ a : Float, a.isFinite = true → abs (realToR a) ≤ natCast 710 → (stdI1 leanPrims .cosh a).isFinite = true` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_cosh_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .cosh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .cosh a) - cosh (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_exp_finite` | float-bridge | `: ∀ a : Float, a.isFinite = true → realToR a ≤ natCast 709 → (stdI1 leanPrims .exp a).isFinite = true` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_exp_rounds` | float-bridge | `: ∀ (hi : MachLib.Real) (a : Float), a.isFinite = true → (stdI1 leanPrims .exp a).isFinite = true → dblMin ≤ exp (realToR a) → realToR a ≤ hi → abs (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_fpbridge` | float-bridge | `: FPBridgeFinite realToR` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_fpfinite` | float-bridge | `: FPFiniteOfRange realToR` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_log10_rounds` | float-bridge | `: ∀ (lo hi : MachLib.Real) (a : Float), a.isFinite = true → 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .log10 a) - log10` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_log_finite` | float-bridge | `: ∀ a : Float, a.isFinite = true → 0 < realToR a → (stdI1 leanPrims .ln a).isFinite = true` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_log_rounds` | float-bridge | `: ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ u * (abs ` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_round_bounds` | float-bridge | `: ∀ M x : Real, 0 ≤ M → M ≤ dblMax → abs x ≤ M → (x = 0 ∨ dblMin ≤ abs x) → abs (realToR (floatOfR x) - x) ≤ u * M` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_round_finite` | float-bridge | `: ∀ x : Real, abs x ≤ dblMax → (floatOfR x).isFinite = true` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sin_eps` | float-bridge | `: MachLib.Real` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sin_rounds` | float-bridge | `: ∀ a : Float, abs (realToR (stdI1 leanPrims .sin a) - sin (realToR a)) ≤ real_sin_eps` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
+| `Certcom.real_sinh_finite` | float-bridge | `: ∀ a : Float, a.isFinite = true → abs (realToR a) ≤ natCast 710 → (stdI1 leanPrims .sinh a).isFinite = true` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sinh_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), (stdI1 leanPrims .sinh a).isFinite = true → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .sinh a) - sinh (r` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_sqrt_rounds` | float-bridge | `: ∀ (hi : MachLib.Real) (a : Float), 0 ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .sqrt a) - sqrt (realToR a)) ≤ u * sqrt hi` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
 | `Certcom.real_tan_rounds` | float-bridge | `: ∀ (R : MachLib.Real) (a : Float), a.isFinite = true → 0 ≤ R → R < pi / (1 + 1) → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .tan a) - tan (` | claim about IEEE float, NOT modelable in ℝ — validated by measurement |
@@ -212,6 +229,7 @@ decides what a certificate can claim.
 | `MachLib.Real.tanh_eq_sinh_div_cosh` | witnessed | `(x : Real) : tanh x = sinh x / cosh x` | fun x => Real.tanh_eq_sinh_div_cosh x |
 | `MachLib.Real.tanh_lt_one` | witnessed | `(x : Real) : tanh x < 1` | fun x => by rw [Real.tanh_eq_sinh_div_cosh x, div_lt_one (Real.cosh_pos x)]; exact Real.sinh_lt_cosh x |
 | `MachLib.Real.u` | witnessed | `: Real` | ((1 : ℝ) / 2 ^ 53) |
+| `MachLib.Real.u_le_half` | witnessed | `: u + u ≤ 1` | (by norm_num : (1 : ℝ) / 2 ^ 53 + 1 / 2 ^ 53 ≤ 1) |
 | `MachLib.Real.u_lt_one` | witnessed | `: u < 1` | (by norm_num : (1 : ℝ) / 2 ^ 53 < 1) |
 | `MachLib.Real.u_nonneg` | witnessed | `: (0 : Real) ≤ u` | le_of_lt (by norm_num : (0 : ℝ) < 1 / 2 ^ 53) |
 | `MachLib.Real.zeroR` | witnessed | `: Real` | (0 : ℝ) |

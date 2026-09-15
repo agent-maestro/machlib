@@ -34,22 +34,21 @@ the owner that day and measured before they were added, change that:
 zero branch. The `DBL_MIN` branch needs a lower bound on a nonzero float's real value, and every lower bound available
 carries a factor `1 − u`: `real_round_bounds` puts `realToR (floatOfR x)` no closer to `0` than `(1 − u)·|x|`, and each
 rounding through `real_fpbridge` costs another factor `1 − u`. `u < 1` makes `1 − u` positive and says nothing about how
-small it is, so no product of two such values is provably at least `DBL_MIN`, however the inputs are chosen within
-`DBL_MAX`. A quantitative bound such as `u ≤ 1/2`, which `2⁻⁵³` meets, would give it; none was approved or added. The sum
-specimen can be nonzero because a sum carries no `DBL_MIN` condition.
+small it is, so no product of two such values is provably at least `DBL_MIN` from it. The sum specimen can be nonzero
+because a sum carries no `DBL_MIN` condition. Later on 2026-09-14 the owner approved `u_le_half` (`u + u ≤ 1`, so
+`1 − u ≥ 1/2`), and `pipeline_det_grounded_nonzero_specimen` (`GroundedPIDInstances.lean`) reaches the `DBL_MIN` branch.
 
-## What is still not instantiated, and the fact each needs
+## What was not instantiated here, and where it is now
 
-  * `pid_grounded`, every `pid_<prim>_grounded`, and the `LibmBudget` restatements (`pid_sin_at_budget` and siblings):
-    the PID law multiplies the literal gains `1.5`, `0.4` and `0.05`, and `real_fpfinite.mul` needs each literal to be a
-    finite float. No axiom says anything about a `Float` literal, neither that it is finite nor its real value (which the
-    `DBL_MIN` branch needs as well). `pid_exp_grounded`, `pid_sinh_grounded`, `pid_cosh_grounded` and
-    `pid_log_cosh_grounded` also need a finite `exp`, `sinh` or `cosh` result, and the `LibmBudget` forms need the budget
-    `RuntimeLibmBudget B`, which is empirical.
-  * `eml_tree_grounded` at an `eml` node, and the `eml_var_var` family (`eml_var_var_pipeline_uniform_grounded`,
-    `eml_var_var_quantized_pointwise_grounded`, `eml_var_var_certcom_witness_grounded`): they need the float results of
-    `exp` and `log` to be finite. `real_round_finite` gives a finite `floatOfR x`, and `real_fpfinite` would give the
-    finiteness of `exp(…) − log(…)` once both results are known finite; nothing gives those two.
+  * `pid_grounded`, every `pid_<prim>_grounded`, and the `LibmBudget` restatements multiply the literal gains `1.5`, `0.4`
+    and `0.05`, and when this module was written no axiom said that a `Float` literal is finite or what its real value is;
+    `pid_exp_grounded`, `pid_sinh_grounded`, `pid_cosh_grounded` and `pid_log_cosh_grounded` also needed a finite `exp`,
+    `sinh` or `cosh` result. `GroundedPIDInstances.lean` instantiates `pid_grounded` and fourteen of the primitive forms on
+    the literal and libm-finiteness axioms approved later that day, and says what `pid_log_cosh_grounded` and the
+    `LibmBudget` forms still lack.
+  * `eml_tree_grounded` at an `eml` node, and the `eml_var_var` family, needed finite `exp` and `log` results.
+    `GroundedEMLInstances.lean` instantiates `eml_tree_grounded` at three `eml` trees and two of the three `eml_var_var`
+    forms, and says what `eml_var_var_certcom_witness_grounded` still lacks.
 -/
 
 namespace Certcom

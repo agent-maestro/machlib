@@ -666,6 +666,9 @@ import MachLib.EMLCertcomGrounded
 import MachLib.EMLTreeGroundedPipeline
 import MachLib.FloatSafeDischarge
 import MachLib.FloatSafeInstances
+import MachLib.GroundedInstanceArith
+import MachLib.GroundedPIDInstances
+import MachLib.GroundedEMLInstances
 import MachLib.ExtremeValueAttainment
 import MachLib.GeneralPeriodicTargetBarrier
 import MachLib.EMLTowerSubsumesIterExp
