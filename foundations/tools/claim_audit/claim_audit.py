@@ -272,9 +272,22 @@ def hypotheses_of(stmt: str) -> list:
     return hyps
 
 
+#: A Lean or lake DIAGNOSTIC (`file:line:col: error`, with or without an error code, or a line starting `error`), not the
+#: word "error" inside a printed type.
+_LEAN_ERROR = re.compile(r"(?m)(:\d+:\d+: error\b|^error\b)")
+
+
 def statement_resolved(text: str) -> bool:
-    """Did `#check` actually print a type (vs. an error)?"""
-    return " : " in text and "error" not in text.lower()
+    """Did `#check` actually print a type (vs. an error)?
+
+    Until 2026-09-14 this asked whether the substring "error" occurred anywhere in the output, lowercased. A statement
+    that MENTIONS an error is not one: every theorem whose type names `emlTreeErrorBound` read as a build failure, so the
+    six grounded eml-tree claims could not be registered with a `hypotheses_count` (the strength check would have
+    reported "could not resolve the STATEMENT"). A false negative in the unsafe direction: the check the claims needed was
+    the one it made impossible to register. It now matches a diagnostic, not a substring; canary 18 checks both
+    directions, on synthetic text and on a live `#check`.
+    """
+    return " : " in text and _LEAN_ERROR.search(text) is None
 
 
 def resolved(text: str) -> bool:
@@ -1125,6 +1138,26 @@ def self_test() -> int:
     print(f"{GREEN}[self-test] canary 17 fires: {thm}'s footprint {sorted(fnames)} passes as listed, and "
           f"the old two-axiom row, a list with an extra axiom and an unreadable footprint are each "
           f"REJECTED. \u2713{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 18: a statement that MENTIONS an error is not an error, both ways …{RST}")
+    # Added 2026-09-14. `statement_resolved` matched the substring "error", so every statement naming
+    # `emlTreeErrorBound` read as a build failure and six claims could not carry `hypotheses_count`.
+    mentions = "Certcom.x : ∀ (env : Env), abs (a - b) ≤ emlTreeErrorBound t x"
+    diag = "tmp.lean:2:7: error(lean.unknownIdentifier): Unknown constant `Certcom.nope`"
+    live_ok = statement_of("MachLib.GroundedEMLInstances", "Certcom.eml_tree_grounded_eml_var_var_specimen")
+    live_bad = statement_of("MachLib.GroundedEMLInstances", "Certcom._claim_audit_no_such_theorem")
+    verdicts18 = {
+        "a type naming emlTreeErrorBound resolves": statement_resolved(mentions),
+        "a diagnostic beside it does not": not statement_resolved(diag + "\n" + mentions),
+        "a lake error line does not": not statement_resolved("error: build failed\n" + mentions),
+        "the live eml-tree specimen resolves": statement_resolved(live_ok) and "emlTreeErrorBound" in live_ok,
+        "a live #check of a missing theorem does not": not statement_resolved(live_bad),
+    }
+    if not all(verdicts18.values()):
+        print(f"{RED}[self-test] FAILED: statement_resolved does not discriminate: "
+              f"{[k for k, v in verdicts18.items() if not v]}{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 18 fires both ways: {'; '.join(verdicts18)}. ✓{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"

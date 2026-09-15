@@ -7,56 +7,58 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 116 `.lean` files** (802 top-level + 314 in subdirectories) /
-**256 703 lines** / **7 850 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 080 `.lean` files** (805 top-level + 275 in subdirectories) /
+**255 029 lines** / **7 870 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 850
-python3 tools/count_theorems.py --scope all           # 8 570
+python3 tools/count_theorems.py --scope core          # 7 870
+python3 tools/count_theorems.py --scope all           # 8 494
 ```
 
-The two differ by **720**, which is `Discovered/`, and that 720 is the cross-derivation that says the
-method is right — the same figure was recorded independently when this was last measured.
+The two differ by **624**, which is `Discovered/`. **Every file and theorem count here is over git-TRACKED files**
+(since 2026-09-14): `MachLib/Discovered/.gitignore` ignores whatever the auto-prover emits until someone adds it by hand,
+and 39 such local-only files had this machine print 1 116 files and 720 Discovered theorems while CI printed 1 077. The
+scripts now read `git ls-files`; the gates still examine every file on disk.
 
 **Two revisions of this file have carried a theorem count nobody can reproduce**: `5 851` by an
 unrecorded method, then `8 231`, which exceeds the largest number the corpus can produce by any
 file set (`8 097` as measured when it was caught, every `.lean` outside `.lake`). It is almost certainly the
 **unquoted-glob inflation** below. Do not restate a count without re-running the command above.
 
-**`MachLib/Discovered/` (292 files) is deliberately outside the aggregator**: each file is
+**`MachLib/Discovered/` (253 tracked files) is deliberately outside the aggregator**: each file is
 self-contained and they cannot be imported together; it is the Forge `@verify(lean)` corpus and has
 its own harness, `scripts/closerate.sh`. The numeric
-substrate is **`MachLib.Real`**, an *axiomatised* real field (274 `axiom` declarations, every one
-disclosed in **`foundations/axiom_ledger.json`**): there is no Mathlib, no `Complex`, and
+substrate is **`MachLib.Real`**, an *axiomatised* real field (its axioms are counted and disclosed by the ledger below and in
+**`foundations/AXIOM_MANIFEST.md`**, not by `foundations/axiom_ledger.json`, an older generated snapshot): there is no Mathlib, no `Complex`, and
 `Real.log` is **totalised** — `log y = 0` for `y ≤ 0`, which is load-bearing in EML proofs and a
 frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`** replace `ring`/
 `linarith`.
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **254 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **256 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
-223  MachLib.*   axioms in the environment after `import MachLib`
- 31  Certcom.*   IEEE-754 floor axioms
+224  MachLib.*   axioms in the environment after `import MachLib`
+ 32  Certcom.*   IEEE-754 floor axioms
 ---
-254  = what the ledger pins
+256  = what the ledger pins
 ```
 
 (Re-derive the split with a `#eval` over `getEnv` partitioning `.axiomInfo` by name prefix — that is
-how these two were measured, not by grep; last on 2026-09-14, after the literal, libm-finiteness and `u_le_half`
-axioms were added.)
+how these two were measured, not by grep; last on 2026-09-14, after `u_le_inv_two_pow_52` and `real_abs_eps_eq_zero`
+were added.)
 
 A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
 base, not project axioms: `propext`, `Classical.choice`, `Quot.sound`, `sorryAx`, `Quot.lcInv`,
 `Lean.{ofReduceBool,ofReduceNat,trustCompiler}`, `isScalarObj`, and the `lc*` compiler internals.
 
-**Why grep disagrees:** `grep -c '^ *axiom '` over `MachLib/*.lean` returns **278** (511 including
+**Why grep disagrees:** `grep -c '^ *axiom '` over `MachLib/*.lean` returns **292** (525 including
 subdirectories, which the environment mostly does not see). When this was last decomposed by hand the
 gap was docstring prose plus axioms in unreachable modules; those two sub-counts are **not**
 re-derived here and should not be quoted as current. Use the environment (`getEnv`, `.axiomInfo`), never grep —
@@ -79,54 +81,66 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 
 | class | n | |
 |---|---|---|
-| witnessed | 121 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 122 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
-| **float-bridge** | **31** | about IEEE floats — **no Mathlib witness can ever discharge these** |
+| **float-bridge** | **32** | about IEEE floats — **no Mathlib witness can ever discharge these** |
 | tracked gap | **0** | closed 2026-09-02; every witnessable axiom is witnessed |
 | unmodeled | **0** | gate 13 fails if this is ever nonzero |
 
 **Every mathematical axiom in the trusted footprint now has a kernel-checked Mathlib witness.**
-`121 + 12 + 3 + 31 = 167`. The only axioms without one are the 31 float-bridge rows, which are
+`122 + 12 + 3 + 32 = 169`. The only axioms without one are the 32 float-bridge rows, which are
 unwitnessable *in principle* rather than pending — see below.
 
-**The 31 float-bridge axioms are a different kind of trust and must not be averaged in.** Most
+**The 32 float-bridge axioms are a different kind of trust and must not be averaged in.** Most
 assert a concrete float `exp`/`atan`/`sqrt` rounds to within `ε` of the real function, six (`real_fpfinite`,
 `real_round_finite`, `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite`, `real_log_finite`, all 2026-09-14) that a
-float result is finite, and three (`float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`) what a PID gain's `Float` literal is. Mathlib has
+float result is finite, three (`float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`) what a PID gain's `Float` literal is, and one
+(`real_abs_eps_eq_zero`) that the runtime `abs` is exact. Mathlib has
 no IEEE-754 semantics, so they are validated by *measurement*, not by a model. **This is what a
 hardware certificate actually rests on** — anyone shown an atan/tan bench certificate should be
 pointed at that block first.
 
-**They are measured now, and eight were false as stated.** `tools/float_bridge/measure.py` (in
+**They are measured now, and nine were false as stated.** `tools/float_bridge/measure.py` (in
 `check_all.sh`; local only, because its pins are this machine's glibc) measures every float-bridge axiom
 it can express against a 256-bit reference, checks the runtime's floats bit for bit against Lean's own
 `#eval`, carries too-tight controls that must fail, and fails the run when a pinned number in
 `tools/float_bridge/registry.json` moves, a statement changes, or a row fails. On 2026-09-14 it found
 `real_tanh_rounds` false (restated: finite inputs, `2u`), and then, with inputs widened adversarially,
 `real_fpbridge`, `real_round_bounds`, `real_exp_rounds`, `real_sinh_rounds`, `real_cosh_rounds`,
-`real_log10_rounds` and `real_tan_rounds`. **All are restated from the measurement and none is
+`real_log10_rounds` and `real_tan_rounds`, and, once inputs whose result lies just above a power of two were added for
+`log`, `real_log_rounds` (at `u` it fails at 20 inputs, max `1.0162u`; its pin had read exactly `1.000000` of the bound,
+which was a warning, not a pass). **All are restated from the measurement and none is
 acknowledged violated now**: `real_fpbridge` is `FPBridgeFinite` (finite results, and a product's exact
 value `0` or at least `DBL_MIN`), `real_round_bounds` excludes nonzero reals below `DBL_MIN` and above
 `DBL_MAX`, and the primitives need finite inputs or results (`exp` also an exact result of at least
-`DBL_MIN`) with constants glibc actually meets: `exp` 2u, `sinh` and `cosh` 4u, `log10` 3u, `tan` 2u. Each old
+`DBL_MIN`) with constants glibc actually meets: `exp` and `log` 2u, `sinh` and `cosh` 4u, `log10` 3u, `tan` 2u. Each old
 statement is kept in the registry as a control that must still fail. The price is in the grounded theorems'
 statements, and it is deliberately visible there: they take `hsafe : FloatSafe …` (the float side
 conditions at each node of the kernel's evaluation) and, where a primitive needs one, a result-finiteness or
 `DBL_MIN` hypothesis. Lean itself proves none of those for a concrete input. Read each axiom's docstring,
 and the registry, before citing a grounded bound.
-**Checked on 2026-09-14, then changed twice the same day by approved axioms.** Nothing in the environment concluded that
+**No float-bridge axiom admits a non-finite input** (2026-09-14). Eight older rows (`log`, `sqrt`, `asin`, `acos`, and the
+`sin`/`cos`/`atan`/`abs` eps forms) quantified over `±∞` and NaN, where `realToR` has no value. None was false there alone,
+but on glibc's values at `+∞` they forced `realToR (+∞) ≤ −1`, `real_abs_eps ≥ 2` and `real_atan_eps ≳ 3π/4`, and beside
+`real_abs_eps = 0` they had NO reading: `abs_exact_inconsistent_with_unrestricted_forms` (`MachLib/FloatBridgeNonFinite.lean`)
+derives `False` from their old statements and three runtime equations Lean cannot prove. All now take `a.isFinite = true`
+(narrowing only), and the harness refuses to read a statement that admits a non-finite input. **Narrow a bound over
+`Float` to finite inputs before pinning any constant in it.**
+**Checked on 2026-09-14, then changed three times the same day by approved axioms.** Nothing in the environment concluded that
 a float is finite, so only a constant leaf of `eml_tree_grounded` was instantiated. The owner approved the range axioms
 `real_fpfinite` and `real_round_finite` with `u_lt_one` (`MachLib/FloatSafeInstances.lean`: the determinant and `x + y`),
 then the literal axioms `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05` (narrow on purpose: Lean's `Float.ofScientific`
 is not correctly rounded in general, and the generic statement is a harness control that fails), the libm finiteness
-axioms `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite`, `real_log_finite`, and `u_le_half` (`u + u ≤ 1`), each
-measured or witnessed before it was added. `MachLib/GroundedPIDInstances.lean` instantiates `pid_grounded` and fourteen of
+axioms `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite`, `real_log_finite`, and `u_le_half` (`u + u ≤ 1`), and last
+`u_le_inv_two_pow_52` (`u ≤ 2⁻⁵²`) and `real_abs_eps_eq_zero`, each measured or witnessed before it was added. `MachLib/GroundedPIDInstances.lean` instantiates `pid_grounded` and fourteen of
 the fifteen primitive forms, and a determinant specimen through the `DBL_MIN` branch; `MachLib/GroundedEMLInstances.lean`
-instantiates `eml_tree_grounded` at three `eml` trees and two of the three `eml_var_var` forms; every instance has a
-specimen. **Still not instantiated:** `pid_log_cosh_grounded` (`u ≤ 1/2` leaves the runtime `cosh`'s read-back with no
-positive lower bound), the `LibmBudget` forms (no axiom says `real_abs_eps = 0`), and
-`eml_var_var_certcom_witness_grounded` (its error must be below `1`, which needs a numeric bound on `u`). Two traps those
+instantiates `eml_tree_grounded` at three `eml` trees and two of the three `eml_var_var` forms; `GroundedLogCoshInstance.lean`
+instantiates `pid_log_cosh_grounded` (on `u ≤ 2⁻⁵²`) and `GroundedBudgetInstances.lean` the four `LibmBudget` forms (on
+`real_abs_eps = 0`; the `sin`/`cos`/`atan` budget is the symbolic sum of their eps constants). Every instance has a specimen.
+**Not instantiated, and not instantiable for binary64:** `eml_var_var_certcom_witness_grounded`. Its `hMB` forces
+`B > ext 15 ≈ 48.7` (`emlVarVar_combinedBoundE_eq`: the encoder's bound is `14`), so its error is at least `u·exp B`, about
+`1.5·10⁵` at `u = 2⁻⁵³`; no upper bound on `u` helps. Two traps those
 modules avoid: no trusted axiom bounds `exp` from above (they derive `exp n ≤ 4ⁿ` from `1 + x ≤ exp x`), and
 `mach_decimal`'s order arms rest on `realOfScientific_le_of_nat`/`_lt_of_nat`, which are not trusted, so they use
 `grounded_decimal`. Their docstrings say more.
@@ -136,7 +150,8 @@ modules avoid: no trusted axiom bounds `exp` from above (they derive `exp n ≤ 
 > compiling MachLib's current source under the old toolchain and could not build — while the
 > ledger went on reporting "trusted", because "trusted" meant *listed* and the thing that turns
 > listing into evidence was not running. Its `trustedFootprint` was also a hand-pinned snapshot
-> (78 names against a live 149) whose own cross-check passed **against the copy**. When it was
+> (78 names against a live 149) whose own cross-check passed **against the copy**; it had drifted again to 152 against
+> 167 by 2026-09-14, and since then it is READ from the live ledger on every build, with a control. When it was
 > finally rebuilt it rejected two witnesses immediately — Mathlib v4.32 had *flipped*
 > `add_lt_add_left` to add on the right. **Gate 13 (`tools/soundness_witness_audit.py`) now fails
 > on toolchain skew between the two repos**, on any trusted axiom with no witness and no
@@ -154,12 +169,12 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 815 jobs, ~3 s warm
+lake build                                     # 818 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
-bash scripts/check_discovered_compiles.sh 4    # the 292 Forge @verify files still compile (~1 min)
-lake env lean AxiomLedger.lean                 # "254 axioms pinned; 102 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 560 claims resolve against #print axioms"
+bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
+lake env lean AxiomLedger.lean                 # "256 axioms pinned; 112 headline footprints ⊆ trusted"
+python3 tools/claim_audit/claim_audit.py       # "all 572 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
@@ -167,7 +182,7 @@ bash tools/check_obligations.sh                # EMLDepthTameness's open/dischar
 gate. It reports every registered claim-theorem that takes hypotheses and is referenced nowhere else
 in `MachLib/` — i.e. nobody has ever supplied its hypotheses. That is the one signal that was present
 and unread when `positive_branch_impossible` was vacuous: it had no caller and no specimen. The
-baseline is pinned as a **set** (`tools/witness_baseline.json`, 64 entries), not a count, so the
+baseline is pinned as a **set** (`tools/witness_baseline.json`, 65 entries), not a count, so the
 ratchet turns one way — a new entry fails, a witnessed one must be removed. It carries two convict
 specimens of its own. Read its scope note before trusting it: no-caller is not a defect on its own,
 and it cannot see vacuity, only drift.
@@ -275,7 +290,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**812 of 1116 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**815 of 1080 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -605,12 +620,12 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**812 of 1 116 modules reachable, 12 documented unreachable** as of 2026-09-14); quote it from
+run (**815 of 1 080 modules reachable, 12 documented unreachable** as of 2026-09-14); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
-**254 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
-the entire depth/decay programme below, then eleven added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
+**256 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
+the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
 `u_lt_one`; then `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`, `real_exp_finite`, `real_sinh_finite`,
-`real_cosh_finite`, `real_log_finite`, `u_le_half`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
+`real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,

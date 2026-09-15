@@ -65,13 +65,31 @@
       "reason": "an opaque constant with nothing stated about it; real_abs_rounds is what is measured",
       "statement": ": MachLib.Real"
     },
+    "Certcom.real_abs_eps_eq_zero": {
+      "kind": "eps-zero",
+      "function": "abs",
+      "domain": "finite",
+      "bound": "zero",
+      "eps": "Certcom.real_abs_eps",
+      "expect": "holds",
+      "statement": ": real_abs_eps = 0",
+      "pinned": {
+        "inputs": 21811,
+        "examined": 21808,
+        "vacuous": 3,
+        "unmeasurable": 0,
+        "violations": 0,
+        "max": "0.000000e+00",
+        "argmax": "0000000000000000"
+      }
+    },
     "Certcom.real_abs_rounds": {
       "kind": "existential-eps",
       "function": "abs",
       "domain": "finite",
       "bound": "sup",
       "eps": "Certcom.real_abs_eps",
-      "statement": ": ∀ a : Float, abs (realToR (stdI1 leanPrims .abs a) - abs (realToR a)) ≤ real_abs_eps",
+      "statement": ": ∀ a : Float, a.isFinite = true → abs (realToR (stdI1 leanPrims .abs a) - abs (realToR a)) ≤ real_abs_eps",
       "pinned": {
         "inputs": 21811,
         "examined": 21808,
@@ -88,7 +106,7 @@
       "domain": "open_unit",
       "bound": "u_pi",
       "expect": "holds",
-      "statement": ": ∀ (R : MachLib.Real) (a : Float), R < 1 → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .acos a) - arccos (realToR a)) ≤ u * pi",
+      "statement": ": ∀ (R : MachLib.Real) (a : Float), a.isFinite = true → R < 1 → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .acos a) - arccos (realToR a)) ≤ u * pi",
       "pinned": {
         "inputs": 408540,
         "examined": 388486,
@@ -105,7 +123,7 @@
       "domain": "open_unit",
       "bound": "u_pi_half",
       "expect": "holds",
-      "statement": ": ∀ (R : MachLib.Real) (a : Float), R < 1 → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .asin a) - arcsin (realToR a)) ≤ u * (pi / (1 + 1))",
+      "statement": ": ∀ (R : MachLib.Real) (a : Float), a.isFinite = true → R < 1 → abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .asin a) - arcsin (realToR a)) ≤ u * (pi / (1 + 1))",
       "pinned": {
         "inputs": 411132,
         "examined": 391078,
@@ -127,7 +145,7 @@
       "domain": "finite",
       "bound": "sup",
       "eps": "Certcom.real_atan_eps",
-      "statement": ": ∀ a : Float, abs (realToR (stdI1 leanPrims .atan a) - atan (realToR a)) ≤ real_atan_eps",
+      "statement": ": ∀ a : Float, a.isFinite = true → abs (realToR (stdI1 leanPrims .atan a) - atan (realToR a)) ≤ real_atan_eps",
       "pinned": {
         "inputs": 377855,
         "examined": 377852,
@@ -149,7 +167,7 @@
       "domain": "finite",
       "bound": "sup",
       "eps": "Certcom.real_cos_eps",
-      "statement": ": ∀ a : Float, abs (realToR (stdI1 leanPrims .cos a) - cos (realToR a)) ≤ real_cos_eps",
+      "statement": ": ∀ a : Float, a.isFinite = true → abs (realToR (stdI1 leanPrims .cos a) - cos (realToR a)) ≤ real_cos_eps",
       "pinned": {
         "inputs": 380173,
         "examined": 380170,
@@ -287,8 +305,8 @@
       "min_examined": 350000,
       "statement": ": ∀ a : Float, a.isFinite = true → 0 < realToR a → (stdI1 leanPrims .ln a).isFinite = true",
       "pinned": {
-        "inputs": 428492,
-        "examined": 378478,
+        "inputs": 696587,
+        "examined": 646573,
         "vacuous": 50014,
         "unmeasurable": 0,
         "violations": 0,
@@ -300,17 +318,18 @@
       "kind": "measured",
       "function": "ln",
       "domain": "positive",
-      "bound": "u_abs_log_x",
+      "bound": "c_u_abs_log_x",
+      "c": "2",
       "expect": "holds",
-      "statement": ": ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ u * (abs (log lo) + abs (log hi))",
+      "statement": ": ∀ (lo hi : MachLib.Real) (a : Float), a.isFinite = true → 0 < lo → lo ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ (u + u) * (abs (log lo) + abs (log hi))",
       "pinned": {
-        "inputs": 396377,
-        "examined": 396365,
+        "inputs": 653246,
+        "examined": 653234,
         "vacuous": 12,
         "unmeasurable": 0,
         "violations": 0,
-        "max": "1.000000e+00",
-        "argmax": "3feffffffffffffe"
+        "max": "5.081178e-01",
+        "argmax": "3ff2216045c01346"
       }
     },
     "Certcom.real_round_bounds": {
@@ -353,7 +372,7 @@
       "domain": "finite",
       "bound": "sup",
       "eps": "Certcom.real_sin_eps",
-      "statement": ": ∀ a : Float, abs (realToR (stdI1 leanPrims .sin a) - sin (realToR a)) ≤ real_sin_eps",
+      "statement": ": ∀ a : Float, a.isFinite = true → abs (realToR (stdI1 leanPrims .sin a) - sin (realToR a)) ≤ real_sin_eps",
       "pinned": {
         "inputs": 379342,
         "examined": 379339,
@@ -406,7 +425,7 @@
       "domain": "nonneg",
       "bound": "u_sqrt_x",
       "expect": "holds",
-      "statement": ": ∀ (hi : MachLib.Real) (a : Float), 0 ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .sqrt a) - sqrt (realToR a)) ≤ u * sqrt hi",
+      "statement": ": ∀ (hi : MachLib.Real) (a : Float), a.isFinite = true → 0 ≤ realToR a → realToR a ≤ hi → abs (realToR (stdI1 leanPrims .sqrt a) - sqrt (realToR a)) ≤ u * sqrt hi",
       "pinned": {
         "inputs": 390190,
         "examined": 390165,
@@ -588,6 +607,21 @@
       "inputs_of": "Certcom.real_log_finite",
       "only_at_zero": true,
       "why": "real_log_finite with 0 <= x in place of 0 < x: log of zero is -inf, so this must fail, and only at zero"
+    },
+    "log-as-stated-until-2026-09-14": {
+      "kind": "measured",
+      "function": "ln",
+      "domain": "positive",
+      "bound": "u_abs_log_x",
+      "why": "real_log_rounds as stated until 2026-09-14, with bound u; restated that day to 2u from this measurement, which found it false at inputs whose log lies just above a power of two (x = e^(±2^j)); kept so the run keeps showing it fails"
+    },
+    "abs-eps-zero-read-on-sin": {
+      "kind": "eps-zero",
+      "function": "sin",
+      "domain": "finite",
+      "bound": "zero",
+      "eps": "Certcom.real_sin_eps",
+      "why": "the real_abs_eps_eq_zero row's exactness check pointed at the runtime sin, which rounds: it must see a nonzero error"
     }
   }
 }

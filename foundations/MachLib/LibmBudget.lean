@@ -96,7 +96,11 @@ theorem libmBudget_satisfiable : LibmBudget 0 0 0 0 0 where
 /-- **The empirical instance.** The disclosed libm rounding constants of `FPGrounding`, all within a
 single budget `B`. Unprovable here by construction — `Float` is opaque — and that is the honest
 status: it is the same trust as the `_rounds` axioms, made quantitative and collected in one place.
-The certifier's measured value for the libm transcendentals is `B = 4 * u` (two ulp). -/
+The certifier's measured value for the libm transcendentals is `B = 4 * u` (two ulp).
+
+**Since 2026-09-14 one field is an axiom**: `abs_exact` is `real_abs_eps_eq_zero` (`FPGrounding.lean`, owner-approved,
+measured), and `GroundedBudgetInstances.lean` proves `RuntimeLibmBudget` at `B = real_sin_eps + real_cos_eps +
+real_atan_eps`. A NUMERIC `B` such as `4u` still needs one axiom per constant, and none was approved. -/
 abbrev RuntimeLibmBudget (B : MachLib.Real) : Prop :=
   LibmBudget real_abs_eps real_sin_eps real_cos_eps real_atan_eps B
 

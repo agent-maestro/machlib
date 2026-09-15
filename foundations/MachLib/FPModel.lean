@@ -61,6 +61,19 @@ magnitude. It is written without division because `OfNat Real` has no `2`. Witne
 (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`). `u_lt_one` follows from it and is left as it was. -/
 axiom u_le_half : u + u ≤ 1
 
+/-- **`u` is at most `2⁻⁵²`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit roundoff `2⁻⁵³`, so this
+bound is true with a factor `2` to spare. `u + u ≤ 1` leaves `4u` as large as `2`, so a primitive rounding bound such as
+`real_cosh_rounds`'s `4u · cosh R` gave no positive lower bound on a runtime `cosh` read back, and a certificate's error
+term `u · exp B` was never provably below `1`. This is the smallest numeric statement that closes the first
+(`GroundedLogCoshInstance.lean`). It does NOT close the second for `eml_var_var_certcom_witness_grounded`: that
+certificate's own hypotheses force `B > 15.5π`, where `u · exp B` is about `1.5·10⁵` at `u = 2⁻⁵³` itself
+(`GroundedEMLInstances.lean` says why).
+
+Spelt with a `natCast` power and a division, the way `dblMin` is, because `OfNat Real` has no `2`. Witnessed against
+Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`). `u_le_half`, `u_lt_one` and
+`u_le_one` follow from it and are left as they were. -/
+axiom u_le_inv_two_pow_52 : u ≤ 1 / natCast (2 ^ 52)
+
 /-- The standard model of floating-point arithmetic: `fl` is a valid
 rounding of the exact real `e` when `fl = e·(1+δ)` for some relative
 perturbation `|δ| ≤ u` (written `-u ≤ δ ≤ u`). -/

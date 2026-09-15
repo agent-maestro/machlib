@@ -126,7 +126,7 @@ If promoted:
   machinery makes this automatic and visible — the axiom ledger pins shipped footprints ⊆
   `trustedFootprint`, so the blast radius is mechanically enumerable at any time, not estimated.
 * **NOT inheriting it:** everything currently proved. This is an addition to the permitted set, not
-  a change to any existing statement. The 720-theorem generated corpus, the closed-loop control
+  a change to any existing statement. The 624-theorem generated corpus, the closed-loop control
   results, the float-bridge lane and the ℤ-model consistency check are untouched.
 * **Disclosure:** one row in `disclosedTrusted` with its reason, which gate 23–24
   (`disclosure_names_check.py`) now requires to name only constants that exist. If witnessed, it

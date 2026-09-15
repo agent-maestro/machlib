@@ -18,22 +18,22 @@
   },
   "lean_files": {
    "kind": "shell",
-   "cmd": "find MachLib -name '*.lean' | wc -l",
+   "cmd": "env -u GIT_DIR git ls-files -- MachLib | grep -c '\\.lean$'",
    "extract": "^\\s*(\\d+)\\s*$"
   },
   "lean_files_top": {
    "kind": "shell",
-   "cmd": "find MachLib -maxdepth 1 -name '*.lean' | wc -l",
+   "cmd": "env -u GIT_DIR git ls-files -- MachLib | grep -c '^MachLib/[^/]*\\.lean$'",
    "extract": "^\\s*(\\d+)\\s*$"
   },
   "lean_files_sub": {
    "kind": "shell",
-   "cmd": "find MachLib -mindepth 2 -name '*.lean' | wc -l",
+   "cmd": "env -u GIT_DIR git ls-files -- MachLib | grep -c '^MachLib/.*/.*\\.lean$'",
    "extract": "^\\s*(\\d+)\\s*$"
   },
   "lean_lines": {
    "kind": "shell",
-   "cmd": "find MachLib -name '*.lean' -exec cat {} + | wc -l",
+   "cmd": "env -u GIT_DIR git ls-files -z -- MachLib | grep -z '\\.lean$' | xargs -0 cat | wc -l",
    "extract": "^\\s*(\\d+)\\s*$"
   },
   "axioms_pinned": {
@@ -120,6 +120,11 @@
   "absence_claims": {
    "kind": "shell",
    "cmd": "python3 -c \"import json;print(len(json.load(open('tools/absence_claims.json'))['claims']))\"",
+   "extract": "^\\s*(\\d+)\\s*$"
+  },
+  "discovered_files": {
+   "kind": "shell",
+   "cmd": "env -u GIT_DIR git ls-files -- MachLib/Discovered | grep -c '\\.lean$'",
    "extract": "^\\s*(\\d+)\\s*$"
   }
  },
@@ -567,6 +572,18 @@
    "id": "decision.theorems_discovered",
    "file": "TRUST_BOUNDARY_DECISION_analytic_finite_zeros_2026_09_11.md",
    "pattern": "The ([0-9  ]+)-theorem generated corpus",
+   "source": "theorems_discovered"
+  },
+  {
+   "id": "claude.discovered_files",
+   "file": "CLAUDE.md",
+   "pattern": "`MachLib/Discovered/` \\(([0-9  ]+) tracked files\\)",
+   "source": "discovered_files"
+  },
+  {
+   "id": "claude.theorems_discovered_diff",
+   "file": "CLAUDE.md",
+   "pattern": "The two differ by \\*\\*([0-9  ]+)\\*\\*",
    "source": "theorems_discovered"
   }
  ]

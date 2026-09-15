@@ -216,8 +216,27 @@ if stale:
           f"An unneeded licence is a licence for the next orphan.", file=sys.stderr)
     sys.exit(1)
 
-print(f"[check-aggregator] PASS: {len(seen)} of {len(files)} modules reachable from "
-      f"MachLib.lean by transitive closure; {len(KNOWN_UNREACHABLE)} documented "
+# THE FIGURES ARE FROM TRACKED FILES (2026-09-14); THE VERDICT IS NOT. The decision above examines every `.lean` file on
+# disk, untracked ones included (canary 1 plants an untracked orphan and must be caught). The two numbers printed are what
+# a clean checkout has: until this change CI printed "812 of 1077" and this machine "812 of 1116", because 39 files under
+# MachLib/Discovered/ are ignored by that directory's .gitignore and exist only here.
+def tracked_modules():
+    import subprocess
+    env = {k: v for k, v in os.environ.items() if k not in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE")}
+    try:
+        r = subprocess.run(["git", "ls-files", "-z", "--", "MachLib"], capture_output=True, env=env, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return {mod_of(q) for q in r.stdout.decode("utf-8").split("\0") if q.endswith(".lean")}
+
+tracked = tracked_modules()
+if not tracked:
+    print("[check-aggregator] UNAVAILABLE: git ls-files listed no tracked module, so no reproducible figure can be "
+          "printed", file=sys.stderr)
+    sys.exit(2)
+print(f"[check-aggregator] PASS: {len(seen & tracked)} of {len(tracked)} modules reachable from "
+      f"MachLib.lean by transitive closure (git-tracked files, {len(set(files) - tracked)} untracked also examined); "
+      f"{len(KNOWN_UNREACHABLE)} documented "
       f"unreachable; Discovered/ excluded (guarded separately by "
       f"check_discovered_compiles.sh).")
 sys.exit(0)

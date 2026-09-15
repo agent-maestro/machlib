@@ -61,7 +61,17 @@ harness can read it, and the harness enforces that the registry and the corpus a
     range (`exp` to 710, `sinh`/`cosh` to 711, `log` to `0 ≤ x`) and must fail, and only beyond the axiom's own range
     (`only_beyond_axiom_bound`) or only at zero (`only_at_zero`). Lean's own `Float.isFinite` of each primitive is
     cross-checked at the boundaries.
+  * `eps-zero` — `real_abs_eps_eq_zero` (added 2026-09-14): `real_<f>_eps = 0` for a primitive the harness computes. Measured
+    over `real_<f>_rounds`'s own inputs with a bound of exactly `0`, and for `abs` also bit for bit (every result is its
+    input with the sign bit cleared). The row also fails unless the `existential-eps` row bounded by the same constant
+    takes `a.isFinite = true`: an eps pinned to `0` beside a bound over every float describes no runtime
+    (`MachLib/FloatBridgeNonFinite.lean`). Control `abs-eps-zero-read-on-sin` asks it of `sin`, which rounds.
   * `declaration` — a function symbol or an opaque constant, not a proposition.
+
+NON-FINITE INPUTS (2026-09-14). `derive_reading` refuses a `measured` or `existential-eps` statement that admits a non-finite
+input: one with neither `a.isFinite = true` nor a finite-result hypothesis on a primitive whose runtime result at `±∞` and
+NaN is itself non-finite (`sinh`, `cosh`; re-checked every run on the runtime functions). Such a statement constrains
+`realToR` where it has no value, and eight axioms of that shape were narrowed that day.
 
 INPUTS, deterministic: a dense grid over each function's interesting range; log-spaced tiny |x| down to the
 denormals; consecutive doubles on both sides of every branch threshold and edge (identity cut-offs, the
@@ -349,6 +359,10 @@ def bound_of(spec: dict, X):
         return u * mp.exp(X)
     if kind == "u_abs_log_x":
         return u * abs(mp.log(X))
+    if kind == "c_u_abs_log_x":
+        return mp.mpf(spec["c"]) * u * abs(mp.log(X))
+    if kind == "zero":
+        return mp.mpf(0)
     if kind == "u_abs_log10_x":
         return u * abs(mp.log10(X))
     if kind == "u_sqrt_x":
@@ -464,6 +478,15 @@ def _inputs_for(function: str) -> tuple:
                     x0 = float(mp.mpf(10) ** (sgn * mp.mpf(2) ** j))
                     if 0 < x0 < math.inf:
                         xs += around(x0, 100)
+        else:
+            # Added 2026-09-14: results just above 2^j in magnitude, x = e^(±2^j). The set above had none, pinned a
+            # maximum of exactly u for real_log_rounds, and missed the 20 inputs where glibc's log exceeds it.
+            xs += uniform(0.5, 2.0, 200_000, 45) + around(1.0, 20_000)
+            for j in range(-60, 11):
+                for sgn in (1, -1):
+                    x0 = float(mp.exp(sgn * mp.mpf(2) ** j))
+                    if 0 < x0 < math.inf:
+                        xs += around(x0, 200)
     elif function == "sqrt":
         xs = (logspace(DENORM_MIN, DBL_MAX, 200_000, False) + denormals(2000)
               + [y for k in range(-537, 512, 3) for y in around(math.ldexp(1.0, 2 * k), 20)]
@@ -964,6 +987,13 @@ def measure_axiom(spec: dict, pool) -> dict:
     kind = spec["kind"]
     if kind in ("measured", "existential-eps"):
         return measure_function_axiom(spec, pool)
+    if kind == "eps-zero":
+        res = measure_function_axiom(spec, pool)
+        # For `abs`, exactness is also a bit-level fact: the result is the input with the sign bit cleared.
+        if spec["function"] == "abs":
+            res["not_bitclear"] = sum(1 for x in inputs_for("abs")
+                                      if math.isfinite(x) and bits(FABS(x)) != bits(x) & ~SIGN_BIT)
+        return res
     if kind == "literal":
         res = _literal_chunk([decode_decimal_literal(spec["literal"])])
         res["inputs"] = 1
@@ -1055,15 +1085,15 @@ _POS = _H({"0 < lo", "lo ≤ realToR a", "realToR a ≤ hi"})
 READINGS = {
     (_H({"a.isFinite = true"}), "u + u"): ("finite", "c_u", "2", None),
     (_H({"a.isFinite = true"}), "u"): ("finite", "c_u", "1", None),
-    (_H({"abs (realToR a) ≤ R"}), "u"): ("finite", "c_u", "1", None),                       # R free: every finite a
-    (_H({"realToR a ≤ hi"}), "u * exp hi"): ("finite", "u_exp_x", None, None),              # hi = x
-    (_POS, "u * (abs (log lo) + abs (log hi))"): ("positive", "u_abs_log_x", None, None),   # lo or hi at 1
-    (_POS, "u * (abs (log10 lo) + abs (log10 hi))"): ("positive", "u_abs_log10_x", None, None),
-    (_H({"0 ≤ realToR a", "realToR a ≤ hi"}), "u * sqrt hi"): ("nonneg", "u_sqrt_x", None, None),
-    (_H({"R < 1", "abs (realToR a) ≤ R"}), "u * (pi / (1 + 1))"): ("open_unit", "u_pi_half", None, None),
-    (_H({"R < 1", "abs (realToR a) ≤ R"}), "u * pi"): ("open_unit", "u_pi", None, None),
-    (_H({"0 ≤ R", "R < pi / (1 + 1)", "abs (realToR a) ≤ R"}), "u * tan R"): ("tan_open", "u_abs_tan_x", None, None),
-    (_H({"abs (realToR a) ≤ R"}), "u * cosh R"): ("finite", "u_cosh_x", None, None),       # R = |x|
+    # Every shape that admitted a non-finite input (no `a.isFinite = true`, and no finite-result hypothesis of a
+    # primitive that is not finite at `±∞` or NaN) was removed on 2026-09-14, when the last axioms of those shapes were
+    # narrowed: `derive_reading` refuses such a statement before it looks here (`admits_nonfinite_input`).
+    (_POS | {"a.isFinite = true"}, "(u + u) * (abs (log lo) + abs (log hi))"):
+        ("positive", "c_u_abs_log_x", "2", None),                                            # lo or hi at 1
+    (_H({"a.isFinite = true", "0 ≤ realToR a", "realToR a ≤ hi"}), "u * sqrt hi"): ("nonneg", "u_sqrt_x", None, None),
+    (_H({"a.isFinite = true", "R < 1", "abs (realToR a) ≤ R"}), "u * (pi / (1 + 1))"):
+        ("open_unit", "u_pi_half", None, None),
+    (_H({"a.isFinite = true", "R < 1", "abs (realToR a) ≤ R"}), "u * pi"): ("open_unit", "u_pi", None, None),
     # restated 2026-09-14
     (_H({"a.isFinite = true", "(stdI1 leanPrims .<f> a).isFinite = true", "dblMin ≤ exp (realToR a)", "realToR a ≤ hi"}),
      "(u + u) * exp hi"): ("finite_normal_exp", "c_u_exp_x", "2", "exp"),
@@ -1084,6 +1114,25 @@ FINITE_OF_RANGE_STATEMENT = ": FPFiniteOfRange realToR"
 ROUND_FINITE_STATEMENT = ": ∀ x : Real, abs x ≤ dblMax → (floatOfR x).isFinite = true"
 
 READING_KEYS = ("kind", "function", "domain", "bound", "c", "eps", "literal")
+
+#: A rounding constant pinned to zero (`real_abs_eps_eq_zero`, 2026-09-14). Read only for a primitive the harness computes.
+EPS_ZERO_STATEMENT = re.compile(r": real_(\w+)_eps = 0")
+#: The hypothesis that excludes a non-finite input directly.
+FINITE_INPUT = "a.isFinite = true"
+#: A finite-RESULT hypothesis, as `derive_reading` spells it.
+FINITE_RESULT = "(stdI1 leanPrims .<f> a).isFinite = true"
+#: Primitives whose runtime result at `±∞` and at NaN is itself non-finite, so a finite-result hypothesis excludes a
+#: non-finite input. `verdicts` re-checks it on the runtime functions every run (`nonfinite_propagation_problems`).
+NONFINITE_PROPAGATES = ("sinh", "cosh")
+
+
+def admits_nonfinite_input(fn: str, hyps: frozenset) -> bool:
+    """Does a statement with these hypotheses quantify over `±∞` or NaN inputs, where `realToR` has no real value?
+
+    Added 2026-09-14. Eight axioms did, and together they pinned what those floats read back as, which `real_abs_eps = 0`
+    then contradicted (`MachLib/FloatBridgeNonFinite.lean`). A statement that admits a non-finite input is not measured
+    by this harness (it cannot say what `realToR` of one is), so it must not be readable at all."""
+    return FINITE_INPUT not in hyps and not (FINITE_RESULT in hyps and fn in NONFINITE_PROPAGATES)
 
 #: A `Float` literal equated with `floatOfR` of the SAME decimal spelling (`float_lit_1_5` and siblings, 2026-09-14).
 LITERAL_STATEMENT = re.compile(r": \((\d+\.\d+) : Float\) = floatOfR (\d+\.\d+)")
@@ -1120,6 +1169,12 @@ def derive_reading(statement: str | None) -> dict | None:
         return None
     if s in (": Float → MachLib.Real", ": Real → Float", ": MachLib.Real"):
         return {"kind": "declaration"}
+    ez = EPS_ZERO_STATEMENT.fullmatch(s)
+    if ez is not None:
+        if ez.group(1) not in FLOAT_FUNCS:
+            return None
+        return {"kind": "eps-zero", "function": ez.group(1), "domain": "finite", "bound": "zero",
+                "eps": f"Certcom.real_{ez.group(1)}_eps"}
     if s == ": FPBridgeFinite realToR":
         return {"kind": "bridge"}
     if s == ": FPBridge realToR":
@@ -1142,8 +1197,10 @@ def derive_reading(statement: str | None) -> dict | None:
         return None
     fn, bound_text = c.group(1), c.group(3)
     hyps = _H(h.replace(f"stdI1 leanPrims .{fn} a", "stdI1 leanPrims .<f> a") for h in parts[:-1])
+    if admits_nonfinite_input(fn, hyps):
+        return None
     eps = re.fullmatch(r"real_\w+_eps", bound_text)
-    if eps and not hyps:
+    if eps and hyps == _H({FINITE_INPUT}):
         return {"kind": "existential-eps", "function": fn, "domain": "finite", "bound": "sup",
                 "eps": "Certcom." + bound_text}
     reading = READINGS.get((hyps, bound_text))
@@ -1446,9 +1503,15 @@ def verdicts(registry: dict, results: dict, control_results: dict, manifest: set
             problems.append(f"{name}: the Lean source states\n      {statements.get(short)!r}\n    and the registry "
                             f"measures\n      {spec['statement']!r}\n    Re-read the axiom and update its registry entry.")
         derived = derive_reading(statements.get(short))
+        if derived is not None and derived.get("kind") == "measured" and FINITE_INPUT not in spec["statement"]:
+            fn = derived["function"]
+            leaks = [x for x in (math.inf, -math.inf, math.nan) if math.isfinite(FLOAT_FUNCS[fn](x))]
+            if fn not in NONFINITE_PROPAGATES or leaks:
+                problems.append(f"{name}: its finite-result hypothesis excludes non-finite inputs only if the runtime {fn} "
+                                f"is non-finite at ±∞ and NaN, and it is finite at {leaks}")
         if derived is None:
             problems.append(f"{name}: the harness cannot read its statement {statements.get(short)!r} (no READINGS "
-                            "entry), so it cannot say what to measure")
+                            "entry, or it admits a non-finite input), so it cannot say what to measure")
         else:
             wrong = {k: (spec.get(k), derived.get(k)) for k in READING_KEYS if spec.get(k) != derived.get(k)}
             if wrong:
@@ -1484,6 +1547,21 @@ def verdicts(registry: dict, results: dict, control_results: dict, manifest: set
                     f"midpoint = {s['max']}); expected {spec['expect']}")
             if spec["expect"] == "holds" and s["violations"]:
                 problems.append(f"{name} is VIOLATED: Lean's literal is not the correctly rounded double of its decimal")
+        elif kind == "eps-zero":
+            line = (f"  {name}: {s['examined']} examined of {s['inputs']}; {s['violations']} with a nonzero error (largest "
+                    f"{s['max']}, must be 0), {res.get('not_bitclear', 0)} whose result is not its input with the sign bit "
+                    f"cleared; expected {spec['expect']}")
+            if spec["expect"] == "holds" and (s["violations"] or res.get("not_bitclear")):
+                problems.append(f"{name} is VIOLATED: {spec['eps']} = 0 fails at {s['violations']} input(s), and "
+                                f"{res.get('not_bitclear', 0)} result(s) are not a sign-bit clear")
+            rounds = [(n, sp) for n, sp in axioms.items()
+                      if sp.get("kind") == "existential-eps" and sp.get("eps") == spec["eps"]]
+            if len(rounds) != 1:
+                problems.append(f"{name}: pins {spec['eps']} to 0, and {len(rounds)} existential-eps row(s) bound by that "
+                                "constant are registered, not exactly 1")
+            elif FINITE_INPUT not in rounds[0][1]["statement"]:
+                problems.append(f"{name}: pins {spec['eps']} to 0 while {rounds[0][0]} admits a non-finite input; together "
+                                "they describe no runtime (MachLib/FloatBridgeNonFinite.lean)")
         elif kind == "prim-finite":
             line += (f"{s['violations']} violation(s) (a non-finite result its hypothesis admits); the admitted inputs "
                      f"reach {s['max']} of the boundary, at {describe_argmax(s)}; expected {spec['expect']}")
@@ -1847,6 +1925,73 @@ def self_test() -> int:
         failures.append(f"finiteness at the boundaries: {e709}, {e710}, {lpos}, {lnn}")
     else:
         print("  canary fires: exp(709.79) is outside 709 and violates 710; log(0) is outside x > 0 and violates x >= 0")
+    # the finite-input guard (2026-09-14): the unrestricted forms no longer read, the narrowed ones do
+    old_log = (": ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi → "
+               "abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ u * (abs (log lo) + abs (log hi))")
+    new_log = (": ∀ (lo hi : MachLib.Real) (a : Float), a.isFinite = true → 0 < lo → lo ≤ realToR a → realToR a ≤ hi → "
+               "abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ (u + u) * (abs (log lo) + abs (log hi))")
+    old_abs = ": ∀ a : Float, abs (realToR (stdI1 leanPrims .abs a) - abs (realToR a)) ≤ real_abs_eps"
+    new_abs = ": ∀ a : Float, a.isFinite = true → abs (realToR (stdI1 leanPrims .abs a) - abs (realToR a)) ≤ real_abs_eps"
+    if derive_reading(new_log) != {"kind": "measured", "function": "ln", "domain": "positive", "bound": "c_u_abs_log_x",
+                                   "c": "2"}:
+        failures.append(f"the narrowed real_log_rounds reads as {derive_reading(new_log)}")
+    if derive_reading(new_abs) != {"kind": "existential-eps", "function": "abs", "domain": "finite", "bound": "sup",
+                                   "eps": "Certcom.real_abs_eps"}:
+        failures.append(f"the narrowed real_abs_rounds reads as {derive_reading(new_abs)}")
+    if derive_reading(": real_abs_eps = 0") != {"kind": "eps-zero", "function": "abs", "domain": "finite",
+                                                "bound": "zero", "eps": "Certcom.real_abs_eps"}:
+        failures.append(f"real_abs_eps_eq_zero reads as {derive_reading(': real_abs_eps = 0')}")
+    for label, bad_st in (("real_log_rounds as stated until 2026-09-14, admitting a non-finite input", old_log),
+                          ("an eps bound over every float, non-finite ones included", old_abs),
+                          ("an eps pinned to a value other than 0", ": real_abs_eps = u"),
+                          ("a primitive's eps pinned to 0 that the harness cannot compute", ": real_pow_eps = 0"),
+                          ("a finite-result hypothesis on a primitive finite at infinity",
+                           exp_st.replace("a.isFinite = true → ", ""))):
+        if derive_reading(bad_st) is not None:
+            failures.append(f"canary '{label}' is readable: {derive_reading(bad_st)}")
+        else:
+            print(f"  canary fires: {label} is unreadable")
+    # eps-zero verdicts: an exact abs beside a narrowed rounds row passes; a nonzero error, a result that is not a sign-bit
+    # clear, and a rounds row that admits a non-finite input each fire
+    ez_ok = dict(fake, not_bitclear=0, worst=[(0.0, bits(1.0))])
+
+    def ez_problems(res_ez, rounds_statement):
+        reg = {"platform": platform_id(), "controls": {}, "axioms": {
+            "Certcom.real_abs_eps_eq_zero": {"kind": "eps-zero", "function": "abs", "domain": "finite", "bound": "zero",
+                                             "eps": "Certcom.real_abs_eps", "expect": "holds",
+                                             "statement": ": real_abs_eps = 0", "pinned": summary(res_ez)},
+            "Certcom.real_abs_rounds": {"kind": "existential-eps", "function": "abs", "domain": "finite", "bound": "sup",
+                                        "eps": "Certcom.real_abs_eps", "statement": rounds_statement,
+                                        "pinned": summary(fake)}}}
+        return verdicts(reg, {"Certcom.real_abs_eps_eq_zero": res_ez, "Certcom.real_abs_rounds": fake}, {},
+                        set(reg["axioms"]), {"real_abs_eps_eq_zero": ": real_abs_eps = 0", "real_abs_rounds": rounds_statement},
+                        dict(EXPECTED_DEFINITIONS))[0]
+    if ez_problems(ez_ok, new_abs):
+        failures.append(f"an exact abs beside a narrowed rounds row produced problems: {ez_problems(ez_ok, new_abs)}")
+    for label, res_ez, st, needle in (
+            ("a nonzero abs error", dict(ez_ok, violations=3, worst=[(math.inf, bits(2.0))]), new_abs, "VIOLATED"),
+            ("an abs result that is not a sign-bit clear", dict(ez_ok, not_bitclear=1), new_abs, "sign-bit clear"),
+            ("eps pinned to 0 beside a rounds row over every float", ez_ok, old_abs, "describe no runtime")):
+        if not any(needle in p for p in ez_problems(res_ez, st)):
+            failures.append(f"canary '{label}' did not produce '{needle}': {ez_problems(res_ez, st)}")
+        else:
+            print(f"  canary fires: {label}")
+    # a finite-result hypothesis must exclude non-finite inputs on the RUNTIME function, not just by its name
+    saved_sinh = FLOAT_FUNCS["sinh"]
+    try:
+        FLOAT_FUNCS["sinh"] = lambda x: 0.0 if not math.isfinite(x) else saved_sinh(x)
+        sinh_reg = {"platform": platform_id(), "controls": {}, "axioms": {"Certcom.real_sinh_rounds": {
+            "kind": "measured", "function": "sinh", "domain": "finite_result", "bound": "c_u_cosh_x", "c": "4",
+            "expect": "holds", "statement": sinh_st, "pinned": summary(fake)}}}
+        leak = verdicts(sinh_reg, {"Certcom.real_sinh_rounds": fake}, {}, {"Certcom.real_sinh_rounds"},
+                        {"real_sinh_rounds": sinh_st}, dict(EXPECTED_DEFINITIONS))[0]
+    finally:
+        FLOAT_FUNCS["sinh"] = saved_sinh
+    if not any("finite-result hypothesis excludes" in p for p in leak):
+        failures.append(f"canary 'a sinh finite at infinity' did not fire: {leak}")
+    else:
+        print("  canary fires: a runtime sinh that were finite at infinity would leave its finite-result row unreadable "
+              "as a finite-input row")
     if failures:
         print("FLOAT-BRIDGE SELFTEST FAIL:\n  - " + "\n  - ".join(failures))
         return 1

@@ -144,14 +144,15 @@ exactly that role.)
 
 Since 2026-09-14 it also takes `hxfin`, `hexpfin` and `hout` (`x`'s float, its `exp` and the kernel's output are
 finite), which the restated `real_exp_rounds` and `real_fpbridge` need, and `exp` rounds at `2u` where it rounded at
-`u`. `exp`'s exact result is at least `DBL_MIN` because `1 ≤ A ≤ x` (`dblMin_le_one`). -/
+`u`. `exp`'s exact result is at least `DBL_MIN` because `1 ≤ A ≤ x` (`dblMin_le_one`). Later that day `real_log_rounds`
+was restated too (finite input, `2u`); `hxfin` is its input, and `log` rounds at `2u` here since. -/
 theorem eml_var_var_pipeline_uniform_grounded (env : Env) (A B : MachLib.Real) (hA1 : 1 ≤ A)
     (hlo : A ≤ realToR (env "x").toF) (hhi : realToR (env "x").toF ≤ B)
     (hxfin : (env "x").toF.isFinite = true)
     (hexpfin : (stdI1 leanPrims .exp (env "x").toF).isFinite = true)
     (hout : (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC emlVarVar)).toF.isFinite = true) :
-    AbsEnc (u * ((exp B + (u + u) * exp B) + (log B + u * (abs (log A) + abs (log B))))
-        + ((u + u) * exp B + u * (abs (log A) + abs (log B))))
+    AbsEnc (u * ((exp B + (u + u) * exp B) + (log B + (u + u) * (abs (log A) + abs (log B))))
+        + ((u + u) * exp B + (u + u) * (abs (log A) + abs (log B))))
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC emlVarVar)).toF)
       (exp (realToR (env "x").toF) - log (realToR (env "x").toF)) := by
   have hX1 : (1 : MachLib.Real) ≤ realToR (env "x").toF := le_trans hA1 hlo
@@ -167,14 +168,14 @@ theorem eml_var_var_pipeline_uniform_grounded (env : Env) (A B : MachLib.Real) (
       show stdR1 leanPrims (Trans1.exp).cName (env "x").toF = stdI1 leanPrims .exp (env "x").toF
       exact std_hrt1 leanPrims .exp (env "x").toF
     rw [heq]; exact real_exp_rounds B (env "x").toF hxfin hexpfin hnorm hhi
-  have hE2 : AbsEnc (u * (abs (log A) + abs (log B)))
+  have hE2 : AbsEnc ((u + u) * (abs (log A) + abs (log B)))
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .ln (.var "x")))).toF)
       (log (realToR (env "x").toF)) := by
     have heq : (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .ln (.var "x")))).toF
         = stdI1 leanPrims .ln (env "x").toF := by
       show stdR1 leanPrims (Trans1.ln).cName (env "x").toF = stdI1 leanPrims .ln (env "x").toF
       exact std_hrt1 leanPrims .ln (env "x").toF
-    rw [heq]; exact real_log_rounds A B (env "x").toF hA0 hlo hhi
+    rw [heq]; exact real_log_rounds A B (env "x").toF hxfin hA0 hlo hhi
   have hsub : RoundsW u (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC emlVarVar)).toF)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .exp (.var "x")))).toF
         - realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .ln (.var "x")))).toF) := by
@@ -191,15 +192,15 @@ theorem eml_var_var_pipeline_uniform_grounded (env : Env) (A B : MachLib.Real) (
     abs_of_nonneg (log_nonneg hX1)
   rw [hEexp, hElog] at htight
   have hloosen : u * ((exp (realToR (env "x").toF) + (u + u) * exp B)
-        + (log (realToR (env "x").toF) + u * (abs (log A) + abs (log B))))
-        + ((u + u) * exp B + u * (abs (log A) + abs (log B)))
-      ≤ u * ((exp B + (u + u) * exp B) + (log B + u * (abs (log A) + abs (log B))))
-        + ((u + u) * exp B + u * (abs (log A) + abs (log B))) := by
+        + (log (realToR (env "x").toF) + (u + u) * (abs (log A) + abs (log B))))
+        + ((u + u) * exp B + (u + u) * (abs (log A) + abs (log B)))
+      ≤ u * ((exp B + (u + u) * exp B) + (log B + (u + u) * (abs (log A) + abs (log B))))
+        + ((u + u) * exp B + (u + u) * (abs (log A) + abs (log B))) := by
     have hstep : exp (realToR (env "x").toF) + (u + u) * exp B
-          + (log (realToR (env "x").toF) + u * (abs (log A) + abs (log B)))
-        ≤ exp B + (u + u) * exp B + (log B + u * (abs (log A) + abs (log B))) :=
+          + (log (realToR (env "x").toF) + (u + u) * (abs (log A) + abs (log B)))
+        ≤ exp B + (u + u) * exp B + (log B + (u + u) * (abs (log A) + abs (log B))) :=
       add_le_add (add_le_add (exp_monotone hhi) (le_refl ((u + u) * exp B)))
-        (add_le_add (log_le_log hX0 hhi) (le_refl (u * (abs (log A) + abs (log B)))))
+        (add_le_add (log_le_log hX0 hhi) (le_refl ((u + u) * (abs (log A) + abs (log B)))))
     exact add_le_add (mul_le_mul_of_nonneg_left hstep u_nonneg) (le_refl _)
   unfold AbsEnc at htight ⊢
   exact le_trans htight hloosen
@@ -222,8 +223,8 @@ theorem eml_var_var_quantized_pointwise_grounded (env : Env) (A B : MachLib.Real
     abs (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt env floatOfR x)
         (emitC emlVarVar)).toF - (EMLTree.eml EMLTree.var EMLTree.var).eval x)
       ≤ u * ((exp (B + u * B) + (u + u) * exp (B + u * B))
-            + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
-          + ((u + u) * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
+            + (log (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+          + ((u + u) * exp (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B))))
         + (exp (B + u * B) + 1 / (A - u * B)) * (u * B) := by
   have huB : (0 : MachLib.Real) ≤ u * B := mul_nonneg u_nonneg hB0
   have hAρ' : (0 : MachLib.Real) < A - u * B := lt_of_lt_of_le zero_lt_one_ax hAρ
@@ -308,7 +309,11 @@ takes is either a genuine mathematical quantity (`A`, `B`, `ε`, `env`) or a sid
 quantities (`hA0`, `hεlt1`, `hB0`, `hBmax`, `hAρ`, `hδε`, `hMB`), or, since 2026-09-14, a float side
 condition (`hfl`, `hexpfin`, `hout`: `floatOfR x`, its `exp` and the kernel's output are finite for every `x` in
 `(A, B)`), which the restated `real_round_bounds`, `real_exp_rounds` and `real_fpbridge` need and Lean cannot
-establish. The `exp` rounding inside the bound is `2u` since that day. -/
+establish. The `exp` rounding inside the bound is `2u` since that day, and the `log` rounding since later that day.
+
+**It cannot be instantiated for binary64** (computed 2026-09-14, `GroundedEMLInstances.lean`): `hMB` forces
+`B > ext 15 ≈ 48.7`, and every term of the error in `hδε` is non-negative, so that error is at least `u · exp B`, about
+`1.5·10⁵` at `u = 2⁻⁵³`. `hδε` then contradicts `hεlt1`. -/
 theorem eml_var_var_certcom_witness_grounded (env : Env) (A B ε : MachLib.Real)
     (hA0 : A < ext 0) (hεlt1 : ε < 1) (hB0 : 0 ≤ B) (hBmax : B ≤ dblMax) (hAρ : 1 ≤ A - u * B)
     (hfl : ∀ x : Real, A < x → x < B → (floatOfR x).isFinite = true)
@@ -316,8 +321,8 @@ theorem eml_var_var_certcom_witness_grounded (env : Env) (A B ε : MachLib.Real)
     (hout : ∀ x : Real, A < x → x < B →
       (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt env floatOfR x) (emitC emlVarVar)).toF.isFinite = true)
     (hδε : u * ((exp (B + u * B) + (u + u) * exp (B + u * B))
-            + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
-          + ((u + u) * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
+            + (log (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+          + ((u + u) * exp (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B))))
         + (exp (B + u * B) + 1 / (A - u * B)) * (u * B) < ε)
     (hMB : ext (combinedBoundE
         (len (EMLTree.eml EMLTree.var EMLTree.var) 0)
@@ -326,8 +331,8 @@ theorem eml_var_var_certcom_witness_grounded (env : Env) (A B ε : MachLib.Real)
         (enc (EMLTree.eml EMLTree.var EMLTree.var) emlEmptyChain).2 + 1) < B) :
     ∃ x : MachLib.Real, A < x ∧ x < B ∧
       ε - (u * ((exp (B + u * B) + (u + u) * exp (B + u * B))
-              + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
-            + ((u + u) * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
+              + (log (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+            + ((u + u) * exp (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B))))
           + (exp (B + u * B) + 1 / (A - u * B)) * (u * B))
         ≤ abs (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt env floatOfR x)
             (emitC emlVarVar)).toF - Real.sin x) := by
@@ -337,8 +342,8 @@ theorem eml_var_var_certcom_witness_grounded (env : Env) (A B ε : MachLib.Real)
     ⟨trivial, trivial, fun x hxA _ => lt_of_lt_of_le hA0' (le_of_lt hxA)⟩
   exact certcom_total_error_floor_compact_interval (EMLTree.eml EMLTree.var EMLTree.var) A B ε
     (u * ((exp (B + u * B) + (u + u) * exp (B + u * B))
-          + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
-        + ((u + u) * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
+          + (log (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+        + ((u + u) * exp (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B))))
       + (exp (B + u * B) + 1 / (A - u * B)) * (u * B))
     hA0 hεlt1 hδε hvalidon
     (fun x => realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt env floatOfR x)

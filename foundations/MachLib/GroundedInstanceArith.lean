@@ -287,6 +287,24 @@ theorem abs_log_le_self {x : MachLib.Real} (hx : 1 ≤ x) : abs (log x) ≤ x :=
   rw [abs_of_nonneg (log_nonneg hx)]
   exact le_trans (log_le_sub_one h0) (sub_le_self (le_of_lt zero_lt_one_ax))
 
+/-! ## 4b. Numeric bounds on `u`, from `u ≤ 2⁻⁵²` -/
+
+/-- **`u · n < 1` for every natural `n < 2⁵²`**, from `u_le_inv_two_pow_52` (owner-approved 2026-09-14). -/
+theorem u_mul_natCast_lt_one {n : Nat} (h : n < 2 ^ 52) : u * natCast n < 1 := by
+  have hN : (0 : MachLib.Real) < natCast (2 ^ 52) := natCast_pos (Nat.two_pow_pos 52)
+  have hNe : (natCast (2 ^ 52) : MachLib.Real) ≠ 0 := Ne.symm (ne_of_lt hN)
+  have h1 : u * natCast n ≤ (1 / natCast (2 ^ 52)) * natCast n :=
+    mul_le_mul_of_nonneg_right u_le_inv_two_pow_52 (Real.natCast_nonneg n)
+  have h2 : natCast n * (1 / natCast (2 ^ 52)) < natCast (2 ^ 52) * (1 / natCast (2 ^ 52)) :=
+    mul_lt_mul_of_pos_right (natCast_lt_natCast_of_nat_lt' h) (one_div_pos_of_pos hN)
+  rw [mul_comm (natCast (2 ^ 52)) (1 / natCast (2 ^ 52)), div_mul_cancel hNe,
+    mul_comm (natCast n) (1 / natCast (2 ^ 52))] at h2
+  exact lt_of_le_of_lt h1 h2
+
+/-- `u + u + u + u = u · 4`. -/
+theorem four_u_eq : u + u + u + u = u * natCast 4 := by
+  rw [natCast_four]; mach_ring
+
 /-! ## 5. `π/2` -/
 
 /-- `0.5 < π/2`, from `1 < π`. -/

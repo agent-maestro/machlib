@@ -44,11 +44,12 @@ because a sum carries no `DBL_MIN` condition. Later on 2026-09-14 the owner appr
     and `0.05`, and when this module was written no axiom said that a `Float` literal is finite or what its real value is;
     `pid_exp_grounded`, `pid_sinh_grounded`, `pid_cosh_grounded` and `pid_log_cosh_grounded` also needed a finite `exp`,
     `sinh` or `cosh` result. `GroundedPIDInstances.lean` instantiates `pid_grounded` and fourteen of the primitive forms on
-    the literal and libm-finiteness axioms approved later that day, and says what `pid_log_cosh_grounded` and the
-    `LibmBudget` forms still lack.
+    the literal and libm-finiteness axioms approved later that day; `GroundedLogCoshInstance.lean` and
+    `GroundedBudgetInstances.lean` instantiate `pid_log_cosh_grounded` and the `LibmBudget` forms on two axioms approved
+    later still.
   * `eml_tree_grounded` at an `eml` node, and the `eml_var_var` family, needed finite `exp` and `log` results.
     `GroundedEMLInstances.lean` instantiates `eml_tree_grounded` at three `eml` trees and two of the three `eml_var_var`
-    forms, and says what `eml_var_var_certcom_witness_grounded` still lacks.
+    forms, and says why `eml_var_var_certcom_witness_grounded` cannot be instantiated for binary64.
 -/
 
 namespace Certcom

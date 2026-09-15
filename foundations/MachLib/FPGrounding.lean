@@ -50,6 +50,33 @@ same day four more turn a bound on an argument into a finite `exp`, `sinh`, `cos
 its siblings, below), and three say what the PID gains' `Float` literals are (`float_lit_1_5` and its siblings,
 `EMLCertcomGrounded.lean`). With `u_le_half` they let `GroundedPIDInstances.lean` and `GroundedEMLInstances.lean`
 instantiate most of the certificates below; those modules' docstrings name the ones that are still not instantiated.
+
+## Non-finite inputs (2026-09-14)
+
+`realToR` is the real value of a FINITE double. Nothing axiomatises it at `±∞` or NaN, so an axiom quantifying over every
+`a : Float` constrains it there only through the axioms themselves. Until 2026-09-14 eight did: `real_log_rounds`,
+`real_sqrt_rounds`, `real_asin_rounds`, `real_acos_rounds`, `real_sin_rounds`, `real_cos_rounds`, `real_atan_rounds` and
+`real_abs_rounds`. Measured on glibc 2.39, aarch64 (and checked against Lean's own `#eval` wherever the bits are not a
+NaN's, which `Float.toBits` does not expose): `fabs (+∞) = +∞`, `log (+∞) = sqrt (+∞) = +∞`, `atan (+∞)` is the finite
+`π/2`, and `asin (+∞)`, `acos (+∞)`, `sin (+∞)`, `cos (+∞)` are one quiet NaN, which `log`, `sqrt`, `asin` and `acos`
+return unchanged. On those values:
+
+  * `real_log_rounds` at `a = +∞`, with `lo = hi = realToR (+∞)`, rules out `realToR (+∞) > 0` for any `u ≤ 1/2`, since
+    `|v − log v| > 2u·|log v|` for every `v > 0`; `real_asin_rounds` and `real_acos_rounds` at `+∞` rule out
+    `(−1, 0]` once `u < 1/3`, since `arcsin` and `arccos` differ by at least `π/2` there. So the eight read `+∞` as at most
+    `−1`, and then `fabs (+∞) = +∞` forces `real_abs_eps ≥ 2`, and `atan (+∞) = π/2` forces `real_atan_eps` to about
+    `3π/4` or more, where the measurement puts those constants at `0` and `1.11·10⁻¹⁶`.
+  * At non-finite inputs the eight still had a common reading (every non-finite float read as `−1`, those two
+    constants large), so none was false THERE (`real_log_rounds` was false at finite inputs, which its docstring records).
+    `real_abs_eps = 0`, approved the same day, has no such reading: `fabs (+∞) = +∞` makes `realToR (+∞) ≥ 0`, `log` makes
+    it `0`, and `asin`/`acos` at `0` then need `π/2 ≤ 3uπ/2`, which `u ≤ 2⁻⁵²` refutes. Lean cannot derive `False` from
+    it, because it proves no equation between `Float` values; the axioms would have described no runtime at all.
+    `FloatBridgeNonFinite.lean` checks that argument from the three measured equations.
+
+So each of the eight now takes `a.isFinite = true`. That only narrows them and adds no trust; every caller already had
+the finiteness (`FloatSafe.add_isFinite`, or a finite-input hypothesis). `real_sinh_rounds` and `real_cosh_rounds` take a
+finite RESULT instead, which excludes non-finite inputs because the runtime `sinh` and `cosh` of `±∞` or NaN are not
+finite; `tools/float_bridge/measure.py` checks that, and refuses to read any statement that admits a non-finite input.
 -/
 
 namespace Certcom
@@ -350,44 +377,58 @@ grounding" (certcom-A scoping doc item 5) costs per primitive: a disclosed round
 plus a domain hypothesis unless the primitive happens to be globally Lipschitz like `tanh`, plus
 (for `log` specifically) a positivity side-condition on top of the plain range bound. -/
 
-/-- **The disclosed libm rounding bound for the runtime `log`, domain-restricted.** For any
-`0 < lo ≤ hi` and `a : Float` with `lo ≤ realToR a ≤ hi`, `leanPrims.log`, through `realToR`, is
-within `u · (abs (log lo) + abs (log hi))` of the exact `Real.log` — a safe two-sided bound (log
-monotonic, so `log (realToR a) ∈ [log lo, log hi]`, and `abs (log (realToR a)) ≤ abs (log lo) +
-abs (log hi)` regardless of whether that interval straddles `0`), reusing exactly the `lo`/`hi` every
-caller (`pid_log_grounded`, Track C's `eml_var_var_*_grounded`) already carries. **Not claimed
-unconditionally** (erratum-driven design, 2026-07-22): `log` is undefined/`NaN` at or below `0`, so an
-unconditional bound over every `Float` — including non-positive ones — asserts something no runtime
-satisfies. Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
-axiom real_log_rounds : ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi →
-    abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ u * (abs (log lo) + abs (log hi))
+/-- **The disclosed libm rounding bound for the runtime `log`, domain-restricted.** For any finite `a` and
+`0 < lo ≤ realToR a ≤ hi`, `leanPrims.log`, through `realToR`, is within `2u · (abs (log lo) + abs (log hi))` of the
+exact `Real.log` — a safe two-sided bound (log monotonic, so `log (realToR a) ∈ [log lo, log hi]`, and
+`abs (log (realToR a)) ≤ abs (log lo) + abs (log hi)` regardless of whether that interval straddles `0`), reusing exactly
+the `lo`/`hi` every caller (`pid_log_grounded`, Track C's `eml_var_var_*_grounded`) already carries. `log` is
+undefined/`NaN` at or below `0`, so no bound is claimed there (2026-07-22). Un-witnessable in Lean (`Float` opaque); the
+residual libm trust for this primitive.
+
+**Restated 2026-09-14 from a measurement, because the statement before it was false.** It read
+`∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi → … ≤ u * (abs (log lo) + abs (log hi))`.
+Two things break it:
+
+  * glibc's `log` is not correctly rounded. Its source (glibc 2.39 `sysdeps/ieee754/dbl-64/e_log.c`) bounds the error by
+    about `0.52` ulp, which is up to about `1.04u` relative to a result just above a power of two. The harness's inputs had
+    no such result until this restatement, and it pinned a maximum of `u` itself (`1.000000`) with no violation.
+    `tools/float_bridge/measure.py`, with inputs `x = e^(±2ʲ)` packed on both sides added: the old statement fails at 20
+    inputs, at most `1.0162u`, at `x = 1.1331484531994689`, where `log x` is just above `2⁻³` (take `lo = 1`, `hi = x`).
+    The restated one holds at every input its hypotheses admit, at most about `0.51` of `2u`.
+  * nothing excluded an input `±∞` or NaN, where `realToR` has no real value; `FPGrounding`'s section
+    "Non-finite inputs" says why that is not harmless. `a.isFinite = true` narrows it.
+
+`tools/float_bridge/registry.json` pins the numbers and keeps the old statement as a control that must still fail. -/
+axiom real_log_rounds : ∀ (lo hi : MachLib.Real) (a : Float), a.isFinite = true → 0 < lo → lo ≤ realToR a →
+    realToR a ≤ hi → abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ (u + u) * (abs (log lo) + abs (log hi))
 
 /-- **A third grounded transcendental control kernel: `log(PID law)`.** For any `[lo,hi]` with `lo>0`
 that the PID law's computed AND exact values both land in, the emitted C for
 `log(1.5·e + 0.4·i + 0.05·d)` — a logarithmic-gain variant of the controller (e.g. a decibel-scaled
-error signal) — read through `realToR`, is within `u·(abs(log lo)+abs(log hi)) + (1/lo)·absErr` of the
+error signal) — read through `realToR`, is within `2u·(abs(log lo)+abs(log hi)) + (1/lo)·absErr` of the
 exact ℝ value `log(PID law)`, with **no `FPBridge` and no ∀-primitive rounding hypothesis**: `FPBridge`
 is discharged by `real_fpbridge`, the runtime correspondence by `std_hrt1`/`std_hrt2`, and the one
 `log` rounding by the disclosed, domain-restricted `real_log_rounds` — discharged from the SAME
-`hlo`/`hflx_lo`/`hflx_hi` this theorem already required for the Lipschitz part, no new hypothesis
-needed. Third grounded transcendental kernel over real `Float` bytes. Instance of
+`hlo`/`hflx_lo`/`hflx_hi` this theorem already required for the Lipschitz part, and from `hsafe` for its finite
+input. Third grounded transcendental kernel over real `Float` bytes. Instance of
 `pipeline_log_of_arith_finite` at `pidRawEML`.
 
 **Takes `hsafe` since 2026-09-14**: the float side conditions of the kernel's evaluation (`FloatSafe`), which the
 restated `real_fpbridge` (`FPBridgeFinite`) needs. Until then this theorem rested on `FPBridge realToR`, which
-binary64 does not satisfy. -/
+binary64 does not satisfy. Later that day `real_log_rounds` was restated from a measurement too, and the rounding
+constant here is `2u` where it was `u`. -/
 theorem pid_log_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
     (hsafe : FloatSafe realToR (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML)
     (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
     (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
-    AbsEnc (u * (abs (log lo) + abs (log hi)) + (1 / lo) * absErr realToR env pidRawEML)
+    AbsEnc ((u + u) * (abs (log lo) + abs (log hi)) + (1 / lo) * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .ln pidRawEML))).toF)
       (log (exactR realToR env pidRawEML)) :=
   pipeline_log_of_arith_finite real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .ln lo hi (u * (abs (log lo) + abs (log hi))) hlo pidRawEML isArith_pidRawEML hsafe
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_log_rounds lo hi _ hlo hflx_lo hflx_hi)
+    env .ln lo hi ((u + u) * (abs (log lo) + abs (log hi))) hlo pidRawEML isArith_pidRawEML hsafe
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_log_rounds lo hi _ (FloatSafe.add_isFinite hsafe) hlo hflx_lo hflx_hi)
 
 /-! ### Grounding a fourth libm primitive: `sin`, back to GLOBALLY Lipschitz
 
@@ -410,10 +451,14 @@ a fixed `real_sin_eps` COULD be a true statement about the real runtime for ever
 it's calibrated large enough to cover known accuracy degradation from large-argument range reduction
 (a real, if second-order, libm concern for huge `|a|` — a genuinely different, milder failure mode
 than the others' `NaN`/`inf`/unboundedness). Not provably false the way the ten fixed axioms were;
-left unconditional. -/
+left unconditional.
+
+**Narrowed to finite inputs on 2026-09-14.** The unconditional form still quantified over `±∞` and NaN, where `realToR`
+has no real value, and together with its neighbours it pinned what those floats read back as; this file's section
+"Non-finite inputs" says what that forced. `a.isFinite = true` only narrows it. -/
 axiom real_sin_eps : MachLib.Real
 
-axiom real_sin_rounds : ∀ a : Float,
+axiom real_sin_rounds : ∀ a : Float, a.isFinite = true →
     abs (realToR (stdI1 leanPrims .sin a) - sin (realToR a)) ≤ real_sin_eps
 
 /-- **A fourth grounded transcendental control kernel: `sin(PID law)`.** The emitted C for
@@ -434,7 +479,7 @@ theorem pid_sin_grounded (env : Env)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     env .sin sin 1 real_sin_eps
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact sin_lipschitz p q)
-    pidRawEML isArith_pidRawEML hsafe (real_sin_rounds _)
+    pidRawEML isArith_pidRawEML hsafe (real_sin_rounds _ (FloatSafe.add_isFinite hsafe))
 
 /-! ### Grounding a fifth libm primitive: `cos`, also GLOBALLY Lipschitz
 
@@ -446,10 +491,11 @@ composite `leanPrims.cos`, through `realToR`, is within a fixed `real_cos_eps` o
 Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive.
 
 **Confirmed unconditional (2026-07-22 audit, not changed)** — same reasoning as `real_sin_eps`
-above: native `Prims` field, bounded output, no `inf/inf`/`NaN`/pole failure mode. -/
+above: native `Prims` field, bounded output, no `inf/inf`/`NaN`/pole failure mode. **Narrowed to finite inputs on
+2026-09-14**, for the reason `real_sin_eps` gives. -/
 axiom real_cos_eps : MachLib.Real
 
-axiom real_cos_rounds : ∀ a : Float,
+axiom real_cos_rounds : ∀ a : Float, a.isFinite = true →
     abs (realToR (stdI1 leanPrims .cos a) - cos (realToR a)) ≤ real_cos_eps
 
 /-- **A fifth grounded transcendental control kernel: `cos(PID law)`.** The emitted C for
@@ -469,7 +515,7 @@ theorem pid_cos_grounded (env : Env)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     env .cos cos 1 real_cos_eps
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact cos_lipschitz p q)
-    pidRawEML isArith_pidRawEML hsafe (real_cos_rounds _)
+    pidRawEML isArith_pidRawEML hsafe (real_cos_rounds _ (FloatSafe.add_isFinite hsafe))
 
 /-! ### Grounding a sixth libm primitive: `atan`, also GLOBALLY Lipschitz
 
@@ -482,10 +528,12 @@ composite `leanPrims.atan`, through `realToR`, is within a fixed `real_atan_eps`
 
 **Confirmed unconditional (2026-07-22 audit, not changed)** — same reasoning as `real_sin_eps`:
 native `Prims` field, output bounded by `π/2` for every real input, no failure mode requiring a
-domain restriction. -/
+domain restriction. **Narrowed to finite inputs on 2026-09-14**, for the reason `real_sin_eps` gives: `atan (+∞)` is the
+finite `π/2`, and read against `realToR (+∞) ≤ −1`, which the unrestricted neighbours forced, it made this constant at
+least about `3π/4`. -/
 axiom real_atan_eps : MachLib.Real
 
-axiom real_atan_rounds : ∀ a : Float,
+axiom real_atan_rounds : ∀ a : Float, a.isFinite = true →
     abs (realToR (stdI1 leanPrims .atan a) - atan (realToR a)) ≤ real_atan_eps
 
 /-- **A sixth grounded transcendental control kernel: `atan(PID law)`.** The emitted C for
@@ -505,7 +553,7 @@ theorem pid_atan_grounded (env : Env)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     env .atan atan 1 real_atan_eps
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact atan_lipschitz p q)
-    pidRawEML isArith_pidRawEML hsafe (real_atan_rounds _)
+    pidRawEML isArith_pidRawEML hsafe (real_atan_rounds _ (FloatSafe.add_isFinite hsafe))
 
 /-! ### Grounding a seventh libm primitive: `abs`, the LAST globally-Lipschitz one
 
@@ -523,11 +571,27 @@ every other primitive here rather than assumed exact, since the runtime call sti
 
 **Confirmed unconditional (2026-07-22 audit, not changed)** — `abs` is exact (no rounding at all in
 principle) and its output magnitude never exceeds the input's, so it inherits no failure mode from
-anything upstream; the weakest possible case for a domain restriction of all fourteen. -/
+anything upstream; the weakest possible case for a domain restriction of all fourteen. **Narrowed to finite inputs on
+2026-09-14**, for the reason `real_sin_eps` gives, and it had to be before `real_abs_eps_eq_zero` below could be added:
+unrestricted, `fabs (+∞) = +∞` read against its neighbours forced this constant to be at least `2`. -/
 axiom real_abs_eps : MachLib.Real
 
-axiom real_abs_rounds : ∀ a : Float,
+axiom real_abs_rounds : ∀ a : Float, a.isFinite = true →
     abs (realToR (stdI1 leanPrims .abs a) - abs (realToR a)) ≤ real_abs_eps
+
+/-- **The runtime `abs` is exact: `real_abs_eps = 0`** (added 2026-09-14, owner-approved). `stdI1 leanPrims .abs` is
+`Float.abs`, glibc's `fabs`, which clears the sign bit and changes nothing else (IEEE-754 §5.5.1, a quiet-computational
+operation beside `negate` and `copySign`), so a finite float's absolute value is represented exactly and reads back as
+the absolute value of its real value. With `real_abs_rounds` this says so, and it is what `LibmBudget`'s `abs_exact`
+field asks for. Un-witnessable in Lean (`Float` is opaque); disclosed like `real_fpbridge`.
+
+**Measured before it was added.** `tools/float_bridge/measure.py` computes `fabs` through ctypes, checks it bit for bit
+against Lean's own `#eval` of `stdI1 leanPrims .abs`, and compares with the exact absolute value over the same finite
+doubles as `real_abs_rounds` (random bit patterns, the subnormals, `±0`, `±DBL_MIN`, `±DBL_MAX`): the largest error is
+exactly `0`, and every result is its input with the sign bit cleared. A control asks the same `= 0` of the runtime `sin`
+and must fail, and does. The row also fails if `real_abs_rounds` ever again admits a non-finite input, since the two
+together then describe no runtime: this file's section "Non-finite inputs" says why. -/
+axiom real_abs_eps_eq_zero : real_abs_eps = 0
 
 /-- **A seventh grounded transcendental control kernel: `abs(PID law)`.** The emitted C for
 `abs(1.5·e + 0.4·i + 0.05·d)` — a rectified-error variant of the controller — read through `realToR`
@@ -546,7 +610,7 @@ theorem pid_abs_grounded (env : Env)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     env .abs abs 1 real_abs_eps
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact abs_abs_sub_le p q)
-    pidRawEML isArith_pidRawEML hsafe (real_abs_rounds _)
+    pidRawEML isArith_pidRawEML hsafe (real_abs_rounds _ (FloatSafe.add_isFinite hsafe))
 
 /-! ### Grounding an eighth libm primitive: `sqrt`, LOCALLY Lipschitz on a positive domain
 
@@ -559,8 +623,10 @@ needs its own domain/positivity bookkeeping. -/
 `u · sqrt hi` of the exact `Real.sqrt` (`sqrt` monotonic and non-negative, so `sqrt (realToR a) ≤
 sqrt hi`). **Not claimed unconditionally** (erratum-driven design, 2026-07-22): `Float.sqrt` of a
 negative input is `NaN` in IEEE-754, and `realToR (NaN)` is unconstrained. Un-witnessable in Lean
-(`Float` opaque); the residual libm trust for this primitive. -/
-axiom real_sqrt_rounds : ∀ (hi : MachLib.Real) (a : Float), 0 ≤ realToR a → realToR a ≤ hi →
+(`Float` opaque); the residual libm trust for this primitive. **Narrowed to finite inputs on 2026-09-14**: `0 ≤ realToR a`
+did not exclude `+∞` or a NaN, since `realToR` of either is some unconstrained real; this file's section "Non-finite
+inputs" says what that forced. -/
+axiom real_sqrt_rounds : ∀ (hi : MachLib.Real) (a : Float), a.isFinite = true → 0 ≤ realToR a → realToR a ≤ hi →
     abs (realToR (stdI1 leanPrims .sqrt a) - sqrt (realToR a)) ≤ u * sqrt hi
 
 /-- **An eighth grounded transcendental control kernel: `sqrt(PID law)`.** For any `[lo,hi]` with
@@ -583,7 +649,8 @@ theorem pid_sqrt_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
   pipeline_sqrt_of_arith_finite real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     env .sqrt lo hi (u * sqrt hi) hlo pidRawEML isArith_pidRawEML hsafe
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_sqrt_rounds hi _ (le_of_lt (lt_of_lt_of_le hlo hflx_lo)) hflx_hi)
+    hflx_lo hflx_hi hxe_lo hxe_hi
+    (real_sqrt_rounds hi _ (FloatSafe.add_isFinite hsafe) (le_of_lt (lt_of_lt_of_le hlo hflx_lo)) hflx_hi)
 
 /-! ### Grounding a ninth libm primitive: `log10`, LOCALLY Lipschitz on a positive domain
 
@@ -654,8 +721,9 @@ IEEE-754, and `realToR (NaN)` is unconstrained — a version of this axiom witho
 as false as the original unconditional `real_asin_eps` was, just with the failure boundary moved from
 "no bound at all" to "no bound past `abs x = 1`," which is still outside what `abs (realToR a) ≤ R`
 alone rules out for `R ≥ 1`. Un-witnessable in Lean (`Float` opaque); the residual libm trust for
-this primitive. -/
-axiom real_asin_rounds : ∀ (R : MachLib.Real) (a : Float), R < 1 → abs (realToR a) ≤ R →
+this primitive. **Narrowed to finite inputs on 2026-09-14**: `abs (realToR a) ≤ R < 1` did not exclude `±∞` or a NaN,
+whose `realToR` is some unconstrained real; this file's section "Non-finite inputs" says what that forced. -/
+axiom real_asin_rounds : ∀ (R : MachLib.Real) (a : Float), a.isFinite = true → R < 1 → abs (realToR a) ≤ R →
     abs (realToR (stdI1 leanPrims .asin a) - arcsin (realToR a)) ≤ u * (pi / (1 + 1))
 
 /-- **A tenth grounded transcendental control kernel: `asin(PID law)`.** For any `[-R,R]` (`R<1`) that
@@ -677,7 +745,8 @@ theorem pid_asin_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
   pipeline_arcsin_of_arith_finite real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     env .asin R (u * (pi / (1 + 1))) hR pidRawEML isArith_pidRawEML hsafe
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_asin_rounds R _ hR (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
+    hflx_lo hflx_hi hxe_lo hxe_hi
+    (real_asin_rounds R _ (FloatSafe.add_isFinite hsafe) hR (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
 
 /-! ### Grounding an eleventh libm primitive: `acos` (`arccos`), same symmetric-domain shape as `asin`
 -/
@@ -687,8 +756,9 @@ and `a : Float` with `abs (realToR a) ≤ R`, `leanPrims.acos`, through `realToR
 the exact `Real.arccos` — CONSTANT (`arccos`'s output is always in `[0,π]`), same shape as
 `real_asin_rounds` (including the same `R < 1` fix). **Not claimed unconditionally** (erratum-driven
 design, 2026-07-22): same out-of-domain `NaN` risk as `asin`. Un-witnessable in Lean (`Float`
-opaque); the residual libm trust for this primitive. -/
-axiom real_acos_rounds : ∀ (R : MachLib.Real) (a : Float), R < 1 → abs (realToR a) ≤ R →
+opaque); the residual libm trust for this primitive. **Narrowed to finite inputs on 2026-09-14**, as `real_asin_rounds`
+was: at `+∞` the two send the same NaN, and their bounds against `arcsin` and `arccos` are what pinned `realToR (+∞)`. -/
+axiom real_acos_rounds : ∀ (R : MachLib.Real) (a : Float), a.isFinite = true → R < 1 → abs (realToR a) ≤ R →
     abs (realToR (stdI1 leanPrims .acos a) - arccos (realToR a)) ≤ u * pi
 
 /-- **An eleventh grounded transcendental control kernel: `acos(PID law)`.** Same shape as
@@ -708,7 +778,8 @@ theorem pid_acos_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
   pipeline_arccos_of_arith_finite real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     env .acos R (u * pi) hR pidRawEML isArith_pidRawEML hsafe
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_acos_rounds R _ hR (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
+    hflx_lo hflx_hi hxe_lo hxe_hi
+    (real_acos_rounds R _ (FloatSafe.add_isFinite hsafe) hR (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
 
 /-! ### Grounding a twelfth libm primitive: `sinh`, SYMMETRIC domain, unconditional on `R`
 
@@ -915,9 +986,9 @@ theorem pid_log_cosh_grounded (env : Env) (R lo hi : MachLib.Real) (hR0 : 0 ≤ 
     rw [exactRn_eq_exactR_of_arith realOfLogCosh env isArith_pidRawEML]; exact hxe_hi1
   have he : IsFoldLocal realToR (stdI1 leanPrims) (stdI2 leanPrims) realOfLogCosh env
       (.tr1 .ln (.tr1 .cosh pidRawEML)) :=
-    .tr1 .ln _ (1 / lo) lo hi (u * (abs (log lo) + abs (log hi)))
+    .tr1 .ln _ (1 / lo) lo hi ((u + u) * (abs (log lo) + abs (log hi)))
       (le_of_lt (one_div_pos_of_pos hlo)) (log_lip_local lo hi hlo)
-      hflx_lo2 hflx_hi2 hxe_lo2 hxe_hi2 (real_log_rounds lo hi _ hlo hflx_lo2 hflx_hi2)
+      hflx_lo2 hflx_hi2 hxe_lo2 hxe_hi2 (real_log_rounds lo hi _ hcosh hlo hflx_lo2 hflx_hi2)
       (.tr1 .cosh _ (sinh R) (-R) R ((u + u + u + u) * cosh R) (sinh_nonneg hR0) (cosh_lip_local R)
         hflx_lo1 hflx_hi1 hxe_lo1' hxe_hi1'
         (real_cosh_rounds R _ hcosh (abs_le_iff.mpr ⟨hflx_lo1, hflx_hi1⟩))

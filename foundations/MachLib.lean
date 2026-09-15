@@ -669,6 +669,9 @@ import MachLib.FloatSafeInstances
 import MachLib.GroundedInstanceArith
 import MachLib.GroundedPIDInstances
 import MachLib.GroundedEMLInstances
+import MachLib.GroundedLogCoshInstance
+import MachLib.GroundedBudgetInstances
+import MachLib.FloatBridgeNonFinite
 import MachLib.ExtremeValueAttainment
 import MachLib.GeneralPeriodicTargetBarrier
 import MachLib.EMLTowerSubsumesIterExp

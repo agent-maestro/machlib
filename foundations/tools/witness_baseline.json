@@ -2,6 +2,7 @@
   "_comment": "Registered claim-theorems that take hypotheses and are referenced nowhere else in MachLib/ -- nobody supplies their hypotheses. Uses are counted over the corpus with COMMENTS STRIPPED (see corpus_text's docstring): a name in a docstring is not an instantiation, and counting it as one is the defect this baseline was re-set for.",
   "taken": "2026-09-06 \u2014 RE-BASELINED ONCE, because the instrument was fixed rather than because the corpus regressed. `corpus_text()` now strips comments and docstrings before counting uses; before today a docstring mention counted as an instantiation, so 30 capstones were reported witnessed on prose alone. Among them `positive_branch_impossible` \u2014 the vacuous flagship this audit was built to catch, which appears 17 times in MachLib/: one declaration, sixteen comments. The ratchet still turns one way from here; this single step is the correction, and every entry it added is annotated `prose-only`. Previously: 2026-08-31 \u2014 ratcheted: derivCoprime_of_ne_zero witnessed by derivCoprime_of_irred (PolyDerivNonzero)",
   "unwitnessed": [
+    "Certcom.abs_exact_inconsistent_with_unrestricted_forms",
     "MachLib.EMLTree.depth_optimal_value_unique",
     "MachLib.EMLTree.inv_x_min_depth",
     "MachLib.EMLTree.inv_x_schedule_floor_via_certificate",
@@ -68,6 +69,7 @@
     "MachLib.zero_query_evSignDef"
   ],
   "_categories": {
+    "refutation-by-design": "Added 2026-09-14, with a reason, as the audit asks. Concludes False from hypotheses that are unsatisfiable on purpose: the old, unrestricted statements of four float-bridge axioms, real_abs_eps = 0, and three glibc runtime equations at +inf that Lean cannot prove. That they have no model IS the content (MachLib/FloatBridgeNonFinite.lean), so a specimen supplying them would itself be a proof of False. witness_audit.not_applicable already classes it as a refutation theorem; main() does not subtract that class, so it lands here.",
     "computation": "Value-binders only (a `(x : Real)` counts toward hypotheses_count). No propositional hypothesis, so no vacuity risk at all.",
     "receipt": "Deliberate generalisation receipt: recovers an earlier statement as an instance (`Pr := True`). Terminal by design -- that IS its job.",
     "internal-absurd": "Case-analysis absurdity discharged inside a larger proof. Terminal by construction.",
@@ -78,6 +80,7 @@
   },
   "_triage_note": "Triaged 2026-08-24. The raw count overstates risk: hypotheses_count counts ALL top-level binders, including value binders, so a computation lemma `foo (x : Real) : ...` lands here with arity 1 and zero vacuity exposure. Only the `review` and `witnessable-pole` entries are candidates for the failure that made positive_branch_impossible vacuous.",
   "annotations": {
+    "Certcom.abs_exact_inconsistent_with_unrestricted_forms": "refutation-by-design",
     "MachLib.EMLTree.depth_optimal_value_unique": "review",
     "MachLib.EMLTree.inv_x_schedule_floor_via_certificate": "review",
     "MachLib.EMLTree.sqTree_eval": "computation",

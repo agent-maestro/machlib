@@ -26,15 +26,15 @@ provably `0` or at least `DBL_MIN`. The owner approved the facts that were missi
 `pidSpecimen_domain` shows it is in the positive domain at `B = 0.008`, `δ = 0.002`. Every specimen below uses it (with
 `R = 0.5`). Its inputs are nonzero, so each product meets `ProductsNormal` through the `DBL_MIN` branch, not the zero branch.
 
-## What is not instantiated here
+## What is not instantiated here, and where it is
 
   * `pid_log_cosh_grounded` needs `lo ≤ realToR (cosh of the PID law's float)` with `0 < lo`. `real_cosh_rounds` puts that
-    value no lower than `cosh x − 4u·cosh R`, and `u + u ≤ 1` allows `4u = 2`, so no positive `lo` follows for any `R`.
-    It needs a smaller bound on `u` (for instance `u ≤ 1/8` with `R ≤ 1/2`) or a measured lower bound on the runtime
-    `cosh`'s read-back value; neither was approved.
-  * The `LibmBudget` restatements (`pid_sin_at_budget` and siblings): their `hsafe` now discharges, but `RuntimeLibmBudget B`
-    needs `real_abs_eps = 0`, and no axiom constrains `real_abs_eps` at all (nor `real_sin_eps`, `real_cos_eps`,
-    `real_atan_eps` beyond being bounds).
+    value no lower than `cosh x − 4u·cosh R`, and `u + u ≤ 1` allows `4u = 2`, so no positive `lo` follows here for any `R`.
+    `GroundedLogCoshInstance.lean` instantiates it on `u ≤ 2⁻⁵²` (`u_le_inv_two_pow_52`, approved later on 2026-09-14).
+  * The `LibmBudget` restatements (`pid_sin_at_budget` and siblings): their `hsafe` discharges here, but `RuntimeLibmBudget B`
+    needs `real_abs_eps = 0`, which no axiom said until `real_abs_eps_eq_zero` (later on 2026-09-14).
+    `GroundedBudgetInstances.lean` instantiates them; `real_sin_eps`, `real_cos_eps` and `real_atan_eps` are still bounded
+    by no number.
 -/
 
 namespace Certcom
@@ -289,7 +289,8 @@ theorem pid_exp_grounded_instantiated (env : Env) {B δ R : MachLib.Real} (h : P
 
 /-- **`pid_log_grounded`, instantiated** on `PIDPositiveDomain`, at `lo = 0.0125·δ`, `hi = 60·B`. -/
 theorem pid_log_grounded_instantiated (env : Env) {B δ : MachLib.Real} (h : PIDPositiveDomain env B δ) :
-    AbsEnc (u * (abs (log (0.0125 * δ)) + abs (log (60.0 * B))) + (1 / (0.0125 * δ)) * absErr realToR env pidRawEML)
+    AbsEnc ((u + u) * (abs (log (0.0125 * δ)) + abs (log (60.0 * B)))
+        + (1 / (0.0125 * δ)) * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .ln pidRawEML))).toF)
       (log (exactR realToR env pidRawEML)) := by
   obtain ⟨hs, hfl, hex⟩ := pidRawEML_domain_facts h.toPIDInputDomain (stdI1 leanPrims) (stdI2 leanPrims)
@@ -465,7 +466,7 @@ theorem pid_exp_grounded_specimen :
 
 /-- Specimen for `pid_log_grounded_instantiated`, at `pidSpecimenEnv`. -/
 theorem pid_log_grounded_specimen :
-    AbsEnc (u * (abs (log (0.0125 * 0.002)) + abs (log (60.0 * 0.008)))
+    AbsEnc ((u + u) * (abs (log (0.0125 * 0.002)) + abs (log (60.0 * 0.008)))
         + (1 / (0.0125 * 0.002)) * absErr realToR pidSpecimenEnv pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) pidSpecimenEnv (emitC (tr1OfEML .ln pidRawEML))).toF)
       (log (exactR realToR pidSpecimenEnv pidRawEML)) :=

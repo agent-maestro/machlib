@@ -25,12 +25,18 @@ one, `exp n ≤ 4ⁿ`, from `1 + x ≤ exp x`; it is the reason the domains belo
 Each has a specimen at a concrete input: `floatOfR 2.0`, `floatOfR 1.0`, or, for the quantized form, `x = 3.5` in
 `(3.0, 4.0)`.
 
-## Not instantiated: `eml_var_var_certcom_witness_grounded`
+## Not instantiated: `eml_var_var_certcom_witness_grounded`, and it cannot be for binary64
 
 Its `hδε` asks the explicit error `δ = u·((exp (B + u·B) + …) …) + (exp (B + u·B) + 1/(A − u·B))·(u·B)` to be below
-`ε < 1`. With `u` known only to be at most `1/2`, `δ` is at least `u·exp (B + u·B)`, which no bound on `u` short of a
-numeric one keeps below `1`; its `hMB` and `hA0 : A < ext 0` (`ext 0 = π/2`) constrain `A` and `B` further. It needs a
-numeric bound on `u` (such as `u ≤ 2⁻⁵⁰`) on top of what was approved.
+`ε < 1`, and its `hMB` asks `ext (combinedBoundE … + 1) < B`. `combinedBoundE` at `eml var var` is `14`
+(`emlVarVar_combinedBoundE_eq` below, by `decide`), so `B > ext 15 = π/2 + 15π ≈ 48.7`. Every term of `δ` is
+non-negative there (`B ≥ 1`, and `A − u·B ≥ 1` by `hAρ`), so `δ ≥ u·exp (B + u·B) ≥ u·exp 48.7`, which is about
+`1.5·10⁵` at `u = 2⁻⁵³`, the value `u` stands for. So `hδε` and `hεlt1` cannot both hold for binary64, whatever `A`, `B`
+and `ε`: the obstruction is not a missing bound on `u` from above, and `u ≤ 2⁻⁵²` (`u_le_inv_two_pow_52`, approved on
+2026-09-14 in the expectation that it would close this) does not close it. It would need a unit roundoff below about
+`7·10⁻²²`, a binary format of at least 71 bits of precision. Computed, not proved in Lean: `u` has no lower bound here,
+so Lean can neither instantiate nor refute the hypotheses. The value `14` is proved; the arithmetic after it is
+`e^48.7 · 2⁻⁵³`.
 -/
 
 namespace Certcom
@@ -67,16 +73,18 @@ theorem abs_log_le_of_half_le {y : MachLib.Real} {M : Nat} (h : 0.5 ≤ y) (hy :
   exact le_trans (neg_le_neg (one_le_natCast_of hM)) hl
 
 /-- **The runtime `exp a − log b`.** For finite floats with `|realToR a| ≤ N ≤ 500` and `0.5 ≤ realToR b ≤ M`, `M ≥ 1`, and
-`2·(2·4ᴺ + 2·M) ≤ DBL_MAX`: `exp a` is finite (`real_exp_finite`) with `DBL_MIN ≤ exp (realToR a)`, `log b` is finite
-(`real_log_finite`), their float difference is finite (`real_fpfinite`), and it is at most `2·(2·4ᴺ + 2·M)` in magnitude. -/
+`2·(2·4ᴺ + 3·M) ≤ DBL_MAX`: `exp a` is finite (`real_exp_finite`) with `DBL_MIN ≤ exp (realToR a)`, `log b` is finite
+(`real_log_finite`), their float difference is finite (`real_fpfinite`), and it is at most `2·(2·4ᴺ + 3·M)` in magnitude.
+(`3·M` since `real_log_rounds` rounds at `2u`, 2026-09-14: `|log b|` plus its rounding is at most `3·|log b|` on `u + u ≤ 1`;
+it was `2·M` at `u`.) -/
 theorem exp_sub_log_facts {a b : Float} {N M : Nat} (hN : N ≤ 500) (hM : 1 ≤ M)
-    (hsize : 2 * (2 * 4 ^ N + 2 * M) ≤ (2 ^ 53 - 1) * 2 ^ 971)
+    (hsize : 2 * (2 * 4 ^ N + 3 * M) ≤ (2 ^ 53 - 1) * 2 ^ 971)
     (ha : a.isFinite = true) (haN : abs (realToR a) ≤ natCast N)
     (hb : b.isFinite = true) (hb1 : 0.5 ≤ realToR b) (hbM : realToR b ≤ natCast M) :
     (stdI1 leanPrims .exp a).isFinite = true ∧ dblMin ≤ exp (realToR a) ∧
     (stdI1 leanPrims .ln b).isFinite = true ∧
     (stdI1 leanPrims .exp a - stdI1 leanPrims .ln b).isFinite = true ∧
-    abs (realToR (stdI1 leanPrims .exp a - stdI1 leanPrims .ln b)) ≤ natCast (2 * (2 * 4 ^ N + 2 * M)) := by
+    abs (realToR (stdI1 leanPrims .exp a - stdI1 leanPrims .ln b)) ≤ natCast (2 * (2 * 4 ^ N + 3 * M)) := by
   obtain ⟨haL, haU⟩ := abs_le_iff.mp haN
   have hN500 : (natCast N : MachLib.Real) ≤ natCast 500 := natCast_le_natCast_of_nat_le hN
   have hexp : (stdI1 leanPrims .exp a).isFinite = true :=
@@ -85,7 +93,7 @@ theorem exp_sub_log_facts {a b : Float} {N M : Nat} (hN : N ≤ 500) (hM : 1 ≤
   have hb0 : 0 < realToR b := lt_of_lt_of_le (realOfScientific_pos 5 true 1 (by decide)) hb1
   have hlog : (stdI1 leanPrims .ln b).isFinite = true := real_log_finite b hb hb0
   have hE := real_exp_rounds (realToR a) a ha hexp hnorm (le_refl _)
-  have hL := real_log_rounds (realToR b) (realToR b) b hb0 (le_refl _) (le_refl _)
+  have hL := real_log_rounds (realToR b) (realToR b) b hb hb0 (le_refl _) (le_refl _)
   have hre : abs (realToR (stdI1 leanPrims .exp a)) ≤ natCast (2 * 4 ^ N) := by
     have h1 := abs_le_add_err hE
     rw [abs_of_nonneg (le_of_lt (exp_pos _))] at h1
@@ -98,28 +106,29 @@ theorem exp_sub_log_facts {a b : Float} {N M : Nat} (hN : N ≤ 500) (hM : 1 ≤
     have e : 2 * 4 ^ N = 4 ^ N + 4 ^ N := by omega
     rw [e]
     exact le_trans h1 (le_trans (add_le_add (le_refl _) h2) h4)
-  have hrl : abs (realToR (stdI1 leanPrims .ln b)) ≤ natCast (2 * M) := by
+  have hrl : abs (realToR (stdI1 leanPrims .ln b)) ≤ natCast (3 * M) := by
     have hLog : abs (log (realToR b)) ≤ natCast M := abs_log_le_of_half_le hb1 hbM hM
     have h1 := abs_le_add_err hL
-    have h2 : u * (abs (log (realToR b)) + abs (log (realToR b))) ≤ abs (log (realToR b)) := by
-      have e : u * (abs (log (realToR b)) + abs (log (realToR b))) = (u + u) * abs (log (realToR b)) := by mach_ring
-      rw [e]
-      have h3 := mul_le_mul_of_nonneg_right u_le_half (abs_nonneg (log (realToR b)))
+    have h2 : (u + u) * (abs (log (realToR b)) + abs (log (realToR b)))
+        ≤ abs (log (realToR b)) + abs (log (realToR b)) := by
+      have h3 := mul_le_mul_of_nonneg_right u_le_half
+        (add_nonneg (abs_nonneg (log (realToR b))) (abs_nonneg (log (realToR b))))
       rw [one_mul_thm] at h3; exact h3
-    have h4 : abs (log (realToR b)) + abs (log (realToR b)) ≤ natCast M + natCast M := add_le_add hLog hLog
-    rw [← natCast_add] at h4
-    have e2 : 2 * M = M + M := by omega
+    have h4 : abs (log (realToR b)) + (abs (log (realToR b)) + abs (log (realToR b)))
+        ≤ natCast M + (natCast M + natCast M) := add_le_add hLog (add_le_add hLog hLog)
+    rw [← natCast_add, ← natCast_add] at h4
+    have e2 : 3 * M = M + (M + M) := by omega
     rw [e2]
     exact le_trans h1 (le_trans (add_le_add (le_refl _) h2) h4)
   have hdiff : abs (realToR (stdI1 leanPrims .exp a) - realToR (stdI1 leanPrims .ln b))
-      ≤ natCast (2 * 4 ^ N + 2 * M) := by
+      ≤ natCast (2 * 4 ^ N + 3 * M) := by
     rw [natCast_add]; exact le_trans (abs_sub_le' _ _) (add_le_add hre hrl)
-  have hdmax : (natCast (2 * 4 ^ N + 2 * M) : MachLib.Real) ≤ dblMax :=
+  have hdmax : (natCast (2 * 4 ^ N + 3 * M) : MachLib.Real) ≤ dblMax :=
     natCast_le_natCast_of_nat_le (by omega)
   have hsub := real_fpfinite.sub _ _ hexp hlog (le_trans hdiff hdmax)
   have hr := real_fpbridge.sub _ _ hsub
   have hmag : abs (realToR (stdI1 leanPrims .exp a - stdI1 leanPrims .ln b))
-      ≤ (1 + 1) * natCast (2 * 4 ^ N + 2 * M) :=
+      ≤ (1 + 1) * natCast (2 * 4 ^ N + 3 * M) :=
     le_trans (abs_le_one_add (roundsW_abs hr))
       (mul_le_mul' one_add_u_nonneg one_add_u_le_two_of_lt_one (abs_nonneg _) hdiff)
   rw [← natCast_two, ← natCast_mul] at hmag
@@ -147,7 +156,8 @@ theorem eml_tree_grounded_eml_var_var_instantiated (env : Env) (hx : (env "x").t
     exp_sub_log_facts (N := 500) (M := 500) (by decide) (by decide) (by decide) hx habs hx hlo hhi
   have hv : EMLTreeValid (realToR (env "x").toF) (EMLTree.eml EMLTree.var EMLTree.var) :=
     EMLTreeValid.eml _ _ (by show (0 : MachLib.Real) < realToR (env "x").toF; exact h0) EMLTreeValid.var EMLTreeValid.var
-  exact eml_tree_grounded env _ hv (EMLTreeFloatSafe.eml _ _ hx hexp hnorm hout EMLTreeFloatSafe.var EMLTreeFloatSafe.var)
+  exact eml_tree_grounded env _ hv
+    (EMLTreeFloatSafe.eml _ _ hx hx hexp hnorm hout EMLTreeFloatSafe.var EMLTreeFloatSafe.var)
 
 set_option exponentiation.threshold 1100 in
 /-- **`eml_tree_grounded`, instantiated at the depth-2 tree `eml (eml var var) var`** (`exp(exp x − log x) − log x`), on
@@ -175,15 +185,15 @@ theorem eml_tree_grounded_depth2_instantiated (env : Env) (hx : (env "x").toF.is
   obtain ⟨hexp1, hnorm1, _, hout1, hmag1⟩ :=
     exp_sub_log_facts (N := 2) (M := 2) (by decide) (by decide) (by decide) hx habs hx hlo hhi
   obtain ⟨hexp2, hnorm2, _, hout2, _⟩ :=
-    exp_sub_log_facts (N := 2 * (2 * 4 ^ 2 + 2 * 2)) (M := 2) (by decide) (by decide) (by decide) hout1 hmag1
+    exp_sub_log_facts (N := 2 * (2 * 4 ^ 2 + 3 * 2)) (M := 2) (by decide) (by decide) (by decide) hout1 hmag1
       hx hlo hhi
   have hv1 : EMLTreeValid (realToR (env "x").toF) (EMLTree.eml EMLTree.var EMLTree.var) :=
     EMLTreeValid.eml _ _ (by show (0 : MachLib.Real) < realToR (env "x").toF; exact h0) EMLTreeValid.var EMLTreeValid.var
   have hv : EMLTreeValid (realToR (env "x").toF) (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) EMLTree.var) :=
     EMLTreeValid.eml _ _ (by show (0 : MachLib.Real) < realToR (env "x").toF; exact h0) hv1 EMLTreeValid.var
   exact eml_tree_grounded_depth2_instance env hv
-    (EMLTreeFloatSafe.eml _ _ hout1 hexp2 hnorm2 hout2
-      (EMLTreeFloatSafe.eml _ _ hx hexp1 hnorm1 hout1 EMLTreeFloatSafe.var EMLTreeFloatSafe.var) EMLTreeFloatSafe.var)
+    (EMLTreeFloatSafe.eml _ _ hout1 hx hexp2 hnorm2 hout2
+      (EMLTreeFloatSafe.eml _ _ hx hx hexp1 hnorm1 hout1 EMLTreeFloatSafe.var EMLTreeFloatSafe.var) EMLTreeFloatSafe.var)
 
 set_option exponentiation.threshold 1100 in
 /-- **`eml_tree_grounded`, instantiated at `eml (const 1) var`** (`exp 1 − log x`, the constant compiled as `floatOfR 1`),
@@ -212,7 +222,7 @@ theorem eml_tree_grounded_eml_const_one_instantiated (env : Env) (hx : (env "x")
     EMLTreeValid.eml _ _ (by show (0 : MachLib.Real) < realToR (env "x").toF; exact h0)
       (EMLTreeValid.const 1) EMLTreeValid.var
   exact eml_tree_grounded_const_instance env 1 hv
-    (EMLTreeFloatSafe.eml _ _ hf1 hexp hnorm hout
+    (EMLTreeFloatSafe.eml _ _ hf1 hx hexp hnorm hout
       (EMLTreeFloatSafe.const 1 (Or.inr (by rw [abs_one]; exact dblMin_le_one)) (by rw [abs_one]; exact one_le_dblMax))
       EMLTreeFloatSafe.var)
 
@@ -224,8 +234,8 @@ set_option exponentiation.threshold 1100 in
 theorem eml_var_var_pipeline_uniform_instantiated (env : Env) (A B : MachLib.Real) (hA1 : 1 ≤ A)
     (hB : B ≤ natCast 500) (hx : (env "x").toF.isFinite = true)
     (hlo : A ≤ realToR (env "x").toF) (hhi : realToR (env "x").toF ≤ B) :
-    AbsEnc (u * ((exp B + (u + u) * exp B) + (log B + u * (abs (log A) + abs (log B))))
-        + ((u + u) * exp B + u * (abs (log A) + abs (log B))))
+    AbsEnc (u * ((exp B + (u + u) * exp B) + (log B + (u + u) * (abs (log A) + abs (log B))))
+        + ((u + u) * exp B + (u + u) * (abs (log A) + abs (log B))))
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC emlVarVar)).toF)
       (exp (realToR (env "x").toF) - log (realToR (env "x").toF)) := by
   have h1 : 1 ≤ realToR (env "x").toF := le_trans hA1 hlo
@@ -249,8 +259,8 @@ theorem eml_var_var_quantized_pointwise_instantiated (env : Env) (A B : MachLib.
     abs (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt env floatOfR x)
         (emitC emlVarVar)).toF - (EMLTree.eml EMLTree.var EMLTree.var).eval x)
       ≤ u * ((exp (B + u * B) + (u + u) * exp (B + u * B))
-            + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
-          + ((u + u) * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
+            + (log (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+          + ((u + u) * exp (B + u * B) + (u + u) * (abs (log (A - u * B)) + abs (log (B + u * B))))
         + (exp (B + u * B) + 1 / (A - u * B)) * (u * B) := by
   have huB : u * B + u * B ≤ B := by
     have h := mul_le_mul_of_nonneg_right u_le_half hB0
@@ -365,8 +375,8 @@ theorem eml_tree_grounded_eml_const_one_specimen :
 /-- Specimen for `eml_var_var_pipeline_uniform_instantiated`, at `x = floatOfR 2.0`, `A = 1`, `B = 4`. -/
 theorem eml_var_var_pipeline_uniform_specimen :
     AbsEnc (u * ((exp (natCast 4) + (u + u) * exp (natCast 4))
-          + (log (natCast 4) + u * (abs (log 1) + abs (log (natCast 4)))))
-        + ((u + u) * exp (natCast 4) + u * (abs (log 1) + abs (log (natCast 4)))))
+          + (log (natCast 4) + (u + u) * (abs (log 1) + abs (log (natCast 4)))))
+        + ((u + u) * exp (natCast 4) + (u + u) * (abs (log 1) + abs (log (natCast 4)))))
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) emlSpecimenEnv (emitC emlVarVar)).toF)
       (exp (realToR (floatOfR 2.0)) - log (realToR (floatOfR 2.0))) :=
   eml_var_var_pipeline_uniform_instantiated emlSpecimenEnv 1 (natCast 4) (le_refl 1)
@@ -377,12 +387,26 @@ theorem eml_var_var_quantized_pointwise_specimen :
     abs (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt emlSpecimenEnv floatOfR 3.5)
         (emitC emlVarVar)).toF - (EMLTree.eml EMLTree.var EMLTree.var).eval 3.5)
       ≤ u * ((exp (4.0 + u * 4.0) + (u + u) * exp (4.0 + u * 4.0))
-            + (log (4.0 + u * 4.0) + u * (abs (log (3.0 - u * 4.0)) + abs (log (4.0 + u * 4.0)))))
-          + ((u + u) * exp (4.0 + u * 4.0) + u * (abs (log (3.0 - u * 4.0)) + abs (log (4.0 + u * 4.0))))
+            + (log (4.0 + u * 4.0) + (u + u) * (abs (log (3.0 - u * 4.0)) + abs (log (4.0 + u * 4.0)))))
+          + ((u + u) * exp (4.0 + u * 4.0) + (u + u) * (abs (log (3.0 - u * 4.0)) + abs (log (4.0 + u * 4.0))))
         + (exp (4.0 + u * 4.0) + 1 / (3.0 - u * 4.0)) * (u * 4.0) :=
   eml_var_var_quantized_pointwise_instantiated emlSpecimenEnv 3.0 4.0
     (le_of_lt (realOfScientific_pos 40 true 1 (by decide)))
     (le_trans (decimal_le_natCast 40 1 (by decide)) (natCast_le_natCast_of_nat_le (by decide)))
     (by rw [← realOfScientific_two_dot_zero]; grounded_decimal) 3.5 (by grounded_decimal) (by grounded_decimal)
+
+/-! ## 5. Why `eml_var_var_certcom_witness_grounded` is not instantiated -/
+
+open MachLib.EMLExplicitBound in
+set_option maxRecDepth 100000 in
+/-- **The zero-count bound the Khovanskii encoder gives `eml var var` is `14`**, by `decide` (the kernel evaluates the
+encoder; about 5 seconds). `eml_var_var_certcom_witness_grounded`'s `hMB` is `ext (this + 1) < B`, so its `B` must exceed
+`ext 15 = π/2 + 15π`, about `48.7`; the module docstring says why that rules the certificate out at binary64's `u`. The
+same proposition at `13` is refuted by `decide`. -/
+theorem emlVarVar_combinedBoundE_eq :
+    combinedBoundE (len (EMLTree.eml EMLTree.var EMLTree.var) 0)
+      (enc (EMLTree.eml EMLTree.var EMLTree.var) emlEmptyChain).1
+      (encTags (EMLTree.eml EMLTree.var EMLTree.var) emlEmptyChain ())
+      (enc (EMLTree.eml EMLTree.var EMLTree.var) emlEmptyChain).2 = 14 := by decide
 
 end Certcom

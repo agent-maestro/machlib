@@ -41,7 +41,9 @@ quote.
 from __future__ import annotations
 
 import argparse
+import os
 import re
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -79,8 +81,23 @@ def count_file(p: Path) -> int:
     return len(DECL.findall(strip_block_comments(p.read_text(encoding="utf-8", errors="ignore"))))
 
 
+def tracked_lean(root: Path) -> list[Path] | None:
+    """The `.lean` files under `MachLib/` that git TRACKS, or None when git cannot say.
+
+    TRACKED, since 2026-09-14. This counted every `.lean` file on disk, and `MachLib/Discovered/.gitignore` ignores
+    everything the auto-prover emits until it is added by hand, so this machine counted 39 local-only Discovered files
+    that no clean checkout has: CI and the documents disagreed (253 against 292 Discovered files). A count that depends
+    on what happens to be lying in the working tree is not reproducible."""
+    env = {k: v for k, v in os.environ.items() if k not in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE")}
+    try:
+        r = subprocess.run(["git", "ls-files", "-z", "--", "MachLib"], cwd=root, capture_output=True, env=env, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return sorted(root / q for q in r.stdout.decode("utf-8").split("\0") if q.endswith(".lean"))
+
+
 def files(scope: str, root: Path) -> list[Path]:
-    allf = sorted((root / "MachLib").rglob("*.lean"))
+    allf = tracked_lean(root) or []
     if scope == "all":
         return allf
     inside = [p for p in allf if "Discovered" in p.parts]
