@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 // repository's check suite if the corpus drifts from what is printed here.
 // The date is the measurement date; the command that reproduces each figure
 // is in README.md under "Numbers, measured".
-const MEASURED_ON = "2026-09-14";
+const MEASURED_ON = "2026-09-15";
 
 const TILES: { value: string; label: string }[] = [
   { value: "7 870", label: "theorems, outside the Forge corpus" },

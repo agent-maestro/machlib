@@ -489,6 +489,13 @@
    "source": "manifest_float"
   },
   {
+   "id": "site.axioms_pinned",
+   "file": "site/components/CheckIt.tsx",
+   "pattern": "# ([0-9 \\u202f]+) axioms pinned; headline footprints",
+   "source": "axioms_pinned",
+   "_note": "Registered 2026-09-15: the site's sample output of the ledger command read 243 while the ledger pinned 256, and nothing read that line."
+  },
+  {
    "id": "claude.claims_total",
    "file": "CLAUDE.md",
    "pattern": "all ([\\d  ,]+) claims resolve against #print axioms",

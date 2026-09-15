@@ -23,7 +23,7 @@ const PATHS: Path[] = [
       "The claim inventory says what is proven, what it rests on and what is open, with a " +
       "command next to each claim. If something there cannot be reproduced in a few commands, " +
       "that is a bug in the document.",
-    cmd: "cd machlib/foundations\nlake env lean AxiomLedger.lean\n# 243 axioms pinned; headline footprints ⊆ trusted",
+    cmd: "cd machlib/foundations\nlake env lean AxiomLedger.lean\n# 256 axioms pinned; headline footprints ⊆ trusted",
     href: "https://github.com/agent-maestro/machlib/blob/master/foundations/docs/what_is_proven.md",
     hrefLabel: "what_is_proven.md →",
   },
@@ -46,8 +46,11 @@ export default function CheckIt() {
         <div className="eyebrow">// check it yourself</div>
         <h2>Three ways in, each ending in a command.</h2>
         <p className="section-lede">
-          Nothing on this page asks to be believed. The library builds in about
-          a minute and its gates run in about fifteen.
+          Nothing on this page asks to be believed. On 2026-09-15 a cold build
+          from a fresh clone took 13 minutes on GitHub&apos;s hosted runner,
+          which times one on every push to master that touches the library,
+          and the full gate run took just under 20 minutes on a 20-core
+          workstation.
         </p>
 
         <div className="paths">
