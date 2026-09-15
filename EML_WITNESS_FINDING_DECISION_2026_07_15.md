@@ -5367,6 +5367,9 @@ Read `check_ledger.py` (a CI runner that builds `AxiomLedger.lean` and asserts g
 prose-generation pipeline unrelated to Option D). Conclusion: not stale or broken, just out of
 scope for Option D's needs. No action taken.
 
+> *(2026-09-15: superseded. See `foundations/docs/machsig/PHASE1_ISSUES.md`, whose closing note records what became
+> of `axiom_ledger.json`.)*
+
 **A1 (built, `aecc2b56`):** `AxiomLedger.lean` previously only checked a hand-curated `headlines`
 list. Added `optionDSpineModules` (the 16 cont.56-71 spine files) and `spineTheorems (env)`, which
 maps every theorem to its source module via `env.getModuleIdxFor?`/`env.header.moduleNames` — kernel

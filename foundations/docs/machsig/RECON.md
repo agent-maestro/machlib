@@ -80,13 +80,15 @@ The hardest-sounding features are the most available. `AxiomLedger.lean` enumera
 environment (`getEnv`, `.axiomInfo`) and takes footprints from **the kernel's own dependency graph**
 (`Lean.collectAxioms`, the `#print axioms` mechanism). `tools/sorry_audit.lean` already walks every
 MachLib declaration and computes transitive `sorryAx` dependence. `tools/axiom_ledger/emit_ledger.py`
-already writes machine-readable output (`axiom_ledger.json`).
+wrote machine-readable output (`axiom_ledger.json`) when this was written.
 
 MachSig's proof features should reuse that path rather than re-deriving it.
 
 > **Caution before reuse:** `axiom_ledger.json` records `total_axioms: 220` while the live gate
 > reports **243 axioms pinned**. The two are probably differently scoped, but the discrepancy is
 > unresolved and the json must not be treated as the current count without checking.
+> *(2026-09-15: settled in `PHASE1_ISSUES.md`, whose closing note records what became of the json and of
+> `emit_ledger.py`'s output. Read the count off `lake env lean AxiomLedger.lean`.)*
 
 ---
 

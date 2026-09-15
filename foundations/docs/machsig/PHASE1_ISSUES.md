@@ -20,6 +20,16 @@ artifact was found in this scope. Regenerating `emit_ledger.py` and re-diffing i
 **Neither number was "chosen".** The gate's figure is now explained; the json's is narrowed to a
 one-axiom question with a named way to settle it.
 
+**Closed 2026-09-15, by deletion rather than regeneration: `foundations/axiom_ledger.json` no longer exists.** Measured
+that day, the json still held its 2026-08-20 write, `total_axioms: 220`; `emit_ledger.py`'s own scope and filter
+(`MachLib.*` or `Real.*`, compiler artifacts excluded) counted **224** in the live environment; and the ledger pinned
+**256**. So it was stale in its own scope as well as scoped differently from the gate. Nothing read it: a search of
+machlib, forge, monogate-lean and the site sources found no reader, only its writer `tools/axiom_ledger/emit_ledger.py`,
+which no script or workflow runs. A copy that nothing checks can only drift, so the file was deleted and `emit_ledger.py`
+now prints its prose without writing it. `axiom-ledger-json-absent` in `tools/absence_claims.json` fires if the file
+comes back. Read the axiom count off `lake env lean AxiomLedger.lean` and the trusted base off
+`foundations/AXIOM_MANIFEST.md`.
+
 ## RESOLVED — sorry count cross-validates
 
 The census computes `depends_on_sorry` independently, via `Lean.collectAxioms` over every

@@ -33,7 +33,7 @@ file set (`8 097` as measured when it was caught, every `.lean` outside `.lake`)
 self-contained and they cannot be imported together; it is the Forge `@verify(lean)` corpus and has
 its own harness, `scripts/closerate.sh`. The numeric
 substrate is **`MachLib.Real`**, an *axiomatised* real field (its axioms are counted and disclosed by the ledger below and in
-**`foundations/AXIOM_MANIFEST.md`**, not by `foundations/axiom_ledger.json`, an older generated snapshot): there is no Mathlib, no `Complex`, and
+**`foundations/AXIOM_MANIFEST.md`**): there is no Mathlib, no `Complex`, and
 `Real.log` is **totalised** — `log y = 0` for `y ≤ 0`, which is load-bearing in EML proofs and a
 frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`** replace `ring`/
 `linarith`.
@@ -245,7 +245,7 @@ load-bearing; nothing read the **sentences**. When you add a checked list whose 
 assume the prose is unchecked until you find the gate that reads it.
 
 It registers each absence claim with **something that could falsify it** (`tools/absence_claims.json`,
-14 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
+15 entries) and fails when that thing starts holding. Two check kinds, and the difference matters:
 
 * **search** — a regex, for *"no such declaration"*;
 * **probe** — a Lean snippet that must FAIL to compile, for *"no such tactic"*. A grep for
@@ -335,9 +335,12 @@ behind it is missing — registration is still a human act.
   Measure, **read the output**, then commit as a separate command — the same rule as gate-then-act,
   turned on the commit message.
 - **A green gate line is a claim about the gate's SCOPE, not about your theorem.** `witness_audit.py`
-  excludes theorems concluding `False` **by design** — it now prints how many (60) it cannot examine,
-  rather than leaving `OK` to read as coverage. Check your theorem is in the class a gate examines
-  before citing it.
+  cannot examine a theorem concluding `False` **by design** (an unsatisfiable hypothesis set is its
+  content), and it prints how many it cannot examine (61) rather than leaving `OK` to read as coverage.
+  That count is a report, **not an exclusion from the ratchet**: `main()` never subtracts the class, so a
+  `False`-concluding capstone with no caller is pinned in `tools/witness_baseline.json` like any other
+  (`positive_branch_impossible` and `abs_exact_inconsistent_with_unrestricted_forms` both are). Check
+  your theorem is in the class a gate examines before citing it.
 - **DO NOT EDIT THE TREE DURING A GATE RUN — and the freeze you can see is not the only one.**
   `check_all.sh` fingerprints `git status --porcelain | sha1sum`: a NAME-and-STATUS list.
   `claim_audit.py` keeps its **own, stricter** fingerprint that also hashes the **CONTENTS** of every

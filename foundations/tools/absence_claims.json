@@ -203,6 +203,20 @@
    },
    "note": "ENVIRONMENT probe. Registered on 2026-09-14 as `no-float-finiteness-producer` ('no theorem or axiom here concludes that a float is finite'), narrowed the same day when the owner approved the range axioms `real_fpfinite` and `real_round_finite`, and narrowed again, still the same day, for the libm finiteness axioms `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite` and `real_log_finite`. Part 1 is the original scan: every axiom and theorem after `import MachLib` that concludes Float.isFinite (or, for an axiom, an inductive that stores finiteness, such as a structure whose field concludes it) from premises that supply none; only the two range axioms, and theorems whose `#print axioms` footprint includes one of them, may be found. The libm axioms take a finite input, so Part 1 cannot see them at all, and the sentence it guarded would have gone on reading as true of a corpus with four more axioms concluding finiteness. Part 2 closes that: every AXIOM whose conclusion mentions finiteness, whatever its premises assume, must be one of the six by name. It throws SCAN-BROKEN if it does not see all six, so a scan that stopped working reads as broken rather than as a pass. Checked capable of both verdicts before this change was committed (see the commit): it throws NO-OTHER-FINITENESS-PRODUCER on the corpus and on a planted theorem resting on `real_round_finite`; it finds a planted axiom concluding a literal finite, a planted axiom carrying finiteness from a finite input to `Float.sin`, and it throws SCAN-BROKEN when told to expect `real_tanh_rounds`. If it fires, a finiteness fact that none of the six supplies has arrived, and what_is_proven.md's grounded-certificates lane and the Grounded*Instances docstrings must be revisited.",
    "recorded": "2026-09-14"
+  },
+  {
+   "id": "axiom-ledger-json-absent",
+   "source_file": "docs/machsig/PHASE1_ISSUES.md",
+   "claim_text": [
+    "`foundations/axiom_ledger.json` no longer exists"
+   ],
+   "expect": "no_match",
+   "probe": {
+    "snippet": "#eval show IO Unit from do\n  if (← System.FilePath.pathExists \"axiom_ledger.json\") then\n    IO.println \"axiom_ledger.json is present\"\n  else\n    throw <| IO.userError \"axiom-ledger-json-absent: foundations/axiom_ledger.json does not exist\"",
+    "must_fail_with": "axiom-ledger-json-absent"
+   },
+   "note": "FILE probe. The claim is that a generated snapshot is gone, which a search cannot state: run_search greps *.lean only. The harness runs `lake env lean` from foundations/, so the relative path is foundations/axiom_ledger.json, and the snippet throws, naming this id, only when that file is absent; a file that comes back makes the probe COMPILE and read NOW-FALSE. Both verdicts were run through absence_audit.run_probe at registration: (clean, saw) = (True, False) with the file present, then (False, True) after `git rm`. The file went because nothing read it and it had drifted (220 in its own scope against a live 224, while the ledger pinned 256, all measured 2026-09-15). If this fires, whoever brought it back must name what reads it and gate it against the ledger, or delete it again.",
+   "recorded": "2026-09-15"
   }
  ]
 }

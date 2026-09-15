@@ -29,6 +29,14 @@ All fold certificates rest on: the `MachLib.Real` field/order axioms (witnessed 
 Theorem B / the axiom-ledger), the roundoff constants `u`/`u_nonneg`/`u_le_one`, and — as a
 **discharged hypothesis, not an axiom** — `FPBridge toR`.
 
+> **Historical (2026-07-10), not a current trust statement.** This list is the scoping pass's reading and nothing keeps
+> it current. Re-read with `#print axioms` on 2026-09-15: the fold certificates in the table (`pipeline_arith`,
+> `pipeline_det`, `pipeline_pos_over_arith`, `pipeline_{exp,log}_of_arith`, `pipeline_nested_{glob,std}`) rest on `u` and
+> `u_nonneg` but not on `u_le_one`, which only the worked `length_sq2_bridge` uses, and every one past the arithmetic
+> fragment also rests on `MachLib.Real`'s derivative and transcendental axioms (`HasDerivAt_*`, `exp`, …). The trusted
+> base, one row per axiom with how each is modeled, is **`AXIOM_MANIFEST.md`**; a certificate's own footprint is its
+> `#print axioms`.
+
 > **Stale docstring flagged:** `FloatRealBridge.lean`'s header still calls general cancelling
 > accumulation "the remaining CompCert-scale T3 work, not claimed here." `AbsoluteFold.pipeline_arith`
 > has since closed exactly that for the arithmetic fragment (cancellation included, sorryAx-free).

@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-"""Emit the axiom ledger as data (axiom_ledger.json) + the generated footprint prose.
+"""Print the generated footprint prose for four Khovanskii headlines, read off the kernel.
 
 The point (the muse's permanent fix for "§05 drifts from reality"): the khovanskii page's
 axiom-footprint sentences should be GENERATED from the kernel-verbatim ledger, not hand-typed.
 This reads the real footprints via `Lean.collectAxioms` (same mechanism as AxiomLedger.lean's
-gate), writes axiom_ledger.json, and prints the canonical §05/§06 sentence. Regenerate on every
-release; the sentence and the gate then cannot disagree.
+gate) and prints the canonical §05/§06 sentence.
+
+It also wrote `foundations/axiom_ledger.json` until 2026-09-15, and no longer does. Nothing read that file, nothing ran
+this script, and the file had drifted even in its own scope (220 against a live 224 that day) while the ledger pinned
+256. `docs/machsig/PHASE1_ISSUES.md` records the deletion, and `axiom-ledger-json-absent` in `tools/absence_claims.json`
+fires if the file comes back. The axiom count is `lake env lean AxiomLedger.lean`; the trusted base is
+`AXIOM_MANIFEST.md`.
 
 Usage:
-    python3 tools/axiom_ledger/emit_ledger.py            # write axiom_ledger.json + print prose
-    python3 tools/axiom_ledger/emit_ledger.py --print    # print only
+    python3 tools/axiom_ledger/emit_ledger.py            # print the prose; no artifact is written
 """
-import json, os, re, subprocess, sys, tempfile
+import os, re, subprocess, sys, tempfile
 
 FOUND = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-OUT = os.path.join(FOUND, "axiom_ledger.json")
 
 HEADLINES = [
     ("47-barrier (pure exp tower)", "MachLib.KhovanskiiConcrete.eexp_barrier_zero_count_le_47"),
@@ -103,10 +106,7 @@ def prose(led: dict) -> str:
 
 def main() -> int:
     led = build(collect_facts())
-    if "--print" not in sys.argv:
-        json.dump(led, open(OUT, "w"), indent=2)
-        print(f"wrote {os.path.relpath(OUT, FOUND)}")
-    print("\n--- generated §05/§06 footprint sentence ---\n" + prose(led))
+    print("--- generated §05/§06 footprint sentence ---\n" + prose(led))
     return 0
 
 

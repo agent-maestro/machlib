@@ -56,6 +56,11 @@
    "cmd": "python3 -c \"import json; print(len(json.load(open('tools/witness_baseline.json'))['unwitnessed']))\"",
    "extract": "^\\s*(\\d+)\\s*$"
   },
+  "witness_not_applicable": {
+   "kind": "shell",
+   "cmd": "python3 tools/witness_audit.py",
+   "extract": "(\\d+) refutation theorem\\(s\\) NOT APPLICABLE"
+  },
   "hypothesis_entries": {
    "kind": "shell",
    "cmd": "python3 -c \"import json; print(len(json.load(open('tools/hypothesis_baseline.json'))['unproduced']))\"",
@@ -372,6 +377,12 @@
    "file": "CLAUDE.md",
    "pattern": "`tools/witness_baseline.json`, (\\d+) entries",
    "source": "witness_entries"
+  },
+  {
+   "id": "claude.witness_not_applicable",
+   "file": "CLAUDE.md",
+   "pattern": "prints\\s+how\\s+many\\s+it\\s+cannot\\s+examine\\s+\\((\\d+)\\)",
+   "source": "witness_not_applicable"
   },
   {
    "id": "claude.closerate_pct",
