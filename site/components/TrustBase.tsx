@@ -10,7 +10,7 @@ export default function TrustBase() {
     <section id="trust">
       <div className="container">
         <div className="eyebrow">// what it rests on</div>
-        <h2>Zero unmodeled axioms. Not zero axioms.</h2>
+        <h2>Zero unaccounted axioms. Not zero axioms.</h2>
         <p className="section-lede">
           Everything Mathlib would prove as a theorem — the ordered field of
           reals, the definitions and derivatives of exp, log, sin and cos, the
@@ -18,7 +18,8 @@ export default function TrustBase() {
           can be vacuous without a single <code>sorry</code>, so nothing
           inside MachLib is allowed to vouch for MachLib. A sibling project
           that imports both Mathlib and MachLib checks, in the kernel, that a
-          Mathlib term inhabits each axiom&apos;s interpreted type. The
+          Mathlib term inhabits the interpreted type of each witnessable
+          axiom. The
           manifest listing all 169 is generated, and a gate fails if the
           witness project stops running — it did once, for 33 days.
         </p>

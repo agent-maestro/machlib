@@ -1,7 +1,7 @@
 const NOT_CLAIMED: string[] = [
   "No claim about physical silicon beyond the reproduction package and the bench evidence it cites. A theorem about a datapath is a theorem about the datapath.",
   "No compiler-correctness claim for Forge. The certifier binds a proof to a kernel by hash; it does not verify code generation.",
-  "The analytic base is axiomatised, not constructed. Every axiom is listed and modeled; none is proved here.",
+  "The analytic base is axiomatised, not constructed. Every trusted axiom is listed and accounted for — witnessed in Mathlib, interpreted, or measured; none is proved here.",
   "The end-to-end composition from bits to a closed-loop trajectory is proved for the affine plant kernel, not yet for the PID controller path.",
   "The research lane on the EML language is the work of one author: kernel-checked, not yet externally reviewed.",
   "Counts are snapshots. Re-run the command before quoting one.",

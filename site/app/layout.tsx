@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "MachLib — machine-checked theorems about compiled numerics",
   description:
-    "A Mathlib-free Lean 4 library that proves things about EML kernels, the exp/log expression language Forge compiles to C, GPU code and RTL. Every axiom listed and modeled; every claim paired with the command that checks it.",
+    "A Mathlib-free Lean 4 library that proves things about EML kernels, the exp/log expression language Forge compiles to C, GPU code and RTL. Every trusted axiom listed and accounted for; every claim paired with the command that checks it.",
   applicationName: "MachLib",
   authors: [{ name: "Mosa Creates LLC" }],
   keywords: [
@@ -26,14 +26,14 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "MachLib — machine-checked theorems about compiled numerics",
     description:
-      "A Mathlib-free Lean 4 library that proves things about EML kernels. Every axiom listed and modeled; every claim paired with the command that checks it.",
+      "A Mathlib-free Lean 4 library that proves things about EML kernels. Every trusted axiom listed and accounted for; every claim paired with the command that checks it.",
     siteName: "MachLib",
   },
   twitter: {
     card: "summary_large_image",
     title: "MachLib — machine-checked theorems about compiled numerics",
     description:
-      "A Mathlib-free Lean 4 library that proves things about EML kernels. Every axiom listed and modeled; every claim paired with the command that checks it.",
+      "A Mathlib-free Lean 4 library that proves things about EML kernels. Every trusted axiom listed and accounted for; every claim paired with the command that checks it.",
   },
   robots: { index: true, follow: true },
   icons: { icon: "/favicon.ico" },

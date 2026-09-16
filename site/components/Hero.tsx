@@ -16,14 +16,17 @@ export default function Hero() {
             marginTop: 8,
           }}
         >
-          MachLib — Lean 4, Mathlib-free, every axiom listed and modeled.
+          MachLib — Lean 4, Mathlib-free, every trusted axiom listed and
+          accounted for.
         </p>
         <p className="subtitle">
           MachLib is a Lean 4 library that proves things about EML kernels: the
           small exp/log expression language that Forge compiles to C, GPU code
           and RTL. It carries its own axiomatised reals instead of Mathlib, so
           the compiler&apos;s proof obligations build in a minute — and every
-          one of those axioms is checked against Mathlib in a sibling project.
+          axiom its headline theorems rest on is accounted for: witnessed in
+          Mathlib by a sibling project, interpreted, or, for the IEEE-754
+          floor, measured.
         </p>
         <div className="hero-buttons">
           <a

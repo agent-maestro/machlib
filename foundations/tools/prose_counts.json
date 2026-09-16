@@ -161,7 +161,7 @@
   {
    "id": "readme.trusted",
    "file": "README.md",
-   "pattern": "trusted axioms, all modeled \\| ([0-9 \\u202f]+) \\|",
+   "pattern": "trusted axioms, all accounted for \\| ([0-9 \\u202f]+) \\|",
    "source": "manifest_trusted"
   },
   {
@@ -447,7 +447,7 @@
   {
    "id": "site.trusted",
    "file": "site/components/Numbers.tsx",
-   "pattern": "value: \"([0-9 \\u202f]+)\", label: \"trusted axioms, every one modeled\"",
+   "pattern": "value: \"([0-9 \\u202f]+)\", label: \"trusted axioms, none unaccounted\"",
    "source": "manifest_trusted"
   },
   {

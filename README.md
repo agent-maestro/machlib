@@ -163,7 +163,7 @@ MachLib is Mathlib-free by construction, so nothing inside it can show its axiom
 satisfiable. That check lives in the sibling project
 [`monogate-lean`](https://github.com/agent-maestro/monogate-lean), which imports both Mathlib and
 MachLib and, for every trusted axiom, verifies that a Mathlib term inhabits the axiom's interpreted
-type. The honest headline is **zero unmodeled axioms**, never "zero axioms":
+type. The honest headline is **zero unaccounted axioms**, never "zero axioms":
 
 | class | count | meaning |
 |---|---|---|
@@ -208,7 +208,7 @@ fails if the text drifts from the corpus. Measured 2026-09-14:
 | theorems in the Forge `@verify` corpus | 624 | the same command over `Discovered/` |
 | `.lean` files under `MachLib/` | 1 080 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
 | axioms pinned by the ledger | 256 | `lake env lean AxiomLedger.lean` |
-| trusted axioms, all modeled | 169 | `AXIOM_MANIFEST.md` |
+| trusted axioms, all accounted for | 169 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
 | modules reachable from the aggregator | 815 of 1 080 | `scripts/check_aggregator.sh` |
 
@@ -218,8 +218,8 @@ fails if the text drifts from the corpus. Measured 2026-09-14:
   `monogate-research` show; a theorem about a datapath is a theorem about the datapath.
 - No compiler-correctness claim for Forge: the certifier binds a proof to a kernel by hash, it
   does not verify code generation.
-- The analytic base is axiomatised, not constructed; every axiom is listed and modeled, none is
-  proved here.
+- The analytic base is axiomatised, not constructed; every trusted axiom is listed and accounted
+  for — witnessed in Mathlib, interpreted, or measured — and none is proved here.
 - The research lane is the work of one author, kernel-checked and not yet externally reviewed.
 - Counts are snapshots; re-run the command before quoting one.
 
