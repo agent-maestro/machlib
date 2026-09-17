@@ -43,6 +43,25 @@ theorem mul_div_cancel_left' {a b : Real} (hb : b ≠ 0) : (b * a) / b = a := by
 theorem self_div {b : Real} (hb : b ≠ 0) : b / b = 1 := by
   rw [div_def b b hb, mul_inv b hb]
 
+/-- `a / 1 = a`, with no side condition — the one division identity that needs none.
+
+**Moved here from `MachLib/EMLRationalGerm.lean` (2026-09-17), and the reason is the rule this
+corpus already states:** put a lemma where its name would be looked for, not where it was proved.
+It is a field identity, it lived in a rational-germ module, and the corpus had grown **four** local
+copies of the same fact — `div_one_local` (`GaussianDiskSandwich`) and `one_div_one_eq_one` twice
+(`InvXNotInEML`, `EMLDifferentiationClosureFailure`) — because nobody looking for it found it.
+
+It is load-bearing for Forge. An emitted artifact imports `MachLib.Decimal`, hence this file, and
+NOT `EMLRationalGerm`; since the optimizer stopped folding `x * 0` (Forge is IEEE-exact by default
+from 2026-09-17), four emitted obligations normalise to `1 / 1 = 1` and nothing in the emitted
+import scope could close it. `exact?` from that import set returned nothing for `a / 1 = a`. -/
+theorem div_one_eq (a : Real) : a / 1 = a := by
+  rw [div_def a 1 (ne_of_gt zero_lt_one_ax)]
+  have e : (1 : Real) * (1 / 1) = 1 / 1 := by mach_ring
+  have h := mul_inv (1 : Real) (ne_of_gt zero_lt_one_ax)
+  rw [e] at h
+  rw [h]; mach_ring
+
 /-- `c ≠ 0 → a/c + b/c = (a+b)/c`. -/
 theorem div_add_div_same {a b c : Real} (hc : c ≠ 0) : a / c + b / c = (a + b) / c := by
   rw [div_def a c hc, div_def b c hc, div_def (a + b) c hc]

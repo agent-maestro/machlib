@@ -413,12 +413,13 @@ theorem one_div_le_one_div_of_le {a b : Real} (ha : 0 < a) (hab : a ≤ b) : 1 /
     rw [e, mul_inv a (ne_of_gt ha)]; mach_ring
   rw [e1, e2]; exact hab
 
-theorem div_one_eq (a : Real) : a / 1 = a := by
-  rw [div_def a 1 (ne_of_gt zero_lt_one_ax)]
-  have e : (1 : Real) * (1 / 1) = 1 / 1 := by mach_ring
-  have h := mul_inv (1 : Real) (ne_of_gt zero_lt_one_ax)
-  rw [e] at h
-  rw [h]; mach_ring
+-- `div_one_eq` MOVED to `MachLib/FieldLemmas.lean` (2026-09-17). It is `a / 1 = a`, a field
+-- identity with nothing rational-germ about it, and it was unreachable from every module that
+-- wanted it: Forge's emitted artifacts import `MachLib.Decimal` (hence `FieldLemmas`) and not this
+-- module, so four separate local copies of the same fact grew up around the corpus
+-- (`div_one_local` in `GaussianDiskSandwich`, `one_div_one_eq_one` in `InvXNotInEML` and in
+-- `EMLDifferentiationClosureFailure`). Nothing here changes: `FieldLemmas` is in this module's own
+-- transitive closure and the name resolves through `open Real`.
 
 theorem zero_div_eq {q : Real} (hq : q ≠ 0) : (0 : Real) / q = 0 := by
   rw [div_def 0 q hq]; mach_ring
