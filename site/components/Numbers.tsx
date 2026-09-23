@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 const MEASURED_ON = "2026-09-15";
 
 const TILES: { value: string; label: string }[] = [
-  { value: "7 873", label: "theorems, outside the Forge corpus" },
+  { value: "7 931", label: "theorems, outside the Forge corpus" },
   { value: "169", label: "trusted axioms, none unaccounted" },
   { value: "4", label: "distinct open obligations" },
   { value: "79.9 %", label: "of Forge @verify obligations auto-close" },

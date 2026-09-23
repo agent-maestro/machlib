@@ -860,8 +860,12 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   an axiom, and until it is accepted without proof it is an obligation nobody has discharged.
 
   **Asterisks, stated rather than implied.** The impossibility result covers *local scalar growth
-  descent through the syntax tree* — **not** every well-founded induction; lexicographic orders,
-  ordinal ranks and non-structural arguments are untouched. *(e)* sharpens the **bound** and not the
+  descent through the syntax tree*, and — since 2026-09-22, `EMLPolarityMeasure` — every measure on
+  trees into **any well-founded order** descending to both children, lexicographic orders, vectors
+  and ordinal ranks included, proved from well-foundedness alone. It is still **not** the claim that
+  no well-founded induction can work: a mutual induction over `(tree, polarity)` with *different*
+  relations per polarity, a measure descending on one side only, a well-founded relation on germs
+  rather than a function of them, and non-structural arguments are untouched. *(e)* sharpens the **bound** and not the
   obligation: `LeadingMonomialFloor` is exactly as unproved as before, and a larger conclusion drawn
   from an input nobody has supplied moves nothing. `ehTree` also **overcounts** — it is syntactic, so
   it cannot see `exp (1 - log x) = e/x` collapse a level (`ehTree_overcounts_witness`) — which means

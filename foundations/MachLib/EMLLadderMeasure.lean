@@ -59,9 +59,18 @@ sections kill is **local scalar growth descent through the syntax tree** — a `
 trees, syntactic or germ-based, descending to both children.
 
 That is *not* the claim that no well-founded induction can work, and the difference matters. A
-lexicographic order with an unbounded second component, an ordinal rank, a well-founded **relation**
-on germs rather than a function of them, and any non-structural argument are all untouched. State
-the result at that width and no wider.
+well-founded **relation** on germs rather than a function of them, and any non-structural argument,
+are untouched. State the result at that width and no wider.
+
+**And two of the escapes this section used to list are now closed, one width up.**
+`EMLPolarityMeasure` re-proves the obstruction for a measure into an **arbitrary well-founded
+order** descending to both children — lexicographic orders, vectors and ordinal ranks included —
+from well-foundedness alone (`recip_not_below`, `no_wf_descent_of_cheap_recip`, and
+`posEmbed_not_below` for the four-node re-embedding). So the `step` arithmetic below is the shadow
+of something simpler: the reciprocal travels **up**, two strict steps, and a well-founded order has
+nothing to say against that whatever its order type. The class that remains untouched is a mutual
+induction over `(tree, polarity)` with *different* relations per polarity, a measure descending on
+one side only, a relation on germs, and anything non-structural.
 
 **Where the escape hatch is, and why it is not one.** The hypothesis doing the work is `step_pos`.
 A measure that prices an `eml` node at `0` evades `recip_ge` — but then `step_children` hands back

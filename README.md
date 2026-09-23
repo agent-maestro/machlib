@@ -204,13 +204,13 @@ fails if the text drifts from the corpus. Measured 2026-09-14:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 873 | `python3 tools/count_theorems.py --scope core` |
+| theorems outside `Discovered/` | 7 931 | `python3 tools/count_theorems.py --scope core` |
 | theorems in the Forge `@verify` corpus | 624 | the same command over `Discovered/` |
-| `.lean` files under `MachLib/` | 1 080 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
+| `.lean` files under `MachLib/` | 1 081 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
 | axioms pinned by the ledger | 256 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all accounted for | 169 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 815 of 1 080 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 816 of 1 081 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

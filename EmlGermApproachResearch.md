@@ -82,9 +82,10 @@ shape.**
 
 ---
 
-## 4. The three failed descent mechanisms
+## 4. The four failed descent mechanisms
 
-All three are proved, footprint-clean, in `EMLLadderMeasure` and `EMLGermApproach`.
+All four are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach` and
+`EMLPolarityMeasure`.
 
 1. **Syntactic scalar measure.** Any `Nat`-valued measure descending to *both* children is a
    `LadderMeasure` with `step = 1` (`ofStrictDescent` — the hypothesis *is* the induction
@@ -97,11 +98,36 @@ All three are proved, footprint-clean, in `EMLLadderMeasure` and `EMLGermApproac
    (`C x · (A x − log (C x)) ≤ exp (A x) − C x`), but `A − log C` sits one depth **above** `A` and
    `C`, so peeling moves **up** the ladder — the third independent sighting of the same direction of
    travel, found while looking for something else.
+4. **Any measure into any well-founded order** (`EMLPolarityMeasure`, 2026-09-22). Drop `Nat`
+   entirely. Let `μ : EMLTree → W` for **any** `W` under **any** well-founded `R`, descending
+   strictly to **both** children. Then `recipTree = eTree ∘ negLogTree` is **two strict steps up** —
+   one `log` edge in, one `exp` edge out — so `¬ R (μ (recipTree t)) (μ t)` and
+   `μ (recipTree t) ≠ μ t` (`recip_not_below`, `recip_ne`); `posEmbed` is **four**
+   (`posEmbed_not_below`). The proofs use **only well-foundedness** — three rotate-the-cycle lemmas,
+   `no_cycle2/3/5` — and no arithmetic whatever. `no_wf_descent_of_cheap_recip` is
+   `no_structural_induction_of_cheap_recip` with the codomain and the order universally quantified;
+   `ofLadderMeasure` shows the new class contains the old, and `polDescent` that it is strictly
+   larger (`no_nat_collapse`).
+   **So mechanism (1)'s arithmetic was incidental.** *"`recipTree` costs `2 · step` while a rung
+   buys `1 · step`"* is the `Nat` shadow of *"the transfer travels up"*, and a well-founded order
+   has nothing to say against that whatever its order type. Lexicographic orders, vectors and
+   ordinal ranks do not escape it, and neither does the polarity-indexed form — a measure carrying
+   a bit the `log` edge flips — which fails at the flipped polarity (`PolWfDescent`,
+   `pol_recip_not_below`).
 
 **Stated at the right width, and this has been got wrong once:** what is killed is *local scalar
-growth descent through the syntax tree*. **Not** every well-founded induction. Lexicographic orders,
-ordinal ranks, well-founded *relations* on germs rather than functions of them, and non-structural
-arguments are untouched.
+growth descent through the syntax tree* (1)-(3), and — since (4) — **every measure on trees, into
+any well-founded order, that descends to both children**. That is still **not** the claim that no
+well-founded induction can work. Untouched, precisely: a **mutual** induction over
+`(tree, polarity)` pairs with *different* relations per polarity; a measure descending on **one**
+side only, the other side carried by a different argument; a well-founded **relation on germs**
+rather than a function of them — (4) quantifies over functions `EMLTree → W`, so a relation is
+outside it by construction; and any non-structural argument.
+
+**And the first of those classes is where the ladder already lives**, which is why a better measure
+cannot help it: `decayFloor_of_ladderInputs` is a structural induction on the depth bound needing no
+measure at all, and its residue is `NodeDecayBound` — an unproved rung, not a parameter. A measure
+buys the *transfer* route, and the transfer route is what (4) closes.
 
 **And one correction worth carrying:** `(di)`'s re-embedding is a **moving boundary**. It says the
 positive branch at depth `k` is as hard as `DecayFloor` at depth `k − 4`. With depth ≤ 3 proved
@@ -128,16 +154,76 @@ EML syntax  →  [ asymptotic normal form ]  →  leading surviving scale  →  
 * Wanted: the **coarsest germ-invariant height for which the floor still holds**. That is what
   transseries would have to supply, and it is *not* the closure.
 
-Candidates not yet tried, in the order I would try them:
+Candidates, in the order I would try them. **1 and 2 are now DEAD** (run 2026-09-22, below);
+3 and 4 are untried.
 
-1. **A vector, not a scalar** — `(exp-height, log-depth, alternation, size)` with a lexicographic or
-   product order. The proved failures are all about *scalar* descent; a well-founded order on a
-   vector is untouched by §4.
-2. **A polarity-aware measure** distinguishing left/`exp` from right/`log` behaviour. Mechanism (2)
-   fails *specifically on the right child*; a measure that treats the two sides asymmetrically is the
-   obvious response and nobody has written one.
-3. **Hardy-field valuation / comparability class** rather than a height integer.
-4. **A well-founded relation on germs** that is not a function of the germ at all.
+1. ~~**A vector, not a scalar**~~ — `(exp-height, log-depth, alternation, size)` under a
+   lexicographic order. **DEAD.** Killed by `recipTree`, and its last two components are provably
+   never consulted.
+2. ~~**A polarity-aware measure**~~ distinguishing left/`exp` from right/`log`. **DEAD**, in both
+   the vector form and the strongest form (a polarity bit the `log` edge flips). It *does* answer
+   mechanism (2) — see the positives below, they are real — and it dies on mechanism (4).
+3. **Hardy-field valuation / comparability class** rather than a height integer. **UNTRIED.**
+4. **A well-founded relation on germs** that is not a function of the germ at all. **UNTRIED**, and
+   note it is the one candidate §4(4) does not reach: §4(4) quantifies over *functions*
+   `EMLTree → W`, so a relation is outside it by construction.
+
+### ▸ RUN, 2026-09-22 — candidates 1 and 2, `MachLib/EMLPolarityMeasure.lean`
+
+**Both DEAD. The escape they predicted is real, and it is not enough.** What was built:
+
+* **candidate 1** — `vecMeasure t = (ehTree t, ldTree t, altTree t, size t)` under the nested
+  lexicographic order (`lexProd`, `natQuadLex_wf`);
+* **candidate 2** — `polMeasure t = (ehTree t, ldTree t)`, the corpus's `ehTree` for the left/`exp`
+  side and the new `ldTree` (log-depth, the exact dual: right edges cost one, left edges nothing)
+  for the right/`log` side; plus `PolWfDescent`, a measure carrying the polarity **bit the `log`
+  edge flips**, which is the bit the ladder's own recursion carries, since a floor for
+  `exp (A x) − log (B x)` needs a *lower* bound on the left child and an *upper* bound on the right.
+
+**Every §3 fixture, measured before any theorem was attempted.** The instrument is shown capable of
+both verdicts — it PASSES `capNode`, the family that killed mechanism (2), and FAILS `recipTree`.
+
+| §3 fixture | `polMeasure` | what it tests | verdict |
+|---|---|---|---|
+| `recipTree t` | `(max 1 eh + 1, ld + 1)`, i.e. `(eh+1, ld+1)` for `eh ≥ 1` | reciprocal within one rung? | **KILLED** |
+| `posEmbed t` | `(eh + 2, max ld 1 + 2)` | re-embedding at its own level? | **KILLED**, four steps up |
+| `capNode n` | `(n+1, 2)`, right child `(n+1, 1)` | descends to the right child? | **PASS** |
+| `deepDecay m` | `(m+3, 2)` | floor height consistent? | PASS — forces `f (m+3, 2) ≥ m+1` |
+| `gapTarget n c` | `(n+1, 1)` | is approach controlled by growth? | PASS, with slack `n` |
+| `eTree (eTree A)` | `(2, 2)` — **equal to a positive tree's** | separates the meeting boundary? | **BLIND** |
+
+**The three genuine positives, recorded so nobody rebuilds them.** Each is real; none is enough.
+
+* The polarity pair is the **first measure in this corpus that strictly descends to both children**
+  (`pol_left`, `pol_right`). On the right the `exp` component may tie — it does, with the gap of
+  exactly zero that `ehTree_not_right_le` records — and `ldTree` breaks the tie unconditionally.
+* It **passes `capNode` at every `n`** (`pol_descends_capNode`), where no germ-growth measure can:
+  the node is non-positive while its right child is the `(n+1)`-tower.
+* **`ehTree (recipTree t) = ehTree t + 1`** (`eh_recipTree_of_one_le`). The `exp` component pays
+  **one** node for the reciprocal where `depth` and `size` pay two, both tightly
+  (`depthMeasure_recip_sharp`, `sizeMeasure_recip_sharp`). **The predicted escape exists**, and it
+  is genuinely outside §4(1): `no_nat_collapse` proves the order does not collapse to `Nat`, so
+  `ofStrictDescent` cannot reach it.
+
+**Why it dies anyway.** `recipTree = eTree ∘ negLogTree`: one `exp` node and one `log` node, so the
+cost is **relocated, not reduced** — one node into each component — and §4(4) needs only the
+direction of travel. The vector's last two components are never consulted, because every polarity
+descent lifts to a vector descent (`vec_of_pol`); candidates 1 and 2 therefore stand or fall
+together, and **adding components cannot rescue either**.
+
+**Two further measurements, so the next candidate starts from them.**
+
+* **`k` cannot come from the `log` component.** `deepDecay m` forces the floor height to `m + 1`
+  while its `ldTree` stays pinned at `2` for every `m` (`pol_deepDecay`,
+  `deepDecay_forces_first_component`). Whatever carries `k`, it is the `exp` side.
+* **The reindexing is bookkeeping, in both directions** — `ehTree, ldTree ≤ depth ≤ ehTree + ldTree`
+  (`reindexing_is_two_way`), so *"`k` from the depth bound alone"* and *"`k` from the polarity pair
+  alone"* are the same statement. §9's rule turned on this session's own work: an equivalence with a
+  converse is not progress, and this one has a converse.
+* And both candidates are **blind at the hypothesis boundary**: `meetTree` (identically `0`) and
+  `posTree` (`exp (1 − x)`, positive everywhere) have the *same* four-vector `(2, 2, 3, 7)`
+  (`measure_blind_at_meeting`). Depth is blind there too; what the pair rules out is the hope that a
+  finer **syntactic** parameter would see the difference.
 
 ---
 
