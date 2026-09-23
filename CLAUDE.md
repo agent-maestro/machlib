@@ -7,16 +7,16 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 081 `.lean` files** (806 top-level + 275 in subdirectories) /
-**255 890 lines** / **7 931 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 084 `.lean` files** (809 top-level + 275 in subdirectories) /
+**257 389 lines** / **8 014 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 931
-python3 tools/count_theorems.py --scope all           # 8 555
+python3 tools/count_theorems.py --scope core          # 8 014
+python3 tools/count_theorems.py --scope all           # 8 638
 ```
 
 The two differ by **624**, which is `Discovered/`. **Every file and theorem count here is over git-TRACKED files**
@@ -178,7 +178,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 822 jobs, ~3 s warm
+lake build                                     # 825 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
@@ -326,7 +326,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**816 of 1081 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**819 of 1084 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -659,7 +659,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**816 of 1 081 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
+run (**819 of 1 084 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **256 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
@@ -791,12 +791,17 @@ touching it, because each was learned the expensive way:
    Stated at that width and no wider: a mutual induction over `(tree, polarity)` with *different*
    relations per polarity, a measure descending on one side only, a well-founded relation on germs,
    and non-structural arguments are untouched.
+   **Widened again 2026-09-23** (`EMLPeelRecursion`): the one-sided *syntactic* route — the peel,
+   measured by the leftmost-spine length — genuinely descends and terminates in `≤ j` steps, and
+   dies on its **base case** instead: `PeelTerminalNoCancel ↔ GrowthEnvelope` and
+   `PeelTerminalConstZero ↔ EmlGermApproach`, so both cells a peeling recursion can stop at *are*
+   the obligation. **Price the terminal cell, not only the measure.**
 2. **The missing input is named and placed.** `EmlGermApproach` (`EMLGermApproach`) is the obligation
    at its narrowest, equivalent to `DecayFloor`. Its *per-pair* form is a corollary of Hardy (1912);
    **the entire open content is the position of one `∃ k`**. **No axiom has been spent on it,
    deliberately.** It is now a **separate research programme with its own file — read
    `EmlGermApproachResearch.md` before writing any Lean against it.** That file carries the exact
-   conjecture, the adversarial families already built, the four failed descent mechanisms, the
+   conjecture, the adversarial families already built, the six failed descent mechanisms, the
    surgical question for a specialist, and **exit criteria for PROVED / REFUTED / ASSUMED decided in
    advance.** Engineering effort on the other five open obligations should not wait on it.
 3. **The ladder reaches the obligation.** `decayFloor_of_ladderInputs` (`EMLValueGap`): `DecayFloor`

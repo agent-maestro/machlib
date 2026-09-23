@@ -476,6 +476,9 @@ import MachLib.EMLGermApproach
 import MachLib.EMLHeightInterface
 import MachLib.EMLHeightVsDepth
 import MachLib.EMLPolarityMeasure
+import MachLib.EMLGermInvariance
+import MachLib.EMLComparability
+import MachLib.EMLPeelRecursion
 import MachLib.EMLDepth3Rung
 import MachLib.EMLDecayLadderStep
 import MachLib.EMLValueGap

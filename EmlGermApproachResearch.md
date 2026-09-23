@@ -82,10 +82,10 @@ shape.**
 
 ---
 
-## 4. The four failed descent mechanisms
+## 4. The six failed descent mechanisms
 
-All four are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach` and
-`EMLPolarityMeasure`.
+All six are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach`,
+`EMLPolarityMeasure`, `EMLGermInvariance` and `EMLPeelRecursion`.
 
 1. **Syntactic scalar measure.** Any `Nat`-valued measure descending to *both* children is a
    `LadderMeasure` with `step = 1` (`ofStrictDescent` — the hypothesis *is* the induction
@@ -115,14 +115,96 @@ All four are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach` a
    a bit the `log` edge flips — which fails at the flipped polarity (`PolWfDescent`,
    `pol_recip_not_below`).
 
-**Stated at the right width, and this has been got wrong once:** what is killed is *local scalar
-growth descent through the syntax tree* (1)-(3), and — since (4) — **every measure on trees, into
-any well-founded order, that descends to both children**. That is still **not** the claim that no
-well-founded induction can work. Untouched, precisely: a **mutual** induction over
-`(tree, polarity)` pairs with *different* relations per polarity; a measure descending on **one**
-side only, the other side carried by a different argument; a well-founded **relation on germs**
-rather than a function of them — (4) quantifies over functions `EMLTree → W`, so a relation is
-outside it by construction; and any non-structural argument.
+5. **Any GERM-INVARIANT parameter at all** (`EMLGermInvariance`, 2026-09-23). Not a measure that
+   *travels* badly — a class that is **empty**. If `μ` reads only the germ
+   (`GermInvariant μ : ∀ s t, s.eval = t.eval → μ s = μ t`) then it cannot strictly descend to
+   both children of an `eml` node in **any** well-founded order: `no_germInvariant_wfDescent`.
+   The witness is §3's own `posEmbed`, which is **four `eml` edges above `t` and has exactly
+   `t`'s germ** (`posEmbed_eval`, in the corpus since `(di)`) — so the four edges close a
+   **4-cycle** on a germ-invariant `μ` and `no_cycle4` finishes it. No cheapness hypothesis, no
+   `recipTree`, no arithmetic.
+   **This corrects the width paragraph below, which was wrong.** A well-founded relation on germs
+   is *not* outside (4) "by construction": it **is** a `WfDescent` at `W := Real → Real`,
+   `μ := EMLTree.eval` (`GermDescent.toWfDescent`). The germ is a function of the tree.
+   Three consequences, all proved: a relation on germs is empty (`no_germDescent`); so is the
+   repair *"descend only where the germs differ"* (`no_germDescentNe` — the four germs round the
+   `posEmbed var` cycle are pairwise distinct, so every guard discharges); and so is **one-sided**
+   germ descent (`no_germDescentLeft`, `no_germDescentRight`), which this section had listed as
+   untouched — the witnesses are depth-1 constant nodes whose germ *is* a child's,
+   `exp 0 − log (exp 1) = 0` and `exp 0 − log 1 = 1`, refuted by irreflexivity alone.
+   **And one-sided *guarded* descent, the last germ-invariant shape those leave standing, is
+   empty too** (`no_germDescentLeftNe`, `no_germDescentRightNe`): two-edge cycles on a single
+   side with a distinct intermediate germ — `var → eTree var → selfLeftNode var`, and
+   `negGerm → rightStep1 → rightStep2` where `negGerm = 1 − exp (exp x)` is negative at **every**
+   real, so totalised `log` erases it as a *function* and not merely on a ray. An `eml` node's
+   other child is unconstrained, which is what makes one edge from a germ `g` able to reach a
+   germ engineered to come back. **So the closure is complete: both children or one, guarded or
+   not, no germ-invariant parameter descends anywhere.**
+   **Both verdicts on one instrument:** `WfDescent` is inhabited (`wfDescent_inhabited`, by
+   `polDescent`), and the hypothesis blamed is exactly what `polDescent` lacks —
+   `polMeasure_not_germInvariant`: `posEmbed var` and `var` share a germ and measure `(2,3)` vs
+   `(0,0)`. Inhabited when indexed by the tree, empty when indexed by the germ.
+
+6. **A one-sided, syntax-reading recursion whose step is the PEEL** (`EMLPeelRecursion`,
+   2026-09-23). This is the class the width paragraph listed as untouched, on **both** of its
+   readings — *a measure descending on one side only that reads the syntax*, and *a relation on
+   pairs `(A, C)` that a peeling step decreases*. **The measure works. The base case is the
+   conjecture.**
+   The peel takes the gap `exp (A x) − C x` to `A x − log (C x)`, and the merge
+   (`peel_shape_pos`, `peel_shape_nonpos` — `log A₂ + log C = log (A₂·C)`, or the clamped branch
+   where totalised `log` kills the term) rewrites that as `exp (A₁ x) − log (·)`: **the same shape
+   at the LEFT CHILD of `A`**. So the recursion's parameter is `lspTree`, the leftmost-spine
+   length. It descends strictly on the left (`lspTree_left_lt`), reads **no right child at all**
+   (`lspTree_right_unbounded`), and bounds the leftmost-spine length by the depth bound
+   (`peel_terminates`), so the recursion performs at most `lspTree A + 1` peels — one per `eml`
+   node on that spine plus the first — hence at most `j + 1`, exactly as the route intends. Being
+   syntactic it is outside
+   (5); being one-sided it is outside (4); `recipTree` never travels up it because it is never
+   asked to.
+   **It dies on the terminal cell, and there are only two, and each is the whole obligation.**
+   * `PeelTerminalNoCancel ↔ GrowthEnvelope` (`peelTerminalNoCancel_iff_growthEnvelope`, both
+     directions, `+2` depth each way; `+1` height cell→envelope, none the other way). The route's own description of its base case is *"a
+     germ pair with no cancellation left"*. `approach_gap_ge_exp_of_nonpos` reduces that cell to
+     `exp (−towerFn k x) ≤ exp (A x)` — an **upper envelope on `−A`, uniform in depth**, which is
+     `GrowthEnvelope`, the third name of this obligation. **The cancellation-free cell is not
+     free.**
+   * `PeelTerminalConstZero ↔ EmlGermApproach` (`peelTerminalConstZero_iff_emlGermApproach`). The
+     other exit is *"nothing left to peel"*, `lspTree A = 0`. Fix `A` at the single leaf
+     `const 0` — and `decayFloor_of_emlGermApproach` **never instantiates `A` at anything else**,
+     so that one cell already implies `DecayFloor` at `−2` depth. Peeling the left germ down to a
+     leaf is free and buys nothing.
+   And the parameter cannot supply `k` either — it is **anti-correlated** with the height the
+   floor needs. `deepDecay m` is priced at `2` for every `m` while forcing height `m + 1`;
+   `gapTarget n c` is priced at `n + 1` while needing height `0` (`peel_measure_anticorrelated`;
+   `peelCount_cannot_carry_floor` concludes `False`). **Both verdicts on one instrument:** the
+   same argument does **not** refute `depth`, which grows on that family
+   (`lspTree_refuted_where_depth_is_not`) — `lspTree` is refuted for being *constant* on the
+   extremal family, not for being a tree parameter.
+   **This is a failure of a different kind from (1)–(5).** Those die on the measure: the transfer
+   travels up and no descent survives it. This one has a measure that descends, terminates in
+   `≤ j` steps, and even **separates the meeting boundary** that (4)'s candidates are blind at
+   (`lsp_separates_meeting`: `meetTree` and `posTree` have equal `depth` and equal four-vectors,
+   and peel counts `1` and `2`). It dies on the **base case**. What is ruled out is therefore not
+   peeling but **any recursion whose terminal cell is "no cancellation" or "left germ of
+   exponential height 0"**, whatever reaches it.
+   Two prices this route never got to pay, recorded so a seventh attempt does not re-derive them:
+   the merge is **pointwise**, and a single right-hand germ for the whole tail needs eventual sign
+   determination for every right child on the left spine — `evSign_all`, and with it the analytic
+   axiom block (`rolle_ct`, `analytic_finite_zeros_compact`) that `EMLDecayFloorIsGrowth` is
+   deliberately routed around; and the merged right-hand germ is a **product**, for which EML has
+   no node. Neither is computed, because the T2 death is independent of both.
+
+**Stated at the right width, and this has been got wrong twice:** what is killed is *local scalar
+growth descent through the syntax tree* (1)-(3); — since (4) — **every measure on trees, into
+any well-founded order, that descends to both children**; — since (5) — **every
+germ-invariant parameter whatever, on either side or both**; and — since (6) — **every recursion,
+of any shape, whose terminal cell is a cancellation-free pair or a height-`0` left germ**, because
+those two cells are the obligation itself. That is still **not** the claim that no well-founded
+induction can work. Untouched, precisely: a **mutual** induction over `(tree, polarity)` pairs with
+*different* relations per polarity; a one-sided syntactic descent **with a terminal cell that is
+neither of (6)'s two** — (6) closes the base case, not the measure, and `lspTree` survives as a
+measure; and any non-structural argument. The sentence this paragraph used to carry — *"a
+well-founded relation on germs … is outside (4) by construction"* — is **false**, and (5) is why.
 
 **And the first of those classes is where the ladder already lives**, which is why a better measure
 cannot help it: `decayFloor_of_ladderInputs` is a structural induction on the depth bound needing no
@@ -154,8 +236,11 @@ EML syntax  →  [ asymptotic normal form ]  →  leading surviving scale  →  
 * Wanted: the **coarsest germ-invariant height for which the floor still holds**. That is what
   transseries would have to supply, and it is *not* the closure.
 
-Candidates, in the order I would try them. **1 and 2 are now DEAD** (run 2026-09-22, below);
-3 and 4 are untried.
+Candidates, in the order I would try them. **All four are now DEAD** — 1 and 2 by the run of
+2026-09-22, 3 and 4 by the run of 2026-09-23, both below. The semantic half of this bet is closed:
+§4(5) shows no germ-invariant parameter descends at all, so an asymptotic normal form cannot be
+the induction's parameter however it is built. It could still be the *content* of
+`NodeDecayBound`; it cannot be the *ladder*.
 
 1. ~~**A vector, not a scalar**~~ — `(exp-height, log-depth, alternation, size)` under a
    lexicographic order. **DEAD.** Killed by `recipTree`, and its last two components are provably
@@ -163,10 +248,74 @@ Candidates, in the order I would try them. **1 and 2 are now DEAD** (run 2026-09
 2. ~~**A polarity-aware measure**~~ distinguishing left/`exp` from right/`log`. **DEAD**, in both
    the vector form and the strongest form (a polarity bit the `log` edge flips). It *does* answer
    mechanism (2) — see the positives below, they are real — and it dies on mechanism (4).
-3. **Hardy-field valuation / comparability class** rather than a height integer. **UNTRIED.**
-4. **A well-founded relation on germs** that is not a function of the germ at all. **UNTRIED**, and
-   note it is the one candidate §4(4) does not reach: §4(4) quantifies over *functions*
-   `EMLTree → W`, so a relation is outside it by construction.
+3. ~~**Hardy-field valuation / comparability class**~~ rather than a height integer. **DEAD**
+   (run 2026-09-23, below), twice over: the comparability order on EML germs is **not
+   well-founded**, and a class is germ-invariant so §4(5) closes its descent before
+   well-foundedness is even reached.
+4. ~~**A well-founded relation on germs**~~ that is not a function of the germ at all. **DEAD**
+   (run 2026-09-23, below). The premise this line rested on was wrong: a relation on germs is
+   *inside* §4(4), at `μ := EMLTree.eval`, and §4(5) shows the class is **empty**.
+
+### ▸ RUN, 2026-09-23 — candidates 3 and 4, `MachLib/EMLGermInvariance.lean` + `MachLib/EMLComparability.lean`
+
+**Both DEAD, and worse than dead: the classes they name are EMPTY, where 1 and 2 named classes
+that were merely unable to run the transfer.** The mechanism is §4(5) and it is one theorem.
+
+**Well-foundedness first, as §5 requires.** For candidate 4 the question does not arise — there is
+no relation to ask it of. For candidate 3 it is asked and answered:
+
+```
+CompLe g h  :=  ∃ c > 0, ∃ X ≥ 1, ∀ x ≥ X,  log (g x) ≤ c · log (h x)
+compLe_refl, compLe_trans    a genuine preorder, so CompLt is irreflexive
+compLt_deepDecay (m)         CompLt (deepDecay (m+1)) (deepDecay m),  for EVERY m
+compLt_not_wf                ¬ WellFounded CompLt
+```
+
+> **`deepDecay` is an infinite strictly descending chain in the comparability order.** The family
+> §3 built to pin the floor height *from below* is, read as classes, an `ω*`. The order has no
+> bottom, and the thing indexing the descent is the floor height itself.
+
+The one asymptotic input is `lin_lt_exp` — *`K + T < c·exp T` for all large `T`, with `c` given in
+advance* — which is where the arbitrary multiplier in `O(·)` is paid for. Proved from the corpus's
+`exp_gt_two_x` and `exp_log` with **no division and no new axiom**: `c·exp T = exp (log c + T)`,
+then `exp w > w + w`.
+
+**Every §3 fixture, measured against the two relations.**
+
+| §3 fixture | germ fact | verdict |
+|---|---|---|
+| `posEmbed t` | germ is **exactly `t`'s** (`posEmbed_eval`), four `eml` edges up | **KILLS both** — a 4-cycle, no side condition, every `t` |
+| `recipTree t` | two germ-edges up (`negLogTree` then `eTree`); germ bounded by `e` when `t ≥ 1` | KILLED — §4(4)'s argument transports verbatim at `μ := eval` |
+| `capNode n` | node germ `1 − towerFn n x` is non-positive, so totalised `log` sends it to `0`; child's log is `towerFn n x` | **FAILS right descent** — `compLt_capNode_right`: the node is strictly **below** its own right child, at every `n`. Mechanism (2), unchanged, in the valuation |
+| `deepDecay m` | `log = 1 − towerFn (m+1) x` | **refutes well-foundedness** — `compLt_deepDecay`, and each sits strictly below the constant class (`compLt_deepDecay_one`) |
+| `gapTarget n c` | gap is the **constant** `c` at operand height `n+1` (`gapTarget_gap_germ`) | the gap's class is the bottom class while the operands' is `n+1` — approach is no more controlled by the class than by the growth rate |
+| `eTree (eTree A)` | gap identically `0` (`exact_meeting_gap_zero`); `log 0 = 0 = log 1` | **BLIND** — `compEquiv_zero_one` puts the no-floor gap in the **same class** as `gapTarget`'s height-`0` gap. A class cannot determine a floor one member has and another does not |
+
+**The positive content of candidate 3, and it is one line.** `compLe_floor_of_floor`: a tower
+floor for `t` **is** a comparability lower bound, `c = 1`, same `X₁`. So *"`DecayFloor` at depth
+`j`"* and *"every eventually-positive depth-`j` germ has a class bounded below by a
+tower-reciprocal, uniformly in `j`"* are the **same statement**, and the converse holds too —
+absorbing the multiplier `c` costs one tower rung, which is what `lin_lt_exp` supplies. §9's rule
+applies exactly as it did to the polarity reindexing: an equivalence with a converse is not
+progress.
+
+**What is now ruled out, as a bound on a class rather than as a failed attempt.** Let `μ` be any
+parameter an induction on EML syntax could descend along. If `μ` factors through the germ, no
+well-founded order on its values admits descent to either child, let alone both — so the entire
+*semantic* half of §5's bet is closed, and the ladder's parameter must read the **syntax**. But
+§4(4) already closed every syntactic measure that descends to both children. What survives is the
+intersection neither theorem touches: a parameter that reads the syntax and descends on **one**
+side, with the other side carried by a different argument; a relation on **pairs** `(A, C)`; and
+non-structural arguments. The corpus's two blindness results now bracket it from both sides —
+`measure_blind_at_meeting` (two trees, one measure, different germs) and
+`polMeasure_not_germInvariant` (two trees, one germ, different measures). **A syntactic parameter
+and a germ parameter are not refinements of one another in either direction**, so nothing is to be
+had by making either finer.
+
+**Scope.** No axiom; no ledger movement; the `DecayFloor` ⇄ `EmlGermApproach` ⇄ `GrowthEnvelope`
+row stays open. 39 theorems, `sorryAx` 0, footprint the plain algebra/`exp` spine
+(`exp_gt_two_x`, `exp_gt_one_plus_self`, `exp_log`, `exp_add`, `log_nonpos`, `log_exp` and the
+order axioms) — nothing analytic.
 
 ### ▸ RUN, 2026-09-22 — candidates 1 and 2, `MachLib/EMLPolarityMeasure.lean`
 
@@ -438,3 +587,10 @@ since `(dm)`, and the row must name the axiom.
   proved. More interfaces will not help.
 * **Do not read any of the equivalences as progress.** Check for a converse first. `(dw)` claimed a
   factoring that `(dx)` had to withdraw.
+* **Do not design a recursion whose base case is "no cancellation" or "height-`0` left germ".**
+  Both cells are the conjecture — `peelTerminalNoCancel_iff_growthEnvelope` and
+  `peelTerminalConstZero_iff_emlGermApproach`, §4(6). Price the **terminal cell** before the
+  measure: (1)–(5) all died on the measure and (6) did not, which is exactly why the habit of
+  checking only the measure is now a trap. The cheapest check is one line —
+  `decayFloor_of_emlGermApproach` instantiates `A` at `const 0` and nothing else, so *any* cell
+  containing that one instance contains the whole obligation.
