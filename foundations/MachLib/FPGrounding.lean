@@ -224,7 +224,7 @@ theorem pipeline_arith_grounded (env : Env) (e : EML) (he : IsArith e)
 `pid.eml` gains `Kp = 1.5`, `Ki = 0.4`, `Kd = 0.05` as literal constants and the three channels
 `e`/`i`/`d` as inputs — left-associated exactly as `FixedPoint.pid_fx_fwd_error` writes it. This is the
 arithmetic datapath of the dual-target controller that Forge compiles to the ESP32 (C) and Arty (RTL);
-`clamp = min (max · lo) hi` is a separate saturating wrapper, outside the `+/−/×` fragment. -/
+`clamp = max lo (min · hi)` is a separate saturating wrapper, outside the `+/−/×` fragment. -/
 def pidRawEML : EML :=
   .bin .add
     (.bin .add (.bin .mul (.lit 1.5) (.var "e"))

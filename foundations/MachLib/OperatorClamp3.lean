@@ -10,7 +10,7 @@ value (`clamp(x, alpha*x, hi)`, the parametric ReLU), that assumption breaks; th
 probe `ctarget.py` caught exactly this (the bound claimed `0` while the active edge `alpha*x`
 carried `~u·|alpha*x|`).
 
-This file proves the general bound. `clamp = min ∘ max`, and `min`/`max` are each 1-Lipschitz
+This file proves the general bound. `clamp = max lo ∘ min · hi`, and `min`/`max` are each 1-Lipschitz
 in BOTH arguments, so `clamp` is JOINTLY 1-Lipschitz in `(v, lo, hi)`:
 
     |clamp v lo hi − clamp v' lo' hi'| ≤ |v − v'| + |lo − lo'| + |hi − hi'|.
@@ -94,22 +94,25 @@ theorem clamp_lipschitz3 (v lo hi v' lo' hi' : Real) :
     abs (clamp v lo hi - clamp v' lo' hi')
       ≤ abs (v - v') + abs (lo - lo') + abs (hi - hi') := by
   unfold clamp
-  refine le_trans (min_lipschitz2 (max v lo) hi (max v' lo') hi') ?_
-  exact add_le_add_both (max_lipschitz2 v lo v' lo') (le_refl (abs (hi - hi')))
+  -- `clamp` is `max lo (min x hi)`, so the OUTER operation is the max over the edge `lo`
+  -- and the inner one the min over `hi`; the two joint bounds compose in that order and
+  -- the rearrangement is only associativity/commutativity of `+`.
+  have e : abs (v - v') + abs (lo - lo') + abs (hi - hi')
+      = abs (lo - lo') + (abs (v - v') + abs (hi - hi')) := by
+    mach_mpoly [abs (v - v'), abs (lo - lo'), abs (hi - hi')]
+  rw [e]
+  exact le_trans (max_lipschitz2 lo (min v hi) lo' (min v' hi'))
+    (add_le_add_both (le_refl (abs (lo - lo'))) (min_lipschitz2 v hi v' hi'))
 
-/-- **`clamp` magnitude is bounded by its edges**, unconditionally (`min ∘ max` saturates into
-`[−max|lo||hi|, hi]`; no `lo ≤ hi` needed). -/
+/-- **`clamp` magnitude is bounded by its edges**, unconditionally (`max lo (min · hi)`
+saturates into `[lo, max lo hi]`; no `lo ≤ hi` needed). -/
 theorem clamp_abs_le (x lo hi : Real) : abs (clamp x lo hi) ≤ max (abs lo) (abs hi) := by
+  unfold clamp
   apply abs_le_of
-  · exact le_trans (clamp_le_hi x lo hi) (le_trans (le_abs_self hi) (le_max_right _ _))
-  · unfold clamp
-    by_cases hA : max x lo ≤ hi
-    · have hm : min (max x lo) hi = max x lo := by unfold min; rw [if_pos hA]
-      rw [hm]
-      exact le_trans (neg_le_neg (le_max_right x lo))
-        (le_trans (neg_le_abs lo) (le_max_left _ _))
-    · have hm : min (max x lo) hi = hi := by unfold min; rw [if_neg hA]
-      rw [hm]; exact le_trans (neg_le_abs hi) (le_max_right _ _)
+  · exact max_le (le_trans (le_abs_self lo) (le_max_left _ _))
+      (le_trans (min_le_right x hi) (le_trans (le_abs_self hi) (le_max_right _ _)))
+  · exact le_trans (neg_le_neg (le_max_left lo (min x hi)))
+      (le_trans (neg_le_abs lo) (le_max_left _ _))
 
 /-- **Joint-Lipschitz clamp certificate.** Each clamp edge carries its OWN forward error
 (`Elo`/`Ehi`), as a *computed* (rounded) value must; the clamp output's error is the sum

@@ -8,15 +8,15 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 080 `.lean` files** (805 top-level + 275 in subdirectories) /
-**255 093 lines** / **7 870 theorems**, re-exported through the aggregator
+**255 170 lines** / **7 873 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 7 870
-python3 tools/count_theorems.py --scope all           # 8 494
+python3 tools/count_theorems.py --scope core          # 7 873
+python3 tools/count_theorems.py --scope all           # 8 497
 ```
 
 The two differ by **624**, which is `Discovered/`. **Every file and theorem count here is over git-TRACKED files**
@@ -280,6 +280,27 @@ does not conclude the proposition. Neither gate can tell you a claim with no reg
 behind it is missing — registration is still a human act.
 
 ## Gotchas
+
+- **`clamp` IS `max lo (min x hi)`, and that changed on 2026-09-22.** It was `min (max x lo) hi`,
+  and its docstring said it matched "the Forge emission exactly" — which was the problem: the EML
+  language reference defines `clamp(x, lo, hi)` as `max(lo, min(x, hi))`, the Forge HDL and proof
+  backends were nesting it the other way, and MachLib had copied the wrong one. The two agree on
+  every well-formed clamp and differ on `lo > hi`, where this one returns `lo` for every `x` and
+  the old one returned `hi`.
+  - **The hypothesis MOVED, it did not go away**: `clamp_le_hi` now takes `(h : lo ≤ hi)` — an
+    inverted band returns `lo`, which is above `hi` — and `lo_le_clamp` is unconditional. Four call
+    sites had to swap it (`OperatorBasisGeneral`, `FixedPointCertifier`, `AntiWindupPITracking`,
+    and `OperatorClamp3.clamp_abs_le`, which had used the unconditional ceiling).
+  - Fallout was mechanical and is worth knowing for the next order change: every proof that
+    `unfold clamp`s sees the operations in the other order, so `clamp_add_const` rewrites `min`
+    first, `clamp_mono` needs `max_mono_right` instead of `min_mono_left`-outermost,
+    `clamp_eq_self` needs `max_eq_right_of_le`, and `clamp_lipschitz` needs `max_comm` (added to
+    `FixedPoint.lean`, from the `lt_total` axiom — **no new axiom**) because `max_lipschitz` varies
+    the FIRST argument and `clamp` now varies the second. `lake build` green at 821 jobs.
+  - **Nothing in `Discovered/` mentions `clamp`**, so the generated Forge sub-corpus needed no
+    regeneration; `check_discovered_compiles.sh` stayed at 290 of 292.
+  - Counts moved with it: core theorems 7 870 → 7 873, lines 255 093 → 255 170. `prose-counts`
+    catches that, and the four prose copies were updated in the same change.
 
 - **SEARCH BEFORE YOU PRICE: state the goal, run `exact?`, and only then decide a lemma is
   missing.** Core Lean's library search works on this corpus and costs almost nothing. Measured

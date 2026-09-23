@@ -30,8 +30,11 @@ FP); the new structural ingredient is the saturating `clamp`.
 
 ## What is proved (`MachLib.FixedPoint`, 17 theorems, `sorryAx`-free)
 
-- **`clamp x lo hi := min (max x lo) hi`** — exactly the emitted shape
-  (`min (max raw OUT_MIN) OUT_MAX`).
+- **`clamp x lo hi := max lo (min x hi)`** — exactly the emitted shape
+  (`max OUT_MIN (min raw OUT_MAX)`). It was `min (max x lo) hi` until 2026-09-22, when
+  the proof backends were brought onto the EML language's definition of `clamp`
+  (`max(lo, min(x, hi))`); the two differ only for `lo > hi`, where the old order
+  returns `hi` and the language returns `lo`.
 - **`max_lipschitz` / `min_lipschitz` / `clamp_lipschitz`** — `min`, `max`, and
   hence `clamp` are 1-Lipschitz: `|clamp a − clamp b| ≤ |a − b|`. Saturation
   never amplifies error. (Proved one-sided first via two branch-condition case
@@ -48,7 +51,9 @@ FP); the new structural ingredient is the saturating `clamp`.
   (`q16_step`) and the kernel's `|inputs| ≤ 100` refinement bound, giving the
   concrete worst-case bound `303·2⁻¹⁶ ≈ 4.62e-3` on the `[−1,1]` output.
 - **`clamp_le_hi` / `lo_le_clamp`** — the output-range bound (`OUT_MIN ≤ pid_step
-  ≤ OUT_MAX`), which is the kernel's own `@verify` obligation.
+  ≤ OUT_MAX`), which is the kernel's own `@verify` obligation. Since the 2026-09-22
+  order swap the `lo ≤ hi` side condition sits on `clamp_le_hi` (the ceiling), not on
+  `lo_le_clamp`, which is now unconditional.
 
 `#print axioms` on every PID theorem shows only `propext`, `Classical.choice`,
 `Quot.sound`, the `MachLib.Real` field axioms, and `abs_add`/`abs_mul` — the same

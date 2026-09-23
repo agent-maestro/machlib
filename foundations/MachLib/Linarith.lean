@@ -785,8 +785,9 @@ macro_rules
       | (apply le_mul_one_add_div <;> assumption)
       -- Gain ≥ 1 grows a nonneg base: `a ≤ a · b` (tapetum amplifier
       -- `input · clamp(gain) ≥ input`). Subgoals `0 ≤ a` (domain hyp) and
-      -- `1 ≤ b` recurse — the clamp `1 ≤ min (max g 1) hi` closes via le_min
-      -- (1 ≤ max g 1 by le_max_right, 1 ≤ hi by the emitted clamp hyp).
+      -- `1 ≤ b` recurse — a clamped gain `1 ≤ max 1 (min g hi)` closes via the
+      -- `le_max_of_le_left` arm above (it was `1 ≤ min (max g 1) hi` via le_min
+      -- before the 2026-09-22 clamp-order change).
       | (apply le_mul_of_one_le_right <;> mach_positivity)
       -- Monotone decrease `a − b ≤ a` for `0 ≤ b` (thermal erosion
       -- `h_self − transfer ≤ h_self`). `apply` fails fast off-shape.
@@ -794,9 +795,10 @@ macro_rules
       -- Clamp ceil: `min a b ≤ a` / `≤ b` (e.g. `clamp ≤ HI`).
       | exact min_le_left _ _
       | exact min_le_right _ _
-      -- Clamp floor: `LO ≤ min (max .. LO) HI` — splits to `LO ≤ max .. LO`
-      -- (closed by le_max_right) and `LO ≤ HI` (the clamp-bound ordering;
-      -- closes when it's a hypothesis — see emitter note below).
+      -- `min` floor: `LO ≤ min a b` — splits to `LO ≤ a` and `LO ≤ b`. This used
+      -- to be THE Forge clamp floor (`LO ≤ min (max x LO) HI`); since 2026-09-22
+      -- `clamp` is `max lo (min x hi)` and its floor closes by `le_max_of_le_left`
+      -- above instead. Still load-bearing for hand-written and nested `min` goals.
       | (apply le_min <;> mach_positivity)
       -- Structural decompositions for `0 < ...`. Order matters:
       -- `add_pos_of_nonneg_pos` before `add_pos` so a sum like

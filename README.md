@@ -204,7 +204,7 @@ fails if the text drifts from the corpus. Measured 2026-09-14:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 7 870 | `python3 tools/count_theorems.py --scope core` |
+| theorems outside `Discovered/` | 7 873 | `python3 tools/count_theorems.py --scope core` |
 | theorems in the Forge `@verify` corpus | 624 | the same command over `Discovered/` |
 | `.lean` files under `MachLib/` | 1 080 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
 | axioms pinned by the ledger | 256 | `lake env lean AxiomLedger.lean` |

@@ -337,8 +337,8 @@ theorem antiwindup_control_in_band (Kp Ki κ U e J : Real)
     exact h1
   have hlohi : κ * (-U - Kp * e) ≤ κ * (U - Kp * e) :=
     mul_le_mul_of_nonneg_left (sub_le_sub_right hUU (Kp * e)) hκ
-  have hlo := lo_le_clamp J (κ * (-U - Kp * e)) (κ * (U - Kp * e)) hlohi
-  have hhi := clamp_le_hi J (κ * (-U - Kp * e)) (κ * (U - Kp * e))
+  have hlo := lo_le_clamp J (κ * (-U - Kp * e)) (κ * (U - Kp * e))
+  have hhi := clamp_le_hi J (κ * (-U - Kp * e)) (κ * (U - Kp * e)) hlohi
   have elo : Ki * (κ * (-U - Kp * e)) = -U - Kp * e := by
     calc Ki * (κ * (-U - Kp * e)) = (Ki * κ) * (-U - Kp * e) := by mach_mpoly [Ki, κ, U, Kp, e]
       _ = 1 * (-U - Kp * e) := by rw [hkap]

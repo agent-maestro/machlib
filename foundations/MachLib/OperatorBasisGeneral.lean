@@ -199,8 +199,8 @@ theorem aerr_clamp {M E v ve lo hi : Real} (hlohi : lo ≤ hi) (h : AErr M E v v
     AErr (max (abs lo) (abs hi)) E (clamp v lo hi) (clamp ve lo hi) := by
   refine ⟨?_, le_trans (clamp_lipschitz v ve lo hi) h.2⟩
   apply abs_le_of
-  · exact le_trans (clamp_le_hi ve lo hi) (le_trans (le_abs_self hi) (le_max_right _ _))
-  · exact le_trans (neg_le_neg (lo_le_clamp ve lo hi hlohi))
+  · exact le_trans (clamp_le_hi ve lo hi hlohi) (le_trans (le_abs_self hi) (le_max_right _ _))
+  · exact le_trans (neg_le_neg (lo_le_clamp ve lo hi))
       (le_trans (neg_le_abs lo) (le_max_left _ _))
 
 /-- **Robust conditional** (`if c then · else ·`): given a forward-error certificate for

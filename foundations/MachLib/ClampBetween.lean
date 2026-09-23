@@ -64,7 +64,9 @@ theorem min_add_const (x y d : Real) : min (x + d) (y + d) = min x y + d := by
 theorem clamp_add_const (a lo hi d : Real) :
     clamp (a + d) (lo + d) (hi + d) = clamp a lo hi + d := by
   unfold clamp
-  rw [max_add_const, min_add_const]
+  -- `clamp` is `max lo (min x hi)`: the INNER rewrite is the min, so it goes first --
+  -- `max_add_const`'s pattern needs both its arguments already in `_ + d` form.
+  rw [min_add_const, max_add_const]
 
 theorem max_mono_left {a b : Real} (h : a ≤ b) (c : Real) : max a c ≤ max b c :=
   max_le (le_trans h (le_max_left b c)) (le_max_right b c)
@@ -72,11 +74,16 @@ theorem max_mono_left {a b : Real} (h : a ≤ b) (c : Real) : max a c ≤ max b 
 theorem min_mono_left {a b : Real} (h : a ≤ b) (c : Real) : min a c ≤ min b c :=
   le_min (le_trans (min_le_left a c) h) (min_le_right a c)
 
+/-- Monotone in the SECOND argument of `max` -- the side `clamp` varies now that it is
+`max lo (min x hi)`. -/
+theorem max_mono_right {a b : Real} (h : a ≤ b) (c : Real) : max c a ≤ max c b :=
+  max_le (le_max_left c b) (le_trans h (le_max_right c b))
+
 /-- **`clamp` is monotone in its argument.** -/
 theorem clamp_mono {a b : Real} (h : a ≤ b) (lo hi : Real) :
     clamp a lo hi ≤ clamp b lo hi := by
   unfold clamp
-  exact min_mono_left (max_mono_left h lo) hi
+  exact max_mono_right (min_mono_left h hi) lo
 
 theorem max_eq_left_of_le {a b : Real} (h : b ≤ a) : max a b = a := by
   unfold MachLib.Real.max
@@ -89,10 +96,14 @@ theorem min_eq_left_of_le {a b : Real} (h : a ≤ b) : min a b = a := by
   unfold MachLib.Real.min
   rw [if_pos h]
 
+theorem max_eq_right_of_le {a b : Real} (h : a ≤ b) : max a b = b := by
+  unfold MachLib.Real.max
+  rw [if_pos h]
+
 /-- **A clamp leaves a value already inside its bounds alone.** -/
 theorem clamp_eq_self {v lo hi : Real} (h1 : lo ≤ v) (h2 : v ≤ hi) : clamp v lo hi = v := by
   unfold clamp
-  rw [max_eq_left_of_le h1, min_eq_left_of_le h2]
+  rw [min_eq_left_of_le h2, max_eq_right_of_le h1]
 
 /-- **Same bounds: the clamp difference lies between `0` and `a − b`.** Monotonicity fixes its sign,
 `clamp_lipschitz` its size. -/

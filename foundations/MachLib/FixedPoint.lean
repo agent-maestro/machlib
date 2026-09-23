@@ -65,9 +65,18 @@ namespace MachLib.Real
 /-! ## clamp -/
 
 /-- Saturating clamp, matching the Forge emission exactly:
-`pid_step = min (max raw OUT_MIN) OUT_MAX` — the lower clamp (`max … lo`) is
-applied first, then the upper clamp (`min … hi`). -/
-noncomputable def clamp (x lo hi : Real) : Real := min (max x lo) hi
+`pid_step = max OUT_MIN (min raw OUT_MAX)` — the UPPER clamp (`min … hi`) is applied
+first, then the lower clamp (`max lo …`).
+
+**This order is the EML language's, and it was the other way round until 2026-09-22.**
+`docs/language-reference.md` in Forge defines `clamp(x, lo, hi)` as `max(lo, min(x, hi))`.
+The two orders agree on every well-formed clamp (`lo ≤ hi`) and differ on `lo > hi`, where
+this one is `lo` for every `x` and `min (max x lo) hi` is `hi`. That is not a corner nobody
+reaches: it is the case the C, Rust, shader and HDL backends all used to get wrong, and a
+theorem stated over the wrong order is a theorem about a different function than the
+artifact computes. The cost of the swap is carried by `clamp_le_hi`, which needed no
+hypothesis before and needs `lo ≤ hi` now — see there. -/
+noncomputable def clamp (x lo hi : Real) : Real := max lo (min x hi)
 
 /-! ## small order helpers -/
 
@@ -117,6 +126,26 @@ theorem max_sub_le_abs' (x y c : Real) : max y c - max x c ≤ abs (x - y) := by
 theorem max_lipschitz (x y c : Real) : abs (max x c - max y c) ≤ abs (x - y) :=
   abs_sub_le_of (max_sub_le_abs x y c) (max_sub_le_abs' x y c)
 
+private theorem le_total_real (a b : Real) : a ≤ b ∨ b ≤ a := by
+  rcases lt_total a b with h | h | h
+  · exact Or.inl (le_of_lt h)
+  · exact Or.inl (le_of_eq h)
+  · exact Or.inr (le_of_lt h)
+
+/-- **`max` is commutative.** Needed because `clamp` saturates on the SECOND argument of
+`max` (`max lo (min x hi)`), while `max_lipschitz` above varies the first; one rewrite
+reuses the existing bound instead of duplicating its case analysis. -/
+theorem max_comm (a b : Real) : max a b = max b a := by
+  unfold MachLib.Real.max
+  by_cases hab : a ≤ b
+  · rw [if_pos hab]
+    by_cases hba : b ≤ a
+    · rw [if_pos hba]; exact le_antisymm hba hab
+    · rw [if_neg hba]
+  · rw [if_neg hab]
+    have hba : b ≤ a := (le_total_real a b).resolve_left hab
+    rw [if_pos hba]
+
 theorem min_sub_le_abs (x y c : Real) : min x c - min y c ≤ abs (x - y) := by
   by_cases hy : y ≤ c
   · have hmy : min y c = y := by unfold min; rw [if_pos hy]
@@ -147,15 +176,22 @@ lets the PID forward-error pass through the output clamp unchanged. -/
 theorem clamp_lipschitz (a b lo hi : Real) :
     abs (clamp a lo hi - clamp b lo hi) ≤ abs (a - b) := by
   unfold clamp
-  exact le_trans (min_lipschitz (max a lo) (max b lo) hi) (max_lipschitz a b lo)
+  rw [max_comm lo (min a hi), max_comm lo (min b hi)]
+  exact le_trans (max_lipschitz (min a hi) (min b hi) lo) (min_lipschitz a b hi)
 
 /-! ## clamp range (closes the kernel's `pid_output_clamped` obligation) -/
 
-theorem clamp_le_hi (x lo hi : Real) : clamp x lo hi ≤ hi := by
-  unfold clamp; exact min_le_right _ _
+/-- **`clamp x lo hi ≤ hi` NEEDS `lo ≤ hi`.** Under the language's order the clamp saturates
+UP to `lo` last, so an inverted band (`lo > hi`) returns `lo`, which is above `hi`. The old
+definition (`min (max x lo) hi`) made this unconditional and the floor bound conditional; the
+hypothesis has simply moved to the side where the language puts it. Forge emits a
+`h_clamp : lo ≤ hi` hypothesis for every clamp it sees, so the discharge is unchanged. -/
+theorem clamp_le_hi (x lo hi : Real) (h : lo ≤ hi) : clamp x lo hi ≤ hi := by
+  unfold clamp; exact max_le h (min_le_right x hi)
 
-theorem lo_le_clamp (x lo hi : Real) (h : lo ≤ hi) : lo ≤ clamp x lo hi := by
-  unfold clamp; exact le_min (le_max_right x lo) h
+/-- **`lo ≤ clamp x lo hi` is UNCONDITIONAL now** (it took `lo ≤ hi` before the order swap). -/
+theorem lo_le_clamp (x lo hi : Real) : lo ≤ clamp x lo hi := by
+  unfold clamp; exact le_max_left lo (min x hi)
 
 /-! ## one fixed-point product term
 
