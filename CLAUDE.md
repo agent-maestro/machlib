@@ -7,16 +7,16 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 084 `.lean` files** (809 top-level + 275 in subdirectories) /
-**257 389 lines** / **8 014 theorems**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 085 `.lean` files** (810 top-level + 275 in subdirectories) /
+**257 909 lines** / **8 038 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 8 014
-python3 tools/count_theorems.py --scope all           # 8 638
+python3 tools/count_theorems.py --scope core          # 8 038
+python3 tools/count_theorems.py --scope all           # 8 662
 ```
 
 The two differ by **624**, which is `Discovered/`. **Every file and theorem count here is over git-TRACKED files**
@@ -178,7 +178,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 825 jobs, ~3 s warm
+lake build                                     # 826 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
@@ -326,7 +326,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**819 of 1084 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**820 of 1085 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -659,7 +659,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**819 of 1 084 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
+run (**820 of 1 085 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **256 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
@@ -796,6 +796,17 @@ touching it, because each was learned the expensive way:
    dies on its **base case** instead: `PeelTerminalNoCancel ↔ GrowthEnvelope` and
    `PeelTerminalConstZero ↔ EmlGermApproach`, so both cells a peeling recursion can stop at *are*
    the obligation. **Price the terminal cell, not only the measure.**
+   **And once more the same day** (`EMLProductMerge`, mechanism 7): the peel's unpaid price — the
+   merged germ `A₂·C`, *"for which EML has no node"* — is payable, because `EMLRingClosure` makes
+   EML closed under `×` with **no hypotheses** (`mulGen_eval`) and `EMLCharacterisation` says the
+   class **is** the `exp`/`log` closure of ℝ. A merge costs **115 depth levels**, one per peel, so a
+   depth-`j` pair's accumulator is an EML tree of depth `≤ 116·j` — bounded, and therefore back
+   inside (6): `peelTerminalAccum_iff_emlGermApproach`, **with a converse**. Stated at width:
+   **no enlargement of the germ class can shrink a terminal cell**
+   (`terminalCell_of_class_is_the_conjecture`); dropping the syntax loses the measure instead
+   (`no_germInvariant_peel_bound`). **Price the CLASS before the cell** — *"no product node"* is not
+   *"not closed under products"*, and the closure had sat in the corpus uncited by this programme
+   since 2026-09.
 2. **The missing input is named and placed.** `EmlGermApproach` (`EMLGermApproach`) is the obligation
    at its narrowest, equivalent to `DecayFloor`. Its *per-pair* form is a corollary of Hardy (1912);
    **the entire open content is the position of one `∃ k`**. **No axiom has been spent on it,

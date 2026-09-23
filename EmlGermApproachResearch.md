@@ -82,10 +82,10 @@ shape.**
 
 ---
 
-## 4. The six failed descent mechanisms
+## 4. The seven failed descent mechanisms
 
-All six are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach`,
-`EMLPolarityMeasure`, `EMLGermInvariance` and `EMLPeelRecursion`.
+All seven are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach`,
+`EMLPolarityMeasure`, `EMLGermInvariance`, `EMLPeelRecursion` and `EMLProductMerge`.
 
 1. **Syntactic scalar measure.** Any `Nat`-valued measure descending to *both* children is a
    `LadderMeasure` with `step = 1` (`ofStrictDescent` — the hypothesis *is* the induction
@@ -100,7 +100,9 @@ All six are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach`,
    travel, found while looking for something else.
 4. **Any measure into any well-founded order** (`EMLPolarityMeasure`, 2026-09-22). Drop `Nat`
    entirely. Let `μ : EMLTree → W` for **any** `W` under **any** well-founded `R`, descending
-   strictly to **both** children. Then `recipTree = eTree ∘ negLogTree` is **two strict steps up** —
+   strictly to **both** children. **It does NOT say no such descent exists** — `wfDescent_inhabited`
+   exhibits one (`polDescent`). It says none of them also prices the reciprocal at one step, which
+   is what the ladder needs. Then `recipTree = eTree ∘ negLogTree` is **two strict steps up** —
    one `log` edge in, one `exp` edge out — so `¬ R (μ (recipTree t)) (μ t)` and
    `μ (recipTree t) ≠ μ t` (`recip_not_below`, `recip_ne`); `posEmbed` is **four**
    (`posEmbed_not_below`). The proofs use **only well-foundedness** — three rotate-the-cycle lemmas,
@@ -193,17 +195,70 @@ All six are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach`,
    axiom block (`rolle_ct`, `analytic_finite_zeros_compact`) that `EMLDecayFloorIsGrowth` is
    deliberately routed around; and the merged right-hand germ is a **product**, for which EML has
    no node. Neither is computed, because the T2 death is independent of both.
+   **The second one is now computed — it is 115 depth levels per merge, and (7) is what paying it
+   buys.** The first is still unpaid, and still not due.
+
+7. **A class closed under products — the merge's own price, PAID** (`EMLProductMerge`, 2026-09-23).
+   The obvious seventh attempt, and the one (6) invites: define the smallest class containing the
+   EML germs and closed under multiplication, redo the peel there, and see what the terminal cells
+   become. **There is no such extension.** `EMLRingClosure` (2026-09, never cited by this programme
+   until now) proves `mulGen_eval (u v : EMLTree) (x : Real) : (mulGen u v).eval x = u.eval x *
+   v.eval x` with **no hypothesis of any kind** — not positivity, not on `x` — and
+   `EMLCharacterisation` identifies the class outright: `InEML f ↔ ExpLogClosure f`, the closure of
+   the constants and `id` under `+`, `−`, `×`, `exp`, `log`. `prodClosure_iff_inEML` writes down the
+   route's own class (EML germs, products, totalised `log`) and proves it **equal to EML, both
+   ways**. Reciprocals were inside before that: `recipTree` is `e/t` at `+2`.
+   **"EML has no product NODE" is true; "the class is not closed under products" is false**, and
+   (6)'s price paragraph is where the two were run together.
+   **So the price is payable, and it is `115` depth levels per merge** (`mergeTree_depth_le` =
+   `mulGen_depth_le` 112 + `logTree_depth` 3; at `var` the product alone is 54,
+   `mulGen_var_var_depth`). The merge multiplies the accumulator by exactly **one** germ per peel,
+   so a run performs `lspTree A ≤ j` merges and the accumulated right-hand germ is an ordinary EML
+   tree of depth **`≤ 116 · j`** (`peelAccum_depth_le`, `peel_accumulator_bounded`).
+   **The crux — does the complexity bound survive the closure? — is answered YES, and that is what
+   kills it.** A bounded class is a class (6) applies to:
+   `PeelTerminalAccum ↔ EmlGermApproach`, **both directions**
+   (`peelTerminalAccum_iff_emlGermApproach`). Forward costs nothing —
+   `peelAccum (const 0) C = C` by `rfl`, so a leaf left germ performs **no merges** and the
+   product-closed cell *contains* (6)'s `PeelTerminalConstZero` verbatim. The converse is where the
+   `116 · j` is spent, so the cell is not harder either. Read as a reduction: **the peel with its
+   price paid reduces the conjecture at depth `j` to the conjecture at depth `116 · j`** — the
+   fourth sighting of the same direction of travel (`recipTree` `+2`, `posEmbed` `+4`,
+   `A − log C` `+1`, the merge `+115` a step).
+   **At the right width this is not about products at all.**
+   `terminalCell_of_class_is_the_conjecture` takes **any** carrier, with **any** complexity measure,
+   into which EML trees embed with bounded complexity, and concludes `EmlGermApproach` from its
+   height-`0` terminal cell. **No enlargement of the right-hand germ class can shrink a terminal
+   cell, because the cell quantifies over the class.** Transseries, Hardy fields, valuation rings:
+   the cell grows with the class, and §5's asymptotic-normal-form bet cannot be rescued by making
+   the class bigger any more than by making the parameter finer.
+   **And the escape costs the measure.** Drop the syntax and `exp (log g) = g` restores the peel's
+   shape at every positive germ, so the recursion never has to stop — but then nothing bounds it.
+   `no_germInvariant_peel_bound`: **no function of the germ bounds the peel count**, because
+   `selfLeftNode` re-presents any tree **two spine levels up with the same germ**, unconditionally,
+   and iterates (`iterSelf_germ`, `iterSelf_lsp`). Any parameter that survives the closure is
+   germ-invariant, and (5) proved that class empty. **Pay the price and you are in (6); refuse to
+   stop and you are in (5).**
+   Fixtures: every §3 verdict is unchanged, one column added. `deepDecay m` still merges **twice**
+   for every `m` (`prod_peel_blind_on_deepDecay`) while forcing height `m + 1`; `gapTarget n c`
+   still merges `n + 1` times for a floor of height `0` (`prod_peel_overworks_on_gapTarget`);
+   `peelCount_cannot_carry_floor` is untouched. **The closure changes the arithmetic and no
+   verdict.**
 
 **Stated at the right width, and this has been got wrong twice:** what is killed is *local scalar
 growth descent through the syntax tree* (1)-(3); — since (4) — **every measure on trees, into
 any well-founded order, that descends to both children**; — since (5) — **every
-germ-invariant parameter whatever, on either side or both**; and — since (6) — **every recursion,
+germ-invariant parameter whatever, on either side or both**; — since (6) — **every recursion,
 of any shape, whose terminal cell is a cancellation-free pair or a height-`0` left germ**, because
-those two cells are the obligation itself. That is still **not** the claim that no well-founded
+those two cells are the obligation itself; and — since (7) — **every enlargement of the
+right-hand germ class**, whatever it is closed under and however its complexity is measured,
+because the terminal cell quantifies over the class and therefore grows with it. That is still
+**not** the claim that no well-founded
 induction can work. Untouched, precisely: a **mutual** induction over `(tree, polarity)` pairs with
 *different* relations per polarity; a one-sided syntactic descent **with a terminal cell that is
 neither of (6)'s two** — (6) closes the base case, not the measure, and `lspTree` survives as a
-measure; and any non-structural argument. The sentence this paragraph used to carry — *"a
+measure, though (7) says a **bigger class** is not how such a cell is obtained; and any
+non-structural argument. The sentence this paragraph used to carry — *"a
 well-founded relation on germs … is outside (4) by construction"* — is **false**, and (5) is why.
 
 **And the first of those classes is where the ladder already lives**, which is why a better measure
@@ -213,8 +268,9 @@ buys the *transfer* route, and the transfer route is what (4) closes.
 
 **And one correction worth carrying:** `(di)`'s re-embedding is a **moving boundary**. It says the
 positive branch at depth `k` is as hard as `DecayFloor` at depth `k − 4`. With depth ≤ 3 proved
-(`decayFloorUpTo_three`), it first bites at **depth 8**, and that boundary rises by one per rung
-proved. Read carelessly it retires four rungs without an argument.
+(`decayFloorUpTo_three` — which proves depth 3 at height **2**, not the sharp height 0 the §6 sweep
+reports; the theorem and the measurement are different claims), it first bites at **depth 8**, and
+that boundary rises by one per rung proved. Read carelessly it retires four rungs without an argument.
 
 ---
 
@@ -240,7 +296,9 @@ Candidates, in the order I would try them. **All four are now DEAD** — 1 and 2
 2026-09-22, 3 and 4 by the run of 2026-09-23, both below. The semantic half of this bet is closed:
 §4(5) shows no germ-invariant parameter descends at all, so an asymptotic normal form cannot be
 the induction's parameter however it is built. It could still be the *content* of
-`NodeDecayBound`; it cannot be the *ladder*.
+`NodeDecayBound`; it cannot be the *ladder*. And — since §4(7) — it cannot be rescued by working
+in a **larger** class either: the terminal cell quantifies over the class, so transseries or a
+Hardy-field completion enlarges the cell rather than the toolkit.
 
 1. ~~**A vector, not a scalar**~~ — `(exp-height, log-depth, alternation, size)` under a
    lexicographic order. **DEAD.** Killed by `recipTree`, and its last two components are provably
@@ -475,9 +533,14 @@ bound, and `deepDecay` is the family that attains it**: the extremal tree the de
 returns is `eml(eml(0, eml(eml(x,0), eml(x,0))), 1)`, which unfolds to `e·exp(−exp x)` — that
 family, rediscovered by the sweep rather than supplied to it.
 
-So at depths 2–4 the conjecture's `k` is pinned from both sides at `j − 3`. That is not a proof for
-any depth (a sweep is not an induction), but it does say the *value* of `k` is not in doubt, and a
-proof attempt should aim at exactly `j − 3` rather than search for the right constant.
+So at depths 2–4 the conjecture's `k` is pinned from both sides at `j − 3` — **and the two sides
+are not the same kind of statement.** The LOWER bound is machine-checked (`deepDecay m` is a
+theorem). The UPPER bound is NUMERICAL ONLY, and over a **two-element constant alphabet** while
+the grammar allows an arbitrary real constant at every leaf; §6 records that a counterexample
+needing a particular transcendental constant is invisible to this instrument, and that this corpus
+has one recorded instance of exactly that miss. A sweep is not an induction, and half of this pin
+is not even a proof of a bound. What it does say is that the *value* is not in doubt, so a proof
+attempt should aim at `j − 3` rather than hunt the constant.
 
 **Depth 5 is under-resolved and the table says so.** Its ray reaches only `x ≈ 2.2`, so the search
 cannot get to where a height-2 germ separates from a height-1 one; 354 of 8 000 readings were
@@ -518,7 +581,13 @@ Full note with sources and its own limits:
 **Classical, and it is most of the statement.** EML germs at infinity are Hardy
 **logarithmico-exponential** germs (totalised `log` is first-order definable in `ℝ_exp`, so
 totalisation does not leave the class). LE-functions form a **field**, so `1/gap` is again an
-LE-function; and every Hardy-field germ is `o(exp^∘k)` for **some** `k`. Compose: per-pair floor.
+LE-function; and every germ in Hardy's class `𝓛` is `o(exp^∘k)` for **some** `k`. Compose:
+per-pair floor. **Say `𝓛`, not "Hardy field":** the `o(exp^∘k)` step is FALSE for Hardy fields in
+general — transexponential ones exist, containing germs that outgrow every iterate of `exp`. This
+file said "every Hardy-field germ" until 2026-09-23; the argument only ever needed `𝓛`, where it
+is correct, and EML germs lie in `𝓛` (`EMLCharacterisation.eml_eq_expLogClosure` gives the
+`exp`/`log` closure of `ℝ`; that this closure sits inside `𝓛` is classical and argued in prose
+here, not formalised).
 **`recipTree` *is* that reciprocal** — the corpus walked backwards into a 1912 argument.
 
 **Not classical: the uniformity.** Two near misses, both instructive:
@@ -587,6 +656,15 @@ since `(dm)`, and the row must name the axiom.
   proved. More interfaces will not help.
 * **Do not read any of the equivalences as progress.** Check for a converse first. `(dw)` claimed a
   factoring that `(dx)` had to withdraw.
+* **Do not propose a bigger germ class.** EML is already closed under `+`, `−`, `×`, `exp` and
+  totalised `log`, with **no hypotheses** (`EMLRingClosure`, `EMLCharacterisation`), so *"the class
+  closed under products"* names the class we are already in (`prodClosure_iff_inEML`) — and for
+  **any** class whatever the terminal cell grows with it
+  (`terminalCell_of_class_is_the_conjecture`, §4(7)). The rule below says price the terminal cell
+  before the measure; this one says **price the class before the cell**, and the cheapest check is
+  one grep for the operation's own name — `grep -rln "mulGen" MachLib/` — which this programme had
+  never run in fourteen months of asking whether EML expresses products. That gap is what made (7)
+  look like a new class.
 * **Do not design a recursion whose base case is "no cancellation" or "height-`0` left germ".**
   Both cells are the conjecture — `peelTerminalNoCancel_iff_growthEnvelope` and
   `peelTerminalConstZero_iff_emlGermApproach`, §4(6). Price the **terminal cell** before the
