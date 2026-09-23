@@ -480,6 +480,7 @@ import MachLib.EMLGermInvariance
 import MachLib.EMLComparability
 import MachLib.EMLPeelRecursion
 import MachLib.EMLProductMerge
+import MachLib.EMLPairDescent
 import MachLib.EMLDepth3Rung
 import MachLib.EMLDecayLadderStep
 import MachLib.EMLValueGap

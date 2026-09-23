@@ -82,10 +82,11 @@ shape.**
 
 ---
 
-## 4. The seven failed descent mechanisms
+## 4. The eight failed descent mechanisms
 
-All seven are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach`,
-`EMLPolarityMeasure`, `EMLGermInvariance`, `EMLPeelRecursion` and `EMLProductMerge`.
+All eight are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach`,
+`EMLPolarityMeasure`, `EMLGermInvariance`, `EMLPeelRecursion`, `EMLProductMerge` and
+`EMLPairDescent`.
 
 1. **Syntactic scalar measure.** Any `Nat`-valued measure descending to *both* children is a
    `LadderMeasure` with `step = 1` (`ofStrictDescent` — the hypothesis *is* the induction
@@ -245,6 +246,58 @@ All seven are proved, footprint-clean, in `EMLLadderMeasure`, `EMLGermApproach`,
    `peelCount_cannot_carry_floor` is untouched. **The closure changes the arithmetic and no
    verdict.**
 
+8. **A well-founded relation on PAIRS `(A, C)`** (`EMLPairDescent`, 2026-09-23). The class this
+   file's own width paragraph put at the head of what is untouched, and the one that looked most
+   alive: every mechanism before it measures **one tree**, while the conjecture is about a pair.
+   **It is well-founded, the peel decreases it, the run terminates — and its minimal elements are
+   (6)'s T2 cell.**
+   The relation is the peel step itself, with no measure interposed: `PeelRel` sends
+   `(eml A₁ A₂, C)` to `(A₁, mergeTree A₂ C)` — the merge of (7), proved and usable. **Well-foundedness
+   first, as §5 requires**: `peelRel_wf`, by `lspTree ∘ fst`, and the class `PairDescent` — any
+   measure on pairs into any well-founded order the peel decreases — is inhabited
+   (`pairDescent_inhabited`).
+   **Mechanism (4) does NOT transport, and that was checked first because it is one lemma either
+   way.** The exact configuration (4) refutes is **realised** here: the pair measure prices
+   `recipTree t` at `2` for every `t`, so on any left germ with two or more peels the reciprocal is
+   *cheap* (`cheap_recip_survives_in_pairs`) and no contradiction follows — because the peel never
+   asks for descent to a right child, and `lspTree` provably does not have it
+   (`lspTree_not_right_descending`). `mechanism_four_does_not_transport` states the three facts
+   together. **So (8) is a genuinely new class, not (4) in new clothes.**
+   **The minimal elements, computed before any floor was attempted.**
+   `pairMinimal_iff : PairMinimal (A, C) ↔ A.lspTree = 0`, both directions — an `eml` left germ
+   always has a peel below it, a leaf left germ has nothing below it — and the first half survives
+   for **every** `PairDescent` (`pairDescent_eml_not_minimal`), so the minimal set of any
+   peel-decreased pair relation is contained in `{A.lspTree = 0}`. **That is T2 verbatim**, and
+   `PairTerminalCell ↔ EmlGermApproach` (`pairTerminalCell_iff_emlGermApproach`), **with a
+   converse**, at the same depth — where (7)'s converse cost `j ↦ 116·j`. The route's other exit is
+   the peel step's own side condition `0 < c`, which is T1. **The same two cells, in new clothes.**
+   **And the cell is not a choice.** `base_must_contain_constZero`: any sound peel-driven pair
+   recursion whose base cases are `≺`-minimal contains `(const 0, C)` for every `C`. The proof is
+   the run — instantiate the induction at `P A C := S (leftLeaf A) (peelAccum A C)`, whose step case
+   is `rfl` because that substitution *is* a peel, and read the conclusion at `const 0`. **Both
+   verdicts on the instrument**: the same theorem refutes the `var`-only base case
+   (`var_only_base_is_unsound`), and the full leaf base case is sound (`pair_peel_induction`) — the
+   pair recursion is a valid induction principle, machine-checked, `peel_run` reaching
+   `(leftLeaf A, peelAccum A C)` in exactly `A.lspTree` steps.
+   **The fixture row that decides it is sharper at pair width than it was for `lspTree`.** (6)
+   records the peel count as *constant* on `deepDecay`; on pairs it is **zero** there, and not by
+   accident — `decayFloor_of_emlGermApproach` routes **every** instance of `DecayFloor` through the
+   pair `(const 0, approachTarget t)`, whose left germ is a leaf. So **the entire obligation the
+   conjecture reduces to consists of `≺`-minimal pairs** (`decayFloor_reduction_is_minimal`): the
+   route's engine never turns over on its own workload, and `pairCount_cannot_carry_floor` turns
+   that into `False` (`deepDecay m` forces `m + 1 ≤ f 0` for every `m`).
+   **Two escapes, priced.** The second coordinate cannot carry the descent —
+   `no_accumulator_descent`: no measure of the accumulator alone descends along the merge in **any**
+   well-founded order, because the merge iterates and `C, A₂·C, A₂·(A₂·C), …` would be an infinite
+   descending chain. And dropping the syntax is closed at pair width too
+   (`no_germInvariant_pair_bound`): no function of the **germ pair** bounds the peel count, by
+   `selfLeftNode` exactly as in (7).
+   **So the pair reading does not escape (6) — it IS (6)**, with the accumulator named and the
+   measure read off the first coordinate. Fixtures: four of the six terminate at `const 0` (the T2
+   cell verbatim — `fixtures_terminate_at_constZero`), `gapTarget n c` is the one that terminates at
+   `var` (`leftLeaf_gapTarget`), and the meeting pair `(A, eTree A)` **never enters** the recursion
+   at all (`pair_entry_fails_at_meeting`). **Pairs change the vocabulary and no verdict.**
+
 **Stated at the right width, and this has been got wrong twice:** what is killed is *local scalar
 growth descent through the syntax tree* (1)-(3); — since (4) — **every measure on trees, into
 any well-founded order, that descends to both children**; — since (5) — **every
@@ -252,14 +305,20 @@ germ-invariant parameter whatever, on either side or both**; — since (6) — *
 of any shape, whose terminal cell is a cancellation-free pair or a height-`0` left germ**, because
 those two cells are the obligation itself; and — since (7) — **every enlargement of the
 right-hand germ class**, whatever it is closed under and however its complexity is measured,
-because the terminal cell quantifies over the class and therefore grows with it. That is still
+because the terminal cell quantifies over the class and therefore grows with it; and — since (8) —
+**every well-founded relation on PAIRS `(A, C)` that the peel step decreases**, whatever its carrier
+and order type, because its minimal elements are contained in `{lspTree A = 0}` and no sound base
+case can omit the `(const 0, C)` instances the peel itself carries every pair to. That is still
 **not** the claim that no well-founded
 induction can work. Untouched, precisely: a **mutual** induction over `(tree, polarity)` pairs with
 *different* relations per polarity; a one-sided syntactic descent **with a terminal cell that is
 neither of (6)'s two** — (6) closes the base case, not the measure, and `lspTree` survives as a
-measure, though (7) says a **bigger class** is not how such a cell is obtained; and any
-non-structural argument. The sentence this paragraph used to carry — *"a
-well-founded relation on germs … is outside (4) by construction"* — is **false**, and (5) is why.
+measure, though (7) says a **bigger class** is not how such a cell is obtained and (8) says a
+**pair** is not either; and any non-structural argument. The sentence this paragraph used to carry
+— *"a well-founded relation on germs … is outside (4) by construction"* — is **false**, and (5) is
+why. The one it carried until (8) — *"a relation on pairs `(A, C)`"* as an untouched class — is
+**closed**, and the reason is that a pair relation's descent has nowhere to live but the left germ's
+syntax (`no_accumulator_descent`), which is (6)'s territory.
 
 **And the first of those classes is where the ladder already lives**, which is why a better measure
 cannot help it: `decayFloor_of_ladderInputs` is a structural induction on the depth bound needing no
@@ -363,8 +422,10 @@ well-founded order on its values admits descent to either child, let alone both 
 *semantic* half of §5's bet is closed, and the ladder's parameter must read the **syntax**. But
 §4(4) already closed every syntactic measure that descends to both children. What survives is the
 intersection neither theorem touches: a parameter that reads the syntax and descends on **one**
-side, with the other side carried by a different argument; a relation on **pairs** `(A, C)`; and
-non-structural arguments. The corpus's two blindness results now bracket it from both sides —
+side, with the other side carried by a different argument; and non-structural arguments. (*A
+relation on **pairs** `(A, C)`* stood in that list until §4(8), which closed it: the pair relation
+is well-founded and the peel decreases it, but its minimal elements are (6)'s T2 cell and the
+accumulator cannot carry a descent at all.) The corpus's two blindness results now bracket it from both sides —
 `measure_blind_at_meeting` (two trees, one measure, different germs) and
 `polMeasure_not_germInvariant` (two trees, one germ, different measures). **A syntactic parameter
 and a germ parameter are not refinements of one another in either direction**, so nothing is to be
@@ -539,8 +600,42 @@ theorem). The UPPER bound is NUMERICAL ONLY, and over a **two-element constant a
 the grammar allows an arbitrary real constant at every leaf; §6 records that a counterexample
 needing a particular transcendental constant is invisible to this instrument, and that this corpus
 has one recorded instance of exactly that miss. A sweep is not an induction, and half of this pin
-is not even a proof of a bound. What it does say is that the *value* is not in doubt, so a proof
-attempt should aim at `j − 3` rather than hunt the constant.
+is not even a proof of a bound. **What it does say is that the value is not in doubt — but `j − 3` is the value of ONE of two
+metrics, and this section reported it under the other.** `DecayFloor` is stated with a constant,
+`t(x) ≥ exp(−(C + tower_k x))`; `EmlGermApproach` (§1) is stated **without** one,
+`exp(−tower_k x) ≤ gap`. They are equivalent as *propositions* — that is the proved cycle — but
+their **attained heights differ by exactly one**, and every table in this section measures
+`−log t(x) ≤ tower_k(x)`, which is the strict form, over an alphabet that could not express the
+difference.
+
+The separating family is `exp(1 − tower_{j−3}(x) − M)` at depth `j`, built from `e^-M` at one
+leaf (defect 7). Its `−log t` is `tower_{j−3}(x) + M − 1`, which **exceeds `tower_{j−3}(x)` at
+every `x`** and is **below `C + tower_{j−3}(x)` with `C = M − 1`**. Measured 2026-09-23 with `M`
+running `0, 1, 5, 50, 10⁶, 10⁴⁰`: the DecayFloor height stays at `j − 3` throughout, and the
+strict height is `j − 2`. So:
+
+* **`DecayFloor`'s `k(j) = j − 3`** — attained by `deepDecay (j−4)`, and the value every table in
+  this section and in the 2026-09-23 run reports **at the tail**;
+* **`EmlGermApproach`'s `k(j) = j − 2`** — attained by the offset family above, and the value the
+  2026-09-05 tables would have reported had any sweep alphabet contained a constant in `(0,1)`.
+
+**Both are bounded at fixed `j`, so neither is a counterexample** — the conjecture's content is
+that `k` depends on `j` alone, not that it equals any particular function of `j`. But a proof
+attempt must aim at the number belonging to the form it is proving, and **must not carry `j − 3`
+across the equivalence.** The cycle costs a height when it is traversed, which is the same fact
+§4(6) records as *"`+1` height cell→envelope, none the other way"*.
+
+Read the tables accordingly. **The 2026-09-05 rows and the 2026-09-23 rows both report the
+DecayFloor number**, the first by accident of its alphabet and the second because an additive
+constant is below the working precision beside `tower_{j−3}(x)` in the tail. Neither has ever
+measured the strict number except on the bounded window of `x` where `M` is still resolvable, and
+that window shrinks like `log^{j−3}(M)`.
+
+And the older caution survives intact and now cuts twice: the LOWER bound is machine-checked, the
+UPPER bound is numerical only, **and until today the upper bound was not even a bound on the
+quantity `EmlGermApproach` asks about.**
+
+---
 
 **Depth 5 is under-resolved and the table says so.** Its ray reaches only `x ≈ 2.2`, so the search
 cannot get to where a height-2 germ separates from a height-1 one; 354 of 8 000 readings were
@@ -564,12 +659,143 @@ evidence about the class.
    killed, on the machine whose editor an out-of-memory kill had already taken down that morning.
    Samples are now *constructed*, never filtered out of a construction.
 
+7. **THE CONSTANT ALPHABET HAD A HOLE, AND IT WAS EXACTLY THE ONE DIRECTION THAT MOVES THE
+   READING.** `log₀ c` is `0` for `c ≤ 0` and for `c = 1`, **positive** for `c > 1`, and
+   **negative** — the only case in which a leaf ADDS to a germ, since `eml A B = exp A − log₀ B` —
+   for `0 < c < 1`. Every sweep alphabet of `germ_approach_search.py` lies inside
+   `{0, 1, 5, 50, 1000}` (lines 503-519: `[0,1]`, `[0,1,5]`, `[0,1,50]`, `[0,1,1000]`,
+   `[0,1,5,50]`), so **`log₀ c ≥ 0` at every leaf of every tree it ever examined** and no leaf
+   could add anything to any germ. Every widening of `{0,1}` that section reports — to `{0,1,5}`,
+   `{0,1,50}`, `{0,1,1000}`, `{0,1,5,50}` — added only constants that SUBTRACT, and a constant
+   subtrahend is dominated in the tail by the subtree it sits beside. The constants that ADD are
+   the ones that move the strict reading, and none was ever present.
+   **The mechanism was in that file the whole time — inside its own controls.** `exp(−1)` occurs
+   in `germ_approach_search.py` exactly twice, at lines **334 and 337**, both inside `controls()`,
+   where `eml(var, const e⁻¹) = exp(x) + 1` is what makes control-1 fire. **The one leaf value able
+   to move the reading was in the instrument's controls and never in its search.**
+   With `e^-M` in the alphabet, `eml(tower_{n-1}, const e^-M) = tower_n(x) + M` at depth `n`, and
+   `exp(1 − tower_n(x) − M)` at depth `n + 3` misses the strict height-`n` floor at **every** `x`,
+   by the constant `M − 1`. That is the family PIECE 3 is about.
+   **This is defect 3's shape, not defect 4's.** Defect 3 was a guard that rejected both positive
+   controls — an instrument reporting a clean negative result while unable to report anything else.
+   This is an alphabet that excluded the one constant its own controls depended on. Both are the
+   same failure: *the search and the controls were not exercising the same machinery*, and only the
+   controls were ever checked for it.
+
+---
+
 **The prediction this table tests was itself corrected by the table.** A first draft of this
 section predicted `j − 2`, from miscounting the extremal construction: the smallest positive germ
 at depth `j` is `exp(1 − tower_{j−3})`, and the `exp` that makes it positive costs the extra level.
 The exhaustive depth-3 sweep returned 0 where `j − 2` predicted 1, which is how the miscount was
 found — the instrument correcting the prediction rather than the other way round, which is the
 only direction that is worth anything.
+
+### ▸ RUN, 2026-09-23 — `foundations/tools/germ_tower{,_eml,_search}.py`
+
+**No counterexample. `j − 3` held at depths 4-7, where the 2026-09-05 instrument could resolve
+only depth 4 — and the search's own table now separates the two metrics that run conflated.**
+
+```
+depth ≤ 2, ≤ 3, constants {0,1}   EXHAUSTIVE, 147 and 21 612 trees   height 0 — reproduces 2026-09-05
+depths 1-7, 16 constants + var    288 910 nodes formed, 78 369 distinct germs
+                                  DecayFloor height 0,0,0,1,2,3,4  =  j − 3 at every depth
+depth 5 alone                     52 440 nodes, 16 592 germs, 0 OVERFLOWS, 0 of 12 unstable
+pair form, depth ≤ 2 / 3 / 4      287 346 pairs           height 0 / 1 / 2
+positive controls                 deepDecay 0..5, depths 4-9, heights 1..6 — all SIX FIRE
+```
+
+**The old ray did not die of precision. It died of REPRESENTATION, and that is the whole design.**
+§6 above records the reach as a function of depth — `x ≤ 10⁵` at depth 2, `x ≤ 13` at depth 3,
+`x ≤ 2.8` at depth 4, `x ≈ 2.2` at depth 5 — and attributes it to the tower passing 120-digit
+precision. The attribution is wrong in a way that matters: to know the *mantissa* of
+`exp(exp(exp x))` to one digit you must know `exp(exp x)` to one **absolute** digit, i.e. to
+`exp(x)/ln 10` significant digits. At `x = 20` that is 210 million digits. **No dps setting reaches
+depth 5**; raising it buys about one unit of `x`. A value representation cannot be fixed here.
+
+So `germ_tower.py` does not represent the value. It represents the **iterated-log spine**:
+
+```
+val((), m)          = m                        (m an ordinary mpf, any sign)
+val((s,) + rest, m) = s * exp(val(rest, m))    (s = ±1)
+```
+
+canonical iff a nonempty spine's inner value exceeds `LOGBIG`, so every number has one form. Then
+**`exp` is a spine push and `log` a spine pop, both EXACT with no arithmetic at all**, `neg` flips
+the leading sign, and the only operation that can cost a digit is `+`. `exp(−exp(exp x))` at
+`x = 10³⁰` is the three-symbol object `((+1,−1,+1), 1e30)`, compared and differenced exactly.
+Reach stops being a function of depth: **one ray serves every depth**, scoring at
+`x ∈ [6.18, 2.85 × 10⁶⁴]` and confirming at `x ∈ [6.18, 4.11 × 10¹²⁹⁴]`. The `overflow` and
+`tail-unmeasured` buckets that defect 2 was built for are **empty by construction** — there is no
+working range left to leave.
+
+A sum is `a + b = sa·exp(A)·(1 + (sa·sb)·exp(B − A))`, a recursive difference of exponents
+bottoming out on two ordinary mpfs, and *that* bottom is the one place cancellation destroys
+digits. The guard there is **relative**, inherited from defect 3 and not re-derived.
+
+**The error bias is one-way, and a reader should know which way.** When `|b|` falls below the
+working precision beside `|a|`, `a + b` returns `a` — the term is ABSORBED. In a difference that
+makes the computed `|t|` **larger** than the truth and the computed height **smaller**. So this
+instrument can **MISS** a counterexample and **cannot INVENT** one. Every absorption is counted, so
+a result landing on exact zero after one is reported in its own bucket (`zero-after-absorption`)
+rather than read as a germ that meets its target.
+
+**What precision each depth actually needed — measured, not assumed.** The same beam run at
+15 / 30 / 60 / 120 / 240 dps:
+
+| dps | depth 2 | depth 3 | depth 4 | depth 5 |
+|---|---|---|---|---|
+| 15 | 0 / 0 unresolved | 0 / 5 | 1 / 0 | 2 / 113 |
+| 30 | 0 / 0 | 0 / 3 | 1 / 0 | 2 / 44 |
+| 60 | 0 / 1 | 0 / 0 | 1 / 0 | 2 / 2 |
+| 120 | 0 / 1 | 0 / 0 | 1 / 0 | 2 / 0 |
+| 240 | 0 / 0 | 0 / 0 | 1 / 0 | 2 / 0 |
+
+**The height verdict is already correct at 15 digits at every depth, and settles at 30.** Only the
+unresolved count moves. The 2026-09-05 run's fixed 120 digits were never the binding constraint —
+which is the same finding as the paragraph above, arriving from the other end.
+
+**The depth-5 verdict, which is what the table above could not give.** DecayFloor height **2**,
+`= j − 3`, confirmed. 52 440 nodes formed at depth 5 over 16 592 distinct germs; **0 overflows, 0 of
+12 re-measurements unstable**, 307 refused as `zero-after-absorption` and 4 as `unresolved` — 0.6 %
+of readings discarded against 2026-09-05's **354 unstable plus 1 141 overflowed out of 8 000**,
+18.7 %. The extremal tree is `eml(eml(0, eml(eml(eml(x,1),1),1)), 0)`, i.e. `exp(1 − exp(exp x))`:
+**`deepDecay 1`, rediscovered by the sweep rather than supplied to it**, exactly as the depth-4
+sweep rediscovered `deepDecay 0`.
+
+| depth | coverage | DecayFloor height | `j − 3` | verdict |
+|---|---|---|---|---|
+| 2 | **exhaustive**, 147 trees over `{0,1}` | 0 | 0 | matches |
+| 3 | **exhaustive**, 21 612 trees over `{0,1}` | 0 | 0 | matches |
+| 4 | beam, 59 712 nodes / 11 774 germs | 1 | 1 | matches |
+| 5 | beam, 52 440 nodes / 16 592 germs | 2 | 2 | **matches — was under-resolved** |
+| 6 | beam, 54 808 nodes / 15 302 germs | 3 | 3 | matches |
+| 7 | beam, 55 776 nodes / 16 781 germs | 4 | 4 | matches |
+
+**Three controls, because a failed search proves nothing.**
+
+* **Positive.** `deepDecay 0..5`, depths 4 to 9, must report heights 1 to 6. All six fire. The
+  2026-09-05 instrument could run this family to `m = 1` at best.
+* **Regression.** The exhaustive depth-≤2 and depth-≤3 sweeps over `{0,1}` return **147** and
+  **21 612** trees at height 0 — the 2026-09-05 rows reproduced tree for tree by an instrument
+  sharing no arithmetic with it.
+* **No-seed.** The beam is seeded with §3's families, so the obvious objection is that it found
+  `deepDecay` because it was handed `deepDecay`. Run with the seed list emptied it reaches the same
+  heights — 0,0,0,1,2,3 at depths 1-6 over 192 096 nodes — via entirely different trees
+  (`eml(eml(eml(eml(-1,x),0),eml(eml(x,0),0)),0)` at depth 4). **The reading is not an artifact of
+  the seeds.**
+
+**And the specimens were re-verified away from the instrument that found them**: the depth-4, 5, 6
+and 7 extremals re-measured at **40, 200 and 1 000 dps** on a ray reaching `x = 3.22 × 10⁷⁰⁶⁸³`
+return identical heights, with the germ printing symbolically as `exp(−exp^k(x))`. The depth of
+every reported tree is now **asserted** rather than assumed — see defect 5, which was a depth
+mislabelling as much as a ray-length one.
+
+---
+
+7. **It cannot certify the cancelling case, only probe it.** The growth recurrences give DecayFloor
+   height `j − 3` free to every tree whose top node has `log₀ B ≤ 0`; the whole open content is the
+   cancelling case, and there the instrument reports only what it happened to construct.
 
 ---
 
@@ -646,6 +872,21 @@ since `(dm)`, and the row must name the axiom.
 
 ## 9. What NOT to do
 
+
+* **Do not hunt a counterexample in the growth mechanism — it is closed by three recurrences, and
+  the only opening is cancellation, which cannot bootstrap.** From `eml A B = exp A − log₀ B`:
+  `max_d = exp(max_{d−1}) − log(pos_{d−1})`, `min_d = −log(max_{d−1})`, and
+  `pos_d ≥ exp(min_{d−1})` **whenever the top node has `log₀ B ≤ 0`** — so every such tree meets
+  DecayFloor at height `d − 3` for free, with no induction and no search. Breaking the bound
+  therefore requires `log₀ B > 0` cancelling against `exp A`, and to reach height `d − 2` the
+  cancellation must itself be of tower height `d − 2`: **it has to be as deep as the thing it is
+  trying to build.** Measured 2026-09-23 by a hunt that indexes the pool by `log (log₀ B)` and
+  pairs each `A` with its nearest `B`: 5 342 deliberately near-meeting nodes at depth 7 reached
+  cancellation heights `{0: 5 278, 1: 35, 2: 15, 3: 14}` against the **5** needed, and their best
+  confirmed result was `j − 4` — **one height BELOW what the growth bound hands out for nothing**.
+  The shape they all take is `eml(D, const e)` = `exp(D) − 1 ≈ D`, with `D` the extremal germ one
+  level down: a whole depth level spent REPRODUCING a decay rather than deepening it. That is
+  what "cancellation cannot bootstrap" looks like when you watch it happen.
 * **Do not start the depth-2 cell enumeration.** `NodeDecayBound 3` is the only thing between the
   ladder and `DecayFloorUpTo 4`, and its only known route is a `≈27 × 27` shape enumeration *before*
   parameter regimes — the scale `FRONTIER_BRIEF_3` §4 Q2 measured and rejected. Depth 3 was reachable
@@ -665,6 +906,15 @@ since `(dm)`, and the row must name the axiom.
   one grep for the operation's own name — `grep -rln "mulGen" MachLib/` — which this programme had
   never run in fourteen months of asking whether EML expresses products. That gap is what made (7)
   look like a new class.
+* **Do not reach for a relation on pairs, or on anything else, before computing its MINIMAL
+  ELEMENTS.** §4(8) is the cheapest death in this file: the pair relation is well-founded, the peel
+  decreases it, and `pairMinimal_iff` settles the whole route in two lines because a relation
+  generated by one step has exactly the minimal elements that step cannot reach. The measure took a
+  paragraph; the minimal elements took a `cases`. **Compute the minimal elements first** — it is the
+  same rule as *price the terminal cell before the measure*, in the form a relation rather than a
+  recursion presents it. And the cheapest sanity check on any candidate parameter is now one line:
+  `decayFloor_of_emlGermApproach` instantiates the left germ at `const 0`, so **if the parameter is
+  constant there, it is constant on the entire obligation**.
 * **Do not design a recursion whose base case is "no cancellation" or "height-`0` left germ".**
   Both cells are the conjecture — `peelTerminalNoCancel_iff_growthEnvelope` and
   `peelTerminalConstZero_iff_emlGermApproach`, §4(6). Price the **terminal cell** before the
