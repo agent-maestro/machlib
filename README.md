@@ -27,6 +27,7 @@ else here.
 | [`site/`](site) | machlib.org, a static export |
 | [`tools/status/`](tools/status) | the status pipeline that publishes `status.json` to the `status-data` branch |
 | [`EmlGermApproachResearch.md`](EmlGermApproachResearch.md) | the live research note on the one conjecture the depth ladder still rests on |
+| [`exploration/`](exploration) | that conjecture stated for an outside specialist — a self-contained problem statement, a ready-to-post MathOverflow question, and a cold-email draft |
 
 The May 2026 product and marketplace drafts that used to live at the root (readiness manifests,
 capability-card drafts, a training gym, evidence reels, reports) were retired on 2026-09-05. They

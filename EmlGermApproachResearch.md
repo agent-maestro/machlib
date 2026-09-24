@@ -601,12 +601,16 @@ the grammar allows an arbitrary real constant at every leaf; §6 records that a 
 needing a particular transcendental constant is invisible to this instrument, and that this corpus
 has one recorded instance of exactly that miss. A sweep is not an induction, and half of this pin
 is not even a proof of a bound. **What it does say is that the value is not in doubt — but `j − 3` is the value of ONE of two
-metrics, and this section reported it under the other.** `DecayFloor` is stated with a constant,
-`t(x) ≥ exp(−(C + tower_k x))`; `EmlGermApproach` (§1) is stated **without** one,
-`exp(−tower_k x) ≤ gap`. They are equivalent as *propositions* — that is the proved cycle — but
-their **attained heights differ by exactly one**, and every table in this section measures
-`−log t(x) ≤ tower_k(x)`, which is the strict form, over an alphabet that could not express the
-difference.
+metrics, and this section reported it under the other.** The two metrics are the INSTRUMENT's and
+the STATEMENTS', not two statements — a first version of this paragraph said `DecayFloor` "is
+stated with a constant" and that is **false**, checked 2026-09-23 against the source:
+`EMLDecayFloor.lean:60` reads `exp (-(towerFn k x)) ≤ t.eval x`, with no `C`, exactly as
+`EmlGermApproach` (§1) does. The corpus's constant-BEARING forms are `LowerEnvBound`
+(`EMLDecayLadderStep.lean:73`, `-(C + towerFn m x) ≤ A.eval x`) and `Depth3ApproachBelow`
+(`EMLDepth2Form.lean:834`), which is where the habit of reading a constant into the floor came
+from. What is constant-TOLERANT is the measurement: every table in this section reads
+`−log t(x)` against `tower_k(x)` in the tail, where an additive constant is below the working
+precision and is absorbed.
 
 The separating family is `exp(1 − tower_{j−3}(x) − M)` at depth `j`, built from `e^-M` at one
 leaf (defect 7). Its `−log t` is `tower_{j−3}(x) + M − 1`, which **exceeds `tower_{j−3}(x)` at
@@ -614,19 +618,23 @@ every `x`** and is **below `C + tower_{j−3}(x)` with `C = M − 1`**. Measured
 running `0, 1, 5, 50, 10⁶, 10⁴⁰`: the DecayFloor height stays at `j − 3` throughout, and the
 strict height is `j − 2`. So:
 
-* **`DecayFloor`'s `k(j) = j − 3`** — attained by `deepDecay (j−4)`, and the value every table in
-  this section and in the 2026-09-23 run reports **at the tail**;
-* **`EmlGermApproach`'s `k(j) = j − 2`** — attained by the offset family above, and the value the
-  2026-09-05 tables would have reported had any sweep alphabet contained a constant in `(0,1)`.
+* **`j − 3` is the CONSTANT-TOLERANT number** — attained by `deepDecay (j−4)`, and what every table
+  in this section and in the 2026-09-23 run reports at the tail. It is the right number for
+  `LowerEnvBound` and `Depth3ApproachBelow`, which carry a `C`;
+* **`j − 2` is the STRICT number, and it is the one BOTH `DecayFloor` AND `EmlGermApproach` need**,
+  since neither admits a constant — attained by the offset family above, and what the 2026-09-05
+  tables would have reported had any sweep alphabet contained a constant in `(0,1)`.
 
 **Both are bounded at fixed `j`, so neither is a counterexample** — the conjecture's content is
-that `k` depends on `j` alone, not that it equals any particular function of `j`. But a proof
-attempt must aim at the number belonging to the form it is proving, and **must not carry `j − 3`
-across the equivalence.** The cycle costs a height when it is traversed, which is the same fact
-§4(6) records as *"`+1` height cell→envelope, none the other way"*.
+that `k` depends on `j` alone, not that it equals any particular function of `j`. But **a proof
+attempt at either `DecayFloor` or `EmlGermApproach` must aim at `j − 2`**, and must not take
+`j − 3` from a table that could not see the difference. (The cycle also costs a height where it is
+traversed between the cell forms — §4(6)'s *"`+1` height cell→envelope, none the other way"* — but
+that is a separate charge from this one, and conflating the two is how the first version of this
+paragraph went wrong.)
 
 Read the tables accordingly. **The 2026-09-05 rows and the 2026-09-23 rows both report the
-DecayFloor number**, the first by accident of its alphabet and the second because an additive
+constant-tolerant number**, the first by accident of its alphabet and the second because an additive
 constant is below the working precision beside `tower_{j−3}(x)` in the tail. Neither has ever
 measured the strict number except on the bounded window of `x` where `M` is still resolvable, and
 that window shrinks like `log^{j−3}(M)`.
@@ -843,7 +851,12 @@ exposes a precursor gap but *raises* EML depth; totalised `log` destroys ordinar
 descent.
 
 **Search is exhausted from this end** — three web searches returned the same framing and no theorem.
-The next step is a person, not a fourth search.
+The next step is a person, not a fourth search — and the artefacts for taking it now exist, in
+`exploration/`: `germ_approach_problem_statement_2026_09_23.md` (the self-contained statement for a
+specialist, no project background required), `germ_approach_mathoverflow_post.md` (the same question
+as a ready-to-post MathOverflow question, MathJax, ~900 words) and `germ_approach_email_draft.md`
+(a <300-word cold email for Aschenbrenner / van den Dries / van der Hoeven or similar). Keep them
+current with this file when a mechanism is added.
 
 ---
 

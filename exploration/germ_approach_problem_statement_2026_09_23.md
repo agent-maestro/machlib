@@ -3,7 +3,9 @@
 **An open problem, stated for a specialist in Hardy fields, transseries, o-minimality or asymptotic
 differential algebra.**
 
-Prepared 2026-09-23. The mathematical assertions below are machine-checked in a proof assistant,
+Prepared 2026-09-23, and revised the same day: §5 gained mechanisms 7 and 8, and §4 separates the
+two metrics that had been running conflated (`j − 3` and `j − 2`).
+The mathematical assertions below are machine-checked in a proof assistant,
 the numerical ones come from a documented search program, and the attributions to the literature
 are attributions rather than theorems of ours; Appendix A says which is which and where each lives.
 You need no background on the project this came from — the problem is self-contained.
@@ -137,34 +139,62 @@ statement; one is recorded in §6.
 `m + 4`: at depth `j` the conjecture's `k` must be at least `j − 3`. In particular no single `k`
 serves all depths, so the `∃k` genuinely has to be inside the `∀j`.
 
-**A matching upper bound, numerically, at the depths a search can resolve.** Over the constant
-alphabet `{0,1}` the decay form was swept exhaustively at depth 2 (147 expressions) and depth 3
-(21 612 expressions); the maximum required tower height was `0` in both, matching `max(j−3, 0)`. At
-depth 4, 20 000 randomly constructed expressions gave maximum `1`, again matching, and the extremal
-expression the sweep returned unfolds to `e·exp(−exp x)` — the family `D_m` above, rediscovered by
-the search rather than supplied to it. A separate sweep of *pairs* measured 223 248 pairs at depth
-≤ 2 (required height `0` throughout) and 2 978 pairs at depth ≤ 3 (height `0` for 2 975, height `1`
-for 3).
+**An upper bound, numerically, to depth 7.** Over the constant alphabet `{0,1}` the decay
+form has been swept **exhaustively** at depth 2 (147 expressions) and depth 3 (21 612 expressions),
+maximum required height `0` in both. Depths 4-7 are a beam search over 16 constants and the
+variable — 288 910 nodes formed, 78 369 distinct germs — returning maximum heights `1, 2, 3, 4`,
+i.e. `j − 3` at every depth. The extremal expression the sweep returns at depth 4 unfolds to
+`e·exp(−exp x)` and at depth 5 to `exp(1 − exp(exp x))`: the family `D_m` above, rediscovered by the
+search rather than supplied to it. Three controls: `D_0 … D_5` at depths 4-9 must report heights
+1-6 and all six fire; the exhaustive depth-≤2 and depth-≤3 rows are reproduced tree for tree by an
+instrument sharing no arithmetic with the earlier one; and with the seed families removed the beam
+reaches the same heights through entirely different expressions, so the reading is not an artifact
+of the seeds. A separate sweep of *pairs* — the form of §2 itself — measured 287 346 pairs and
+returned maximum heights `0, 1, 2` at depth bounds 2, 3, 4.
 
-**So the value of `k` is not in doubt: `k = max(j − 3, 0)` is pinned from below by proof and from
-above by measurement wherever measurement reaches.** A proof attempt should aim at exactly that
-value rather than search for the right constant.
+**Two metrics run close together here, they differ by exactly one rung, and the difference is the
+whole of what a proof attempt must get right.** The search scores an expression by applying `log`
+to `−log ⟦t⟧(x)` until it falls to `x`. In the tail an *additive constant* in the exponent is below
+working precision beside `T_{j−3}(x)`, so what the tables above actually measure is the
+constant-tolerant reading `−log ⟦t⟧(x) ≤ C + T_k(x)`, and under that reading the value is exactly
+`j − 3`. The envelope of §2 carries **no** additive constant. One rung more is needed for it:
+`⟨T_{n−1}, e^{−M}⟩` denotes `T_n(x) + M` at depth `n`, so `exp(1 − T_{j−3}(x) − M)` is an expression
+of depth `j` whose `−log` is `T_{j−3}(x) + M − 1`, above `T_{j−3}(x)` at **every** `x` and below
+`C + T_{j−3}(x)` with `C = M − 1`. Measured with `M` running `0, 1, 5, 50, 10⁶, 10⁴⁰`: the
+constant-tolerant height stays at `j − 3` and the strict height is `j − 2`. The pair sweep, which
+measures §2's form directly, agrees — `0, 1, 2` at depth bounds 2, 3, 4 is `max(j − 2, 0)`.
 
-**And the measurements' limits, stated because they matter.** The usable ray shortens violently with
-depth — about `x ≤ 10⁵` at depth 2, `x ≤ 13` at depth 3, `x ≤ 2.8` at depth 4 — because the towers
-exceed 120-digit precision. The depth-5 row of the same table (8 000 expressions, maximum height 1
-where `j−3` predicts 2) is the instrument running out, not evidence: its ray reaches only `x ≈ 2.2`.
-"Exhaustive" above means exhaustive over a two-element constant alphabet; the class allows an
-arbitrary real constant at every leaf, and a counterexample requiring a particular transcendental
-constant is invisible to any of this. A finite ray cannot certify an asymptotic claim; it can only
-fail to contradict one. What the data supports is narrow and we state it narrowly: within reach,
-nothing pushed the required height up at fixed depth.
+**So aim a proof at `k = max(j − 2, 0)` for the conjecture as stated in §2, and do not carry
+`j − 3` across the equivalences of §3.** Traversing the cycle costs a rung, which is the same fact
+§5 item 6 records from the other side. Neither reading is in doubt as a *value*: `j − 3` is pinned
+from below by proof (`D_m`) and from above by measurement wherever measurement reaches, and the
+strict form's `j − 2` rests on the separating family and the pair sweep, both numerical. What is
+open is not which function of `j` the height is, but that it is a function of `j` at all.
+
+**Why the earlier sweeps could not see this.** Every constant alphabet used before 2026-09-23 lay
+inside `{0, 1, 5, 50, 1000}`, on all of which `L(c) ≥ 0` — so no leaf could ever *add* to a germ.
+The constants that move the strict reading are exactly those in `(0,1)`, where `L(c) < 0`, and none
+was ever present. The instrument's own controls had used `exp(−1)` for years.
+
+**And the measurements' limits, stated because they matter.** The instrument does not represent
+values — it represents the iterated-log spine, on which `exp` is a push and `log` a pop, both
+exact — so reach is no longer a function of depth: one ray serves every depth, scoring on
+`x ∈ [6.18, 2.85 × 10⁶⁴]` and confirming to `x ≈ 4.11 × 10¹²⁹⁴`, with the extremal specimens
+re-verified at 40, 200 and 1 000 digits on a ray reaching `x ≈ 3.22 × 10⁷⁰⁶⁸³`. Its error bias is
+one-way and a reader should know which way: when a term is absorbed the computed gap is too
+*large* and the computed height too *small*, so the search can **miss** a counterexample and cannot
+**invent** one. "Exhaustive" above means exhaustive over a two-element constant alphabet, and the
+deeper rows are a beam search over sixteen constants; the class allows an arbitrary real constant at
+every leaf, and a counterexample requiring a particular transcendental constant is invisible to any
+of this. A finite ray cannot certify an asymptotic claim; it can only fail to contradict one. What
+the data supports is narrow and we state it narrowly: nothing found so far pushes the required
+height up at fixed depth.
 
 ---
 
 ## 5. What is ruled out — the part that should save you time
 
-Six families of argument have been closed, each by proof. They are listed not to discourage but
+Eight families of argument have been closed, each by proof. They are listed not to discourage but
 because each is the obvious next idea, and because the residue they leave is sharper than the
 conjecture as stated.
 
@@ -234,17 +264,48 @@ along constructor edges.
    is equivalent to the approach form. **A recursion that stops at either cell has reduced the
    problem to itself.**
 
+7. **Enlarging the class of right-hand germs buys nothing, whatever the class.** Item 6 leaves one
+   price unpaid: its merge step multiplies two germs, and the grammar of §1 has no product
+   constructor. It *is* payable — the class denoted by these expressions is already closed under
+   `+`, `−`, `×`, `exp` and totalised `L` with no hypotheses, being exactly the `exp`/`log` closure
+   of `ℝ`, so "the smallest class containing these germs and closed under products" names the class
+   we are already in. The merge costs 115 depth levels, one per peel, so a depth-`j` run's
+   accumulated right-hand germ is an expression of depth `≤ 116·j` — bounded, hence back inside
+   item 6, with a converse. At the right width this is not about products at all: for **any**
+   carrier with **any** complexity measure into which these expressions embed with bounded
+   complexity, the height-`0` terminal cell implies the conjecture. **The cell quantifies over the
+   class, so it grows with the class.** Transseries, Hardy-field completions and valuation rings
+   are all covered. Refuse to stop instead, and the parameter that survives the closure is
+   germ-invariant — which is item 5.
+
+8. **A well-founded relation on *pairs* `(A, C)` is item 6 in new clothes.** Every earlier mechanism
+   measures one expression while the conjecture is about a pair, so this is the most natural
+   remaining move. The peel step itself is a well-founded relation on pairs, sending
+   `(⟨A₁,A₂⟩, C)` to `(A₁, A₂·C)`; the class of pair measures it decreases is inhabited, and
+   item 4 genuinely does *not* transport (the reciprocal is cheap here and nothing follows, because
+   the peel never asks for descent into a right child). But its **minimal elements** are exactly
+   the pairs whose left expression is a single leaf — item 6's second cell, verbatim — and no sound
+   base case can omit them, since
+   the peel carries every pair there. The accumulator cannot carry the descent either: the merge
+   iterates, so `C, A₂·C, A₂·(A₂·C), …` would be an infinite descending chain. The sharpest reading
+   in the programme falls out of this: the standard reduction of the decay form to the approach
+   form instantiates the left expression at the single leaf `0` and at nothing else, so **the pair
+   measure is zero on the entire obligation** — if a candidate parameter is constant at that leaf,
+   it is constant on everything the conjecture reduces to.
+
 **What remains, precisely.** Items 1–4 close measures that descend into both children. Item 5
 closes everything germ-invariant, on either side or both. Item 6 closes any recursion whatever
-whose terminal cell is one of those two. Untouched: a mutual induction over (expression, polarity)
-pairs with *different* relations at the two polarities; a one-sided syntactic descent whose terminal
-cell is neither of item 6's; a relation on *pairs* `(A, C)` that a peeling step decreases, which is
-a function of neither germ alone; and any argument that is not a structural recursion on
-constructor edges — which is where an external theorem would land. Two further facts bracket the
-search from both sides: a syntactic parameter and a germ parameter are not refinements of one
-another in *either* direction. There are two expressions with the same four-component syntactic
-measure and different germs, and two expressions with the same germ and different measures. So
-nothing is to be had by making either kind of parameter finer.
+whose terminal cell is one of those two; item 7 closes every enlargement of the germ class, because
+the cell grows with the class; item 8 closes every well-founded relation on pairs that the peel
+decreases, because its minimal elements are item 6's cell. Untouched: a mutual induction over
+(expression, polarity) pairs with *different* relations at the two polarities; a one-sided
+syntactic descent whose terminal cell is neither of item 6's — item 6 closes the base case, not the
+measure, and the leftmost-spine length survives as a measure; and any argument that is not a
+structural recursion on constructor edges, which is where an external theorem would land. Two
+further facts bracket the search from both sides: a syntactic parameter and a germ parameter are
+not refinements of one another in *either* direction. There are two expressions with the same
+four-component syntactic measure and different germs, and two expressions with the same germ and
+different measures. So nothing is to be had by making either kind of parameter finer.
 
 ---
 
@@ -366,7 +427,7 @@ reason the question is malformed.
 ## Appendix A. Where to check any of this
 
 The formal development is a Lean 4 corpus, `machlib`, branch `poly-euclid-spine`, at commit
-`01d26058`. It is deliberately free of any mathematical library: the reals are an axiomatised
+`e2de4482`. It is deliberately free of any mathematical library: the reals are an axiomatised
 ordered field with exponential and logarithm, which is why the classical per-pair result of §2 is
 *not* available inside it even though it is a theorem over the standard reals. Every theorem named
 below is machine-checked in that setting, and none of the files named below contains a `sorry`. The
@@ -389,9 +450,17 @@ in `EMLGermApproach.lean`; the two-edge reciprocal is `recipTree`.
 For §4: the proved small-depth cases are `decayFloorUpTo_three` (`MachLib/EMLDepth3Rung.lean`) —
 height 0 for depth ≤ 2 and height 2 for depth 3. The extremal family is `deepDecay`
 (`MachLib/EMLHeightInterface.lean`) with `deepDecay_depth`, `deepDecay_below_floor` and
-`floorHeight_of_deepDecay`. The numerical sweeps are `foundations/tools/germ_approach_search.py`;
-they are **not** machine-checked, and `EmlGermApproachResearch.md` §6 records six instrument defects
-found in building them, each of which had produced a confident wrong answer first.
+`floorHeight_of_deepDecay`. The numerical sweeps are `foundations/tools/germ_approach_search.py`
+(2026-09-05) and `foundations/tools/germ_tower{,_eml,_search}.py` (2026-09-23, the iterated-log
+representation whose reach is not a function of depth); they are **not** machine-checked, and
+`EmlGermApproachResearch.md` §6 records seven instrument defects found in building them, each of
+which had produced a confident wrong answer first — the seventh being the alphabet hole that hid
+the `j − 3` / `j − 2` distinction. One naming caution for anyone reading §4 against the corpus:
+`DecayFloor` and `DecayFloorUpTo` as formalised carry **no** additive constant
+(`exp (-(towerFn k x)) ≤ t.eval x`), so both named propositions take the `j − 2` number; the
+constant-tolerant `j − 3` is the shape of the ladder inputs (`LowerEnvBound`,
+`MachLib/EMLDecayLadderStep.lean`, and `Depth3ApproachBelow`, `MachLib/EMLDepth2Form.lean`) and of
+what the instrument measures in the tail.
 
 For §5: item 1 is `LadderMeasure` and `recip_not_at_one_step` with
 `no_structural_induction_of_cheap_recip` (`MachLib/EMLLadderMeasure.lean`); item 2 is `capNode` and
@@ -405,8 +474,17 @@ of the comparability order is `compLt_deepDecay` and `compLt_not_wf`
 (`MachLib/EMLComparability.lean`); item 6 is `lspTree`, `peel_terminates`,
 `peel_measure_anticorrelated`, `peelCount_cannot_carry_floor`,
 `peelTerminalNoCancel_iff_growthEnvelope` and `peelTerminalConstZero_iff_emlGermApproach`
-(`MachLib/EMLPeelRecursion.lean`). The two bracketing facts at the end of §5 are
-`measure_blind_at_meeting` and `polMeasure_not_germInvariant`.
+(`MachLib/EMLPeelRecursion.lean`); item 7 is `mulGen_eval` (`MachLib/EMLRingClosure.lean`),
+`eml_eq_expLogClosure` (`MachLib/EMLCharacterisation.lean`) and, in
+`MachLib/EMLProductMerge.lean`, `prodClosure_iff_inEML`, `mergeTree_depth_le`,
+`peelAccum_depth_le`, `peel_accumulator_bounded`, `peelTerminalAccum_iff_emlGermApproach`,
+`terminalCell_of_class_is_the_conjecture` and `no_germInvariant_peel_bound`; item 8 is
+`PeelRel`, `peelRel_wf`, `pairDescent_inhabited`, `mechanism_four_does_not_transport`,
+`pairMinimal_iff`, `pairDescent_eml_not_minimal`, `pairTerminalCell_iff_emlGermApproach`,
+`base_must_contain_constZero`, `pair_peel_induction`, `no_accumulator_descent`,
+`no_germInvariant_pair_bound`, `decayFloor_reduction_is_minimal` and
+`pairCount_cannot_carry_floor` (`MachLib/EMLPairDescent.lean`). The two bracketing facts at the end
+of §5 are `measure_blind_at_meeting` and `polMeasure_not_germInvariant`.
 
 For §6: the two-way re-indexing is `reindexing_is_two_way`; the comparability restatement is
 `compLe_floor_of_floor`; the content-free closure axioms are `HeightModel` and `zeroModel`
