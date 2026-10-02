@@ -8,16 +8,18 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 086 `.lean` files** (811 top-level + 275 in subdirectories) /
-**258 510 lines** / **8 075 theorems**, re-exported through the aggregator
+**258 569 lines** / **8 078 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 8 075
-python3 tools/count_theorems.py --scope all           # 8 699
+python3 tools/count_theorems.py --scope core          # 8 078
+python3 tools/count_theorems.py --scope all           # 8 702
 ```
+
+The line count is `git ls-files 'MachLib/*.lean' | xargs cat | wc -l`, from the same directory.
 
 The two differ by **624**, which is `Discovered/`. **Every file and theorem count here is over git-TRACKED files**
 (since 2026-09-14): `MachLib/Discovered/.gitignore` ignores whatever the auto-prover emits until someone adds it by hand,
