@@ -74,11 +74,11 @@ below close the strict-positive division shape Forge emits for
 the Rayleigh / Mie scattering coefficients (`k / w⁴`,
 `k₀ / (1 + g² - 2g·cosθ)^(3/2)`, etc.).
 
-`one_div_pos_of_pos` is held as an axiom in the same spirit as
-the `≤` version it parallels — derivable from `mul_inv` plus a
-case-split on the sign of `1/b`, but the case-split requires
-`mul_neg` distributivity which `MachLib.Basic` doesn't yet
-expose. The axiom is true in any standard ordered field. -/
+`one_div_pos_of_pos` is held as an axiom. It is DERIVABLE, and the derivation exists:
+`AxiomMinimality.one_div_pos_derivable` (gated by the ledger's `derivableAxioms`), and the `≤`
+version it parallels, `one_div_nonneg_of_pos`, has been a theorem since 2026-10-04 by the same
+trichotomy. It was left an axiom in that audit only because the audit's scope was the axioms
+Forge's proofs used and Forge had not registered; Forge registers this one. -/
 
 /-- `0 < b → 0 < 1 / b`. Strict-positive form of the inverse. -/
 axiom one_div_pos_of_pos {b : Real} (hb : 0 < b) : 0 < 1 / b
@@ -88,6 +88,65 @@ theorem div_pos_of_pos_pos
     {a b : Real} (ha : 0 < a) (hb : 0 < b) : 0 < a / b := by
   rw [div_def a b (ne_of_gt hb)]
   exact mul_pos ha (one_div_pos_of_pos hb)
+
+/-! ### The range of `tanh`, derived
+
+`tanh_lt_one` and `neg_one_lt_tanh` were axioms in `Trig.lean` until 2026-10-04 (the owner's axiom
+audit: a law the others prove is not assumed). `Hyperbolic.lean` links `tanh` to `sinh / cosh` and
+defines both from `exp`, so the range follows from `exp > 0`:
+
+* `cosh x - sinh x = exp (-x) > 0`, so `sinh x < cosh x`, so `tanh x < 1`;
+* `cosh x + sinh x = exp x > 0`, so `-1 < tanh x`.
+
+They rest on `tanh_eq_sinh_div_cosh`, `sinh_eq`, `cosh_eq` and `exp_pos` -- not on `cosh_pos`, whose
+positivity is recomputed here from `cosh_eq`. Here rather than in `Hyperbolic.lean` because the order
+lemmas they need (`mul_lt_mul_of_pos_right`, `one_div_pos_of_pos`) are declared after it. -/
+
+/-- `(a + b) * k = a * k + b * k`. -/
+private theorem add_mul_right_tanh (a b k : Real) : (a + b) * k = a * k + b * k := by
+  rw [mul_comm (a + b) k, mul_distrib, mul_comm k a, mul_comm k b]
+
+theorem tanh_lt_one (x : Real) : tanh x < 1 := by
+  have hd : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hk : (0 : Real) < 1 / (1 + 1) := one_div_pos_of_pos hd
+  have hF : 0 < exp (-x) := exp_pos (-x)
+  have hc : 0 < cosh x := by
+    rw [cosh_eq, div_def (exp x + exp (-x)) (1 + 1) (ne_of_gt hd)]
+    exact mul_pos (add_pos (exp_pos x) hF) hk
+  have hnum : exp x - exp (-x) < exp x + exp (-x) := by
+    rw [sub_def]
+    apply add_lt_add_left _ (exp x)
+    have h1 : -exp (-x) < 0 := by
+      have h2 := add_lt_add_left hF (-exp (-x))
+      rwa [add_zero, neg_add_self] at h2
+    exact lt_trans_ax h1 hF
+  have hsc : sinh x < cosh x := by
+    rw [sinh_eq, cosh_eq, div_def (exp x - exp (-x)) (1 + 1) (ne_of_gt hd),
+      div_def (exp x + exp (-x)) (1 + 1) (ne_of_gt hd)]
+    exact mul_lt_mul_of_pos_right hnum hk
+  rw [tanh_eq_sinh_div_cosh, div_def (sinh x) (cosh x) (ne_of_gt hc)]
+  have h := mul_lt_mul_of_pos_right hsc (one_div_pos_of_pos hc)
+  rwa [mul_inv _ (ne_of_gt hc)] at h
+
+theorem neg_one_lt_tanh (x : Real) : -1 < tanh x := by
+  have hd : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hk : (0 : Real) < 1 / (1 + 1) := one_div_pos_of_pos hd
+  have hc : 0 < cosh x := by
+    rw [cosh_eq, div_def (exp x + exp (-x)) (1 + 1) (ne_of_gt hd)]
+    exact mul_pos (add_pos (exp_pos x) (exp_pos (-x))) hk
+  have hsum : 0 < cosh x + sinh x := by
+    rw [cosh_eq, sinh_eq, div_def (exp x + exp (-x)) (1 + 1) (ne_of_gt hd),
+      div_def (exp x - exp (-x)) (1 + 1) (ne_of_gt hd), ← add_mul_right_tanh]
+    have hE : exp x + exp (-x) + (exp x - exp (-x)) = exp x + exp x := by
+      rw [sub_def, add_assoc, add_left_comm (exp (-x)) (exp x) (-exp (-x)), add_neg, add_zero]
+    rw [hE]
+    exact mul_pos (add_pos (exp_pos x) (exp_pos x)) hk
+  have hpos : 0 < 1 + sinh x * (1 / cosh x) := by
+    have h := mul_pos hsum (one_div_pos_of_pos hc)
+    rwa [add_mul_right_tanh, mul_inv _ (ne_of_gt hc)] at h
+  rw [tanh_eq_sinh_div_cosh, div_def (sinh x) (cosh x) (ne_of_gt hc)]
+  have h := add_lt_add_left hpos (-1)
+  rwa [add_zero, neg_add_cancel_left] at h
 
 /-! ### Square non-negativity
 

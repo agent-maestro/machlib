@@ -125,23 +125,35 @@ theorem log_ne_zero_of_pos_of_ne_one {x : Real}
   rw [exp_log hx, exp_zero] at hpair
   exact hx1 hpair
 
-/-! ### Common-log / common-anti-log axioms
+/-! ### Common log and common antilog
 
-`log10 x = log x / log 10` and `exp10 x = exp (x * log 10)` on
-positive inputs. We axiomatise rather than define here because
-the downstream Forge kernels (pH chemistry, Tafel electro-
-chemistry, distillation) only need the *symbol* and the linking
-identity, not the analytic construction. -/
+`log10 x = log x / log 10` on positive inputs, axiomatised: the
+downstream Forge kernels (pH chemistry, Tafel electrochemistry,
+distillation) need the *symbol* and the linking identity, not the
+analytic construction.
+
+`exp10` is a DEFINITION, `exp (x * log 10)`. It was an opaque axiom with
+`exp10_def` as its defining equation until 2026-10-04 -- a definition in
+disguise -- and `exp10_def`, `exp10_zero` and `exp10_log10_inverse` were
+axioms beside it. All four are theorems now (the owner's axiom audit: a
+law the others prove is not assumed). Through `log`, `exp10` rests on
+`exp_surj`. -/
 
 axiom log10 : Real → Real
-axiom exp10 : Real → Real
 
 axiom log10_zero : log10 1 = 0
-axiom exp10_zero : exp10 0 = 1
 axiom log10_def  (x : Real) :
     0 < x → exp (log10 x * log (natCast 10)) = x
-axiom exp10_def  (x : Real) : exp10 x = exp (x * log (natCast 10))
-axiom exp10_log10_inverse (x : Real) : 0 < x → exp10 (log10 x) = x
+
+/-- The common antilog: `exp10 x = exp (x * log 10)`. -/
+noncomputable def exp10 (x : Real) : Real := exp (x * log (natCast 10))
+
+theorem exp10_def (x : Real) : exp10 x = exp (x * log (natCast 10)) := rfl
+
+theorem exp10_zero : exp10 0 = 1 := by rw [exp10_def, zero_mul, exp_zero]
+
+theorem exp10_log10_inverse (x : Real) : 0 < x → exp10 (log10 x) = x := fun hx => by
+  rw [exp10_def]; exact log10_def x hx
 
 end Real
 end MachLib

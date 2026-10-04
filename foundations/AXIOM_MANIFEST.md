@@ -9,11 +9,11 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-169 of them and they are all listed below.
+166 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 122 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 119 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
@@ -176,12 +176,10 @@ decides what a certificate can claim.
 | `MachLib.Real.exp_lt` | witnessed | `{x y : Real} : x < y → exp x < exp y` | fun h => Real.exp_lt_exp.mpr h |
 | `MachLib.Real.exp_pos` | witnessed | `(x : Real) : 0 < exp x` | Real.exp_pos |
 | `MachLib.Real.exp_surj` | witnessed | `: ∀ y : Real, 0 < y → ∃ x : Real, exp x = y` | fun y hy => ⟨Real.log y, Real.exp_log hy⟩ |
-| `MachLib.Real.exp_zero` | witnessed | `: exp 0 = 1` | Real.exp_zero |
 | `MachLib.Real.hasDerivAt_continuousAt` | witnessed | `{f : Real → Real} {f' x : Real} : HasDerivAt f f' x → ContinuousAt f x` | fun {f f' x} h ε hε => by obtain ⟨δ, hδ, H⟩ := Metric.continuousAt_iff.mp h.continuousAt ε hε exact ⟨δ, hδ, fun y hy => by simpa [Real.dist_eq] using H (by simpa [Real.dist_eq] using hy)⟩ |
 | `MachLib.Real.leR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a ≤ b) |
 | `MachLib.Real.le_iff_lt_or_eq` | witnessed | `(a b : Real) : a ≤ b ↔ a < b ∨ a = b` | fun {a b} => le_iff_lt_or_eq |
 | `MachLib.Real.le_sqrt_of_sq_le` | witnessed | `{z y : Real} (hz : 0 ≤ z) (h : z * z ≤ y) : z ≤ sqrt y` | fun {z y} hz h => by rw [show z = Real.sqrt (z * z) from (Real.sqrt_mul_self hz).symm]; exact Real.sqrt_le_sqrt h |
-| `MachLib.Real.lit_one_eq` | witnessed | `: (1.0 : Real) = (1 : Real)` | by norm_num |
 | `MachLib.Real.log10` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.log10_def` | witnessed | `(x : Real) : 0 < x → exp (log10 x * log (natCast 10)) = x` | fun x hx => by rw [show ((10:ℕ):ℝ) = (10:ℝ) by norm_num, Real.logb, div_mul_cancel₀ _ (by norm_num : Real.log (10:ℝ) ≠ 0)] exact Real.exp_log hx |
 | `MachLib.Real.ltR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a < b) |
@@ -200,10 +198,8 @@ decides what a certificate can claim.
 | `MachLib.Real.natCast_succ` | witnessed | `(n : Nat) : natCast (n + 1) = natCast n + 1` | fun n => by push_cast; ring |
 | `MachLib.Real.natCast_zero` | witnessed | `: natCast 0 = 0` | Nat.cast_zero |
 | `MachLib.Real.negR` | witnessed | `: Real → Real` | (Neg.neg : ℝ → ℝ) |
-| `MachLib.Real.neg_one_lt_tanh` | witnessed | `(x : Real) : -1 < tanh x` | Real.neg_one_lt_tanh |
 | `MachLib.Real.oneR` | witnessed | `: Real` | (1 : ℝ) |
 | `MachLib.Real.one_add_le_exp` | witnessed | `(x : Real) : 1 + x ≤ exp x` | fun x => by simpa [add_comm] using Real.add_one_le_exp x |
-| `MachLib.Real.one_div_nonneg_of_pos` | witnessed | `{b : Real} (hb : 0 < b) : 0 ≤ 1 / b` | fun {b} hb => le_of_lt (one_div_pos.mpr hb) |
 | `MachLib.Real.one_div_pos_of_pos` | witnessed | `{b : Real} (hb : 0 < b) : 0 < 1 / b` | fun {a} => one_div_pos.mpr |
 | `MachLib.Real.pi` | mapped | `: Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.pi_gt_one` | witnessed | `: (1 : Real) < pi` | by linarith [Real.pi_gt_three] |
@@ -215,6 +211,8 @@ decides what a certificate can claim.
 | `MachLib.Real.realOfScientific_pos` | witnessed | `(m : Nat) (s : Bool) (e : Nat) (hm : 0 < m) : 0 < realOfScientific m s e` | fun m s e hm => by have hm' : (0 : ℝ) < (m : ℝ) := by exact_mod_cast hm cases s · show (0:ℝ) < (m : ℝ) * 10 ^ e positivity · show (0:ℝ) < (m : ℝ) / 10 ^ e positivity |
 | `MachLib.Real.realOfScientific_three_dot_zero` | witnessed | `: realOfScientific 30 true 1 = 1 + 1 + 1` | by norm_num |
 | `MachLib.Real.realOfScientific_two_dot_zero` | witnessed | `: realOfScientific 20 true 1 = 1 + 1` | by norm_num |
+| `MachLib.Real.realPow` | witnessed | `: Real → Real → Real` | (fun x y : ℝ => x ^ y) |
+| `MachLib.Real.realPow_nonneg` | witnessed | `{x : Real} (hx : 0 ≤ x) (y : Real) : 0 ≤ x ^ y` | fun {x} hx y => Real.rpow_nonneg hx y |
 | `MachLib.Real.rolle_ct` | witnessed | `(f : Real → Real) (a b : Real) (hab : a < b) (hfa_eq_fb : f a = f b) (hdiff : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt f f' c) : ∃ c : Real` | MonogateEML.RealModel.rolle_witnessed |
 | `MachLib.Real.sin` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.sin_add` | witnessed | `(x y : Real) : sin (x + y) = sin x * cos y + cos x * sin y` | Real.sin_add |
@@ -238,7 +236,6 @@ decides what a certificate can claim.
 | `MachLib.Real.tan_def` | witnessed | `(x : Real) : cos x ≠ 0 → tan x = sin x / cos x` | fun x _ => Real.tan_eq_sin_div_cos x |
 | `MachLib.Real.tanh` | witnessed | `: Real → Real` | Real.tanh |
 | `MachLib.Real.tanh_eq_sinh_div_cosh` | witnessed | `(x : Real) : tanh x = sinh x / cosh x` | fun x => Real.tanh_eq_sinh_div_cosh x |
-| `MachLib.Real.tanh_lt_one` | witnessed | `(x : Real) : tanh x < 1` | fun x => by rw [Real.tanh_eq_sinh_div_cosh x, div_lt_one (Real.cosh_pos x)]; exact Real.sinh_lt_cosh x |
 | `MachLib.Real.u` | witnessed | `: Real` | ((1 : ℝ) / 2 ^ 53) |
 | `MachLib.Real.u_le_half` | witnessed | `: u + u ≤ 1` | (by norm_num : (1 : ℝ) / 2 ^ 53 + 1 / 2 ^ 53 ≤ 1) |
 | `MachLib.Real.u_le_inv_two_pow_52` | witnessed | `: u ≤ 1 / natCast (2 ^ 52)` | (by norm_num : (1 : ℝ) / 2 ^ 53 ≤ 1 / ((2 ^ 52 : ℕ) : ℝ)) |

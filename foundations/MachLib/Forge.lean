@@ -168,8 +168,10 @@ the same `Real`. -/
 axiom lit_zero_eq : (0.0 : Real) = (0 : Real)
 
 /-- The decimal literal `1.0` and the OfNat literal `1` denote
-the same `Real`. -/
-axiom lit_one_eq : (1.0 : Real) = (1 : Real)
+the same `Real`. A theorem since 2026-10-04 (the owner's axiom audit): `(1.0 : Real)`
+IS `realOfScientific 10 true 1` through `instOfScientific`, so this is
+`realOfScientific_one_dot_zero` itself; it had been a second axiom saying the same thing. -/
+theorem lit_one_eq : (1.0 : Real) = (1 : Real) := realOfScientific_one_dot_zero
 
 /-! ### Subtraction + division: scaling helpers
 
@@ -376,10 +378,17 @@ The strict-positivity form (`div_lt_one_of_pos_lt`) is already
 in Forge.lean as an axiom; this is the ≤-version, derivable
 from `mul_le_mul_of_nonneg_right`. -/
 
-/-- `0 < b → 0 ≤ 1 / b`. (Strict positivity of inverse — held
-as a small axiom rather than derived from a `div_pos` chain we
-don't yet have.) -/
-axiom one_div_nonneg_of_pos {b : Real} (hb : 0 < b) : 0 ≤ 1 / b
+/-- `0 < b → 0 ≤ 1 / b`. An axiom until 2026-10-04 (the owner's axiom audit: a law the others
+prove is not assumed), derived now by trichotomy on `1 / b`: the negative case gives
+`b * (1 / b) < 0`, which `mul_inv` makes `1 < 0`. -/
+theorem one_div_nonneg_of_pos {b : Real} (hb : 0 < b) : 0 ≤ 1 / b := by
+  rcases lt_total 0 (1 / b) with hpos | hzero | hneg
+  · exact le_of_lt hpos
+  · rw [← hzero]; exact le_refl 0
+  · exfalso
+    have h := mul_lt_mul_of_pos_right hneg hb
+    rw [mul_comm (1 / b) b, mul_inv b (ne_of_gt hb), zero_mul] at h
+    exact lt_irrefl_ax 0 (lt_trans_ax zero_lt_one_ax h)
 
 /-- `0 < b → a ≤ b → a / b ≤ 1`. -/
 theorem div_le_one_of_le_of_pos

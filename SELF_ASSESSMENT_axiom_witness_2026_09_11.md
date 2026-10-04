@@ -7,7 +7,7 @@ owed. It is kept because its value does not depend on a reader: **§5 is an hone
 where we think this is weakest.**
 
 If a reviewer does appear, this is the packet to hand them — one mechanism, not the corpus, not the
-compiler, self-contained enough that nobody need read 258 510 lines of Lean.
+compiler, self-contained enough that nobody need read 258 674 lines of Lean.
 
 **The question we would ask, stated so it can be answered "no":**
 
@@ -30,7 +30,7 @@ Answers that would be useful, including the dismissive ones:
 
 **MachLib** is a Lean 4 corpus that does not depend on Mathlib. `MachLib.Real` is an *axiomatised*
 ordered field with `exp`, `log`, `sin`, derivatives, and so on — declared, not constructed. The
-corpus is ≈ 8 075 theorems outside its generated sub-corpus.
+corpus is ≈ 8 086 theorems outside its generated sub-corpus.
 
 Why no Mathlib: the corpus ships proof certificates alongside generated engineering artifacts
 (C, Verilog, VHDL…), and we wanted the trusted base to be small, enumerable and auditable rather
@@ -45,8 +45,8 @@ The live figures, all of which this document's own build gate pins to the corpus
 
 | class | n | meaning |
 |---|---|---|
-| trusted footprint | 169 | axioms any shipped theorem is allowed to touch |
-| witnessed | 122 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| trusted footprint | 166 | axioms any shipped theorem is allowed to touch |
+| witnessed | 119 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | about IEEE-754 floats — **unwitnessable in principle**, see §5 |
@@ -144,8 +144,8 @@ $EDITOR monogate-lean/MonogateEML/AxiomWitnessBridge.lean
 
 # the classification, live, from machlib/foundations:
 python3 tools/soundness_witness_audit.py
-#   trusted footprint (live ledger) : 169
-#   witnessed against Mathlib       : 122
+#   trusted footprint (live ledger) : 166
+#   witnessed against Mathlib       : 119
 #   UNMODELED (no witness at all)   : 0
 ```
 

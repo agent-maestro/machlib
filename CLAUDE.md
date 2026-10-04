@@ -8,15 +8,15 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 086 `.lean` files** (811 top-level + 275 in subdirectories) /
-**258 569 lines** / **8 078 theorems**, re-exported through the aggregator
+**258 674 lines** / **8 086 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 8 078
-python3 tools/count_theorems.py --scope all           # 8 702
+python3 tools/count_theorems.py --scope core          # 8 086
+python3 tools/count_theorems.py --scope all           # 8 710
 ```
 
 The line count is `git ls-files 'MachLib/*.lean' | xargs cat | wc -l`, from the same directory.
@@ -42,19 +42,19 @@ frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`**
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **256 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **247 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
-224  MachLib.*   axioms in the environment after `import MachLib`
+215  MachLib.*   axioms in the environment after `import MachLib`
  32  Certcom.*   IEEE-754 floor axioms
 ---
-256  = what the ledger pins
+247  = what the ledger pins
 ```
 
 (Re-derive the split with a `#eval` over `getEnv` partitioning `.axiomInfo` by name prefix — that is
-how these two were measured, not by grep; last on 2026-09-14, after `u_le_inv_two_pow_52` and `real_abs_eps_eq_zero`
-were added.)
+how these two were measured, not by grep; last on 2026-10-04, after the owner's axiom audit made theorems of
+nine axioms -- see "The owner's axiom audit" below.)
 
 A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
 base, not project axioms: `propext`, `Classical.choice`, `Quot.sound`, `sorryAx`, `Quot.lcInv`,
@@ -83,7 +83,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 
 | class | n | |
 |---|---|---|
-| witnessed | 122 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 119 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | **float-bridge** | **32** | about IEEE floats — **no Mathlib witness can ever discharge these** |
@@ -91,7 +91,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 | unmodeled | **0** | gate 13 fails if this is ever nonzero |
 
 **Every mathematical axiom in the trusted footprint now has a kernel-checked Mathlib witness.**
-`122 + 12 + 3 + 32 = 169`. The only axioms without one are the 32 float-bridge rows, which are
+`119 + 12 + 3 + 32 = 166`. The only axioms without one are the 32 float-bridge rows, which are
 unwitnessable *in principle* rather than pending — see below.
 
 **The 32 float-bridge axioms are a different kind of trust and must not be averaged in.** Most
@@ -168,6 +168,30 @@ modules avoid: no trusted axiom bounds `exp` from above (they derive `exp n ≤ 
 > on toolchain skew between the two repos**, on any trusted axiom with no witness and no
 > classification, and on a stale excuse entry. Never re-pin that footprint by hand.
 
+## The owner's axiom audit (2026-10-04)
+
+Forge's proofs rested on twelve MachLib axioms its policy did not admit. The owner's rule: a law the other
+axioms prove is PROVED here, not registered there; a law the model is defined by is registered with its
+statement. The outcome:
+
+- **Proved, axiom gone (9):** `exp_zero` (from `exp_add`, `exp_pos`), `lit_one_eq` (it IS
+  `realOfScientific_one_dot_zero` through `instOfScientific`), `one_div_nonneg_of_pos` (trichotomy),
+  `tanh_lt_one` and `neg_one_lt_tanh` (`Linarith.lean`, from `tanh_eq_sinh_div_cosh` and the sinh/cosh
+  defining equations; `cosh` positivity recomputed from `cosh_eq`, so not `cosh_pos`), and the four `exp10`
+  axioms (`exp10` is a definition in `Log.lean` now, so `exp10_def` is `rfl` and `exp10_zero`,
+  `exp10_log10_inverse` follow). Pinned 256 -> 247; trusted 169 -> 166 (the five that were trusted left;
+  `realPow` and `realPow_nonneg` joined, witnessed by `Real.rpow` in monogate-lean).
+- **Primitive, registered by Forge with their statements:** `div_zero` (divR is opaque; nothing else fixes
+  `a / 0`), `realPow`, `realPow_nonneg` (the opaque power), `exp_lt` (independent of exp's other laws:
+  `b^x`, `0 < b < 1`), `exp_surj` (the existence law `log` is defined from). The ledger's
+  `primitiveByConstruction` and `derivableInPrinciplePinned` now name them with reasons.
+- **Found derivable, NOT converted** (the audit's scope was the twelve): `one_div_pos_of_pos`,
+  `zero_ne_one_ax`, `HasDerivAt_sub` (gated derivations already exist), `mul_lt_mul_of_pos_right`, the three
+  `realOfScientific_*_dot_zero`, `exp_pos` (from `exp_add` and `exp_surj`), `lit_zero_eq`,
+  `div_lt_one_of_pos_lt`, `cosh_pos`. Forge admits the registered ones as `DERIVABLE_LEMMA`.
+- The three file-local helper constants Forge's artifacts declare (`d1`, `bs_d2`, `pid_anti_windup`) are not
+  MachLib's and are not admitted.
+
 ## Where the content comes from
 
 Self-contained. EML semantics live in `MachLib/SinNotInEML.lean` (the `EMLTree` type and `eval`);
@@ -184,7 +208,7 @@ lake build                                     # 827 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
-lake env lean AxiomLedger.lean                 # "256 axioms pinned; 112 headline footprints ⊆ trusted"
+lake env lean AxiomLedger.lean                 # "247 axioms pinned; 112 headline footprints ⊆ trusted"
 python3 tools/claim_audit/claim_audit.py       # "all 572 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
@@ -663,7 +687,7 @@ proves it conducts a failure to its own exit code; the run prints its own gate c
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
 run (**821 of 1 086 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
-**256 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
+**247 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
 `u_lt_one`; then `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`, `real_exp_finite`, `real_sinh_finite`,
 `real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open

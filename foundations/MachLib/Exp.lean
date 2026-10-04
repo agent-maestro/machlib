@@ -23,15 +23,38 @@ axiom exp : Real → Real
 
 /-! ### Defining axioms
 
-These are the seven facts that uniquely determine `exp` among
-real-valued functions on `R`. Together with the field axioms in
-`Basic`, they imply everything MachLib needs about `exp`. -/
+The algebraic and order laws MachLib assumes of `exp`. With the field
+axioms in `Basic` they give everything MachLib needs about `exp` short
+of calculus. They do NOT single out base `e`: `b^x` for any `b > 1`
+satisfies all four.
 
-axiom exp_zero    : exp 0 = 1
+Each one is independent of the other three over an ordered field:
+`b^x` with `0 < b < 1` breaks only `exp_lt`; `exp_surj` is the existence
+law `log` is defined from (`Log.lean`).
+
+`exp_zero` was a fifth axiom here until 2026-10-04 and is a theorem
+below: it follows from `exp_add` and `exp_pos` (the owner's axiom audit:
+a law the others prove is not assumed). -/
+
 axiom exp_add     (x y : Real) : exp (x + y) = exp x * exp y
 axiom exp_pos     (x : Real)   : 0 < exp x
 axiom exp_lt      {x y : Real} : x < y → exp x < exp y
 axiom exp_surj    : ∀ y : Real, 0 < y → ∃ x : Real, exp x = y
+
+/-- `exp 0 = 1`, from `exp_add` and `exp_pos`: `exp 0 = exp (0 + 0) = exp 0 * exp 0`,
+and `exp 0` is not zero, so it is `1`. -/
+theorem exp_zero : exp 0 = 1 := by
+  have hne : exp 0 ≠ 0 := ne_of_gt (exp_pos 0)
+  have h : exp 0 = exp 0 * exp 0 := by
+    have h0 := exp_add 0 0
+    rw [add_zero] at h0
+    exact h0
+  have hinv : exp 0 * (1 / exp 0) = 1 := mul_inv (exp 0) hne
+  calc exp 0 = exp 0 * 1 := (mul_one_ax _).symm
+    _ = exp 0 * (exp 0 * (1 / exp 0)) := by rw [hinv]
+    _ = (exp 0 * exp 0) * (1 / exp 0) := (mul_assoc _ _ _).symm
+    _ = exp 0 * (1 / exp 0) := by rw [← h]
+    _ = 1 := hinv
 
 /-! ### Derived lemmas
 

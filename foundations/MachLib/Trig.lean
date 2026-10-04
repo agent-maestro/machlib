@@ -118,10 +118,12 @@ axiom erf_le_one     (x : Real) : erf x ≤ 1
 
 /-! ### Defining properties (minimal set) -/
 
--- tanh: bounded in (-1, 1), zero at zero, odd.
+-- tanh: zero at zero, odd. Its range bounds `tanh_lt_one` and `neg_one_lt_tanh` were
+-- axioms here until 2026-10-04; they are THEOREMS in `MachLib/Linarith.lean` now, derived
+-- from `Hyperbolic.lean`'s linking axiom `tanh_eq_sinh_div_cosh` and the defining
+-- equations of `sinh`/`cosh` (the owner's axiom audit: a law the others prove is not
+-- assumed).
 axiom tanh_zero     : tanh 0 = 0
-axiom tanh_lt_one   (x : Real) : tanh x < 1
-axiom neg_one_lt_tanh (x : Real) : -1 < tanh x
 axiom tanh_neg      (x : Real) : tanh (-x) = -(tanh x)
 
 -- sqrt: non-negative, fixed at 0 and 1, multiplicative on
