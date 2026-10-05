@@ -236,8 +236,9 @@ exactly where a wrong number hides by fiat." The outcome, 23 axioms; pinned 247 
   before `zero_ne_one`'s was restored), witnesses `pi_lower_bound`, and CHECKS that its interpretations of the two
   new definitions agree with them (`interp_agrees_natCast`, `interp_agrees_realOfScientific`) instead of
   interpreting them by fiat: 104/104 witnessed, 149 trusted = 102 witnessed + 3 standard + 12 mapped + 32
-  float-bridge + 0 gap. Forge's registry is policy `2026-10-04.2`: 70 -> 57 rows, 0 derivable, `zero_ne_one_ax`
-  re-registered PRIMITIVE.
+  float-bridge + 0 gap. Forge's registry is policy `2026-10-04.2`: 70 -> 58 rows, 0 derivable, `zero_ne_one_ax`
+  re-registered PRIMITIVE, and `HasDerivAt_of_eq` admitted: `HasDerivAt_sub` is proved through it now, and the
+  chain-2 Khovanskii headline's trail rests on it.
 - NOT done, and named: `cosh_ge_one` (derivable, needs square monotonicity), `sinh`/`cosh`/`tanh` as
   definitions (their `_eq` axioms ARE definitions stated as axioms), base trig facts derivable from the addition
   laws (`sin_zero`, `cos_zero`), a full derivability audit of the remaining 192, and the muse's larger
