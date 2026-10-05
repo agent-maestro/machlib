@@ -32,7 +32,7 @@ sinh / cosh to the exponential. -/
 
 -- `sinh_zero`/`cosh_zero`/`sinh_neg`/`cosh_neg` PROMOTED to theorems in
 -- `HyperbolicId.lean` (2026-06-27 audit; from `sinh_eq`/`cosh_eq` + FieldLemmas).
-axiom cosh_pos   (x : Real) : 0 < cosh x
+-- `cosh_pos` was an axiom here until 2026-10-04; it is a theorem below `cosh_eq`, which proves it.
 /-- `cosh x ≥ 1` for all real `x`, with equality at `x = 0`. Follows from
 `pythagorean_hyp` (cosh² = 1 + sinh² ≥ 1) plus `cosh_pos`, but deriving it
 needs square-monotonicity infrastructure `MachLib.Basic` doesn't expose; held
@@ -56,6 +56,19 @@ then noting that exp itself preserves ELC. -/
 
 axiom sinh_eq (x : Real) : sinh x = (exp x - exp (-x)) / (1 + 1)
 axiom cosh_eq (x : Real) : cosh x = (exp x + exp (-x)) / (1 + 1)
+
+/-- `0 < cosh x`: `(exp x + exp (-x)) / 2` with both exponentials positive. A theorem since 2026-10-04. -/
+theorem cosh_pos (x : Real) : 0 < cosh x := by
+  have hsum : 0 < exp x + exp (-x) := by
+    have h := add_lt_add_left (exp_pos (-x)) (exp x)
+    rw [add_zero] at h
+    exact lt_trans_ax (exp_pos x) h
+  have htwo : (0 : Real) < 1 + 1 := by
+    have h := add_lt_add_left zero_lt_one_ax (1 : Real)
+    rw [add_zero] at h
+    exact lt_trans_ax zero_lt_one_ax h
+  rw [cosh_eq, div_def _ _ (ne_of_gt htwo)]
+  exact mul_pos hsum (one_div_pos_of_pos htwo)
 
 /-! ### Conversion identities between hyperbolic and exp
 

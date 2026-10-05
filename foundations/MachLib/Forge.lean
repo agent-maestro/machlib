@@ -151,21 +151,11 @@ theorem mul_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a * b := b
 
 /-! ### Literal-form bridges
 
-The Forge codegen emits decimal literals (`0.0`, `1.0`, `100.0`,
-…) which `OfScientific Real` routes through the opaque
-`realOfScientific` axiom in `MachLib.Basic`. The order/arithmetic
-axioms (`mul_pos`, `add_lt_add_left`, …) use the bare `0`/`1`
-literals routed through `OfNat`. Standard Real semantics make
-these equal, but they are not definitionally equal under
-MachLib's "axiomatic, no concrete representation" policy. The
-two facts below bridge the most common cases at the kernel-proof
-level and are otherwise inert. Future literal-positivity facts
-(`(0.6108 : Real) > 0` etc.) still belong in the per-kernel
-discovered file because they're domain-specific. -/
-
-/-- The decimal literal `0.0` and the OfNat literal `0` denote
-the same `Real`. -/
-axiom lit_zero_eq : (0.0 : Real) = (0 : Real)
+The Forge codegen emits decimal literals (`0.0`, `1.0`, `100.0`, …), which `OfScientific Real` routes
+through `realOfScientific` -- a DEFINITION in `MachLib.Basic` since 2026-10-04, `m / 10ᵉ` from `natCast`.
+The order/arithmetic axioms use the bare `0`/`1` literals routed through `OfNat`; the facts below bridge
+the two at the kernel-proof level. `lit_zero_eq` (`0.0 = 0`) was an axiom here and is a theorem in
+`Basic.lean` now. -/
 
 /-- The decimal literal `1.0` and the OfNat literal `1` denote
 the same `Real`. A theorem since 2026-10-04 (the owner's axiom audit): `(1.0 : Real)`
@@ -194,12 +184,9 @@ theorem sub_pos_of_lt {a b : Real} (h : a < b) : 0 < b - a := by
   rw [sub_def, add_comm]         -- goal : 0 < -a + b
   exact step
 
-/-- A value strictly below a positive divisor produces a quotient
-strictly below `1`. Held as an axiom: provable from `mul_inv` plus
-`mul_lt_mul_of_pos_right` plus `one_div_pos_of_pos`, but those
-multiplicative-scaling helpers aren't yet in `MachLib.Basic`. The
-fact is true in any standard ordered field. -/
-axiom div_lt_one_of_pos_lt {a b : Real} (hb : 0 < b) (hab : a < b) : a / b < 1
+-- `div_lt_one_of_pos_lt` (`0 < b → a < b → a / b < 1`) was an axiom here until 2026-10-04, held because
+-- `mul_lt_mul_of_pos_right` and `one_div_pos_of_pos` were not in `MachLib.Basic`. All three are
+-- theorems there now.
 
 /-! ### Zero numerator division
 
@@ -313,18 +300,9 @@ Forge-emitted kernel proofs need the `≤` versions for goals like
 substrate below derives the `≤` forms from the `<` axioms via
 `le_iff_lt_or_eq` case-splits.
 
-The strict `<` multiplicative-right form is held as an axiom in
-the same spirit as `div_lt_one_of_pos_lt` — provable from
-`mul_pos` + a `mul_neg` distributivity lemma we haven't yet
-landed. Adding it as an axiom keeps C-242 scoped to this session;
-the converse derivation goes into a future Basic.lean cleanup. -/
-
-/-- `a < b → 0 < c → a * c < b * c`. Strict multiplicative
-right-monotonicity. Held as axiom (true in any ordered field;
-proof from existing axioms requires `mul_neg` + distributive over
-subtraction, currently absent from `MachLib.Basic`). -/
-axiom mul_lt_mul_of_pos_right
-    {a b c : Real} (h : a < b) (hc : 0 < c) : a * c < b * c
+The strict `<` multiplicative-right form, `mul_lt_mul_of_pos_right`, was an axiom here until
+2026-10-04 ("the converse derivation goes into a future Basic.lean cleanup"): it is a theorem in
+`MachLib.Basic` now, from `mul_pos` and distributivity. -/
 
 /-- `a ≤ b → c + a ≤ c + b`. -/
 theorem add_le_add_left

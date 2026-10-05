@@ -2,10 +2,12 @@
 
 Three directions, and the first uses a REAL circular witness rather than a stub -- the registry
 standard prefers a historical or genuine fault to a synthetic one, and one is available:
-`npow_half_tendsto_zero` genuinely uses `archimedean`, so declaring it as `archimedean`'s DERIVATION
-is exactly the circularity the gate exists to catch, with a real footprint from a real compile.
+`archimedean` -- a THEOREM since 2026-10-04 -- genuinely uses `sup_exists`, so declaring it as
+`sup_exists`'s DERIVATION is exactly the circularity the gate exists to catch, with a real footprint
+from a real compile. (Until that day the witness was `npow_half_tendsto_zero` against the then-axiom
+`archimedean`; converting `archimedean` is what retired it.)
 
-  1. CIRCULAR            (archimedean, npow_half_tendsto_zero)  -- real Lean call, real footprint
+  1. CIRCULAR            (sup_exists, archimedean)              -- real Lean call, real footprint
   2. NOT_RETAINED_BASE   two entries that derive from each other -- the pairwise-composition trap
   3. control             the ledger's real entries                -- must stay clean
 
@@ -32,10 +34,10 @@ def main() -> int:
     print("-" * 86)
 
     # ── 1. CIRCULAR, with a genuine witness ────────────────────────────────────────────────
-    probs = cd.check([(REAL + "archimedean", REAL + "npow_half_tendsto_zero")], verbose=False)
+    probs = cd.check([(REAL + "sup_exists", REAL + "archimedean")], verbose=False)
     codes = {c for c, _ in probs}
     ok1 = "CIRCULAR" in codes
-    print(f"{'1. CIRCULAR (real: npow_half uses archimedean)':<44}{'FIRE':>10}"
+    print(f"{'1. CIRCULAR (real: archimedean uses sup_exists)':<44}{'FIRE':>10}"
           f"{'FIRE' if probs else 'SILENT':>10}  {sorted(codes)}")
     if not ok1:
         fails.append(f"1: expected CIRCULAR, got {sorted(codes)}")
@@ -59,14 +61,28 @@ def main() -> int:
     if not ok2:
         fails.append(f"2: expected NOT_RETAINED_BASE and NOT CIRCULAR, got {sorted(codes2)}")
 
-    # ── 3. control: the real ledger entries ───────────────────────────────────────────────
+    # ── 3. control: the real ledger declares NONE (provable means proved, 2026-10-04) ──────
+    # Checking `cd.check(entries)` over the real entries would now pass over an EMPTY list -- the
+    # vacuous truth a gate must not rest on -- so the control asserts the emptiness itself.
     entries = cd.parse_entries(open(cd.LEDGER).read())
-    probs3 = cd.check(entries, verbose=False)
-    ok3 = not probs3
-    print(f"{'3. control -- the real ledger entries':<44}{'PASS':>10}"
-          f"{'PASS' if ok3 else 'FIRE':>10}  {sorted({c for c,_ in probs3})}")
+    ok3 = entries == []
+    print(f"{'3. control -- the ledger declares none':<44}{'EMPTY':>10}"
+          f"{'EMPTY' if ok3 else len(entries):>10}  {[a for a, _ in entries]}")
     if not ok3:
-        fails.append(f"3: real entries should pass, got {probs3}")
+        fails.append(f"3: {cd.POLICY}, and the ledger declares {entries}")
+
+    # ── 4. POLICY: a derivation that checks clean still fails -- convert, do not record ───────
+    orig_parse, orig_fp = cd.parse_entries, cd.footprint
+    cd.parse_entries = lambda _src: [(REAL + "axC", REAL + "thmC")]
+    cd.footprint = lambda thm: ({REAL + "add_comm"}, "")
+    try:
+        rc4 = cd.main()
+    finally:
+        cd.parse_entries, cd.footprint = orig_parse, orig_fp
+    ok4 = rc4 == 1
+    print(f"{'4. a clean derivation, recorded not converted':<44}{'FAIL':>10}{'FAIL' if ok4 else 'PASS':>10}")
+    if not ok4:
+        fails.append("4: a recorded derivable axiom must fail the policy")
 
     print()
     if fails:
@@ -74,7 +90,7 @@ def main() -> int:
         for f in fails:
             print("  -", f)
         return 1
-    print("DERIVABLE-GATE SPECIMEN: PASS -- 3/3, including the pairwise-composition trap.")
+    print("DERIVABLE-GATE SPECIMEN: PASS -- 4/4, the pairwise-composition trap and the policy included.")
     return 0
 
 

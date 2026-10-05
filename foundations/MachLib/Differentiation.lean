@@ -106,10 +106,7 @@ axiom HasDerivAt_add (f g : Real → Real) (a b : Real) (x : Real) :
     HasDerivAt f a x → HasDerivAt g b x →
     HasDerivAt (fun y => f y + g y) (a + b) x
 
-/-- Difference rule: `(f - g)' = f' - g'`. -/
-axiom HasDerivAt_sub (f g : Real → Real) (a b : Real) (x : Real) :
-    HasDerivAt f a x → HasDerivAt g b x →
-    HasDerivAt (fun y => f y - g y) (a - b) x
+-- Difference rule `HasDerivAt_sub`: a theorem below `HasDerivAt_of_eq` since 2026-10-04.
 
 /-- Product rule: `(f · g)' = f' · g + f · g'`. -/
 axiom HasDerivAt_mul (f g : Real → Real) (a b : Real) (x : Real) :
@@ -127,9 +124,7 @@ axiom HasDerivAt_inv (f : Real → Real) (a : Real) (x : Real) :
     f x ≠ 0 → HasDerivAt f a x →
     HasDerivAt (fun y => 1 / f y) (-a / (f x * f x)) x
 
-/-- Negation rule: `(-f)' = -f'`. -/
-axiom HasDerivAt_neg (f : Real → Real) (a : Real) (x : Real) :
-    HasDerivAt f a x → HasDerivAt (fun y => -f y) (-a) x
+-- Negation rule `HasDerivAt_neg`: a theorem below `HasDerivAt_of_eq` since 2026-10-04.
 
 /-! ## From global function equality to derivative equality -/
 
@@ -137,6 +132,28 @@ axiom HasDerivAt_neg (f : Real → Real) (a : Real) (x : Real) :
 wherever both exist. -/
 axiom HasDerivAt_of_eq (f g : Real → Real) (a : Real) (x : Real) :
     (∀ y, f y = g y) → HasDerivAt f a x → HasDerivAt g a x
+
+/-- Negation rule: `(-f)' = -f'`. `−f = f · (−1)`; the product rule with a constant gives the rest, and
+`a·(−1) + f(x)·0 = −a`. An axiom until 2026-10-04 (its derivation, `DerivMinimality`'s, was gated). -/
+theorem HasDerivAt_neg (f : Real → Real) (a : Real) (x : Real) :
+    HasDerivAt f a x → HasDerivAt (fun y => -f y) (-a) x := by
+  intro hf
+  have hm := HasDerivAt_mul f (fun _ => -1) a 0 x hf (HasDerivAt_const (-1) x)
+  have hval : a * (-1 : Real) + f x * 0 = -a := by mach_ring
+  rw [hval] at hm
+  exact HasDerivAt_of_eq (fun y => f y * (-1)) (fun y => -f y) (-a) x (fun y => by mach_ring) hm
+
+/-- Difference rule: `(f - g)' = f' - g'`. `f − g = f + (−g)`: the sum rule and the negation rule above.
+An axiom until 2026-10-04. -/
+theorem HasDerivAt_sub (f g : Real → Real) (a b : Real) (x : Real) :
+    HasDerivAt f a x → HasDerivAt g b x →
+    HasDerivAt (fun y => f y - g y) (a - b) x := by
+  intro hf hg
+  have hn := HasDerivAt_neg g b x hg
+  have ha := HasDerivAt_add f (fun y => -g y) a (-b) x hf hn
+  have hval : a + -b = a - b := by mach_ring
+  rw [hval] at ha
+  exact HasDerivAt_of_eq (fun y => f y + -g y) (fun y => f y - g y) (a - b) x (fun y => by mach_ring) ha
 
 /-- **Local congruence.** `HasDerivAt` depends only on `f`'s behavior in an arbitrarily small
 neighborhood of `x`: if `f` and `g` agree throughout some neighborhood of `x`, a derivative of one

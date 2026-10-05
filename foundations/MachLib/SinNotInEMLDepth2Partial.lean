@@ -26,10 +26,8 @@ This file does not depend on Mathlib.
 namespace MachLib
 namespace Real
 
-/-- `π > 1`. Reasonable analytic axiom, derivable from `π > 3` once
-that's available. Used in the depth-2 cases for `t1 = .var` to
-contradict `π = 0` or `π = constant`. -/
-axiom pi_gt_one : (1 : Real) < pi
+-- `pi_gt_one` (`π > 1`) was an axiom here, "derivable from `π > 3` once that's available": since 2026-10-04 it
+-- is a theorem in `Trig.lean`, from `pi_lower_bound`. The depth-2 cases below use it to contradict `π = 0`.
 
 end Real
 end MachLib

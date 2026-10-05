@@ -34,12 +34,69 @@ law `log` is defined from (`Log.lean`).
 
 `exp_zero` was a fifth axiom here until 2026-10-04 and is a theorem
 below: it follows from `exp_add` and `exp_pos` (the owner's axiom audit:
-a law the others prove is not assumed). -/
+a law the others prove is not assumed). So, since the muses' E round the
+same day, is `exp_pos`: from `exp_add` and `exp_surj`. -/
 
 axiom exp_add     (x y : Real) : exp (x + y) = exp x * exp y
-axiom exp_pos     (x : Real)   : 0 < exp x
 axiom exp_lt      {x y : Real} : x < y → exp x < exp y
 axiom exp_surj    : ∀ y : Real, 0 < y → ∃ x : Real, exp x = y
+
+/-- `exp x ≠ 0`: were it `0`, `exp z = exp (x + (z - x)) = exp x * exp (z - x) = 0` for EVERY `z`, and
+`exp_surj` gives some `z` with `exp z = 1`. -/
+private theorem exp_ne_zero_b (x : Real) : exp x ≠ 0 := by
+  intro h0
+  obtain ⟨z, hz⟩ := exp_surj 1 zero_lt_one_ax
+  have hsum : x + (z - x) = z := by
+    rw [sub_def, add_comm z (-x), ← add_assoc, add_neg, zero_add]
+  have he := exp_add x (z - x)
+  rw [hsum, h0, zero_mul] at he
+  rw [he] at hz
+  exact zero_ne_one_ax hz
+
+/-- `x/2 + x/2 = x`, with `2 = 1 + 1`. -/
+private theorem half_add_half_b (x : Real) : x * (1 / (1 + 1)) + x * (1 / (1 + 1)) = x := by
+  have h2 : (1 : Real) + 1 ≠ 0 := by
+    have h := add_lt_add_left zero_lt_one_ax (1 : Real)
+    rw [add_zero] at h
+    exact ne_of_gt (lt_trans_ax zero_lt_one_ax h)
+  rw [← mul_distrib]
+  have hh : (1 : Real) / (1 + 1) + 1 / (1 + 1) = 1 := by
+    have e : (1 : Real) / (1 + 1) * (1 + 1) = 1 / (1 + 1) + 1 / (1 + 1) := by
+      rw [mul_distrib, mul_one_ax]
+    rw [← e, mul_comm, mul_inv _ h2]
+  rw [hh, mul_one_ax]
+
+private theorem mul_neg_e (a b : Real) : a * -b = -(a * b) := by
+  have h : a * b + a * -b = 0 := by rw [← mul_distrib, add_neg, mul_zero]
+  have hc : -(a * b) + (a * b + a * -b) = -(a * b) + 0 := by rw [h]
+  rw [← add_assoc, neg_add_self, zero_add, add_zero] at hc
+  exact hc
+
+private theorem neg_neg_e (a : Real) : -(-a) = a := by
+  have h : -a + -(-a) = 0 := add_neg (-a)
+  have hc : a + (-a + -(-a)) = a + 0 := by rw [h]
+  rw [← add_assoc, add_neg, zero_add, add_zero] at hc
+  exact hc
+
+/-- A nonzero square is positive. -/
+private theorem mul_self_pos_e {y : Real} (hy : y ≠ 0) : 0 < y * y := by
+  rcases lt_total 0 y with hpos | hzero | hneg
+  · exact mul_pos hpos hpos
+  · exact absurd hzero.symm hy
+  · have hny : 0 < -y := by
+      have h := add_lt_add_left hneg (-y)
+      rwa [neg_add_self, add_zero] at h
+    have hp := mul_pos hny hny
+    have e : -y * -y = y * y := by rw [mul_neg_e, mul_comm (-y) y, mul_neg_e, neg_neg_e]
+    rwa [e] at hp
+
+/-- `0 < exp x`: `exp x = exp (x/2) * exp (x/2)`, the square of a number `exp_surj` keeps from being `0`.
+An axiom until 2026-10-04. -/
+theorem exp_pos (x : Real) : 0 < exp x := by
+  have e : exp x = exp (x * (1 / (1 + 1))) * exp (x * (1 / (1 + 1))) := by
+    rw [← exp_add, half_add_half_b]
+  rw [e]
+  exact mul_self_pos_e (exp_ne_zero_b _)
 
 /-- `exp 0 = 1`, from `exp_add` and `exp_pos`: `exp 0 = exp (0 + 0) = exp 0 * exp 0`,
 and `exp 0` is not zero, so it is `1`. -/

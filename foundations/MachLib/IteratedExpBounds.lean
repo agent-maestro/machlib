@@ -25,8 +25,7 @@ No Mathlib dependency. Zero-Mathlib gate stays PASS.
 namespace MachLib
 namespace Real
 
-/-- `π > 3`. -/
-axiom pi_gt_three : (1 + 1 + 1 : Real) < pi
+-- `pi_gt_three` was an axiom here until 2026-10-04: a theorem in `Trig.lean`, from `pi_lower_bound`.
 
 /-- `exp 1 < 3`. (e < 3.) -/
 axiom exp_one_lt_three : exp 1 < (1 + 1 + 1 : Real)

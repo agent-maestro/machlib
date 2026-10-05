@@ -74,14 +74,9 @@ below close the strict-positive division shape Forge emits for
 the Rayleigh / Mie scattering coefficients (`k / w⁴`,
 `k₀ / (1 + g² - 2g·cosθ)^(3/2)`, etc.).
 
-`one_div_pos_of_pos` is held as an axiom. It is DERIVABLE, and the derivation exists:
-`AxiomMinimality.one_div_pos_derivable` (gated by the ledger's `derivableAxioms`), and the `≤`
-version it parallels, `one_div_nonneg_of_pos`, has been a theorem since 2026-10-04 by the same
-trichotomy. It was left an axiom in that audit only because the audit's scope was the axioms
-Forge's proofs used and Forge had not registered; Forge registers this one. -/
-
-/-- `0 < b → 0 < 1 / b`. Strict-positive form of the inverse. -/
-axiom one_div_pos_of_pos {b : Real} (hb : 0 < b) : 0 < 1 / b
+`one_div_pos_of_pos` (`0 < b → 0 < 1 / b`) was an axiom here until 2026-10-04, though derivable (its
+derivation, `AxiomMinimality.one_div_pos_derivable`, was gated by the ledger): it is a theorem in
+`MachLib.Basic` now, by the same trichotomy as `one_div_nonneg_of_pos`. -/
 
 /-- `0 < a → 0 < b → 0 < a / b`. -/
 theorem div_pos_of_pos_pos

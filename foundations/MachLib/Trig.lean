@@ -35,7 +35,7 @@ theorem tan_zero : tan 0 = 0 := by
 
 axiom sin_pi         : sin pi = 0
 axiom cos_pi         : cos pi = -1
-axiom pi_pos         : 0 < pi
+-- `pi_pos` was an axiom here until 2026-10-04: a theorem below `pi_lower_bound` now.
 
 /-- Tight numeric bound on `pi`, to 6 decimal places (`3.141592 < π < 3.141593`) — standard,
 well-established mathematics, added specifically to bound `eml_acos.v`'s `HALF_PI` fixed-point
@@ -43,6 +43,33 @@ constant (`314159/200000`, computed at RTL elaboration time, NOT exactly `π/2`)
 value. The coarser `pi_gt_three`/`pi_gt_one` elsewhere are nowhere near tight enough for this. -/
 axiom pi_lower_bound : natCast 3141592 * (1 / natCast 1000000) < pi
 axiom pi_upper_bound : pi < natCast 3141593 * (1 / natCast 1000000)
+
+/-- `π > 3`, from the tight bound: `3 = natCast 3000000 / 10⁶ < natCast 3141592 / 10⁶ < π`. A THEOREM since
+2026-10-04 -- it was an axiom in `IteratedExpBounds.lean`, and `pi_gt_one` (`SinNotInEMLDepth2Partial.lean`,
+"derivable from π > 3 once that's available") and `pi_pos` (here) were two more: three axioms for consequences
+of the one `pi_lower_bound` states (the muses' E round: provable means proved). -/
+theorem pi_gt_three : (1 + 1 + 1 : Real) < pi := by
+  have hM : (0 : Real) < natCast 1000000 := natCast_pos (by decide)
+  have h3 : natCast 3 = (1 + 1 + 1 : Real) := by
+    rw [show (3 : Nat) = 0 + 1 + 1 + 1 from rfl, natCast_succ, natCast_succ, natCast_succ, natCast_zero, zero_add]
+  have hlt : natCast 3 * natCast 1000000 < natCast 3141592 := by
+    rw [← natCast_mul]; exact natCast_lt_natCast (by decide)
+  have h2 := mul_lt_mul_of_pos_right hlt (one_div_pos_of_pos hM)
+  rw [mul_assoc, mul_inv _ (ne_of_gt hM), mul_one_ax, h3] at h2
+  exact lt_trans_ax h2 pi_lower_bound
+
+/-- `π > 1`, below `π > 3`. A theorem since 2026-10-04. -/
+theorem pi_gt_one : (1 : Real) < pi := by
+  have h1 : (1 : Real) < 1 + 1 := by
+    have h := add_lt_add_left zero_lt_one_ax (1 : Real)
+    rwa [add_zero] at h
+  have h2 : (1 : Real) + 1 < 1 + 1 + 1 := by
+    have h := add_lt_add_left zero_lt_one_ax ((1 : Real) + 1)
+    rwa [add_zero] at h
+  exact lt_trans_ax h1 (lt_trans_ax h2 pi_gt_three)
+
+/-- `0 < π`. A theorem since 2026-10-04. -/
+theorem pi_pos : 0 < pi := lt_trans_ax zero_lt_one_ax pi_gt_one
 axiom pythagorean (x : Real) : sin x * sin x + cos x * cos x = 1
 axiom sin_neg        (x : Real) : sin (-x) = -(sin x)
 axiom cos_neg        (x : Real) : cos (-x) = cos x

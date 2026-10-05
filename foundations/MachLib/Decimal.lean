@@ -19,36 +19,9 @@ its mantissa, and finish with `natCast` arithmetic.
 
 namespace MachLib.Real
 
-/-- **The defining property of a decimal literal (the missing foundation).** `realOfScientific m
-true e` denotes `m·10⁻ᵉ`; cleared of its denominator, `(m·10⁻ᵉ)·10ᵉ = m`. Division-free, the standard
-`OfScientific` meaning, and it subsumes the ad-hoc `realOfScientific_{one,two,three}_dot_zero`. -/
-axiom realOfScientific_clears (m e : Nat) :
-    realOfScientific m true e * natCast (10 ^ e) = natCast m
-
-/-- `natCast` is additive (induction on `natCast_succ`). -/
-theorem natCast_add (a b : Nat) : natCast (a + b) = natCast a + natCast b := by
-  induction b with
-  | zero => rw [Nat.add_zero, natCast_zero, add_zero]
-  | succ n ih => rw [Nat.add_succ, natCast_succ, natCast_succ, ih, add_assoc]
-
-/-- `0 ≤ natCast n`. -/
-theorem natCast_nonneg (n : Nat) : 0 ≤ natCast n := by
-  induction n with
-  | zero => rw [natCast_zero]; exact le_refl _
-  | succ k ih => rw [natCast_succ]; exact le_trans ih (le_add_of_nonneg_right (le_of_lt zero_lt_one_ax))
-
-/-- `0 < natCast (n+1)` — so `10ᵉ` can be cancelled. -/
-theorem natCast_succ_pos (n : Nat) : 0 < natCast (n + 1) := by
-  rw [natCast_succ]
-  have h : (0 : Real) + 1 ≤ natCast n + 1 := add_le_add_both (natCast_nonneg n) (le_refl 1)
-  rw [add_comm (0 : Real) 1, add_zero] at h
-  exact lt_of_lt_of_le zero_lt_one_ax h
-
-/-- `0 < n ⇒ 0 < natCast n`. -/
-theorem natCast_pos {n : Nat} (h : 0 < n) : 0 < natCast n := by
-  cases n with
-  | zero => exact (Nat.lt_irrefl 0 h).elim
-  | succ k => exact natCast_succ_pos k
+/-! `realOfScientific_clears` -- `(m·10⁻ᵉ)·10ᵉ = m`, the defining property this file assumed -- and the
+`natCast` arithmetic it used (`natCast_add`, `_nonneg`, `_succ_pos`, `_pos`, `_mul`) are THEOREMS in
+`MachLib.Basic` since 2026-10-04, where `realOfScientific` is defined. -/
 
 /-- `(a + b) − b = a` — clean-named so `mach_mpoly` parses the atoms (it rejects the dirty
 `natCast (n − m)` atom). -/
@@ -64,15 +37,6 @@ theorem mul_right_cancel' {a b c : Real} (hc : c ≠ 0) (h : a * c = b * c) : a 
 theorem natCast_sub {m n : Nat} (h : m ≤ n) : natCast (n - m) = natCast n - natCast m := by
   have hn : natCast n = natCast (n - m) + natCast m := by rw [← natCast_add, Nat.sub_add_cancel h]
   rw [hn, add_sub_cancel_right]
-
-/-- `x·y + x = x·(y+1)` — clean-named helper for the `natCast_mul` induction step. -/
-theorem mul_succ_eq (x y : Real) : x * y + x = x * (y + 1) := by mach_mpoly [x, y]
-
-/-- `natCast` is multiplicative (induction on `natCast_succ`, mirroring `natCast_add`). -/
-theorem natCast_mul (a b : Nat) : natCast (a * b) = natCast a * natCast b := by
-  induction b with
-  | zero => rw [Nat.mul_zero, natCast_zero, mul_zero]
-  | succ k ih => rw [Nat.mul_succ, natCast_add, ih, natCast_succ, mul_succ_eq]
 
 /-- `a·b·(c·d) = (a·c)·(b·d)` — clean-named AC regrouping for `decimal_mul`. -/
 theorem mul4_rearrange (a b c d : Real) : a * b * (c * d) = (a * c) * (b * d) := by

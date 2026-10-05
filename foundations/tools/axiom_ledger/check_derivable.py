@@ -83,23 +83,38 @@ def check(entries: list[tuple[str, str]], verbose: bool = True) -> list[tuple[st
     return problems
 
 
+#: PROVABLE MEANS PROVED (the muses' E round, 2026-10-04: "make provable => proved policy: the 'could
+#: prove but still states' count goes to zero and stays there"). Four of the five axioms this ledger had
+#: declared derivable -- archimedean, one_div_pos_of_pos, HasDerivAt_neg, HasDerivAt_sub -- are THEOREMS at
+#: their own declaration sites now. A derivation found later is a reason to CONVERT the axiom, so a
+#: non-empty `derivableAxioms` fails, with its derivations still checked so the failure says whether the
+#: conversion will go through.
+#:
+#: "PROVABLE" IS JUDGED WITHIN THE SUB-THEORY AN AXIOM SERVES. The fifth, zero_ne_one_ax, stays an axiom: it
+#: follows from the ORDER axioms, not from the FIELD axioms (the zero ring satisfies those), and the
+#: ledger's `algebraFootprint` holds 326 algebra-spine theorems to the field axioms alone. Converted, it put
+#: the order into 33 of them -- AxiomLedger's algebra-spine check failed, which is how this was found. Before
+#: converting, run AxiomLedger.lean: a derivation that crosses a footprint it holds is not a conversion.
+POLICY = "provable means proved"
+
+
 def main() -> int:
     src = open(LEDGER).read()
     entries = parse_entries(src)
     print(f"derivableAxioms: {len(entries)} entr{'y' if len(entries)==1 else 'ies'}")
     if not entries:
-        print("DERIVABLE-AXIOM GATE: PASS (vacuous -- no entries declared)")
+        print(f"DERIVABLE-AXIOM GATE: PASS -- no axiom is declared derivable ({POLICY}: the count is zero "
+              f"and stays there)")
         return 0
     problems = check(entries)
     print()
-    if not problems:
-        print(f"DERIVABLE-AXIOM GATE: PASS -- {len(entries)} derivations verified against the "
-              f"RETAINED base.")
-        print(f"  Effective independent axiom count is {len(entries)} lower than the pinned count.")
-        return 0
-    print("DERIVABLE-AXIOM GATE: FAIL")
+    print(f"DERIVABLE-AXIOM GATE: FAIL -- {POLICY}: convert each axiom to its derivation at its own "
+          f"declaration site instead of recording it here")
     for code, msg in problems:
         print(f"  [{code}] {msg}")
+    if not problems:
+        print(f"  (all {len(entries)} derivations check against the retained base, so each conversion "
+              f"will go through)")
     return 1
 
 
