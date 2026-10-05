@@ -232,7 +232,8 @@ exactly where a wrong number hides by fiat." The outcome, 23 axioms; pinned 247 
 - TRAP: `trustedFootprint` can name something that is no longer an axiom and AxiomLedger stays OK. Two did
   (`archimedean`, `realOfScientific`); gate 13 (monogate-lean's bridge) found them UNACCOUNTED, and its
   double-count canary failed beside them, because a sum already broken cannot be broken by a canary.
-- monogate-lean retired 19 witnesses, witnesses `pi_lower_bound`, and CHECKS that its interpretations of the two
+- monogate-lean retired 18 witnesses (121 -> 104 with `pi_lower_bound` added; its commit message says 19, counted
+  before `zero_ne_one`'s was restored), witnesses `pi_lower_bound`, and CHECKS that its interpretations of the two
   new definitions agree with them (`interp_agrees_natCast`, `interp_agrees_realOfScientific`) instead of
   interpreting them by fiat: 104/104 witnessed, 149 trusted = 102 witnessed + 3 standard + 12 mapped + 32
   float-bridge + 0 gap. Forge's registry is policy `2026-10-04.2`: 70 -> 57 rows, 0 derivable, `zero_ne_one_ax`
