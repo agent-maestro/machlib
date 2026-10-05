@@ -58,7 +58,7 @@ run() {
   # `tail -n 3` window silently dropped them. Cosmetic — SUMMARY decides pass/fail from the captured
   # rc, never from this text — but a comment that overstates what it does is how a gate's scope
   # drifts from its description.
-  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|check-[a-z]+\]|AxiomLedger" \
+  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|check-[a-z]+\]|AxiomLedger" \
     "$OUT/$name.log" | tail -n 2 || true
 }
 
@@ -84,6 +84,9 @@ else
   # half that can be wrong.
   run "consistency-selftest" env SELFTEST=1 bash scripts/check_consistency_model.sh
   run "axiom-ledger" lake env lean AxiomLedger.lean
+  # Checks (8) and (9) arrived with the muses' review of E (2026-10-05); each planted defect must produce its own
+  # message, and an unmutated copy must say OK.
+  run "axiom-ledger-canaries" python3 tools/axiom_ledger/ledger_canaries.py
   run "obligations"  bash tools/check_obligations.sh
   run "discovered"   bash scripts/check_discovered_compiles.sh 4
   # Seeded through an env test seam, so both decision branches are exercised without the

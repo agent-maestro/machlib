@@ -1,5 +1,5 @@
 const CLASSES: { value: string; label: string }[] = [
-  { value: "102", label: "witnessed — a Mathlib term inhabits the interpreted type, kernel-checked" },
+  { value: "96", label: "witnessed — a Mathlib term inhabits the interpreted type, kernel-checked" },
   { value: "12", label: "mapped — carrier or function symbol, interpreted rather than asserted" },
   { value: "3", label: "standard — propext, Classical.choice, Quot.sound" },
   { value: "32", label: "float-bridge — IEEE-754 facts with no model in ℝ, validated by measurement" },
@@ -20,7 +20,7 @@ export default function TrustBase() {
           that imports both Mathlib and MachLib checks, in the kernel, that a
           Mathlib term inhabits the interpreted type of each witnessable
           axiom. The
-          manifest listing all 149 is generated, and a gate fails if the
+          manifest listing all 143 is generated, and a gate fails if the
           witness project stops running — it did once, for 33 days.
         </p>
 

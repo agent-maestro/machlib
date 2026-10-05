@@ -101,11 +101,13 @@ these entries named. The same round converted every other axiom shown derivable 
 `realOfScientific` into DEFINITIONS, so the ten axioms that said what they return are theorems: 23 axioms in
 all.
 
-The fifth, `zero_ne_one_ax`, STAYS AN AXIOM, and this gate is what said so. It is derivable -- from the
-ORDER axioms (`AxiomMinimality.zero_ne_one_derivable`) -- but not from the FIELD axioms, which the zero
-ring satisfies; and `algebraFootprint` holds 326 algebra-spine theorems to the field axioms alone. Converted,
-it put `ltR`, `lt_irrefl_ax` and `zero_lt_one_ax` into 33 of them (measured). So "provable" is judged
-WITHIN THE SUB-THEORY AN AXIOM SERVES: `0 ≠ 1` is primitive for the field, and no entry belongs here.
+The fifth, `zero_ne_one_ax`, is PRIMITIVE IN THE FIELD AND DERIVABLE IN THE ORDERED FIELD, and
+`subTheoryPrimitives` (below) records it as exactly that, with checks. The rule (the muses' review of E,
+2026-10-05): AN AXIOM BELONGS TO THE SMALLEST THEORY IN WHICH IT IS PRIMITIVE. `0 ≠ 1` is derivable from the
+ORDER axioms (`MachLib.Real.zero_ne_one_derivable`) and from no subset of the FIELD axioms -- the zero ring
+satisfies every other one -- so it is primitive in the field, and `algebraFootprint` holds 326 algebra-spine
+theorems to the field axioms alone. (Converting it anyway put `ltR`, `lt_irrefl_ax` and `zero_lt_one_ax` into
+33 of them, measured 2026-10-04: what the rule predicts, not the reason for it.) No entry belongs here.
 `check_derivable.py` FAILS on any entry: a derivation found later is a reason to convert, not to record --
 after asking whether the derivation crosses a footprint this ledger holds. -/
 def derivableAxioms : List (Name × Name) := []
@@ -138,8 +140,13 @@ def primitiveByConstruction : List (Name × String) :=
 `exp_zero` (from `exp_add`, `exp_pos`), `lit_one_eq` (it is `realOfScientific_one_dot_zero`),
 `one_div_nonneg_of_pos` (trichotomy), `tanh_lt_one` and `neg_one_lt_tanh` (from
 `tanh_eq_sinh_div_cosh` and the sinh/cosh defining equations, `Linarith.lean`), and `exp10`,
-`exp10_def`, `exp10_zero`, `exp10_log10_inverse` (`exp10` is a definition now, `Log.lean`). -/
-def knownAxioms : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `Certcom.real_tanh_rounds, `MachLib.HighDimensional.BoundaryDominatesCenter, `MachLib.HighDimensional.overflow_wall_obligation, `MachLib.HighDimensional.domain_wall_obligation, `MachLib.HighDimensional.BoundedEvaluationObligation, `MachLib.HighDimensional.DomainPreservationObligation, `MachLib.HighDimensional.InterventionSoundnessObligation, `MachLib.HighDimensional.boundary_dominates_center_from_packet, `MachLib.HighDimensional.packetTransitionEntropy, `MachLib.IsAnalyticOnReals, `MachLib.Real, `MachLib.Real.HasDerivAt, `MachLib.Real.HasDerivAt_add, `MachLib.Real.HasDerivAt_arccos, `MachLib.Real.HasDerivAt_arcsin, `MachLib.Real.HasDerivAt_atan, `MachLib.Real.HasDerivAt_comp, `MachLib.Real.HasDerivAt_const, `MachLib.Real.HasDerivAt_cos, `MachLib.Real.HasDerivAt_exp, `MachLib.Real.HasDerivAt_id, `MachLib.Real.HasDerivAt_inv, `MachLib.Real.HasDerivAt_log_pos, `MachLib.Real.HasDerivAt_mul, `MachLib.Real.HasDerivAt_of_eq, `MachLib.Real.HasDerivAt_sin, `MachLib.Real.HasDerivAt_unique, `MachLib.Real.HasDerivAt2, `MachLib.Real.HasDerivAt2_add, `MachLib.Real.HasDerivAt2_comp, `MachLib.Real.HasDerivAt2_const, `MachLib.Real.HasDerivAt2_mul, `MachLib.Real.HasDerivAt2_projX, `MachLib.Real.HasDerivAt2_projY, `MachLib.Real.HasDerivAt2_scomp, `MachLib.Real.HasDerivAt2_sub, `MachLib.Real.HasDerivAt_congr, `MachLib.Real.hasDerivAt_continuousAt, `MachLib.Real.hasDerivAt_implicit, `MachLib.Real.hasDerivAt_implicit_local, `Certcom.real_exp_rounds, `Certcom.real_log_rounds, `Certcom.real_sin_eps, `Certcom.real_sin_rounds, `Certcom.real_cos_eps, `Certcom.real_cos_rounds, `Certcom.real_atan_eps, `Certcom.real_atan_rounds, `Certcom.real_abs_eps, `Certcom.real_abs_rounds, `Certcom.real_sqrt_rounds, `Certcom.real_log10_rounds, `Certcom.real_asin_rounds, `Certcom.real_acos_rounds, `Certcom.real_sinh_rounds, `Certcom.real_cosh_rounds, `Certcom.real_tan_rounds, `MachLib.Real.sin_pos_of_pos_lt_pi_div_two, `MachLib.Real.addR, `MachLib.Real.add_assoc, `MachLib.Real.add_comm, `MachLib.Real.add_lt_add_left, `MachLib.Real.add_neg, `MachLib.Real.add_zero, `MachLib.Real.arccos, `MachLib.Real.arccos_le_pi, `MachLib.Real.arccos_nonneg, `MachLib.Real.arccos_one, `MachLib.Real.arccos_zero, `MachLib.Real.arcsin, `MachLib.Real.arcsin_one, `MachLib.Real.arcsin_zero, `MachLib.Real.arctan, `MachLib.Real.arctan_lt_pi_div_two, `MachLib.Real.atan, `MachLib.Real.atan2, `MachLib.Real.atan2_le_pi, `MachLib.Real.atan2_one_zero, `MachLib.Real.atan2_zero_one, `MachLib.Real.atan_zero, `MachLib.Real.cos, `MachLib.Real.cos_add, `MachLib.Real.cos_arccos, `MachLib.Real.cos_neg, `MachLib.Real.cos_periodic, `MachLib.Real.cos_pi, `MachLib.Real.cos_pi_div_two, `MachLib.Real.cos_zero, `MachLib.Real.cosh, `MachLib.Real.cosh_eq, `MachLib.Real.cosh_ge_one, `MachLib.Real.divR, `MachLib.Real.div_def, `MachLib.Real.div_zero, `MachLib.Real.erf, `MachLib.Real.erf_le_one, `MachLib.Real.exp, `MachLib.Real.exp_add, `MachLib.Real.exp_exp_minus_exp_strictly_increasing, `MachLib.Real.exp_gt_one_plus_self, `MachLib.Real.exp_gt_two_x, `MachLib.Real.exp_lt, `MachLib.Real.exp_one_lt_three, `MachLib.Real.exp_surj, `MachLib.Real.floor, `MachLib.Real.floor_le, `MachLib.Real.floor_zero, `MachLib.Real.interval_scale_unit_lit_le, `MachLib.Real.interval_weight_sum_le, `MachLib.Real.leR, `MachLib.Real.le_iff_lt_or_eq, `MachLib.Real.le_sqrt_of_sq_le, `MachLib.Real.log10, `MachLib.Real.log10_def, `MachLib.Real.log10_zero, `MachLib.Real.ltR, `MachLib.Real.lt_floor_add_one, `MachLib.Real.lt_irrefl_ax, `MachLib.Real.lt_total, `MachLib.Real.lt_trans_ax, `MachLib.Real.mulR, `MachLib.Real.mul_assoc, `MachLib.Real.mul_comm, `MachLib.Real.mul_distrib, `MachLib.Real.mul_inv, `MachLib.Real.mul_one_ax, `MachLib.Real.mul_pos, `MachLib.Real.negR, `MachLib.Real.neg_one_le_erf, `MachLib.Real.neg_pi_div_two_lt_arctan, `MachLib.Real.neg_pi_lt_atan2, `MachLib.Real.oneR, `MachLib.Real.one_add_le_exp, `MachLib.Real.pi, `MachLib.Real.pythagorean, `MachLib.Real.realPow, `MachLib.Real.realPow_nonneg, `MachLib.Real.realPow_one, `MachLib.Real.realPow_pos, `MachLib.Real.realPow_zero, `MachLib.Real.rolle_ct, `MachLib.Real.sin, `MachLib.Real.sin_add, `MachLib.Real.sin_arcsin, `MachLib.Real.sin_neg, `MachLib.Real.sin_one_pos, `MachLib.Real.sin_periodic, `MachLib.Real.sin_pi, `MachLib.Real.sin_pi_div_two, `MachLib.Real.sin_zero, `MachLib.Real.sinh, `MachLib.Real.sinh_eq, `MachLib.Real.sqrt, `MachLib.Real.sqrt_le_of_le_sq, `MachLib.Real.sqrt_neg_zero, `MachLib.Real.sqrt_nonneg, `MachLib.Real.sqrt_one, `MachLib.Real.sqrt_sq_nonneg, `MachLib.Real.sqrt_zero, `MachLib.Real.subR, `MachLib.Real.sub_def, `MachLib.Real.sup_exists, `MachLib.Real.tan, `MachLib.Real.tan_def, `MachLib.Real.tan_half_pos, `MachLib.Real.tanh, `MachLib.Real.tanh_eq_sinh_div_cosh, `MachLib.Real.tanh_neg, `MachLib.Real.tanh_zero, `MachLib.Real.u, `MachLib.Real.u_le_one, `MachLib.Real.u_nonneg, `MachLib.Real.zeroR, `MachLib.Real.zero_lt_one_ax, `MachLib.Real.zero_ne_one_ax, `MachLib.analytic_add, `MachLib.analytic_comp, `MachLib.analytic_const, `MachLib.analytic_exp, `MachLib.analytic_finite_zeros_compact, `MachLib.analytic_id, `MachLib.analytic_log_pos, `MachLib.analytic_mul, `MachLib.analytic_ne_zero_nbhd, `MachLib.analytic_one_div_pos, `MachLib.analytic_sin, `MachLib.analytic_sub, `MachLib.chain_algebraic_dependence, `MachLib.eml_pfaffian_validon_from_cos_equality, `MachLib.eml_pfaffian_validon_from_sin_equality, `MachLib.eml_tree_analytic_on_pos, `MachLib.eml_tree_analytic_on_interval, `MachLib.exp_tangent_line_strict, `MachLib.lambertW, `MachLib.lambertW_one_lt_one, `MachLib.lambertW_one_pos, `MachLib.lambertW_zero, -- Added 2026-07-19: Group-B transcendental math arc (asin/acos certificates), added
+`exp10_def`, `exp10_zero`, `exp10_log10_inverse` (`exp10` is a definition now, `Log.lean`).
+
+2026-10-05, the muses' review of E: seven more left it, THEOREMS of the axioms they used to sit beside --
+`sin_zero`, `cos_zero`, `sin_neg`, `cos_neg` (from `pythagorean`, `sin_add`, `cos_add`), `sin_periodic`,
+`cos_periodic` (from the addition laws, `sin_pi`, `cos_pi`), all in `Trig.lean`, and `cosh_ge_one` (from
+`cosh_eq`, `exp_add`, `exp_surj` and the order, `Hyperbolic.lean`). -/
+def knownAxioms : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `Certcom.real_tanh_rounds, `MachLib.HighDimensional.BoundaryDominatesCenter, `MachLib.HighDimensional.overflow_wall_obligation, `MachLib.HighDimensional.domain_wall_obligation, `MachLib.HighDimensional.BoundedEvaluationObligation, `MachLib.HighDimensional.DomainPreservationObligation, `MachLib.HighDimensional.InterventionSoundnessObligation, `MachLib.HighDimensional.boundary_dominates_center_from_packet, `MachLib.HighDimensional.packetTransitionEntropy, `MachLib.IsAnalyticOnReals, `MachLib.Real, `MachLib.Real.HasDerivAt, `MachLib.Real.HasDerivAt_add, `MachLib.Real.HasDerivAt_arccos, `MachLib.Real.HasDerivAt_arcsin, `MachLib.Real.HasDerivAt_atan, `MachLib.Real.HasDerivAt_comp, `MachLib.Real.HasDerivAt_const, `MachLib.Real.HasDerivAt_cos, `MachLib.Real.HasDerivAt_exp, `MachLib.Real.HasDerivAt_id, `MachLib.Real.HasDerivAt_inv, `MachLib.Real.HasDerivAt_log_pos, `MachLib.Real.HasDerivAt_mul, `MachLib.Real.HasDerivAt_of_eq, `MachLib.Real.HasDerivAt_sin, `MachLib.Real.HasDerivAt_unique, `MachLib.Real.HasDerivAt2, `MachLib.Real.HasDerivAt2_add, `MachLib.Real.HasDerivAt2_comp, `MachLib.Real.HasDerivAt2_const, `MachLib.Real.HasDerivAt2_mul, `MachLib.Real.HasDerivAt2_projX, `MachLib.Real.HasDerivAt2_projY, `MachLib.Real.HasDerivAt2_scomp, `MachLib.Real.HasDerivAt2_sub, `MachLib.Real.HasDerivAt_congr, `MachLib.Real.hasDerivAt_continuousAt, `MachLib.Real.hasDerivAt_implicit, `MachLib.Real.hasDerivAt_implicit_local, `Certcom.real_exp_rounds, `Certcom.real_log_rounds, `Certcom.real_sin_eps, `Certcom.real_sin_rounds, `Certcom.real_cos_eps, `Certcom.real_cos_rounds, `Certcom.real_atan_eps, `Certcom.real_atan_rounds, `Certcom.real_abs_eps, `Certcom.real_abs_rounds, `Certcom.real_sqrt_rounds, `Certcom.real_log10_rounds, `Certcom.real_asin_rounds, `Certcom.real_acos_rounds, `Certcom.real_sinh_rounds, `Certcom.real_cosh_rounds, `Certcom.real_tan_rounds, `MachLib.Real.sin_pos_of_pos_lt_pi_div_two, `MachLib.Real.addR, `MachLib.Real.add_assoc, `MachLib.Real.add_comm, `MachLib.Real.add_lt_add_left, `MachLib.Real.add_neg, `MachLib.Real.add_zero, `MachLib.Real.arccos, `MachLib.Real.arccos_le_pi, `MachLib.Real.arccos_nonneg, `MachLib.Real.arccos_one, `MachLib.Real.arccos_zero, `MachLib.Real.arcsin, `MachLib.Real.arcsin_one, `MachLib.Real.arcsin_zero, `MachLib.Real.arctan, `MachLib.Real.arctan_lt_pi_div_two, `MachLib.Real.atan, `MachLib.Real.atan2, `MachLib.Real.atan2_le_pi, `MachLib.Real.atan2_one_zero, `MachLib.Real.atan2_zero_one, `MachLib.Real.atan_zero, `MachLib.Real.cos, `MachLib.Real.cos_add, `MachLib.Real.cos_arccos, `MachLib.Real.cos_pi, `MachLib.Real.cos_pi_div_two, `MachLib.Real.cosh, `MachLib.Real.cosh_eq, `MachLib.Real.divR, `MachLib.Real.div_def, `MachLib.Real.div_zero, `MachLib.Real.erf, `MachLib.Real.erf_le_one, `MachLib.Real.exp, `MachLib.Real.exp_add, `MachLib.Real.exp_exp_minus_exp_strictly_increasing, `MachLib.Real.exp_gt_one_plus_self, `MachLib.Real.exp_gt_two_x, `MachLib.Real.exp_lt, `MachLib.Real.exp_one_lt_three, `MachLib.Real.exp_surj, `MachLib.Real.floor, `MachLib.Real.floor_le, `MachLib.Real.floor_zero, `MachLib.Real.interval_scale_unit_lit_le, `MachLib.Real.interval_weight_sum_le, `MachLib.Real.leR, `MachLib.Real.le_iff_lt_or_eq, `MachLib.Real.le_sqrt_of_sq_le, `MachLib.Real.log10, `MachLib.Real.log10_def, `MachLib.Real.log10_zero, `MachLib.Real.ltR, `MachLib.Real.lt_floor_add_one, `MachLib.Real.lt_irrefl_ax, `MachLib.Real.lt_total, `MachLib.Real.lt_trans_ax, `MachLib.Real.mulR, `MachLib.Real.mul_assoc, `MachLib.Real.mul_comm, `MachLib.Real.mul_distrib, `MachLib.Real.mul_inv, `MachLib.Real.mul_one_ax, `MachLib.Real.mul_pos, `MachLib.Real.negR, `MachLib.Real.neg_one_le_erf, `MachLib.Real.neg_pi_div_two_lt_arctan, `MachLib.Real.neg_pi_lt_atan2, `MachLib.Real.oneR, `MachLib.Real.one_add_le_exp, `MachLib.Real.pi, `MachLib.Real.pythagorean, `MachLib.Real.realPow, `MachLib.Real.realPow_nonneg, `MachLib.Real.realPow_one, `MachLib.Real.realPow_pos, `MachLib.Real.realPow_zero, `MachLib.Real.rolle_ct, `MachLib.Real.sin, `MachLib.Real.sin_add, `MachLib.Real.sin_arcsin, `MachLib.Real.sin_one_pos, `MachLib.Real.sin_pi, `MachLib.Real.sin_pi_div_two, `MachLib.Real.sinh, `MachLib.Real.sinh_eq, `MachLib.Real.sqrt, `MachLib.Real.sqrt_le_of_le_sq, `MachLib.Real.sqrt_neg_zero, `MachLib.Real.sqrt_nonneg, `MachLib.Real.sqrt_one, `MachLib.Real.sqrt_sq_nonneg, `MachLib.Real.sqrt_zero, `MachLib.Real.subR, `MachLib.Real.sub_def, `MachLib.Real.sup_exists, `MachLib.Real.tan, `MachLib.Real.tan_def, `MachLib.Real.tan_half_pos, `MachLib.Real.tanh, `MachLib.Real.tanh_eq_sinh_div_cosh, `MachLib.Real.tanh_neg, `MachLib.Real.tanh_zero, `MachLib.Real.u, `MachLib.Real.u_le_one, `MachLib.Real.u_nonneg, `MachLib.Real.zeroR, `MachLib.Real.zero_lt_one_ax, `MachLib.Real.zero_ne_one_ax, `MachLib.analytic_add, `MachLib.analytic_comp, `MachLib.analytic_const, `MachLib.analytic_exp, `MachLib.analytic_finite_zeros_compact, `MachLib.analytic_id, `MachLib.analytic_log_pos, `MachLib.analytic_mul, `MachLib.analytic_ne_zero_nbhd, `MachLib.analytic_one_div_pos, `MachLib.analytic_sin, `MachLib.analytic_sub, `MachLib.chain_algebraic_dependence, `MachLib.eml_pfaffian_validon_from_cos_equality, `MachLib.eml_pfaffian_validon_from_sin_equality, `MachLib.eml_tree_analytic_on_pos, `MachLib.eml_tree_analytic_on_interval, `MachLib.exp_tangent_line_strict, `MachLib.lambertW, `MachLib.lambertW_one_lt_one, `MachLib.lambertW_one_pos, `MachLib.lambertW_zero, -- Added 2026-07-19: Group-B transcendental math arc (asin/acos certificates), added
   -- earlier this same session, user-approved via AskUserQuestion, never synced into this
   -- snapshot. HasDerivAt_sqrt: InverseTrig.lean. pi_lower_bound/pi_upper_bound: Trig.lean.
   `MachLib.Real.HasDerivAt_sqrt, `MachLib.Real.pi_lower_bound, `MachLib.Real.pi_upper_bound, -- Added 2026-07-22: found while running this gate for the Certcom-bridge headline below --
@@ -172,8 +179,17 @@ def knownAxioms : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `Certc
   -- eight older float-bridge axioms were narrowed to finite inputs, which changes no name. See `disclosedTrusted`.
   `MachLib.Real.u_le_inv_two_pow_52, `Certcom.real_abs_eps_eq_zero]
 
-/-- Axioms permitted in a trustworthy shipped footprint: witnessed foundational core -/
-def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `Certcom.real_tanh_rounds, `MachLib.Real.u, `MachLib.Real.u_nonneg, `MachLib.Real.cosh, `MachLib.Real.cosh_eq, `MachLib.Real.cosh_ge_one, `MachLib.Real.exp_add, `MachLib.Real.HasDerivAt_of_eq, `MachLib.Real.sinh, `MachLib.Real.sinh_eq, `MachLib.Real.tanh, `MachLib.Real.tanh_eq_sinh_div_cosh, `Certcom.real_exp_rounds, `Certcom.real_log_rounds, `Certcom.real_sin_eps, `Certcom.real_sin_rounds, `Certcom.real_cos_eps, `Certcom.real_cos_rounds, `Certcom.real_atan_eps, `Certcom.real_atan_rounds, `Certcom.real_abs_eps, `Certcom.real_abs_rounds, `Certcom.real_sqrt_rounds, `Certcom.real_log10_rounds, `Certcom.real_asin_rounds, `Certcom.real_acos_rounds, `Certcom.real_sinh_rounds, `Certcom.real_cosh_rounds, `Certcom.real_tan_rounds, `MachLib.Real.sin_pos_of_pos_lt_pi_div_two, `MachLib.Real.HasDerivAt_congr, `MachLib.Real.cos_neg, `MachLib.Real.cos_pi_div_two, `MachLib.Real.pi, `MachLib.Real.pi_lower_bound, `MachLib.Real.tan, `MachLib.Real.tan_def, `MachLib.Real.sqrt, `MachLib.Real.sqrt_le_of_le_sq, `MachLib.Real.sqrt_nonneg, `MachLib.Real.sqrt_sq_nonneg, `MachLib.Real.arcsin, `MachLib.Real.HasDerivAt_arcsin, `MachLib.Real.arccos, `MachLib.Real.HasDerivAt_arccos, `MachLib.Real.log10, `MachLib.Real.log10_def, `MachLib.Real.atan, `MachLib.Real.HasDerivAt_atan, `MachLib.Real.HasDerivAt_cos, `MachLib.Real.sin, `MachLib.Real.cos, `MachLib.Real.HasDerivAt_sin, `MachLib.Real.pythagorean, `Classical.choice, `MachLib.IsAnalyticOnReals, `MachLib.Real, `MachLib.Real.HasDerivAt, `MachLib.Real.HasDerivAt_add, `MachLib.Real.HasDerivAt_comp, `MachLib.Real.HasDerivAt_const, `MachLib.Real.HasDerivAt_exp, `MachLib.Real.HasDerivAt_id, `MachLib.Real.HasDerivAt_inv, `MachLib.Real.HasDerivAt_log_pos, `MachLib.Real.HasDerivAt_mul, `MachLib.Real.HasDerivAt_unique, `MachLib.Real.addR, `MachLib.Real.add_assoc, `MachLib.Real.add_comm, `MachLib.Real.add_lt_add_left, `MachLib.Real.add_neg, `MachLib.Real.add_zero, `MachLib.Real.divR, `MachLib.Real.div_def, `MachLib.Real.exp, `MachLib.Real.exp_lt, `MachLib.Real.exp_surj, `MachLib.Real.leR, `MachLib.Real.le_iff_lt_or_eq, `MachLib.Real.ltR, `MachLib.Real.lt_irrefl_ax, `MachLib.Real.lt_total, `MachLib.Real.lt_trans_ax, `MachLib.Real.mulR, `MachLib.Real.mul_assoc, `MachLib.Real.mul_comm, `MachLib.Real.mul_distrib, `MachLib.Real.mul_inv, `MachLib.Real.mul_one_ax, `MachLib.Real.mul_pos, `MachLib.Real.negR, `MachLib.Real.oneR, `MachLib.Real.rolle_ct, `MachLib.Real.subR, `MachLib.Real.sub_def, `MachLib.Real.zeroR, `MachLib.Real.zero_lt_one_ax, `MachLib.Real.zero_ne_one_ax, `MachLib.analytic_add, `MachLib.analytic_comp, `MachLib.analytic_const, `MachLib.analytic_exp, `MachLib.analytic_id, `MachLib.analytic_log_pos, `MachLib.analytic_mul, `MachLib.analytic_one_div_pos, `MachLib.analytic_sub, `Quot.sound, `propext, -- Added 2026-07-22: `Certcom.eml_var_var_pipeline`'s footprint leaked these three -- calling
+/-- Axioms permitted in a trustworthy shipped footprint: witnessed foundational core.
+
+Every entry must NAME A LIVE AXIOM: check (8) below fails on a name the environment does not hold as an axiom
+(the muses' review of E, 2026-10-05: "the ledger that owns that population should itself require each active
+trusted-axiom entry to resolve to an actual current axiom"). `Lean.collectAxioms` reports axioms only, so a
+trusted name that is a theorem or a definition can never be cited by a footprint: it is dead weight that reads as
+trust. `archimedean` and `realOfScientific` sat here for a day after 5841ea60 made them a theorem and a definition,
+and monogate-lean's bridge, not this file, found them. Six entries left on 2026-10-05 for the same reason, made
+theorems that day: `cosh_ge_one`, `sin_zero`, `cos_zero`, `sin_neg`, `cos_neg`, `sin_periodic` (the comments
+below that name them are the history of why they were added). -/
+def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `Certcom.real_tanh_rounds, `MachLib.Real.u, `MachLib.Real.u_nonneg, `MachLib.Real.cosh, `MachLib.Real.cosh_eq, `MachLib.Real.exp_add, `MachLib.Real.HasDerivAt_of_eq, `MachLib.Real.sinh, `MachLib.Real.sinh_eq, `MachLib.Real.tanh, `MachLib.Real.tanh_eq_sinh_div_cosh, `Certcom.real_exp_rounds, `Certcom.real_log_rounds, `Certcom.real_sin_eps, `Certcom.real_sin_rounds, `Certcom.real_cos_eps, `Certcom.real_cos_rounds, `Certcom.real_atan_eps, `Certcom.real_atan_rounds, `Certcom.real_abs_eps, `Certcom.real_abs_rounds, `Certcom.real_sqrt_rounds, `Certcom.real_log10_rounds, `Certcom.real_asin_rounds, `Certcom.real_acos_rounds, `Certcom.real_sinh_rounds, `Certcom.real_cosh_rounds, `Certcom.real_tan_rounds, `MachLib.Real.sin_pos_of_pos_lt_pi_div_two, `MachLib.Real.HasDerivAt_congr, `MachLib.Real.cos_pi_div_two, `MachLib.Real.pi, `MachLib.Real.pi_lower_bound, `MachLib.Real.tan, `MachLib.Real.tan_def, `MachLib.Real.sqrt, `MachLib.Real.sqrt_le_of_le_sq, `MachLib.Real.sqrt_nonneg, `MachLib.Real.sqrt_sq_nonneg, `MachLib.Real.arcsin, `MachLib.Real.HasDerivAt_arcsin, `MachLib.Real.arccos, `MachLib.Real.HasDerivAt_arccos, `MachLib.Real.log10, `MachLib.Real.log10_def, `MachLib.Real.atan, `MachLib.Real.HasDerivAt_atan, `MachLib.Real.HasDerivAt_cos, `MachLib.Real.sin, `MachLib.Real.cos, `MachLib.Real.HasDerivAt_sin, `MachLib.Real.pythagorean, `Classical.choice, `MachLib.IsAnalyticOnReals, `MachLib.Real, `MachLib.Real.HasDerivAt, `MachLib.Real.HasDerivAt_add, `MachLib.Real.HasDerivAt_comp, `MachLib.Real.HasDerivAt_const, `MachLib.Real.HasDerivAt_exp, `MachLib.Real.HasDerivAt_id, `MachLib.Real.HasDerivAt_inv, `MachLib.Real.HasDerivAt_log_pos, `MachLib.Real.HasDerivAt_mul, `MachLib.Real.HasDerivAt_unique, `MachLib.Real.addR, `MachLib.Real.add_assoc, `MachLib.Real.add_comm, `MachLib.Real.add_lt_add_left, `MachLib.Real.add_neg, `MachLib.Real.add_zero, `MachLib.Real.divR, `MachLib.Real.div_def, `MachLib.Real.exp, `MachLib.Real.exp_lt, `MachLib.Real.exp_surj, `MachLib.Real.leR, `MachLib.Real.le_iff_lt_or_eq, `MachLib.Real.ltR, `MachLib.Real.lt_irrefl_ax, `MachLib.Real.lt_total, `MachLib.Real.lt_trans_ax, `MachLib.Real.mulR, `MachLib.Real.mul_assoc, `MachLib.Real.mul_comm, `MachLib.Real.mul_distrib, `MachLib.Real.mul_inv, `MachLib.Real.mul_one_ax, `MachLib.Real.mul_pos, `MachLib.Real.negR, `MachLib.Real.oneR, `MachLib.Real.rolle_ct, `MachLib.Real.subR, `MachLib.Real.sub_def, `MachLib.Real.zeroR, `MachLib.Real.zero_lt_one_ax, `MachLib.Real.zero_ne_one_ax, `MachLib.analytic_add, `MachLib.analytic_comp, `MachLib.analytic_const, `MachLib.analytic_exp, `MachLib.analytic_id, `MachLib.analytic_log_pos, `MachLib.analytic_mul, `MachLib.analytic_one_div_pos, `MachLib.analytic_sub, `Quot.sound, `propext, -- Added 2026-07-22: `Certcom.eml_var_var_pipeline`'s footprint leaked these three -- calling
   -- `pipeline_nested_std` (StdLip's full 7-primitive case split, even though this use only takes
   -- the `.exp` branch) pulls in tanh's range facts and atan's origin fact transitively, since
   -- `#print axioms` reports the WHOLE theorem's dependency graph, not the path one instantiation
@@ -188,7 +204,7 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   -- monogate-research/exploration/RH_converse_infinite_zeros_barrier_bridge_2026_07_19/.
   `MachLib.analytic_finite_zeros_compact, -- MachLibRealModelFiniteZeros.lean:32
   `MachLib.analytic_ne_zero_nbhd, -- MachLibRealModelBatch4.lean:47
-  `MachLib.Real.sin_zero, `MachLib.Real.sin_pi, `MachLib.Real.cos_pi, `MachLib.Real.sin_add, -- all MachLibRealModelBatch3.lean, one-line Mathlib wraps
+  `MachLib.Real.sin_pi, `MachLib.Real.cos_pi, `MachLib.Real.sin_add, -- all MachLibRealModelBatch3.lean, one-line Mathlib wraps
   -- Added 2026-07-22: `MachLib.eml_pfaffian_validon_from_sin_equality` DISCHARGED (vacuously) --
   -- see `MachLib.eml_pfaffian_validon_from_sin_equality_proved`
   -- (EMLPfaffianValidOnSinEqualityProved.lean). Its hypothesis (a tree equaling `sin`
@@ -198,11 +214,11 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   -- `eml_pfaffian_validon_from_sin_equality` itself (non-circular). These 7 entries are the
   -- discharge theorem's own trusted base, all already `knownAxioms`, newly added here so
   -- this headline's footprint check (below) passes.
-  `MachLib.Real.cos_add, `MachLib.Real.cos_zero, `MachLib.Real.hasDerivAt_continuousAt, `MachLib.Real.sin_pi_div_two, `MachLib.Real.sup_exists, -- Added 2026-07-22: `no_tree_eq_nestedTarget_fully_unconditional`'s own base (the
+  `MachLib.Real.cos_add, `MachLib.Real.hasDerivAt_continuousAt, `MachLib.Real.sin_pi_div_two, `MachLib.Real.sup_exists, -- Added 2026-07-22: `no_tree_eq_nestedTarget_fully_unconditional`'s own base (the
   -- eml_eventually_valid_repr + tail-restricted zero-counting closure, no straddle condition, -- no validity-from-0 hypothesis) -- needs `nestedTarget`'s 2π-periodicity directly, unlike
   -- the sin/cos discharges which only needed periodicity's own downstream `kπ`/`half-odd-π`
   -- consequences.
-  `MachLib.Real.sin_periodic, `MachLib.Real.sin_one_pos, -- Added 2026-07-22: `floatOfR`/`real_round_bounds` -- the Real->Float quantization axiom pair
+  `MachLib.Real.sin_one_pos, -- Added 2026-07-22: `floatOfR`/`real_round_bounds` -- the Real->Float quantization axiom pair
   -- `eml_var_var_certcom_witness_grounded`'s footprint rests on (domain-restricted, `u*M` form --
   -- see the erratum note in `disclosedTrusted` below and in `EMLCertcomGrounded.lean`'s own
   -- docstring). Same category as `realToR`/`real_fpbridge`.
@@ -214,7 +230,7 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   -- individually pinned as `headlines`, so the gap was invisible until whole-module checking
   -- existed. Already `knownAxioms` (a plain Mathlib-wrapped `sin_neg` fact); no new trust, just
   -- a bookkeeping gap the guard exists to catch.
-  `MachLib.Real.sin_neg, -- Added 2026-07-25: `gaussianImproperIntegral_eq_sqrt_pi_div_two`'s footprint (the √π project's
+  -- Added 2026-07-25: `gaussianImproperIntegral_eq_sqrt_pi_div_two`'s footprint (the √π project's
   -- finish line, `GaussianLaplaceRoute.lean`) leaks four axioms no prior headline's trail
   -- touched: `div_zero`/`exp_gt_one_plus_self` (basic real-arithmetic facts used inside the
   -- Gaussian-decay bound), `le_sqrt_of_sq_le` (the sqrt-monotonicity direction the final
@@ -250,8 +266,15 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   -- trusts. Witnessed in monogate-lean with `realPow` read as `Real.rpow` (`Real.rpow_nonneg`).
   `MachLib.Real.realPow, `MachLib.Real.realPow_nonneg]
 
-/-- Unwitnessed-but-disclosed axioms + machine-readable reason. Must stay inert. -/
-def disclosedUnwitnessed : List (Name × String) := [(`MachLib.Real.erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.erf_le_one, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.neg_one_le_erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.eml_tree_analytic_on_interval, "unwitnessed-but-SOUND: the INTERVAL-LOCALISED twin of eml_tree_analytic_on_pos, added 2026-08-25. Same upstream fact (a well-formed EML tree is real-analytic), domain localised from (0,inf) to strictly inside any (a,b) on which LogArgPos holds -- needed because declamping supplies log-argument positivity per INTERVAL while the existing form demands it on all of (0,inf). Deliberately NOT an IsAnalyticOnReals congruence: IsAnalyticOnReals f (Icc a b) depends on f NEAR each point, so a plain set-congruence would be UNSOUND. User-approved 2026-08-25 via AskUserQuestion, choosing this over the congruence route. UNLIKE eml_tree_analytic_on_pos this one IS in a footprint: MachLib.signHardCase_holds and everything under it (EMLAnalyticDischarge)."), (`MachLib.eml_tree_analytic_on_pos, "unwitnessed-but-SOUND: EMLLogArgPosOnIoi side-condition restored (was false-as-stated, fixed); real-analyticity of well-formed EML trees not yet proven in machlib; in NO footprint"), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.of_parts._elambda_1, "elaborator-synthesized axiom (isUnsafe=true), NOT hand-written -- `of_parts` in TwoExpPfaffianReductionWitness.lean is a plain structure-literal def with no `partial`/`sorry`/`Classical.choice` at the call site; root cause not yet identified (found + disclosed 2026-07-16, AxiomLedger self-check going red; see AxiomLedger investigation notes). Gate-2d multivariate-Khovanskii frontier work (added 2026-07-13/14), not on any shipped headline's path."), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.reducer._elambda_1, "same as .of_parts._elambda_1 above -- same file, same unexplained isUnsafe synthesis, same frontier, not on any headline's path."), (`MachLib.MultiVarMod.TwoExp.twoExpLowerReductionSolver_of_predicateSolver._elambda_1, "same pattern again -- plain structure-literal def, no visible partial/sorry/Classical.choice; three occurrences in one file is worth a dedicated Lean-internals investigation, not yet done. Not on any headline's path.")]
+/-- Unwitnessed-but-disclosed axioms + machine-readable reason. Must stay inert.
+
+Three entries left on 2026-10-05, when check (8) found that they named no axiom: the `_elambda_1` closures of
+`PfaffianExpSDRReductionSolver.of_parts`, `.reducer` and `twoExpLowerReductionSolver_of_predicateSolver`, disclosed
+on 2026-07-16 as "elaborator-synthesized" axioms whose cause was "not yet identified". `isCompilerArtifact`'s note
+below is the cause, found 2026-07-29: lambda-lifted structure fields, which the v4.20.1 code generator emitted as
+`.axiomInfo` constants and v4.23.0's stopped emitting. From then on these three disclosed nothing, and check (3),
+which asks only whether a disclosed name sits in a footprint, passed over them. -/
+def disclosedUnwitnessed : List (Name × String) := [(`MachLib.Real.erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.erf_le_one, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.neg_one_le_erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.eml_tree_analytic_on_interval, "unwitnessed-but-SOUND: the INTERVAL-LOCALISED twin of eml_tree_analytic_on_pos, added 2026-08-25. Same upstream fact (a well-formed EML tree is real-analytic), domain localised from (0,inf) to strictly inside any (a,b) on which LogArgPos holds -- needed because declamping supplies log-argument positivity per INTERVAL while the existing form demands it on all of (0,inf). Deliberately NOT an IsAnalyticOnReals congruence: IsAnalyticOnReals f (Icc a b) depends on f NEAR each point, so a plain set-congruence would be UNSOUND. User-approved 2026-08-25 via AskUserQuestion, choosing this over the congruence route. UNLIKE eml_tree_analytic_on_pos this one IS in a footprint: MachLib.signHardCase_holds and everything under it (EMLAnalyticDischarge)."), (`MachLib.eml_tree_analytic_on_pos, "unwitnessed-but-SOUND: EMLLogArgPosOnIoi side-condition restored (was false-as-stated, fixed); real-analyticity of well-formed EML trees not yet proven in machlib; in NO footprint")]
 
 /-- Disclosed-yet-load-bearing-BY-DESIGN: the certcom Theorem-A IEEE-754 model. Un-witnessable
 (Lean `Float` is opaque), so — unlike `disclosedUnwitnessed`, which must stay inert — these are the
@@ -674,6 +697,34 @@ predates this whole arc) — kept as-is per `EMLAnyDepthBarrierUnconditional.lea
 rewiring it was deliberately not attempted). No `cos` counterpart exists in the built graph. -/
 def legacyAxiomCallSiteAllowlist : List Name := [`MachLib.sin_not_in_eml_any_depth]
 
+/-- **The ordered field: the field axioms and the order.** `algebraFootprint` plus the nine order axioms its
+docstring excludes -- and NOT `sup_exists`: completeness is not part of an ordered field. An allow-list for the same
+reason `algebraFootprint` is one. Read by `subTheoryPrimitives`, to say where a derivation lives. -/
+def orderedFieldFootprint : List Name := algebraFootprint ++ [
+  `MachLib.Real.ltR, `MachLib.Real.leR, `MachLib.Real.lt_irrefl_ax, `MachLib.Real.lt_trans_ax,
+  `MachLib.Real.lt_total, `MachLib.Real.le_iff_lt_or_eq, `MachLib.Real.add_lt_add_left, `MachLib.Real.mul_pos,
+  `MachLib.Real.zero_lt_one_ax]
+
+/-- **Primitive in a sub-theory, derivable in a larger one** (the muses' review of E, 2026-10-05: "record it that
+way in the ledger -- primitive in Field, derivable in OrderedField -- rather than as 'the gate failed when we
+tried'"). The rule: AN AXIOM BELONGS TO THE SMALLEST THEORY IN WHICH IT IS PRIMITIVE. "Provable means proved" is
+judged within the theory an axiom serves, and an entry here is an axiom that theory cannot prove and a larger one
+can.
+
+Each entry: the axiom; the theory it is primitive in, with that theory's allow-list; the larger theory, with its
+allow-list; and the theorem deriving the axiom's statement there. Check (9) holds every entry to what the kernel
+can see: the axiom is live and in the smaller allow-list; the derivation is a theorem of the SAME statement; its
+footprint does not cite the axiom, lies inside the larger allow-list, and does NOT lie inside the smaller one.
+
+What the kernel cannot see is the claim that NO derivation inside the smaller theory exists -- that is model
+theory, which this ledger leaves out (see `noDerivationFoundAxioms`). For `0 ≠ 1` it is one line: the zero ring
+satisfies every field axiom but this one. A derivation found inside the smaller theory later is a reason to
+convert the axiom, and it fails this check only if it is the recorded derivation -- so a better derivation must
+replace the entry, never sit beside it. -/
+def subTheoryPrimitives : List (Name × String × List Name × String × List Name × Name) :=
+  [(`MachLib.Real.zero_ne_one_ax, "Field", algebraFootprint, "OrderedField", orderedFieldFootprint,
+    `MachLib.Real.zero_ne_one_derivable)]
+
 run_cmd do
   let env ← getEnv
   let live := liveAxioms env
@@ -737,9 +788,47 @@ run_cmd do
           newLegacySites := nm :: newLegacySites
   unless newLegacySites.isEmpty do
     logError m!"AxiomLedger: {newLegacySites.length} NEW call site(s) of a discharged legacy axiom (use the _proved corollary instead): {newLegacySites}"
+  -- (8) every name a trust list carries is a LIVE AXIOM (the muses' review of E, 2026-10-05). `collectAxioms`
+  -- reports axioms only, so a listed name that is a theorem, a definition or nothing at all can never be cited by
+  -- a footprint: it is dead weight that reads as trust, and no check above notices it.
+  let isAxiom (n : Name) : Bool := match env.find? n with
+    | some (.axiomInfo _) => true
+    | _ => false
+  let trustLists : List (String × List Name) := [
+    ("trustedFootprint", trustedFootprint), ("algebraFootprint", algebraFootprint),
+    ("orderedFieldFootprint", orderedFieldFootprint),
+    ("disclosedUnwitnessed", disclosedUnwitnessed.map (·.1)), ("disclosedTrusted", disclosedTrusted.map (·.1)),
+    ("primitiveByConstruction", primitiveByConstruction.map (·.1)),
+    ("derivableInPrinciplePinned", derivableInPrinciplePinned.map (·.1)),
+    ("legacyDischargedAxioms", legacyDischargedAxioms)]
+  let mut listed : Nat := 0
+  for (listName, names) in trustLists do
+    listed := listed + names.length
+    let dead := names.filter (fun n => !isAxiom n)
+    unless dead.isEmpty do
+      logError m!"AxiomLedger: {dead.length} {listName} entr(y/ies) name no live axiom (a theorem, a definition or nothing): {dead}"
+  -- (9) a sub-theory primitive is what its entry says (see `subTheoryPrimitives`).
+  for (ax, small, smallAllowed, large, largeAllowed, deriv) in subTheoryPrimitives do
+    unless isAxiom ax do
+      logError m!"AxiomLedger: sub-theory primitive {ax} is not a live axiom"
+    unless smallAllowed.contains ax do
+      logError m!"AxiomLedger: sub-theory primitive {ax} is not in the {small} allow-list it is said to be primitive in"
+    match env.find? ax, env.find? deriv with
+    | some axInfo, some (.thmInfo dv) =>
+      unless axInfo.type == dv.type do
+        logError m!"AxiomLedger: {deriv} does not state {ax}'s statement: {dv.type} against {axInfo.type}"
+      let fp ← Lean.collectAxioms deriv
+      if fp.contains ax then
+        logError m!"AxiomLedger: {deriv} cites {ax} itself, so it derives nothing"
+      let beyondLarge := fp.toList.filter (fun a => !(largeAllowed.contains a))
+      unless beyondLarge.isEmpty do
+        logError m!"AxiomLedger: {deriv} is not a derivation in {large}: it also cites {beyondLarge}"
+      if fp.toList.all (fun a => smallAllowed.contains a) then
+        logError m!"AxiomLedger: {deriv} derives {ax} inside {small}, so it is not primitive there -- convert it"
+    | _, _ => logError m!"AxiomLedger: {deriv}, the derivation of {ax}, is not a theorem in the environment"
   -- The verdict is READ OFF the message log, not re-derived from the counters above: a check added
   -- later cannot forget to update it, and a summary line cannot say OK while an error was logged.
   let failed := (← get).messages.hasErrors
-  logInfo m!"AxiomLedger {if failed then "FAIL" else "OK"}: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking); legacy axiom call sites pinned to {legacyAxiomCallSiteAllowlist.length} (0 new); {algebra.length} algebra-spine theorems field-axiom-checked ({algebraLeakCount} leaking)."
+  logInfo m!"AxiomLedger {if failed then "FAIL" else "OK"}: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking); legacy axiom call sites pinned to {legacyAxiomCallSiteAllowlist.length} (0 new); {algebra.length} algebra-spine theorems field-axiom-checked ({algebraLeakCount} leaking); {listed} trust-list entries resolved to live axioms; {subTheoryPrimitives.length} sub-theory primitive(s) checked."
 
 end AxiomLedger

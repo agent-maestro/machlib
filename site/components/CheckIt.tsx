@@ -23,7 +23,7 @@ const PATHS: Path[] = [
       "The claim inventory says what is proven, what it rests on and what is open, with a " +
       "command next to each claim. If something there cannot be reproduced in a few commands, " +
       "that is a bug in the document.",
-    cmd: "cd machlib/foundations\nlake env lean AxiomLedger.lean\n# 224 axioms pinned; headline footprints ⊆ trusted",
+    cmd: "cd machlib/foundations\nlake env lean AxiomLedger.lean\n# 217 axioms pinned; headline footprints ⊆ trusted",
     href: "https://github.com/agent-maestro/machlib/blob/master/foundations/docs/what_is_proven.md",
     hrefLabel: "what_is_proven.md →",
   },

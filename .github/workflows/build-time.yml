@@ -109,6 +109,13 @@ jobs:
         working-directory: foundations
         run: lake env lean AxiomLedger.lean
 
+      # Checks (8) and (9) (the muses' review of E, 2026-10-05): every trust-list name is a live
+      # axiom, and each sub-theory primitive is what its entry says. Six planted defects must each
+      # produce their own message, and an unmutated copy must say OK. About 45 s.
+      - name: Axiom ledger canaries (checks 8 and 9 can fail)
+        working-directory: foundations
+        run: python3 tools/axiom_ledger/ledger_canaries.py
+
       - name: "Claim audit (headline prose ↔ #print axioms footprint)"
         working-directory: foundations
         run: python3 tools/claim_audit/claim_audit.py

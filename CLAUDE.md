@@ -8,15 +8,15 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 086 `.lean` files** (811 top-level + 275 in subdirectories) /
-**258 942 lines** / **8 110 theorems**, re-exported through the aggregator
+**259 138 lines** / **8 117 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
 The theorem count is exactly this command, run from `foundations/`, and nothing else:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 8 110
-python3 tools/count_theorems.py --scope all           # 8 734
+python3 tools/count_theorems.py --scope core          # 8 117
+python3 tools/count_theorems.py --scope all           # 8 741
 ```
 
 The line count is `git ls-files 'MachLib/*.lean' | xargs cat | wc -l`, from the same directory.
@@ -42,19 +42,19 @@ frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`**
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **224 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **217 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
-192  MachLib.*   axioms in the environment after `import MachLib`
+185  MachLib.*   axioms in the environment after `import MachLib`
  32  Certcom.*   IEEE-754 floor axioms
 ---
-224  = what the ledger pins
+217  = what the ledger pins
 ```
 
 (Re-derive the split with a `#eval` over `getEnv` partitioning `.axiomInfo` by name prefix — that is
-how these two were measured, not by grep; last on 2026-10-04, after the muses' E round made theorems or
-definitions of 23 axioms -- see "The muses' E round" below.)
+how these two were measured, not by grep; last on 2026-10-05, after the muses' review of E made theorems of
+seven more -- see "The muses' review of E" below.)
 
 A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
 base, not project axioms: `propext`, `Classical.choice`, `Quot.sound`, `sorryAx`, `Quot.lcInv`,
@@ -83,7 +83,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 
 | class | n | |
 |---|---|---|
-| witnessed | 119 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 96 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | **float-bridge** | **32** | about IEEE floats — **no Mathlib witness can ever discharge these** |
@@ -91,7 +91,8 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 | unmodeled | **0** | gate 13 fails if this is ever nonzero |
 
 **Every mathematical axiom in the trusted footprint now has a kernel-checked Mathlib witness.**
-`119 + 12 + 3 + 32 = 166`. The only axioms without one are the 32 float-bridge rows, which are
+`96 + 12 + 3 + 32 = 143` (2026-10-05; the table read `119` and `166` until then, two rounds stale -- gate 13
+counts these, nothing checks this table). The only axioms without one are the 32 float-bridge rows, which are
 unwitnessable *in principle* rather than pending — see below.
 
 **The 32 float-bridge axioms are a different kind of trust and must not be averaged in.** Most
@@ -229,9 +230,10 @@ exactly where a wrong number hides by fiat." The outcome, 23 axioms; pinned 247 
   (`archimedean`, `npow_half_tendsto_zero`) -- `archimedean` is a theorem now -- to (`sup_exists`,
   `archimedean`), its control asserts the ledger declares none instead of passing over an empty list, and a
   fourth case shows a clean derivation still fails the policy.
-- TRAP: `trustedFootprint` can name something that is no longer an axiom and AxiomLedger stays OK. Two did
-  (`archimedean`, `realOfScientific`); gate 13 (monogate-lean's bridge) found them UNACCOUNTED, and its
-  double-count canary failed beside them, because a sum already broken cannot be broken by a canary.
+- TRAP, CLOSED 2026-10-05: `trustedFootprint` could name something that is no longer an axiom and AxiomLedger
+  stayed OK. Two did (`archimedean`, `realOfScientific`); gate 13 (monogate-lean's bridge) found them UNACCOUNTED,
+  and its double-count canary failed beside them, because a sum already broken cannot be broken by a canary.
+  AxiomLedger's check (8) holds every trust list to the environment now -- see the next section.
 - monogate-lean retired 18 witnesses (121 -> 104 with `pi_lower_bound` added; its commit message says 19, counted
   before `zero_ne_one`'s was restored), witnesses `pi_lower_bound`, and CHECKS that its interpretations of the two
   new definitions agree with them (`interp_agrees_natCast`, `interp_agrees_realOfScientific`) instead of
@@ -239,11 +241,58 @@ exactly where a wrong number hides by fiat." The outcome, 23 axioms; pinned 247 
   float-bridge + 0 gap. Forge's registry is policy `2026-10-04.2`: 70 -> 58 rows, 0 derivable, `zero_ne_one_ax`
   re-registered PRIMITIVE, and `HasDerivAt_of_eq` admitted: `HasDerivAt_sub` is proved through it now, and the
   chain-2 Khovanskii headline's trail rests on it.
-- NOT done, and named: `cosh_ge_one` (derivable, needs square monotonicity), `sinh`/`cosh`/`tanh` as
-  definitions (their `_eq` axioms ARE definitions stated as axioms), base trig facts derivable from the addition
-  laws (`sin_zero`, `cos_zero`), a full derivability audit of the remaining 192, and the muse's larger
-  restructure -- "the primitive class should be the named axiomatization in one file ... with a count that only
-  decreases".
+- NOT done that day, and named: `cosh_ge_one` and the base trig facts (`sin_zero`, `cos_zero`) -- DONE 2026-10-05,
+  see the next section -- `sinh`/`cosh`/`tanh` as definitions (their `_eq` axioms ARE definitions stated as
+  axioms), a full derivability audit of the rest, and the muse's larger restructure -- "the primitive class should
+  be the named axiomatization in one file ... with a count that only decreases".
+
+## The muses' review of E (2026-10-05): primitive in Field, derivable in OrderedField
+
+Two memos reviewing the E round reached MachLib. Both agreed on what is below; the owner's answers set the
+order of the work after it (Forge's G -> second verifier -> H -> ...).
+
+- **An axiom belongs to the smallest theory in which it is primitive.** `zero_ne_one_ax` is recorded that way in
+  `AxiomLedger.subTheoryPrimitives` -- primitive in Field (`algebraFootprint`), derivable in OrderedField
+  (`orderedFieldFootprint` = the field axioms + the nine order axioms, NOT `sup_exists`), by
+  `MachLib.Real.zero_ne_one_derivable` -- "rather than as 'the gate failed when we tried'" (muse 1). Check (9)
+  holds an entry to what the kernel can see: the axiom is live and in the smaller allow-list, the derivation states
+  the SAME type (`Expr` equality), does not cite the axiom, lies inside the larger allow-list and NOT inside the
+  smaller one. "No derivation inside the smaller theory exists" is model theory (the zero ring), stated, not checked.
+- **Every name a trust list carries must be a LIVE AXIOM** (check (8); muse 2: "the ledger that owns that
+  population should itself require each active trusted-axiom entry to resolve to an actual current axiom"). Over
+  `trustedFootprint`, `algebraFootprint`, `orderedFieldFootprint`, both disclosure lists, `primitiveByConstruction`,
+  `derivableInPrinciplePinned` and `legacyDischargedAxioms`: 251 entries. ITS FIRST RUN FOUND THREE: the
+  `_elambda_1` closures in `disclosedUnwitnessed`, disclosed 2026-07-16 as elaborator-synthesized axioms "of unknown
+  cause". The cause was the compiler-artifact finding of 2026-07-29 (`isCompilerArtifact`'s note), and v4.23's
+  compiler stopped emitting them, so for two months they disclosed nothing while check (3) -- which only asks whether
+  a disclosed name sits in a footprint -- passed over them. Removed: 8 disclosed inert -> 5.
+- `tools/axiom_ledger/ledger_canaries.py` plants six defects in a copy of AxiomLedger.lean (a theorem and a vanished
+  name in a trust list; a derivation that states something else, lies inside the smaller theory, leaves the larger
+  one; an axiom outside its allow-list) and requires each one's OWN message, beside a control that the unmutated
+  copy says OK. ~45 s; in check_all.sh and CI.
+- **Seven axioms are THEOREMS.** The muses named three (`cosh_ge_one`, `sin_zero`, `cos_zero`); converting them found
+  four more the same addition laws prove: `sin_neg`, `cos_neg`, `sin_periodic`, `cos_periodic`.
+  - `Trig.lean`: `cos_zero` from `pythagorean` and the addition laws at `0 + 0` (`s s = 2 c (s s)` and
+    `c (c c) = c (c + s s)`, so `c = c (s s + c c) = s s + c c = 1`); `sin_zero` from it (`s = s + s`); `cos_neg`/
+    `sin_neg` by solving the addition laws at `x + -x` as two linear equations of determinant `-1`; the periodicity
+    laws from the addition laws, `sin_pi` and `cos_pi`. NO ORDER AXIOM in any of the six footprints: field algebra.
+  - `Hyperbolic.lean`: `cosh_ge_one` from `cosh_eq`, `exp_add`, `exp_surj` and the order: `2 + b (a - 1)² = a + b`
+    with `a = exp x`, `b = exp (-x)`, `b a = 1`. Its old docstring said this "needs square-monotonicity
+    infrastructure `MachLib.Basic` doesn't expose"; it needs `0 ≤ t * t`, about twenty lines from `Basic`'s laws.
+  - Both files sit BELOW `Ring` in the import graph (`Ring` imports `Forge`, which imports both), so there is no
+    `mach_ring`: the proofs are `rw` chains over `Basic`'s laws with `ac_rfl` doing the rearranging (`Basic` declares
+    `Std.Associative`/`Std.Commutative` for `+` and `*`). Helpers are `private` with a `_trig`/`_hyp` suffix, so no
+    visible name changes (Forge's `lean_visible_names.py` regenerates byte-identical, 2734 names). TRAP, foreseen
+    while writing rather than met: `rw` instantiates its lemma at the FIRST pre-order match, so `rw [add_comm] at h`
+    on `1 + 1 < 1 + 1 + E` commutes `1 + 1` into itself and changes nothing -- name the arguments, or state the
+    lemma in the shape the next step wants.
+- Counts, read off the environment: pinned 224 -> 217 (`MachLib.*` 192 -> 185, `Certcom.*` 32); trusted 149 -> 143;
+  112 headlines, 162 Option D spine theorems, 326 algebra-spine theorems, 0 leaking. monogate-lean retired six
+  witnesses (`cos_periodic` was never trusted): 98/98 witnessed, 143 = 96 witnessed + 3 standard + 12 mapped + 32
+  float-bridge + 0 gap. None of the seven is in Forge's registry, so its policy does not move.
+- NOT done, and named: `sinh`/`cosh`/`tanh` as definitions; an HONEST derivability instrument for the remaining 185
+  (muse 1: bounded automation per axiom, so "provable means proved" stops meaning "declared provable means proved");
+  Flocq/Coq witnesses for the 32 float-bridge axioms (muse 1).
 
 ## Where the content comes from
 
@@ -261,8 +310,8 @@ lake build                                     # 827 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
-lake env lean AxiomLedger.lean                 # "224 axioms pinned; 112 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 572 claims resolve against #print axioms"
+lake env lean AxiomLedger.lean                 # "217 axioms pinned; 112 headline footprints ⊆ trusted"
+python3 tools/claim_audit/claim_audit.py       # "all 579 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
@@ -740,7 +789,7 @@ proves it conducts a failure to its own exit code; the run prints its own gate c
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
 run (**821 of 1 086 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
-**224 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
+**217 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
 `u_lt_one`; then `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`, `real_exp_finite`, `real_sinh_finite`,
 `real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open

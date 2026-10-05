@@ -119,12 +119,12 @@ instance instMulAssoc : Std.Associative (α := Real) (· * ·) := ⟨mul_assoc�
 axiom mul_one_ax  (a     : Real) : a * 1 = a
 axiom mul_distrib (a b c : Real) : a * (b + c) = a * b + a * c
 
-/-- `0 ≠ 1` is a FIELD axiom, and it stays one. It IS derivable -- from the ORDER axioms `zero_lt_one_ax` and
-`lt_irrefl_ax` (`AxiomMinimality.zero_ne_one_derivable`) -- but not from the field axioms: the zero ring satisfies
-every other one. MachLib's algebra spine is field-only by design (`AxiomLedger`'s `algebraFootprint`, 326 theorems
-held to it), and proving this from the order put `ltR`, `lt_irrefl_ax` and `zero_lt_one_ax` into 33 of them --
-measured 2026-10-04, the muses' E round, when "provable means proved" first converted it. Provable means proved
-WITHIN THE SUB-THEORY AN AXIOM SERVES; this one is primitive for the field. -/
+/-- `0 ≠ 1`: PRIMITIVE IN THE FIELD, DERIVABLE IN THE ORDERED FIELD, and an axiom because an axiom belongs to the
+smallest theory in which it is primitive. It follows from the ORDER axioms `zero_lt_one_ax` and `lt_irrefl_ax`
+(`AxiomMinimality.zero_ne_one_derivable`) and from no subset of the field axioms -- the zero ring satisfies every
+other one. MachLib's algebra spine is field-only by design (`AxiomLedger`'s `algebraFootprint`, 326 theorems held to
+it), so proving it here would put the order into that spine (into 33 theorems, measured 2026-10-04). `AxiomLedger`'s
+`subTheoryPrimitives` records all of this and checks what the kernel can see of it. -/
 axiom zero_ne_one_ax : (0 : Real) ≠ 1
 axiom div_def        (a b : Real) : b ≠ 0 → a / b = a * (1 / b)
 axiom mul_inv        (a   : Real) : a ≠ 0 → a * (1 / a) = 1

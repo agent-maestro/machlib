@@ -168,7 +168,7 @@ type. The honest headline is **zero unaccounted axioms**, never "zero axioms":
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 102 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 96 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier or function symbol, interpreted rather than asserted |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | IEEE-754 facts with no model in ℝ, validated by measurement |
@@ -205,11 +205,11 @@ fails if the text drifts from the corpus. Measured 2026-09-14:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 8 110 | `python3 tools/count_theorems.py --scope core` |
+| theorems outside `Discovered/` | 8 117 | `python3 tools/count_theorems.py --scope core` |
 | theorems in the Forge `@verify` corpus | 624 | the same command over `Discovered/` |
 | `.lean` files under `MachLib/` | 1 086 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
-| axioms pinned by the ledger | 224 | `lake env lean AxiomLedger.lean` |
-| trusted axioms, all accounted for | 149 | `AXIOM_MANIFEST.md` |
+| axioms pinned by the ledger | 217 | `lake env lean AxiomLedger.lean` |
+| trusted axioms, all accounted for | 143 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
 | modules reachable from the aggregator | 821 of 1 086 | `scripts/check_aggregator.sh` |
 

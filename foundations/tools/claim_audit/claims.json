@@ -10863,7 +10863,6 @@
         "MachLib.Real.add_zero",
         "MachLib.Real.cosh",
         "MachLib.Real.cosh_eq",
-        "MachLib.Real.cosh_ge_one",
         "MachLib.Real.divR",
         "MachLib.Real.div_def",
         "MachLib.Real.exp",
@@ -10946,7 +10945,6 @@
         "MachLib.Real.add_zero",
         "MachLib.Real.cosh",
         "MachLib.Real.cosh_eq",
-        "MachLib.Real.cosh_ge_one",
         "MachLib.Real.divR",
         "MachLib.Real.div_def",
         "MachLib.Real.exp",
@@ -12493,7 +12491,6 @@
         "MachLib.Real.add_neg",
         "MachLib.Real.add_zero",
         "MachLib.Real.cos",
-        "MachLib.Real.cos_neg",
         "MachLib.Real.cos_pi_div_two",
         "MachLib.Real.divR",
         "MachLib.Real.div_def",
@@ -12530,7 +12527,9 @@
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
         "MachLib.Real.pi_lower_bound",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.cos_add",
+        "MachLib.Real.sin_add"
       ],
       "hypotheses_count": 3
     },
@@ -12577,7 +12576,6 @@
         "MachLib.Real.add_neg",
         "MachLib.Real.add_zero",
         "MachLib.Real.cos",
-        "MachLib.Real.cos_neg",
         "MachLib.Real.cos_pi_div_two",
         "MachLib.Real.divR",
         "MachLib.Real.div_def",
@@ -12614,7 +12612,9 @@
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
         "MachLib.Real.pi_lower_bound",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.cos_add",
+        "MachLib.Real.sin_add"
       ],
       "hypotheses_count": 0
     },
@@ -13788,7 +13788,6 @@
         "MachLib.Real.add_zero",
         "MachLib.Real.cosh",
         "MachLib.Real.cosh_eq",
-        "MachLib.Real.cosh_ge_one",
         "MachLib.Real.divR",
         "MachLib.Real.div_def",
         "MachLib.Real.exp",
@@ -13874,7 +13873,6 @@
         "MachLib.Real.add_zero",
         "MachLib.Real.cosh",
         "MachLib.Real.cosh_eq",
-        "MachLib.Real.cosh_ge_one",
         "MachLib.Real.divR",
         "MachLib.Real.div_def",
         "MachLib.Real.exp",
@@ -14640,6 +14638,207 @@
         "MachLib.Real.zero_ne_one_ax"
       ],
       "hypotheses_count": 8
+    },
+    {
+      "_comment": "2026-10-05, the muses' review of E: an axiom until that day, proved from pythagorean and the addition laws (the periodicity laws also from sin_pi and cos_pi). The prose says no order axiom is in its footprint; this holds it to that.",
+      "id": "trig-cos-zero-field-only-claude",
+      "source_file": "CLAUDE.md",
+      "claim_text": [
+        "NO ORDER AXIOM in any of the six footprints"
+      ],
+      "module": "MachLib.Trig",
+      "theorem": "MachLib.Real.cos_zero",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.lt_irrefl_ax",
+        "MachLib.Real.lt_trans_ax",
+        "MachLib.Real.lt_total",
+        "MachLib.Real.le_iff_lt_or_eq",
+        "MachLib.Real.add_lt_add_left",
+        "MachLib.Real.mul_pos",
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.sup_exists"
+      ]
+    },
+    {
+      "_comment": "2026-10-05, the muses' review of E: an axiom until that day, proved from pythagorean and the addition laws (the periodicity laws also from sin_pi and cos_pi). The prose says no order axiom is in its footprint; this holds it to that.",
+      "id": "trig-sin-zero-field-only-claude",
+      "source_file": "CLAUDE.md",
+      "claim_text": [
+        "NO ORDER AXIOM in any of the six footprints"
+      ],
+      "module": "MachLib.Trig",
+      "theorem": "MachLib.Real.sin_zero",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.lt_irrefl_ax",
+        "MachLib.Real.lt_trans_ax",
+        "MachLib.Real.lt_total",
+        "MachLib.Real.le_iff_lt_or_eq",
+        "MachLib.Real.add_lt_add_left",
+        "MachLib.Real.mul_pos",
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.sup_exists"
+      ]
+    },
+    {
+      "_comment": "2026-10-05, the muses' review of E: an axiom until that day, proved from pythagorean and the addition laws (the periodicity laws also from sin_pi and cos_pi). The prose says no order axiom is in its footprint; this holds it to that.",
+      "id": "trig-cos-neg-field-only-claude",
+      "source_file": "CLAUDE.md",
+      "claim_text": [
+        "NO ORDER AXIOM in any of the six footprints"
+      ],
+      "module": "MachLib.Trig",
+      "theorem": "MachLib.Real.cos_neg",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.lt_irrefl_ax",
+        "MachLib.Real.lt_trans_ax",
+        "MachLib.Real.lt_total",
+        "MachLib.Real.le_iff_lt_or_eq",
+        "MachLib.Real.add_lt_add_left",
+        "MachLib.Real.mul_pos",
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.sup_exists"
+      ]
+    },
+    {
+      "_comment": "2026-10-05, the muses' review of E: an axiom until that day, proved from pythagorean and the addition laws (the periodicity laws also from sin_pi and cos_pi). The prose says no order axiom is in its footprint; this holds it to that.",
+      "id": "trig-sin-neg-field-only-claude",
+      "source_file": "CLAUDE.md",
+      "claim_text": [
+        "NO ORDER AXIOM in any of the six footprints"
+      ],
+      "module": "MachLib.Trig",
+      "theorem": "MachLib.Real.sin_neg",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.lt_irrefl_ax",
+        "MachLib.Real.lt_trans_ax",
+        "MachLib.Real.lt_total",
+        "MachLib.Real.le_iff_lt_or_eq",
+        "MachLib.Real.add_lt_add_left",
+        "MachLib.Real.mul_pos",
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.sup_exists"
+      ]
+    },
+    {
+      "_comment": "2026-10-05, the muses' review of E: an axiom until that day, proved from pythagorean and the addition laws (the periodicity laws also from sin_pi and cos_pi). The prose says no order axiom is in its footprint; this holds it to that.",
+      "id": "trig-sin-periodic-field-only-claude",
+      "source_file": "CLAUDE.md",
+      "claim_text": [
+        "NO ORDER AXIOM in any of the six footprints"
+      ],
+      "module": "MachLib.Trig",
+      "theorem": "MachLib.Real.sin_periodic",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.lt_irrefl_ax",
+        "MachLib.Real.lt_trans_ax",
+        "MachLib.Real.lt_total",
+        "MachLib.Real.le_iff_lt_or_eq",
+        "MachLib.Real.add_lt_add_left",
+        "MachLib.Real.mul_pos",
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.sup_exists"
+      ]
+    },
+    {
+      "_comment": "2026-10-05, the muses' review of E: an axiom until that day, proved from pythagorean and the addition laws (the periodicity laws also from sin_pi and cos_pi). The prose says no order axiom is in its footprint; this holds it to that.",
+      "id": "trig-cos-periodic-field-only-claude",
+      "source_file": "CLAUDE.md",
+      "claim_text": [
+        "NO ORDER AXIOM in any of the six footprints"
+      ],
+      "module": "MachLib.Trig",
+      "theorem": "MachLib.Real.cos_periodic",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.lt_irrefl_ax",
+        "MachLib.Real.lt_trans_ax",
+        "MachLib.Real.lt_total",
+        "MachLib.Real.le_iff_lt_or_eq",
+        "MachLib.Real.add_lt_add_left",
+        "MachLib.Real.mul_pos",
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.sup_exists"
+      ]
+    },
+    {
+      "_comment": "2026-10-05, the muses' review of E: an axiom until that day. The prose names exactly what it is proved from, so the footprint is pinned exactly.",
+      "id": "cosh-ge-one-proved-claude",
+      "source_file": "CLAUDE.md",
+      "claim_text": [
+        "`cosh_ge_one` from `cosh_eq`, `exp_add`, `exp_surj` and the order"
+      ],
+      "module": "MachLib.Hyperbolic",
+      "theorem": "MachLib.Real.cosh_ge_one",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "axioms_exact": [
+        "propext",
+        "MachLib.Real",
+        "Quot.sound",
+        "MachLib.Real.addR",
+        "MachLib.Real.add_assoc",
+        "MachLib.Real.add_comm",
+        "MachLib.Real.add_lt_add_left",
+        "MachLib.Real.add_neg",
+        "MachLib.Real.add_zero",
+        "MachLib.Real.cosh",
+        "MachLib.Real.cosh_eq",
+        "MachLib.Real.divR",
+        "MachLib.Real.div_def",
+        "MachLib.Real.exp",
+        "MachLib.Real.exp_add",
+        "MachLib.Real.exp_surj",
+        "MachLib.Real.leR",
+        "MachLib.Real.le_iff_lt_or_eq",
+        "MachLib.Real.ltR",
+        "MachLib.Real.lt_irrefl_ax",
+        "MachLib.Real.lt_total",
+        "MachLib.Real.lt_trans_ax",
+        "MachLib.Real.mulR",
+        "MachLib.Real.mul_assoc",
+        "MachLib.Real.mul_comm",
+        "MachLib.Real.mul_distrib",
+        "MachLib.Real.mul_inv",
+        "MachLib.Real.mul_one_ax",
+        "MachLib.Real.mul_pos",
+        "MachLib.Real.negR",
+        "MachLib.Real.oneR",
+        "MachLib.Real.subR",
+        "MachLib.Real.sub_def",
+        "MachLib.Real.zeroR",
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.zero_ne_one_ax"
+      ]
     }
   ]
 }

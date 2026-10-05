@@ -20,18 +20,12 @@ axiom cos : Real → Real
 axiom tan : Real → Real
 axiom pi  : Real
 
-/-! ### Defining axioms -/
+/-! ### Defining axioms
 
-axiom sin_zero       : sin 0 = 0
-axiom cos_zero       : cos 0 = 1
+`sin_zero` and `cos_zero` were axioms here until 2026-10-05, and `tan_zero` a theorem of them: all three are
+below the addition laws now, which prove them. -/
+
 axiom tan_def        (x : Real) : cos x ≠ 0 → tan x = sin x / cos x
-
-/-- `tan 0 = 0`. PROMOTED from axiom to theorem (2026-06-27 audit): `tan 0 =
-sin 0 / cos 0 = 0 / 1 = 0` (`tan_def` needs `cos 0 = 1 ≠ 0`; `0/1 = 0·(1/1) = 0`
-via `div_def` + `zero_mul`, all `Basic`-level — no downstream tactic needed). -/
-theorem tan_zero : tan 0 = 0 := by
-  have hc : cos 0 ≠ 0 := by rw [cos_zero]; exact one_ne_zero
-  rw [tan_def 0 hc, sin_zero, cos_zero, div_def 0 1 one_ne_zero, zero_mul]
 
 axiom sin_pi         : sin pi = 0
 axiom cos_pi         : cos pi = -1
@@ -71,12 +65,126 @@ theorem pi_gt_one : (1 : Real) < pi := by
 /-- `0 < π`. A theorem since 2026-10-04. -/
 theorem pi_pos : 0 < pi := lt_trans_ax zero_lt_one_ax pi_gt_one
 axiom pythagorean (x : Real) : sin x * sin x + cos x * cos x = 1
-axiom sin_neg        (x : Real) : sin (-x) = -(sin x)
-axiom cos_neg        (x : Real) : cos (-x) = cos x
 axiom sin_add        (x y : Real) :
   sin (x + y) = sin x * cos y + cos x * sin y
 axiom cos_add        (x y : Real) :
   cos (x + y) = cos x * cos y - sin x * sin y
+
+/-! ### What the addition laws prove
+
+`sin_zero`, `cos_zero`, `sin_neg`, `cos_neg`, `sin_periodic` and `cos_periodic` were axioms until 2026-10-05. Each
+follows from `pythagorean`, `sin_add` and `cos_add` (the periodicity laws from `sin_pi` and `cos_pi` too), so each is
+a theorem (the muses' review of E: provable means proved). The helpers are field algebra at `Basic`'s level: `Trig`
+sits below `Ring`, so there is no ring tactic here, and `ac_rfl` does the rearranging. -/
+
+private theorem neg_unique_trig {x y : Real} (h : x + y = 0) : y = -x := by
+  have hc : -x + (x + y) = -x + 0 := by rw [h]
+  rw [← add_assoc, neg_add_self, zero_add, add_zero] at hc
+  exact hc
+
+private theorem mul_neg_trig (a b : Real) : a * -b = -(a * b) := by
+  have h : a * b + a * -b = 0 := by rw [← mul_distrib, add_neg, mul_zero]
+  exact neg_unique_trig h
+
+private theorem neg_neg_trig (a : Real) : -(-a) = a := (neg_unique_trig (neg_add_self a)).symm
+
+private theorem neg_zero_trig : -(0 : Real) = 0 := (neg_unique_trig (add_zero 0)).symm
+
+private theorem neg_one_mul_neg_one_trig : (-1 : Real) * -1 = 1 := by
+  rw [mul_neg_trig, mul_one_ax, neg_neg_trig]
+
+/-- `cos 0 = 1`. With `s = sin 0` and `c = cos 0`, the addition laws at `0 + 0` say `s = s c + c s` and
+`c = c c - s s`. So `s s = s (s c + c s)`, which is `2 c (s s)`, and `c (c c) = c (c + s s)`; then
+`c = c (s s + c c) = 2 c (s s) + c c = s s + c c = 1`. -/
+theorem cos_zero : cos 0 = 1 := by
+  have hs : sin 0 = sin 0 * cos 0 + cos 0 * sin 0 := by
+    have h := sin_add 0 0
+    rwa [add_zero] at h
+  have hc : cos 0 = cos 0 * cos 0 - sin 0 * sin 0 := by
+    have h := cos_add 0 0
+    rwa [add_zero] at h
+  have hp : sin 0 * sin 0 + cos 0 * cos 0 = 1 := pythagorean 0
+  have hc' : cos 0 + sin 0 * sin 0 = cos 0 * cos 0 := by
+    calc cos 0 + sin 0 * sin 0 = (cos 0 * cos 0 - sin 0 * sin 0) + sin 0 * sin 0 := by rw [← hc]
+      _ = cos 0 * cos 0 := by rw [sub_def, add_assoc, neg_add_self, add_zero]
+  have key : sin 0 * sin 0 = cos 0 * (sin 0 * sin 0) + cos 0 * (sin 0 * sin 0) := by
+    calc sin 0 * sin 0 = sin 0 * (sin 0 * cos 0 + cos 0 * sin 0) := by rw [← hs]
+      _ = sin 0 * (sin 0 * cos 0) + sin 0 * (cos 0 * sin 0) := mul_distrib _ _ _
+      _ = cos 0 * (sin 0 * sin 0) + cos 0 * (sin 0 * sin 0) := by ac_rfl
+  calc cos 0 = cos 0 * 1 := (mul_one_ax _).symm
+    _ = cos 0 * (sin 0 * sin 0 + cos 0 * cos 0) := by rw [hp]
+    _ = cos 0 * (sin 0 * sin 0) + cos 0 * (cos 0 * cos 0) := mul_distrib _ _ _
+    _ = cos 0 * (sin 0 * sin 0) + cos 0 * (cos 0 + sin 0 * sin 0) := by rw [hc']
+    _ = cos 0 * (sin 0 * sin 0) + (cos 0 * cos 0 + cos 0 * (sin 0 * sin 0)) := by rw [mul_distrib]
+    _ = (cos 0 * (sin 0 * sin 0) + cos 0 * (sin 0 * sin 0)) + cos 0 * cos 0 := by ac_rfl
+    _ = sin 0 * sin 0 + cos 0 * cos 0 := by rw [← key]
+    _ = 1 := hp
+
+/-- `sin 0 = 0`: `sin 0 = sin 0 * cos 0 + cos 0 * sin 0 = sin 0 + sin 0`, since `cos 0 = 1`. -/
+theorem sin_zero : sin 0 = 0 := by
+  have hs : sin 0 = sin 0 * cos 0 + cos 0 * sin 0 := by
+    have h := sin_add 0 0
+    rwa [add_zero] at h
+  rw [cos_zero, mul_one_ax, one_mul_thm] at hs
+  have hc : -(sin 0) + sin 0 = -(sin 0) + (sin 0 + sin 0) := by rw [← hs]
+  rw [neg_add_self, ← add_assoc, neg_add_self, zero_add] at hc
+  exact hc.symm
+
+/-- `tan 0 = 0`. PROMOTED from axiom to theorem (2026-06-27 audit): `tan 0 =
+sin 0 / cos 0 = 0 / 1 = 0` (`tan_def` needs `cos 0 = 1 ≠ 0`; `0/1 = 0·(1/1) = 0`
+via `div_def` + `zero_mul`, all `Basic`-level — no downstream tactic needed). -/
+theorem tan_zero : tan 0 = 0 := by
+  have hc : cos 0 ≠ 0 := by rw [cos_zero]; exact one_ne_zero
+  rw [tan_def 0 hc, sin_zero, cos_zero, div_def 0 1 one_ne_zero, zero_mul]
+
+/-- `cos (-x) = cos x`. The addition laws at `x + -x = 0` are two linear equations in `u = cos (-x)` and
+`v = sin (-x)`: `S u + C v = 0` and `C u - S v = 1`, with `S = sin x`, `C = cos x`. Their determinant is
+`-(S S + C C) = -1`, so they have one solution: `u = S (S u + C v) + C (C u - S v) = C`. -/
+theorem cos_neg (x : Real) : cos (-x) = cos x := by
+  have hA := sin_add x (-x)
+  rw [add_neg, sin_zero] at hA
+  have hB := cos_add x (-x)
+  rw [add_neg, cos_zero] at hB
+  have e1 : sin x * (sin x * cos (-x)) + sin x * (cos x * sin (-x)) = 0 := by
+    rw [← mul_distrib, ← hA, mul_zero]
+  have e2 : cos x * (cos x * cos (-x)) + -(sin x * (cos x * sin (-x))) = cos x := by
+    have hT : sin x * (cos x * sin (-x)) = cos x * (sin x * sin (-x)) := by ac_rfl
+    rw [hT, ← mul_neg_trig, ← mul_distrib, ← sub_def, ← hB, mul_one_ax]
+  calc cos (-x) = 1 * cos (-x) := (one_mul_thm _).symm
+    _ = (sin x * sin x + cos x * cos x) * cos (-x) := by rw [pythagorean x]
+    _ = sin x * (sin x * cos (-x)) + cos x * (cos x * cos (-x)) := by
+        rw [mul_comm _ (cos (-x)), mul_distrib]; ac_rfl
+    _ = (sin x * (sin x * cos (-x)) + sin x * (cos x * sin (-x)))
+          + (cos x * (cos x * cos (-x)) + -(sin x * (cos x * sin (-x)))) := by
+        rw [← add_zero (sin x * (sin x * cos (-x)) + cos x * (cos x * cos (-x))),
+          ← add_neg (sin x * (cos x * sin (-x)))]
+        ac_rfl
+    _ = cos x := by rw [e1, e2, zero_add]
+
+/-- `sin (-x) = -(sin x)`: the same two equations, solved for `v`: `S + v = (C (S u) - S (S v)) + (S (S v) + C (C v))
+= C (S u + C v) = 0`. -/
+theorem sin_neg (x : Real) : sin (-x) = -(sin x) := by
+  have hA := sin_add x (-x)
+  rw [add_neg, sin_zero] at hA
+  have hB := cos_add x (-x)
+  rw [add_neg, cos_zero] at hB
+  have e1 : cos x * (sin x * cos (-x)) + cos x * (cos x * sin (-x)) = 0 := by
+    rw [← mul_distrib, ← hA, mul_zero]
+  have e2 : cos x * (sin x * cos (-x)) + -(sin x * (sin x * sin (-x))) = sin x := by
+    have hM : cos x * (sin x * cos (-x)) = sin x * (cos x * cos (-x)) := by ac_rfl
+    rw [hM, ← mul_neg_trig, ← mul_distrib, ← sub_def, ← hB, mul_one_ax]
+  have hv : sin (-x) = sin x * (sin x * sin (-x)) + cos x * (cos x * sin (-x)) := by
+    calc sin (-x) = 1 * sin (-x) := (one_mul_thm _).symm
+      _ = (sin x * sin x + cos x * cos x) * sin (-x) := by rw [pythagorean x]
+      _ = sin x * (sin x * sin (-x)) + cos x * (cos x * sin (-x)) := by
+          rw [mul_comm _ (sin (-x)), mul_distrib]; ac_rfl
+  apply neg_unique_trig
+  calc sin x + sin (-x)
+      = (cos x * (sin x * cos (-x)) + -(sin x * (sin x * sin (-x))))
+          + (sin x * (sin x * sin (-x)) + cos x * (cos x * sin (-x))) := by rw [e2, ← hv]
+    _ = (cos x * (sin x * cos (-x)) + cos x * (cos x * sin (-x)))
+          + (sin x * (sin x * sin (-x)) + -(sin x * (sin x * sin (-x)))) := by ac_rfl
+    _ = 0 := by rw [e1, add_neg, add_zero]
 
 /-! ### Boundedness
 
@@ -94,8 +202,20 @@ trusted base no longer carries them as axioms. -/
 
 /-! ### Periodicity (period 2π) -/
 
-axiom sin_periodic (x : Real) : sin (x + (1 + 1) * pi) = sin x
-axiom cos_periodic (x : Real) : cos (x + (1 + 1) * pi) = cos x
+/-- `(1 + 1) * pi = pi + pi`. -/
+private theorem two_pi_trig : (1 + 1) * pi = pi + pi := by
+  rw [mul_comm, mul_distrib, mul_one_ax]
+
+/-- `sin (x + 2 pi) = sin x`, from the addition law twice: `sin pi = 0` and `cos pi = -1` make each half-turn a
+sign change, `sin (x + pi + pi) = -(-(sin x))`. A theorem since 2026-10-05. -/
+theorem sin_periodic (x : Real) : sin (x + (1 + 1) * pi) = sin x := by
+  rw [two_pi_trig, ← add_assoc, sin_add (x + pi) pi, sin_add x pi, cos_pi, sin_pi, mul_zero, mul_zero,
+    add_zero, add_zero, mul_assoc, neg_one_mul_neg_one_trig, mul_one_ax]
+
+/-- `cos (x + 2 pi) = cos x`, the same way. A theorem since 2026-10-05. -/
+theorem cos_periodic (x : Real) : cos (x + (1 + 1) * pi) = cos x := by
+  rw [two_pi_trig, ← add_assoc, cos_add (x + pi) pi, cos_add x pi, cos_pi, sin_pi, mul_zero, mul_zero,
+    sub_def, sub_def, neg_zero_trig, add_zero, add_zero, mul_assoc, neg_one_mul_neg_one_trig, mul_one_ax]
 
 /-! ### Additional analytic primitives
 

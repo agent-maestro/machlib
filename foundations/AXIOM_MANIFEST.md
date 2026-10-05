@@ -9,11 +9,11 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-149 of them and they are all listed below.
+143 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 102 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 96 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
@@ -156,13 +156,10 @@ decides what a certificate can claim.
 | `MachLib.Real.atan_zero` | witnessed | `: atan 0 = 0` | Real.arctan_zero |
 | `MachLib.Real.cos` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.cos_add` | witnessed | `(x y : Real) : cos (x + y) = cos x * cos y - sin x * sin y` | Real.cos_add |
-| `MachLib.Real.cos_neg` | witnessed | `(x : Real) : cos (-x) = cos x` | Real.cos_neg |
 | `MachLib.Real.cos_pi` | witnessed | `: cos pi = -1` | Real.cos_pi |
 | `MachLib.Real.cos_pi_div_two` | witnessed | `: cos (pi / (1 + 1)) = 0` | by norm_num [Real.cos_pi_div_two] |
-| `MachLib.Real.cos_zero` | witnessed | `: cos 0 = 1` | Real.cos_zero |
 | `MachLib.Real.cosh` | witnessed | `: Real → Real` | Real.cosh |
 | `MachLib.Real.cosh_eq` | witnessed | `(x : Real) : cosh x = (exp x + exp (-x)) / (1 + 1)` | fun x => by rw [Real.cosh_eq]; norm_num |
-| `MachLib.Real.cosh_ge_one` | witnessed | `(x : Real) : 1 ≤ cosh x` | Real.one_le_cosh |
 | `MachLib.Real.divR` | witnessed | `: Real → Real → Real` | (fun a b : ℝ => a / b) |
 | `MachLib.Real.div_def` | witnessed | `(a b : Real) : b ≠ 0 → a / b = a * (1 / b)` | fun a b _ => div_eq_mul_one_div a b |
 | `MachLib.Real.div_zero` | witnessed | `(a : Real) : a / 0 = 0` | div_zero |
@@ -199,13 +196,10 @@ decides what a certificate can claim.
 | `MachLib.Real.rolle_ct` | witnessed | `(f : Real → Real) (a b : Real) (hab : a < b) (hfa_eq_fb : f a = f b) (hdiff : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt f f' c) : ∃ c : Real` | MonogateEML.RealModel.rolle_witnessed |
 | `MachLib.Real.sin` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.sin_add` | witnessed | `(x y : Real) : sin (x + y) = sin x * cos y + cos x * sin y` | Real.sin_add |
-| `MachLib.Real.sin_neg` | witnessed | `(x : Real) : sin (-x) = -(sin x)` | Real.sin_neg |
 | `MachLib.Real.sin_one_pos` | witnessed | `: (0 : Real) < sin 1` | Real.sin_pos_of_pos_of_lt_pi one_pos (by linarith [Real.pi_gt_three]) |
-| `MachLib.Real.sin_periodic` | witnessed | `(x : Real) : sin (x + (1 + 1) * pi) = sin x` | fun x => by norm_num [Real.sin_add_two_pi] |
 | `MachLib.Real.sin_pi` | witnessed | `: sin pi = 0` | Real.sin_pi |
 | `MachLib.Real.sin_pi_div_two` | witnessed | `: sin (pi / (1 + 1)) = 1` | by norm_num [Real.sin_pi_div_two] |
 | `MachLib.Real.sin_pos_of_pos_lt_pi_div_two` | witnessed | `(x : Real) (hx0 : 0 < x) (hxp : x < pi / (1 + 1)) : 0 < sin x` | fun x h0 hp => Real.sin_pos_of_pos_of_lt_pi h0 (by nlinarith [Real.pi_pos]) |
-| `MachLib.Real.sin_zero` | witnessed | `: sin 0 = 0` | Real.sin_zero |
 | `MachLib.Real.sinh` | witnessed | `: Real → Real` | Real.sinh |
 | `MachLib.Real.sinh_eq` | witnessed | `(x : Real) : sinh x = (exp x - exp (-x)) / (1 + 1)` | fun x => by rw [Real.sinh_eq]; norm_num |
 | `MachLib.Real.sqrt` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
