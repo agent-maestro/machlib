@@ -14,13 +14,24 @@ Cross-references three sources:
      their containing `fn`).
   2. `MachLib/Discovered/*.lean`: the Forge backend's emitted theorem stubs.
      A stub is classified as `placeholder_true` (body `True := by trivial`),
-     `sorry` (body contains `sorry`), or `proven` (otherwise).
+     `sorry` (body contains `sorry`), or `no_sorry_text` (otherwise).
   3. `MachLib/Applications/*.lean`: hand-authored strengthening proofs. We
      extract their theorems and any docstring backreference to a
      `MachLib/Discovered/...` path.
 
 The output is a JSON ledger of every `@verify` obligation and its closure
 status, plus an optional human-readable Markdown summary.
+
+NOT A COUNT OF PROVED RESULTS (2026-10-10). Every classification here is a
+TEXT pattern over source files: it cannot say a stub compiles, and it cannot
+say what a proof rests on. The status that used to be called
+`proven_in_place` is `stub_text_no_sorry` -- "the stub's body text has no
+`sorry` and is not `True := by trivial`" -- and that is all it says.
+Discovered/ is outside MachLib's checked environment, so no axiom audit
+covers it. Proof counts come from foundations/tools/theorem_ledger/ledger.py
+(the owner's ruling: "a text search is not an acceptable basis for reporting
+the number of proved mathematical results"). Renamed here first; the
+monogate-research original still says `proven_in_place` until it is synced.
 
 This is a read-only audit. It does not edit Lean files, run `lake`, or
 mutate `.eml` sources. It exists so the propagation gap from Forge stub
@@ -140,7 +151,7 @@ class DiscoveredStub:
     discovered_path: str
     discovered_module: str
     theorem_name: str
-    status: str  # "placeholder_true" | "sorry" | "proven"
+    status: str  # "placeholder_true" | "sorry" | "no_sorry_text"
 
 
 @dataclass
@@ -165,7 +176,7 @@ class LedgerEntry:
     obligation: VerifyObligation
     discovered_stub: DiscoveredStub | None
     applications_strengthening: ApplicationsProof | None
-    status: str  # "open" | "placeholder" | "strengthened" | "proven_in_place"
+    status: str  # "open" | "placeholder" | "strengthened" | "stub_text_no_sorry"
 
 
 def scan_eml_verify(
@@ -204,7 +215,7 @@ def scan_eml_verify(
 
 
 def classify_theorem_body(text: str, theorem_start: int) -> str:
-    """Return one of `placeholder_true`, `sorry`, `proven`.
+    """Return one of `placeholder_true`, `sorry`, `no_sorry_text` -- a text pattern, not a proof check.
 
     Looks at the body of a `theorem` starting at `theorem_start` up to the
     next top-level `theorem`, `def`, `end`, or end-of-file. The body
@@ -221,7 +232,7 @@ def classify_theorem_body(text: str, theorem_start: int) -> str:
         return "placeholder_true"
     if re.search(r"\bsorry\b", body):
         return "sorry"
-    return "proven"
+    return "no_sorry_text"
 
 
 def scan_discovered(
@@ -354,7 +365,7 @@ def build_ledger(
         elif stub.status == "sorry":
             status = "open"
         else:
-            status = "proven_in_place"
+            status = "stub_text_no_sorry"
         entries.append(
             LedgerEntry(
                 verify_theorem=ob.verify_theorem,
@@ -389,7 +400,7 @@ def write_json(entries: list[LedgerEntry], out_path: Path) -> None:
 
 
 def summarize(entries: list[LedgerEntry]) -> dict[str, int]:
-    counts: dict[str, int] = {"open": 0, "placeholder": 0, "strengthened": 0, "proven_in_place": 0}
+    counts: dict[str, int] = {"open": 0, "placeholder": 0, "strengthened": 0, "stub_text_no_sorry": 0}
     for e in entries:
         counts[e.status] = counts.get(e.status, 0) + 1
     counts["total"] = len(entries)
@@ -408,7 +419,7 @@ def write_markdown(entries: list[LedgerEntry], out_path: Path) -> None:
         f"· strengthened: {summary['strengthened']}  "
         f"· placeholder: {summary['placeholder']}  "
         f"· open: {summary['open']}  "
-        f"· proven-in-place: {summary['proven_in_place']}"
+        f"· stub text without sorry (text pattern, NOT a proof count): {summary['stub_text_no_sorry']}"
     )
     lines.append("")
     lines.append("## Status")
@@ -496,7 +507,8 @@ def main() -> int:
         f"strengthened={summary['strengthened']} "
         f"placeholder={summary['placeholder']} "
         f"open={summary['open']} "
-        f"proven_in_place={summary['proven_in_place']}"
+        f"stub_text_no_sorry={summary['stub_text_no_sorry']} "
+        "(text classification of stubs; NOT a count of proved results -- see tools/theorem_ledger)"
     )
     if args.gaps_only:
         for e in entries:

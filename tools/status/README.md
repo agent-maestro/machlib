@@ -34,19 +34,37 @@ Key fields the renderer should rely on:
   follow-up.
 - `sorries.history_recent` — short timestamped series (capped at 30
   entries) so the page can plot direction rather than a snapshot.
-- `verify_audit` — the cross-referenced Forge `@verify` ledger.
-  Splits `proven` into:
-  - `proven_from_mathlib` (structurally 0 for MachLib by design — zero
-    mathlib dependency; the field exists so the renderer never
-    misreports a single "proven" total),
-  - `proven_mod_machlib_axioms` (Forge-emitted Discovered/ stub
-    already carries a concrete proof, conditional on the documented
-    `MachLib.Real.*` axiomatized base).
+- `theorem_ledger` — **the only proof counts on the dashboard** (schema 2,
+  2026-10-10; the owner's ruling: "a text search is not an acceptable basis
+  for reporting the number of proved mathematical results"). Seven counts
+  read off the Lean environment by
+  [`foundations/tools/theorem_ledger/ledger.py`](../../foundations/tools/theorem_ledger/ledger.py):
+  `declarations`, `theorems`, `kernel_checked`, `axiom_audited`,
+  `approved_policy`, `conditional`, `unchecked`, each defined in the block's
+  own `definitions`. Every theorem's `#print axioms` footprint is classified
+  against `AxiomLedger.lean`'s `trustedFootprint` and `knownAxioms`. The block
+  carries the ledger's provenance (commit, the Forge-compatible
+  `machlib_sources` digest, Lean version, imports, axiom-policy version), its
+  `binding_id` and `ledger_sha256`; the full ledger, every theorem's record,
+  is published beside status.json as `theorem_ledger.json`. When the ledger is
+  missing, for another commit, unbound (a dirty tree), or fails its own
+  checks, the block is `available: false` with the reason and every count is
+  null: UNAVAILABLE is not zero.
+- `verify_audit` — the cross-referenced Forge `@verify` ledger, a TEXT
+  classification of Forge stubs. Since schema 2 it carries no proof count of
+  its own: `proven_from_mathlib`, `proven_mod_machlib_axioms` and
+  `discharged_pct` are null (the second was "stub body has no `sorry`", over
+  `Discovered/`, which no axiom audit covers), the text figure survives as
+  `stub_text_no_sorry`, and `strengthened` counts only links to an
+  `Applications/` module whose every theorem the ledger counts as
+  kernel-checked (`strengthened_ledger_backing`).
 - `axiomatized_base` — which axioms the headline theorems rest on.
 
 ## Counting method (canonical)
 
-The sorry counter in `generate_status.py` matches
+The sorry counter is a count of the TOKEN, not of unproved theorems (status.json says so in
+`sorries.not_a_proof_count`); the environment's own figure is
+`theorem_ledger.unchecked_by_reason.sorryAx`. The sorry counter in `generate_status.py` matches
 `monogate-research/tools/graph/builder_v2.py` byte-for-byte:
 
 - Strip Lean block comments (`/- ... -/`, `/-! ... -/`).
@@ -64,6 +82,9 @@ incorrect dashboard refresh on 2026-06-14 (corrected 2026-06-15 via
 this CI pipeline).
 
 ## forge_verify_audit.py
+
+Its classifications are text patterns over source files. The stub status it called `proven_in_place` is
+`stub_text_no_sorry` since 2026-10-10, here first: **sync the rename to monogate-research.**
 
 This file is duplicated from
 `monogate-research/tools/forge_verify_audit/forge_verify_audit.py`
@@ -83,6 +104,7 @@ the Forge figures, not a claim that they are unmeasured — UNAVAILABLE is never
 cd machlib
 SHA=$(git rev-parse HEAD)
 cd foundations && lake build && lake env lean AxiomAudit.lean > /tmp/axiom_audit.txt && cd ..
+cd foundations && python3 tools/theorem_ledger/ledger.py --out /tmp/theorem_ledger.json && cd ..
 python tools/status/forge_verify_audit.py \
     --forge-root        ../forge \
     --eml-stdlib-root   ../eml-stdlib \
@@ -95,6 +117,7 @@ python tools/status/generate_status.py \
     --machlib-sha         "$SHA" \
     --axiom-audit         /tmp/axiom_audit.txt \
     --verify-audit-json   /tmp/verify_audit.json \
+    --theorem-ledger      /tmp/theorem_ledger.json \
     --build-exit-code     0 \
     --out                 /tmp/status.json
 ```

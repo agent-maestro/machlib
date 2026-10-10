@@ -14,7 +14,8 @@ name: status
 #     wrong surface for an integrity-claiming dashboard.
 #   * The output branch `status-data` is orphan (no shared history with
 #     master). Each run force-pushes a single-commit tree containing
-#     only status.json. The branch is its own audit trail; the JSON's
+#     status.json and theorem_ledger.json (the full theorem ledger the
+#     status's proof counts come from; status.json pins its sha256). The branch is its own audit trail; the JSON's
 #     own machlib_sha + generated_at_utc carry the data provenance.
 #   * The renderer in monogate-net fetches via
 #     raw.githubusercontent.com/agent-maestro/machlib/status-data/status.json
@@ -150,6 +151,19 @@ jobs:
           lake env lean AxiomAudit.lean > axiom_audit.txt 2>&1 || true
           head -60 axiom_audit.txt || true
 
+      # The ONLY source of proof counts on the dashboard (the owner's ruling, 2026-10-10: "a text search is
+      # not an acceptable basis for reporting the number of proved mathematical results"). It reads the Lean
+      # environment, classifies every theorem's #print-axioms footprint against AxiomLedger.lean's policy, and
+      # runs `lake build` first (a no-op after the build step). On a red build or a failed probe it writes
+      # {"unavailable": true, "reason": ...}, and status.json then reports no proof count at all.
+      - name: Theorem ledger
+        working-directory: machlib/foundations
+        run: |
+          python3 tools/theorem_ledger/ledger.py --out "$GITHUB_WORKSPACE/theorem_ledger.json" || true
+          if [ ! -s "$GITHUB_WORKSPACE/theorem_ledger.json" ]; then
+            echo '{"unavailable": true, "reason": "ledger.py wrote no ledger"}' > "$GITHUB_WORKSPACE/theorem_ledger.json"
+          fi
+
       - name: Mark the Forge audit UNAVAILABLE when a clone failed
         if: steps.clone_forge.outcome != 'success' || steps.clone_stdlib.outcome != 'success'
         run: |
@@ -184,6 +198,7 @@ jobs:
             --build-log machlib/foundations/build.log \
             --build-exit-code "${{ steps.build.outputs.exit_code }}" \
             --verify-audit-json verify_audit.json \
+            --theorem-ledger theorem_ledger.json \
             --previous-status machlib/.status-prev/status.json \
             --out status.json
           echo "=== status.json summary ==="
@@ -196,11 +211,13 @@ jobs:
           print('lake_passed    :', d['build']['lake_build_passed'])
           print('sorries        :', d['sorries']['total'],
                 'delta=', d['sorries']['delta_vs_previous'].get('net_change'))
+          tl = d['theorem_ledger']
+          print('ledger         :', 'available' if tl['available'] else 'UNAVAILABLE: ' + tl['reason'])
+          print('ledger counts  :', tl['counts'])
           va = d['verify_audit']
-          print(f\"verify         : total={va['total']} strengthened={va['strengthened']} \"
-                f\"proven_mod_machlib_axioms={va['proven_mod_machlib_axioms']} \"
-                f\"placeholder={va['placeholder']} open={va['open']} \"
-                f\"discharged_pct={va['discharged_pct']} gap_pct={va['gap_pct']}\")
+          print(f\"verify (text)  : total={va['total']} strengthened(ledger)={va['strengthened']} \"
+                f\"stub_text_no_sorry={va['stub_text_no_sorry']} \"
+                f\"placeholder={va['placeholder']} open={va['open']} gap_pct={va['gap_pct']}\")
           print('content_hash   :', d['content_hash_sha256'])
           "
 
@@ -210,6 +227,9 @@ jobs:
         run: |
           mkdir status-publish
           cp status.json status-publish/
+          # The full theorem ledger (every theorem's statement digest, axiom set and classification) is published
+          # beside status.json, whose theorem_ledger.ledger_sha256 pins it.
+          cp theorem_ledger.json status-publish/
           # Also publish a vercel.json that disables Vercel deploys on
           # this branch. The branch contains only status.json (no source
           # tree, no `site/` directory), so Vercel's default project
@@ -223,7 +243,7 @@ jobs:
           git init -b status-data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add status.json vercel.json
+          git add status.json theorem_ledger.json vercel.json
           git commit -m "ci(status): refresh status.json at ${{ steps.machlib_sha.outputs.sha }}"
           git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           # Orphan force-push: this branch's history is just the
