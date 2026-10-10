@@ -1,0 +1,139 @@
+
+/-! ## Theorem-ledger probe — appended to `AxiomLedger.lean` by `tools/theorem_ledger/ledger.py`
+
+This text is NOT a standalone Lean file (hence `.lean.in`): `ledger.py` writes a temporary file that
+is the verbatim text of `AxiomLedger.lean` followed by this, so the LIVE `AxiomLedger.knownAxioms`,
+`trustedFootprint`, `headlines` and `isCompilerArtifact` are in scope and nothing here copies them.
+`AxiomLedger.lean`'s own `run_cmd` runs first, so its verdict line is in the same output.
+
+It writes one JSON object per line to the output path and decides only what needs the environment:
+which declarations are auxiliary, each theorem's transitive axiom footprint (`Lean.collectAxioms`,
+the `#print axioms` mechanism) and a canonical serialization of each theorem's TYPE. The
+classification (approved / conditional / unchecked) is done in Python, from these raw facts and the
+two live lists, so the self-test exercises the same classifier the real run uses. -/
+
+namespace TheoremLedgerProbe
+open Lean Elab Command Meta
+
+def kindOf : ConstantInfo → String
+  | .axiomInfo _ => "axiom" | .defnInfo _ => "definition" | .thmInfo _ => "theorem"
+  | .opaqueInfo _ => "opaque" | .quotInfo _ => "quotient" | .inductInfo _ => "inductive"
+  | .ctorInfo _ => "constructor" | .recInfo _ => "recursor"
+
+/-- Universe levels, with each universe PARAMETER written as its position in the declaration's
+parameter list: renaming `u` to `v` is a binder rename, not a change of statement. -/
+partial def serLevel (ps : List Name) : Level → String
+  | .zero => "0"
+  | .succ l => "(s " ++ serLevel ps l ++ ")"
+  | .max a b => "(max " ++ serLevel ps a ++ " " ++ serLevel ps b ++ ")"
+  | .imax a b => "(imax " ++ serLevel ps a ++ " " ++ serLevel ps b ++ ")"
+  | .param n => match ps.idxOf? n with
+    | some i => "u" ++ toString i
+    | none => "(free " ++ n.toString ++ ")"
+  | .mvar _ => "(?)"
+
+/-- Canonical structural serialization of a stored `Expr`. Keeps constructor shape, constant names
+with their universe arguments, de Bruijn indices and literals; DROPS binder names, binder info and
+`mdata`. Same shape as Forge's statement-closure serializer, with universe levels made positional. -/
+partial def serExpr (ps : List Name) : Expr → String
+  | .bvar i => "(B " ++ toString i ++ ")"
+  | .fvar _ => "(F)"
+  | .mvar _ => "(M)"
+  | .sort l => "(S " ++ serLevel ps l ++ ")"
+  | .const n ls => "(C " ++ n.toString ++ " [" ++ " ".intercalate (ls.map (serLevel ps)) ++ "])"
+  | .app f a => "(A " ++ serExpr ps f ++ " " ++ serExpr ps a ++ ")"
+  | .lam _ t b _ => "(L " ++ serExpr ps t ++ " " ++ serExpr ps b ++ ")"
+  | .forallE _ t b _ => "(P " ++ serExpr ps t ++ " " ++ serExpr ps b ++ ")"
+  | .letE _ t v b _ => "(Z " ++ serExpr ps t ++ " " ++ serExpr ps v ++ " " ++ serExpr ps b ++ ")"
+  | .lit (.natVal n) => "(N " ++ toString n ++ ")"
+  | .lit (.strVal s) => "(T " ++ s.quote ++ ")"
+  | .mdata _ e => serExpr ps e
+  | .proj s i e => "(J " ++ s.toString ++ " " ++ toString i ++ " " ++ serExpr ps e ++ ")"
+
+/-- The statement serialization the digest is taken over (`ledger.py` hashes it with SHA-256). -/
+def statementSer (ci : ConstantInfo) : String :=
+  "machlib-stmt/v1 U" ++ toString ci.levelParams.length ++ " " ++ serExpr ci.levelParams ci.type
+
+def lastComponent : Name → String
+  | .str _ s => s
+  | _ => ""
+
+/-- Why `n` is NOT a mathematical declaration, or `none` when it is one. The first rule that fires
+names the reason; `ledger.py` prints the rule text with the counts. `ranged n` says whether Lean
+recorded a source range for `n` (`findDeclarationRangesCore?`, the table go-to-definition reads):
+the elaborator records one for what it elaborated from source text and none for what it generated. -/
+partial def auxReason (env : Environment) (ranged : Name → Bool) (n : Name) : Option String :=
+  let user := (privateToUserName? n).getD n
+  let ci? := env.find? n
+  if user.isInternalDetail then some "internal-name"
+  else if ci? matches some (.recInfo _) then some "recursor"
+  else if isAuxRecursor env n then some "aux-recursor"
+  else if isNoConfusion env n then some "no-confusion"
+  else if Meta.isMatcherCore env n then some "matcher"
+  else if isReservedName env n then some "reserved-name"
+  else if ["inj", "injEq", "sizeOf_spec"].contains (lastComponent n)
+      && (env.find? n.getPrefix matches some (.ctorInfo _)) then some "constructor-lemma"
+  else if (ci? matches some (.axiomInfo _)) && AxiomLedger.isCompilerArtifact n then some "compiler-artifact"
+  else if !n.getPrefix.isAnonymous && env.contains n.getPrefix
+      && (auxReason env ranged n.getPrefix).isSome then some "child-of-auxiliary"
+  else if !ranged n then some "no-source-range"
+  else none
+
+def nameJson (n : Name) : Json := Json.str n.toString
+def namesJson (ns : List Name) : Json := Json.arr (ns.map nameJson).toArray
+
+def isOwnModule (m : Name) : Bool := (`MachLib).isPrefixOf m || m == `CertcomLibm
+
+end TheoremLedgerProbe
+
+open Lean Elab Command Meta TheoremLedgerProbe in
+run_cmd Command.liftTermElabM do
+  let env ← getEnv
+  let outPath : System.FilePath := "@@OUT_PATH@@"
+  -- Environment mode: every constant whose module (the environment's module index) is MachLib's own.
+  -- Fixture mode (the self-test only): constants of THIS file under the fixture namespace.
+  let fixturePrefix : Name := @@FIXTURE_PREFIX@@
+  let mods := env.header.moduleNames
+  let mut pop : Array (Name × ConstantInfo × String) := #[]
+  for (nm, ci) in env.constants.toList do
+    match env.getModuleIdxFor? nm with
+    | some i =>
+      if fixturePrefix.isAnonymous then
+        if h : i.toNat < mods.size then
+          if isOwnModule mods[i.toNat] then pop := pop.push (nm, ci, mods[i.toNat].toString)
+    | none =>
+      if !fixturePrefix.isAnonymous && fixturePrefix.isPrefixOf ((privateToUserName? nm).getD nm) then
+        pop := pop.push (nm, ci, "<fixture>")
+  let mut ranged : NameSet := {}
+  for (nm, _, _) in pop do
+    if (← findDeclarationRangesCore? nm).isSome then ranged := ranged.insert nm
+  let h ← IO.FS.Handle.mk outPath .write
+  let emit (j : Json) : IO Unit := h.putStrLn j.compress
+  emit <| Json.mkObj [("t", Json.str "policy"),
+    ("known", namesJson AxiomLedger.knownAxioms), ("trusted", namesJson AxiomLedger.trustedFootprint),
+    ("headlines", namesJson AxiomLedger.headlines)]
+  emit <| Json.mkObj [("t", Json.str "environment"),
+    ("imports", namesJson (env.header.imports.toList.map (·.module))),
+    ("modules", namesJson mods.toList),
+    ("own_modules", namesJson (mods.toList.filter isOwnModule))]
+  let mut n := 0
+  for (nm, ci, m) in pop do
+    let reason := auxReason env ranged.contains nm
+    let base : List (String × Json) := [("t", Json.str "decl"), ("n", nameJson nm),
+      ("u", nameJson ((privateToUserName? nm).getD nm)), ("k", Json.str (kindOf ci)), ("m", Json.str m),
+      ("x", match reason with | some r => Json.str r | none => Json.null),
+      ("rng", Json.bool (ranged.contains nm)), ("priv", Json.bool (isPrivateName nm)),
+      ("ca", Json.bool (AxiomLedger.isCompilerArtifact nm))]
+    let extra : List (String × Json) ← if reason.isSome then pure [] else
+      match ci with
+      | .thmInfo _ => do
+        let axs ← Lean.collectAxioms nm
+        pure [("a", namesJson axs.toList), ("s", Json.str (statementSer ci))]
+      | .defnInfo _ | .opaqueInfo _ => do
+        let p ← try Meta.isProp ci.type catch _ => pure false
+        pure [("prop", Json.bool p)]
+      | _ => pure []
+    emit (Json.mkObj (base ++ extra))
+    n := n + 1
+  emit <| Json.mkObj [("t", Json.str "end"), ("declarations_emitted", toJson n)]
+  h.flush

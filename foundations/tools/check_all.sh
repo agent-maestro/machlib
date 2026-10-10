@@ -58,7 +58,7 @@ run() {
   # `tail -n 3` window silently dropped them. Cosmetic — SUMMARY decides pass/fail from the captured
   # rc, never from this text — but a comment that overstates what it does is how a gate's scope
   # drifts from its description.
-  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|check-[a-z]+\]|AxiomLedger" \
+  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|THEOREM-LEDGER|check-[a-z]+\]|AxiomLedger" \
     "$OUT/$name.log" | tail -n 2 || true
 }
 
@@ -87,6 +87,12 @@ else
   # Checks (8) and (9) arrived with the muses' review of E (2026-10-05); each planted defect must produce its own
   # message, and an unmutated copy must say OK.
   run "axiom-ledger-canaries" python3 tools/axiom_ledger/ledger_canaries.py
+  # The theorem ledger (2026-10-10) is the ONLY source of proof counts: every theorem in the environment above,
+  # its #print-axioms footprint classified against AxiomLedger's policy, the seven counts' invariants checked.
+  # It writes only to a temp dir. Its self-test runs a fixture with one theorem per category -- including a
+  # native_decide proof, whose v4.32 `_native` axiom a name-only compiler-trust test misses.
+  run "theorem-ledger" python3 tools/theorem_ledger/ledger.py
+  run "theorem-ledger-selftest" python3 tools/theorem_ledger/ledger.py --self-test
   run "obligations"  bash tools/check_obligations.sh
   run "discovered"   bash scripts/check_discovered_compiles.sh 4
   # Seeded through an env test seam, so both decision branches are exercised without the
@@ -122,9 +128,9 @@ else
   # Every tracked number in README / CLAUDE.md / what_is_proven.md must equal what the corpus
   # measures (tools/prose_counts.json). The selftest stages doctored copies in a temp dir and
   # never writes into the tree, so it is safe inside a fingerprinted run.
-  # The theorem count feeding prose-counts is a pattern count, and the pattern it replaced could
-  # not tell a declaration from a docstring sentence beginning with the word "theorem" -- 47 of
-  # them. The counter must keep demonstrating it can tell the difference.
+  # count_theorems.py is a TEXT LINT since 2026-10-10 (prose-counts reads the theorem ledger). Its self-test
+  # stays: the pattern it replaced could not tell a declaration from a docstring sentence beginning with the
+  # word "theorem" -- 47 of them -- and the lint must keep demonstrating it can.
   run "count-theorems-selftest" python3 tools/count_theorems.py --self-test
   run "prose-counts" python3 tools/prose_counts_check.py
   run "prose-counts-selftest" python3 tools/prose_counts_check.py --self-test

@@ -23,3 +23,6 @@ out/
 .env.*.local
 .wrangler/
 foundations/tmp*.lean
+
+# The theorem ledger, when written into the tree (`ledger.py --out theorem_ledger.json` from foundations/)
+/foundations/theorem_ledger.json
