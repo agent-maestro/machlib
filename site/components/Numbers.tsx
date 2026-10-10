@@ -7,13 +7,16 @@ import { useEffect, useState } from "react";
 // repository's check suite if the corpus drifts from what is printed here.
 // The date is the measurement date; the command that reproduces each figure
 // is in README.md under "Numbers, measured".
-const MEASURED_ON = "2026-09-15";
+const MEASURED_ON = "2026-10-10";
 
+// The theorem tile is the theorem ledger's approved-policy count (foundations/tools/theorem_ledger): theorems
+// the Lean kernel admitted whose every axiom is in the declared trusted policy. Until 2026-10-10 it was a text
+// count of `theorem` lines, which is not a count of proved results.
 const TILES: { value: string; label: string }[] = [
-  { value: "8 117", label: "theorems, outside the Forge corpus" },
+  { value: "8 963", label: "theorems kernel-checked, every axiom within the trusted policy" },
   { value: "143", label: "trusted axioms, none unaccounted" },
   { value: "4", label: "distinct open obligations" },
-  { value: "79.9 %", label: "of Forge @verify obligations auto-close" },
+  { value: "79.9 %", label: "of Forge @verify obligations elaborate without sorry (not axiom-audited)" },
 ];
 
 // Live status is written by CI to an orphan branch on every push to master;

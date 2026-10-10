@@ -30,7 +30,9 @@ Answers that would be useful, including the dismissive ones:
 
 **MachLib** is a Lean 4 corpus that does not depend on Mathlib. `MachLib.Real` is an *axiomatised*
 ordered field with `exp`, `log`, `sin`, derivatives, and so on — declared, not constructed. The
-corpus is ≈ 8 117 theorems outside its generated sub-corpus.
+corpus is ≈ 9 425 theorems outside its generated sub-corpus (counted in the Lean environment by the theorem
+ledger, `foundations/tools/theorem_ledger/ledger.py`, which also classifies each one's axiom footprint; this
+line read 8 117 until 2026-10-10, a text count of `theorem` lines that could not see `private theorem`).
 
 Why no Mathlib: the corpus ships proof certificates alongside generated engineering artifacts
 (C, Verilog, VHDL…), and we wanted the trusted base to be small, enumerable and auditable rather

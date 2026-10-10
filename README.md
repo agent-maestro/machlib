@@ -189,24 +189,35 @@ tools/check_all.sh         # every gate and audit; prints every verdict; rc = 0 
 ```
 
 The gates, in the order the runner prints them: build, aggregator reachability, the ℤ-model
-consistency check, the axiom ledger, the obligations ledger, the Forge `@verify` corpus compiles,
+consistency check, the axiom ledger, the theorem ledger (every theorem's axiom footprint, classified
+against the axiom ledger's policy: the only source of proof counts), the obligations ledger, the Forge `@verify` corpus compiles,
 Forge certificates, the soundness witness, MachSig signatures, the claim audit, the witness and
 hypothesis and absence audits, two name checks — every theorem shown in a docs code block, and
 every constant named in the trust disclosure, must exist — the prose-count gate, and the sorry
 audit; most with their own self-tests, each of which must be shown able to fail before its pass is
 read. `scripts/closerate.sh` is a measurement, not a
-gate: the Forge `@verify(lean)` corpus auto-closes **79.9 %** of its obligations
-(573 of 717, measured 2026-09-05 under Lean v4.32.2).
+gate: in the Forge `@verify(lean)` corpus, **79.9 %** of the obligations elaborate without a `sorry` warning
+(573 of 717, measured 2026-09-05 under Lean v4.32.2). That is not a count of proved results: `Discovered/` is
+outside the checked environment, so no axiom audit covers those files and the theorem ledger counts none of them.
 
 ## Numbers, measured
 
 Every count below is the output of a command, not a memory, and `tools/prose_counts_check.py`
-fails if the text drifts from the corpus. Measured 2026-09-14:
+fails if the text drifts from the corpus. Proof counts come from the **theorem ledger** and from nothing
+else: it reads the Lean environment `AxiomLedger.lean` checks and classifies every theorem's
+`#print axioms` footprint against that file's declared axiom policy (a text search over the sources is
+not a count of proved results). Measured 2026-10-10:
 
 | figure | value | source |
 |---|---|---|
-| theorems outside `Discovered/` | 8 117 | `python3 tools/count_theorems.py --scope core` |
-| theorems in the Forge `@verify` corpus | 624 | the same command over `Discovered/` |
+| declarations in the checked environment | 12 382 | `python3 tools/theorem_ledger/ledger.py` |
+| theorems | 9 425 | the same command: approved-policy + conditional + unchecked |
+| kernel-checked theorems | 9 424 | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited theorems | 9 424 | footprint computed and classified against the policy |
+| approved-policy proofs | 8 963 | every axiom in the footprint is in `trustedFootprint` |
+| conditional proofs | 461 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
+| unchecked theorems | 1 | the allowlisted `sorryAx` (`halve_in_unit_sorry`) |
+| Forge `@verify` corpus files, outside the checked environment | 253 | the same command; files only, none of their theorems is counted |
 | `.lean` files under `MachLib/` | 1 086 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
 | axioms pinned by the ledger | 217 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all accounted for | 143 | `AXIOM_MANIFEST.md` |

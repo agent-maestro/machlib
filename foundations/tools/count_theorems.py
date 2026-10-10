@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Count `theorem` DECLARATIONS — not the word "theorem" at the start of a sentence.
+"""A TEXT LINT over `theorem` declaration lines. NOT a count of proved results.
+
+RETIRED AS A COUNT, 2026-10-10. The owner's ruling: "A text search is not an acceptable basis for reporting
+the number of proved mathematical results." This file was the source of every theorem count MachLib published
+(README, CLAUDE.md, the site) until that day. It cannot tell that a counted declaration compiles, that it is a
+theorem rather than text that looks like one, or what its proof rests on. The count is now
+`tools/theorem_ledger/ledger.py`, which reads the Lean environment and classifies every theorem's axiom
+footprint against the declared policy. This script stays as a LINT: it shows what a pattern over source text
+matches, and its self-test still demonstrates the docstring defect described below. Its output says so.
+
+Original purpose: count `theorem` DECLARATIONS — not the word "theorem" at the start of a sentence.
 
 WHY THIS EXISTS (found 2026-09-11). The headline theorem count — on the README, in CLAUDE.md, and
 on the **public site** — was produced by
@@ -30,8 +40,7 @@ starts with `--`, so the pattern never matched them in the first place.
 
 It is still a PATTERN COUNT, not an elaboration. It cannot tell you a counted declaration compiles,
 and it counts `theorem` inside a string literal if one ever begins a line that way. It is exactly
-one defect narrower than what it replaces, and the number it prints is the number the documents
-quote.
+one defect narrower than what it replaces. No document quotes it since 2026-10-10.
 
     python3 tools/count_theorems.py --scope core        # outside Discovered/
     python3 tools/count_theorems.py --scope all
@@ -170,7 +179,9 @@ def main(argv: list[str]) -> int:
     if not fs:
         print("UNAVAILABLE — no .lean files found; this is not a zero", file=sys.stderr)
         return 2
-    print(sum(count_file(p) for p in fs))
+    n = sum(count_file(p) for p in fs)
+    print(f"{n} source lines beginning with `theorem ` outside block comments ({args.scope}) -- TEXT LINT, "
+          "NOT a count of proved results; the count is python3 tools/theorem_ledger/ledger.py")
     return 0
 
 

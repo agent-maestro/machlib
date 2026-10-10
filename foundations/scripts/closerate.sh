@@ -8,6 +8,12 @@
 # through, surfaced as a `declaration uses 'sorry'` warning per obligation.
 #
 # Output: per-file status + a summary (closed / sorry / error over all theorems).
+#
+# NOT A COUNT OF PROVED RESULTS (2026-10-10). "Closed" means the file elaborated and Lean printed no
+# `declaration uses 'sorry'` for that obligation; the theorem total is a text count (`grep -c '^theorem '`), and
+# no axiom footprint is read, so a native_decide or a file-local axiom closes an obligation here. Discovered/ is
+# outside the environment tools/theorem_ledger/ledger.py audits, and that ledger is the only source of proof
+# counts. The summary says so.
 set -uo pipefail
 cd "$(dirname "$0")/.."   # foundations/
 DISC=MachLib/Discovered
@@ -35,7 +41,7 @@ awk '
     printf "\n=== Forge @verify(lean) close-rate (MachLib/Discovered) ===\n"
     printf "files:     %d  (%d compiled, %d build-error)\n", files, ok_files, err_files
     printf "theorems:  %d  (%d in compiled files, %d in error files)\n", total_thms, total_thms-err_thms, err_thms
-    printf "CLOSED:    %d\n", closed_thms
+    printf "CLOSED:    %d   (no sorry warning; NOT axiom-audited and NOT a count of proved results)\n", closed_thms
     printf "sorry:     %d\n", sorry_thms
     if (total_thms-err_thms > 0)
       printf "close-rate (of compiled): %.1f%%  (%d/%d)\n", 100*closed_thms/(total_thms-err_thms), closed_thms, total_thms-err_thms

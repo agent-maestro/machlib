@@ -688,9 +688,9 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   (`eea_bezout`) and the common-divisor half (`eea_divides`), **Euclid's lemma**
   (`euclid_lemma`), the `q`-adic factorisation with additivity and uniqueness (`ord_pmul`,
   `ord_unique`), cancellation (`peq_pmul_cancel_left`), and the derivative laws
-  (`peq_pderiv_pmul`, `peq_pderiv_ppow`). **All of it is field-axiom-only** — 244 theorems
-  under a whole-module `AxiomLedger` guard (invariant 7) that admits Lean core, the `Real`
-  carrier and the field axioms and nothing else. Check it:
+  (`peq_pderiv_pmul`, `peq_pderiv_ppow`). **All of it is field-axiom-only** — a whole-module `AxiomLedger` guard (invariant 7)
+  holds every theorem in the modules it lists, 326 algebra-spine theorems at the last run, to Lean
+  core, the `Real` carrier and the field axioms and nothing else. Check it:
   ```
   lake env lean AxiomLedger.lean
   #   ⇒ "244 algebra-spine theorems field-axiom-checked (0 leaking)"

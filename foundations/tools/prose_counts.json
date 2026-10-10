@@ -1,20 +1,11 @@
 {
  "_comment": "Numbers in prose that must equal what the corpus measures. Each claim names a prose file (relative to the repo root), a regex whose capture group is the number as written, and a source. Sources are evaluated once against the live tree (shell commands run from foundations/; file patterns read a generated or measured artifact). A claim whose prose number differs from its source is DRIFT (exit 1). A source that cannot be evaluated is UNAVAILABLE (exit 2), never a pass. Thousands separators (space, thin space, comma) are ignored when comparing. To add a figure to a document: add the claim here in the same change, or the doctrine in CLAUDE.md ('Counts: the gate is the source, prose is a copy') is not enforced for it.",
  "sources": {
-  "theorems_core": {
+  "theorem_ledger": {
    "kind": "shell",
-   "cmd": "python3 tools/count_theorems.py --scope core",
-   "extract": "^\\s*(\\d+)\\s*$"
-  },
-  "theorems_discovered": {
-   "kind": "shell",
-   "cmd": "python3 tools/count_theorems.py --scope discovered",
-   "extract": "^\\s*(\\d+)\\s*$"
-  },
-  "theorems_all": {
-   "kind": "shell",
-   "cmd": "python3 tools/count_theorems.py --scope all",
-   "extract": "^\\s*(\\d+)\\s*$"
+   "cmd": "python3 tools/theorem_ledger/ledger.py",
+   "extract": "THEOREM-LEDGER OK [\\s\\S]*?declarations\\s+(\\d+)\\s*\\n\\s*theorems\\s+(\\d+)\\s*\\n\\s*kernel-checked\\s+(\\d+)\\s*\\n\\s*axiom-audited\\s+(\\d+)\\s*\\n\\s*approved-policy proofs\\s+(\\d+)\\s*\\n\\s*conditional proofs\\s+(\\d+)\\s*\\n\\s*unchecked\\s+(\\d+)[\\s\\S]*?outside the environment: (\\d+) of (\\d+) tracked[^\\n]*?Discovered (\\d+)",
+   "_note": "Registered 2026-10-10 (the owner's ruling: proof counts come from the ledger, never from a text search). Groups: 1 declarations, 2 theorems, 3 kernel-checked, 4 axiom-audited, 5 approved-policy, 6 conditional, 7 unchecked, 8 tracked MachLib/ .lean files outside the environment, 9 tracked MachLib/ .lean files, 10 of them under Discovered/. The extract begins at the OK verdict, so a ledger whose invariants fail reads UNAVAILABLE, never a number. Replaces theorems_core / theorems_discovered / theorems_all, which ran tools/count_theorems.py, a text pattern."
   },
   "lean_files": {
    "kind": "shell",
@@ -39,7 +30,7 @@
   "axioms_pinned": {
    "kind": "shell",
    "cmd": "lake env lean AxiomLedger.lean",
-   "extract": "(\\d+) axioms pinned"
+   "extract": "(\\d+) axioms pinned[\\s\\S]*?(\\d+) algebra-spine theorems field-axiom-checked"
   },
   "aggregator": {
    "kind": "shell",
@@ -135,16 +126,60 @@
  },
  "claims": [
   {
-   "id": "readme.theorems_core",
+   "id": "readme.ledger_declarations",
    "file": "README.md",
-   "pattern": "theorems outside `Discovered/` \\| ([0-9 \\u202f]+) \\|",
-   "source": "theorems_core"
+   "pattern": "\\| declarations in the checked environment \\| ([0-9 \\u202f]+) \\|",
+   "source": "theorem_ledger",
+   "group": 1
   },
   {
-   "id": "readme.theorems_discovered",
+   "id": "readme.ledger_theorems",
    "file": "README.md",
-   "pattern": "theorems in the Forge `@verify` corpus \\| ([0-9 \\u202f]+) \\|",
-   "source": "theorems_discovered"
+   "pattern": "^\\| theorems \\| ([0-9 \\u202f]+) \\|",
+   "source": "theorem_ledger",
+   "group": 2
+  },
+  {
+   "id": "readme.ledger_kernel_checked",
+   "file": "README.md",
+   "pattern": "\\| kernel-checked theorems \\| ([0-9 \\u202f]+) \\|",
+   "source": "theorem_ledger",
+   "group": 3
+  },
+  {
+   "id": "readme.ledger_axiom_audited",
+   "file": "README.md",
+   "pattern": "\\| axiom-audited theorems \\| ([0-9 \\u202f]+) \\|",
+   "source": "theorem_ledger",
+   "group": 4
+  },
+  {
+   "id": "readme.ledger_approved",
+   "file": "README.md",
+   "pattern": "\\| approved-policy proofs \\| ([0-9 \\u202f]+) \\|",
+   "source": "theorem_ledger",
+   "group": 5
+  },
+  {
+   "id": "readme.ledger_conditional",
+   "file": "README.md",
+   "pattern": "\\| conditional proofs \\| ([0-9 \\u202f]+) \\|",
+   "source": "theorem_ledger",
+   "group": 6
+  },
+  {
+   "id": "readme.ledger_unchecked",
+   "file": "README.md",
+   "pattern": "\\| unchecked theorems \\| ([0-9 \\u202f]+) \\|",
+   "source": "theorem_ledger",
+   "group": 7
+  },
+  {
+   "id": "readme.discovered_files",
+   "file": "README.md",
+   "pattern": "\\| Forge `@verify` corpus files, outside the checked environment \\| ([0-9 \\u202f]+) \\|",
+   "source": "theorem_ledger",
+   "group": 10
   },
   {
    "id": "readme.lean_files",
@@ -240,7 +275,7 @@
   {
    "id": "readme.closerate_pct",
    "file": "README.md",
-   "pattern": "auto-closes \\*\\*([0-9.]+) %\\*\\*",
+   "pattern": "\\*\\*([0-9.]+) %\\*\\* of the obligations elaborate without a `sorry` warning",
    "source": "closerate_pct"
   },
   {
@@ -276,26 +311,79 @@
   {
    "id": "claude.lean_lines",
    "file": "CLAUDE.md",
-   "pattern": "\\*\\*([0-9 \\u202f]+) lines\\*\\* / \\*\\*[0-9 \\u202f]+ theorems\\*\\*",
+   "pattern": "\\*\\*([0-9 \\u202f]+) lines\\*\\*, re-exported through the aggregator",
    "source": "lean_lines"
   },
   {
-   "id": "claude.theorems_core",
+   "id": "claude.ledger_declarations",
    "file": "CLAUDE.md",
-   "pattern": "\\*\\*[0-9 \\u202f]+ lines\\*\\* / \\*\\*([0-9 \\u202f]+) theorems\\*\\*",
-   "source": "theorems_core"
+   "pattern": "^\\| declarations \\| \\*\\*([0-9 \\u202f]+)\\*\\* \\|",
+   "source": "theorem_ledger",
+   "group": 1
   },
   {
-   "id": "claude.theorems_core_cmd",
+   "id": "claude.ledger_theorems",
    "file": "CLAUDE.md",
-   "pattern": "^python3 tools/count_theorems\\.py --scope core\\s+# ([0-9  ]+)\\s*$",
-   "source": "theorems_core"
+   "pattern": "^\\| theorems \\| \\*\\*([0-9 \\u202f]+)\\*\\* \\|",
+   "source": "theorem_ledger",
+   "group": 2
   },
   {
-   "id": "claude.theorems_all_cmd",
+   "id": "claude.ledger_kernel_checked",
    "file": "CLAUDE.md",
-   "pattern": "^python3 tools/count_theorems\\.py --scope all\\s+# ([0-9  ]+)\\s*$",
-   "source": "theorems_all"
+   "pattern": "^\\| kernel-checked \\| \\*\\*([0-9 \\u202f]+)\\*\\* \\|",
+   "source": "theorem_ledger",
+   "group": 3
+  },
+  {
+   "id": "claude.ledger_axiom_audited",
+   "file": "CLAUDE.md",
+   "pattern": "^\\| axiom-audited \\| \\*\\*([0-9 \\u202f]+)\\*\\* \\|",
+   "source": "theorem_ledger",
+   "group": 4
+  },
+  {
+   "id": "claude.ledger_approved",
+   "file": "CLAUDE.md",
+   "pattern": "^\\| approved-policy \\| \\*\\*([0-9 \\u202f]+)\\*\\* \\|",
+   "source": "theorem_ledger",
+   "group": 5
+  },
+  {
+   "id": "claude.ledger_conditional",
+   "file": "CLAUDE.md",
+   "pattern": "^\\| conditional \\| \\*\\*([0-9 \\u202f]+)\\*\\* \\|",
+   "source": "theorem_ledger",
+   "group": 6
+  },
+  {
+   "id": "claude.ledger_unchecked",
+   "file": "CLAUDE.md",
+   "pattern": "^\\| unchecked \\| \\*\\*([0-9 \\u202f]+)\\*\\* \\|",
+   "source": "theorem_ledger",
+   "group": 7
+  },
+  {
+   "id": "claude.ledger_outside_files",
+   "file": "CLAUDE.md",
+   "pattern": "The \\*\\*([0-9 \\u202f]+)\\*\\* tracked `\\.lean` files under `MachLib/` that the environment does not contain",
+   "source": "theorem_ledger",
+   "group": 8
+  },
+  {
+   "id": "claude.ledger_discovered_files",
+   "file": "CLAUDE.md",
+   "pattern": "\\(`Discovered/`'s ([0-9 \\u202f]+) and",
+   "source": "theorem_ledger",
+   "group": 10
+  },
+  {
+   "id": "claude.discovered_tracked_files",
+   "file": "CLAUDE.md",
+   "pattern": "\\*\\*`MachLib/Discovered/` \\(([0-9 \\u202f]+) tracked files\\) is deliberately outside the aggregator",
+   "source": "theorem_ledger",
+   "group": 10,
+   "_note": "Registered 2026-10-10: Discovered/'s tracked files are exactly the ones outside the environment under Discovered/, since none of them is imported."
   },
   {
    "id": "claude.axioms_pinned",
@@ -397,6 +485,14 @@
    "source": "axioms_pinned"
   },
   {
+   "id": "wip.algebra_spine",
+   "file": "foundations/docs/what_is_proven.md",
+   "pattern": "([0-9 \\u202f]+) algebra-spine theorems at the last run",
+   "source": "axioms_pinned",
+   "group": 2,
+   "_note": "Registered 2026-10-10. It read 244 against the ledger's 326, unregistered: an axiom-audited count of proved results that nothing checked."
+  },
+  {
    "id": "wip.trusted",
    "file": "foundations/docs/what_is_proven.md",
    "pattern": "\\*\\*(\\d+)\\*\\* form the trusted footprint",
@@ -439,10 +535,11 @@
    "source": "manifest_float"
   },
   {
-   "id": "site.theorems_core",
+   "id": "site.ledger_approved",
    "file": "site/components/Numbers.tsx",
-   "pattern": "value: \"([0-9 \\u202f]+)\", label: \"theorems, outside the Forge corpus\"",
-   "source": "theorems_core"
+   "pattern": "value: \"([0-9 \\u202f]+)\", label: \"theorems kernel-checked, every axiom within the trusted policy\"",
+   "source": "theorem_ledger",
+   "group": 5
   },
   {
    "id": "site.trusted",
@@ -460,7 +557,7 @@
   {
    "id": "site.closerate_pct",
    "file": "site/components/Numbers.tsx",
-   "pattern": "value: \"([0-9.]+) %\", label: \"of Forge @verify obligations auto-close\"",
+   "pattern": "value: \"([0-9.]+) %\", label: \"of Forge @verify obligations elaborate without sorry \\(not axiom-audited\\)\"",
    "source": "closerate_pct"
   },
   {
@@ -533,10 +630,11 @@
    "source": "lean_lines"
   },
   {
-   "id": "review.theorems_core",
+   "id": "review.ledger_theorems",
    "file": "SELF_ASSESSMENT_axiom_witness_2026_09_11.md",
    "pattern": "≈ ([0-9  ]+) theorems outside its generated sub-corpus",
-   "source": "theorems_core"
+   "source": "theorem_ledger",
+   "group": 2
   },
   {
    "id": "review.trusted",
@@ -587,22 +685,17 @@
    "source": "manifest_trusted"
   },
   {
-   "id": "decision.theorems_discovered",
+   "id": "decision.discovered_files",
    "file": "TRUST_BOUNDARY_DECISION_analytic_finite_zeros_2026_09_11.md",
-   "pattern": "The ([0-9  ]+)-theorem generated corpus",
-   "source": "theorems_discovered"
+   "pattern": "The ([0-9  ]+)-file generated corpus",
+   "source": "theorem_ledger",
+   "group": 10
   },
   {
    "id": "claude.discovered_files",
    "file": "CLAUDE.md",
    "pattern": "`MachLib/Discovered/` \\(([0-9  ]+) tracked files\\)",
    "source": "discovered_files"
-  },
-  {
-   "id": "claude.theorems_discovered_diff",
-   "file": "CLAUDE.md",
-   "pattern": "The two differ by \\*\\*([0-9  ]+)\\*\\*",
-   "source": "theorems_discovered"
   }
  ]
 }

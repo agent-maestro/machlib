@@ -209,10 +209,13 @@ def self_test(registry: dict) -> int:
             for l in sink:
                 if not l.startswith("  OK"):
                     print("    " + l)
-        # Canary 3 (must be UNAVAILABLE, not PASS): a source whose command fails.
+        # Canary 3 (must be UNAVAILABLE, not PASS): a source whose command fails. It kills the source of the
+        # first README claim -- named by the registry, not here, so retiring a source cannot orphan the canary
+        # (it named `theorems_core` until 2026-10-10, when that text count was replaced by the theorem ledger).
         broken = json.loads(json.dumps(registry))
-        broken["sources"]["theorems_core"] = {"kind": "shell", "cmd": "false", "extract": "(\\d+)"}
-        broken["claims"] = [c for c in broken["claims"] if c["source"] == "theorems_core"]
+        dead = target["source"]
+        broken["sources"][dead] = {"kind": "shell", "cmd": "false", "extract": "(\\d+)"}
+        broken["claims"] = [c for c in broken["claims"] if c["source"] == dead]
         sink = []
         rc3 = check(broken, tmp, FOUNDATIONS, emit=sink.append)
         unavailable = rc3 == 2

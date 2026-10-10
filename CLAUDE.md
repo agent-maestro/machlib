@@ -8,28 +8,48 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 086 `.lean` files** (811 top-level + 275 in subdirectories) /
-**259 138 lines** / **8 117 theorems**, re-exported through the aggregator
+**259 138 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
-The theorem count is exactly this command, run from `foundations/`, and nothing else:
+**Proof counts come from the theorem ledger and from nothing else** (the owner's ruling, 2026-10-10: "a
+text search is not an acceptable basis for reporting the number of proved mathematical results"). Run from
+`foundations/`:
 
 ```bash
-python3 tools/count_theorems.py --scope core          # 8 117
-python3 tools/count_theorems.py --scope all           # 8 741
+python3 tools/theorem_ledger/ledger.py                            # the counts, ~11 s warm, peak ~1.5 GB
+python3 tools/theorem_ledger/ledger.py --out theorem_ledger.json   # plus every theorem's record
+python3 tools/theorem_ledger/ledger.py --check theorem_ledger.json # is that ledger still this tree's?
 ```
 
-The line count is `git ls-files 'MachLib/*.lean' | xargs cat | wc -l`, from the same directory.
+It reads the environment `AxiomLedger.lean` checks (`import MachLib`, `import MachLib.FPGrounding`), takes
+every theorem's `#print axioms` footprint (`Lean.collectAxioms`) and classifies it against that file's LIVE
+`trustedFootprint` and `knownAxioms`. Measured 2026-10-10 at `2d2f59c0`:
 
-The two differ by **624**, which is `Discovered/`. **Every file and theorem count here is over git-TRACKED files**
-(since 2026-09-14): `MachLib/Discovered/.gitignore` ignores whatever the auto-prover emits until someone adds it by hand,
-and 39 such local-only files had this machine print 1 116 files and 720 Discovered theorems while CI printed 1 077. The
-scripts now read `git ls-files`; the gates still examine every file on disk.
+| count | value | meaning |
+|---|---|---|
+| declarations | **12 382** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 425** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 424** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 424** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **8 963** | every axiom in the footprint is in `trustedFootprint` |
+| conditional | **461** | on declared axioms outside it, named per theorem (mostly `HasDerivAt2*`, `hasDerivAt_implicit`, `floor`) |
+| unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
-**Two revisions of this file have carried a theorem count nobody can reproduce**: `5 851` by an
-unrecorded method, then `8 231`, which exceeds the largest number the corpus can produce by any
-file set (`8 097` as measured when it was caught, every `.lean` outside `.lake`). It is almost certainly the
-**unquoted-glob inflation** below. Do not restate a count without re-running the command above.
+The **265** tracked `.lean` files under `MachLib/` that the environment does not contain (`Discovered/`'s 253 and
+12 documented-unreachable top-level files) are reported as FILES ONLY: nothing elaborated them in this
+environment, so none of their theorems is counted, by the ledger or by anything else. The line count is
+`git ls-files 'MachLib/*.lean' | xargs cat | wc -l`, from the same directory. **Every file count here is over
+git-TRACKED files** (since 2026-09-14): `MachLib/Discovered/.gitignore` ignores whatever the auto-prover emits
+until someone adds it by hand, and 39 such local-only files had this machine print 1 116 files while CI printed
+1 077. The scripts read `git ls-files`; the gates still examine every file on disk.
+
+**Every theorem count this file carried before 2026-10-10 was a text count, and three were wrong**: `5 851` by an
+unrecorded method, then `8 231` (almost certainly the **unquoted-glob inflation** below), then `8 117` from
+`tools/count_theorems.py`, which the ledger shows was 1 308 SHORT, net: 27 of its lines sit in files the
+environment does not contain, and it cannot see a theorem whose line begins with a modifier or attribute --
+`private theorem` alone is 1 090 of the ledger's theorems. That script is a lint now, kept for its self-test, and
+says so in its output. Do not restate a count without re-running the ledger.
 
 **`MachLib/Discovered/` (253 tracked files) is deliberately outside the aggregator**: each file is
 self-contained and they cannot be imported together; it is the Forge `@verify(lean)` corpus and has
@@ -361,7 +381,8 @@ Core 7 709 → **7 662**; `Discovered/` unchanged at 720, because generated file
 was wrong for as long as it existed and was found only because a docstring edit made the corpus
 appear to gain a theorem nobody proved. `tools/count_theorems.py` strips block comments first;
 gate 25 keeps it honest. Sibling of the `sorry`-grep lesson in Forge: **before trusting a count,
-ask what else matches the pattern.**
+ask what else matches the pattern.** And ask what the pattern MISSES: on 2026-10-10 the theorem ledger
+showed the stripped count 1 308 short as well, so it is a lint now and the ledger is the count.
 
 **Free text sitting next to a machine-checked structure is unchecked, and drifts.** Two instances
 now, both closed by name gates. Gates 21-22 (`doc_theorem_names_check.py`): a ```lean fence in the
@@ -397,7 +418,8 @@ search is the anti-pattern the registry exists to discourage.
 `lake env lean tools/sorry_audit.lean` is useful (`1 sorryAx`, allowlisted) but is **not** a CI gate,
 and note its scope: it walks the **environment** after `import MachLib`, so it cannot see
 `Discovered/`. Neither is `scripts/closerate.sh`, which is a *measurement* harness (close-rate,
-79.9% at the last sweep), not pass/fail. The CI gate set is exactly the seven above
+79.9% at the last sweep), not pass/fail -- and not a proof count: "closed" means no `sorry` warning, with no
+axiom audit, over files the theorem ledger cannot see. The CI gate set is exactly the seven above
 (`.github/workflows/build-time.yml`).
 
 Note what the last two gate, because it is *not* the same thing. The claim auditor pins prose to the
@@ -409,6 +431,20 @@ behind it is missing — registration is still a human act.
 
 ## Gotchas
 
+- **The theorem ledger (`foundations/tools/theorem_ledger/`, 2026-10-10) learned four things the hard way.**
+  - **Lean v4.32's `native_decide` leaves no `Lean.ofReduceBool` in a footprint.** `Lean.Meta.nativeEqTrue` adds
+    an axiom per use, `<decl>._native.native_decide.ax_N_M : e = true`. A compiler-trust test that names only
+    `ofReduceBool`/`ofReduceNat`/`trustCompiler` files a native_decide proof under "undeclared axiom" at best;
+    the ledger matches the `_native` axiom too, and its fixture proves it.
+  - **`AxiomLedger.isCompilerArtifact` is a substring test written for AXIOM names.** On every declaration it
+    drops seven hand-written ones (`geomSum_closed`, `eml_closed_under_deriv`: `_closed`). The ledger applies it
+    to axioms only, as `liveAxioms` does.
+  - **`_private` is not a mark of generated code**: `private theorem foo` is `_private.M.0.foo`, and 1 090 of
+    the ledger's theorems are private. The ledger excludes by Lean's own predicates plus "no source range"
+    (`findDeclarationRangesCore?`), which is what catches `ctorIdx`, `ofNat`, `noConfusionType` and the
+    `brecOn` of an inductive predicate (a theorem); `diagnostics` prints where the two criteria disagree.
+  - **Imported footprints come from the `.olean`.** v4.32's `collectAxioms` reads a per-module table written
+    when the module compiled, so the ledger runs `lake build` first and refuses to count on a red build.
 - **`clamp` IS `max lo (min x hi)`, and that changed on 2026-09-22.** It was `min (max x lo) hi`,
   and its docstring said it matched "the Forge emission exactly" — which was the problem: the EML
   language reference defines `clamp(x, lo, hi)` as `max(lo, min(x, hi))`, the Forge HDL and proof
