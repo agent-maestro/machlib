@@ -542,6 +542,27 @@
    "group": 5
   },
   {
+   "id": "site.ledger_theorems",
+   "file": "site/components/Numbers.tsx",
+   "pattern": "value: \"([0-9 \\u202f]+)\", label: \"theorems in the Lean environment, each classified by its axioms\"",
+   "source": "theorem_ledger",
+   "group": 2
+  },
+  {
+   "id": "site.ledger_conditional",
+   "file": "site/components/Numbers.tsx",
+   "pattern": "value: \"([0-9 \\u202f]+)\", label: \"theorems kernel-checked relative to declared axioms outside the trusted policy\"",
+   "source": "theorem_ledger",
+   "group": 6
+  },
+  {
+   "id": "site.ledger_unchecked",
+   "file": "site/components/Numbers.tsx",
+   "pattern": "value: \"([0-9 \\u202f]+)\", label: \"theorem unchecked: the allowlisted teaching sorry \\(halve_in_unit_sorry\\)\"",
+   "source": "theorem_ledger",
+   "group": 7
+  },
+  {
    "id": "site.trusted",
    "file": "site/components/Numbers.tsx",
    "pattern": "value: \"([0-9 \\u202f]+)\", label: \"trusted axioms, none unaccounted\"",

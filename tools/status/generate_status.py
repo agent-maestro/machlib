@@ -275,7 +275,44 @@ def theorem_ledger_unavailable(reason: str) -> dict:
     }
 
 
-def load_theorem_ledger(path: Path | None, machlib_sha: str) -> tuple[dict, dict | None]:
+SORRY_ALLOWLIST = Path("foundations") / "tools" / "sorry_audit.lean"
+
+
+def sorry_allowlist(machlib_root: Path | None) -> list[str] | None:
+    """The names sorry_audit.lean's `allowedSorry` licenses, read from its source (None when it cannot be read).
+
+    The gate itself enforces the list in both directions; this only lets the dashboard say whether an unchecked
+    theorem is the documented, licensed one or a new sorry nobody has accounted for."""
+    if machlib_root is None:
+        return None
+    try:
+        text = (machlib_root / SORRY_ALLOWLIST).read_text(encoding="utf-8")
+    except OSError:
+        return None
+    m = re.search(r"def allowedSorry : List Name := \[(.*?)\n\s*\]", text, re.S)
+    if not m:
+        return None
+    body = "\n".join(line.split("--", 1)[0] for line in m.group(1).splitlines())
+    return re.findall(r"`([A-Za-z_][\w.']*)", body)
+
+
+def _unchecked_theorems(ledger: dict, allowlist: list[str] | None) -> list[dict]:
+    """Every theorem the ledger leaves unchecked, by name: the dashboard keeps it visible rather than fold it into
+    a count (the owner's ruling, 2026-10-10: "The single unchecked theorem must remain visible, including its
+    allowlisted sorry")."""
+    out = []
+    for t in ledger.get("theorems", []):
+        if t.get("classification") != "unchecked":
+            continue
+        reasons = t.get("unchecked_reasons", [])
+        out.append({"name": t["name"], "module": t.get("module"), "reasons": reasons,
+                    "sorry_allowlisted": (None if allowlist is None or "sorryAx" not in reasons
+                                          else t["name"] in allowlist)})
+    return sorted(out, key=lambda r: r["name"])
+
+
+def load_theorem_ledger(path: Path | None, machlib_sha: str,
+                        machlib_root: Path | None = None) -> tuple[dict, dict | None]:
     """The `theorem_ledger` block, and the full ledger (for cross-references) when it is usable.
 
     A ledger is usable only if it says it is available, was generated at THIS commit, and is bound to the
@@ -307,6 +344,11 @@ def load_theorem_ledger(path: Path | None, machlib_sha: str) -> tuple[dict, dict
         "available": True,
         "counts": {k: c[k] for k in LEDGER_COUNT_KEYS},
         "unchecked_by_reason": c.get("unchecked_by_reason", {}),
+        # Which declared axioms the conditional theorems rest on (a theorem resting on several counts under each):
+        # conditional is "proved relative to these assumptions", never "unproved".
+        "conditional_by_axiom": c.get("conditional_by_axiom", {}),
+        "unchecked_theorems": _unchecked_theorems(ledger, sorry_allowlist(machlib_root)),
+        "sorry_allowlist_source": f"{SORRY_ALLOWLIST.as_posix()} (allowedSorry)",
         "private_theorems": c.get("private_theorems"),
         "invariants_hold": True,
         "axiom_ledger_verdict": verdict,
@@ -454,7 +496,7 @@ def build_payload(args: argparse.Namespace, previous: dict | None) -> dict:
 
     axiom_info = parse_axiom_audit(args.axiom_audit)
 
-    theorem_ledger, ledger = load_theorem_ledger(args.theorem_ledger, args.machlib_sha)
+    theorem_ledger, ledger = load_theorem_ledger(args.theorem_ledger, args.machlib_sha, machlib_root)
     verify_audit = load_verify_audit(args.verify_audit_json, ledger)
 
     delta = compute_delta_vs_previous(sorries_total, previous)

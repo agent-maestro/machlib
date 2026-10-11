@@ -9,11 +9,17 @@ import { useEffect, useState } from "react";
 // is in README.md under "Numbers, measured".
 const MEASURED_ON = "2026-10-10";
 
-// The theorem tile is the theorem ledger's approved-policy count (foundations/tools/theorem_ledger): theorems
-// the Lean kernel admitted whose every axiom is in the declared trusted policy. Until 2026-10-10 it was a text
-// count of `theorem` lines, which is not a count of proved results.
+// The four theorem tiles are the theorem ledger's categories (foundations/tools/theorem_ledger), all of them: the
+// owner's ruling of 2026-10-10 -- "Do not simply replace the old number with 8,963 and call everything else
+// unproved. Conditional theorems may be perfectly valid relative to their assumptions." Approved-policy: the Lean
+// kernel admitted the proof and its every axiom is in the declared trusted policy. Conditional: admitted by the
+// kernel, resting on declared axioms outside that policy -- proved relative to them. Unchecked: the one allowlisted
+// teaching `sorry`. Until 2026-10-10 the tile was a text count of `theorem` lines, not a count of proved results.
 const TILES: { value: string; label: string }[] = [
+  { value: "9 425", label: "theorems in the Lean environment, each classified by its axioms" },
   { value: "8 963", label: "theorems kernel-checked, every axiom within the trusted policy" },
+  { value: "461", label: "theorems kernel-checked relative to declared axioms outside the trusted policy" },
+  { value: "1", label: "theorem unchecked: the allowlisted teaching sorry (halve_in_unit_sorry)" },
   { value: "143", label: "trusted axioms, none unaccounted" },
   { value: "4", label: "distinct open obligations" },
   { value: "79.9 %", label: "of Forge @verify obligations elaborate without sorry (not axiom-audited)" },
