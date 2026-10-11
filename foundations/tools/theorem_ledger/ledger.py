@@ -527,18 +527,36 @@ def assemble(facts: dict, lean_out: str, prov: dict) -> dict:
     }
 
 
-def verdict_ok(ledger: dict) -> bool:
+def checks_hold(ledger: dict) -> bool:
+    """The invariants, the cross-checks against AxiomLedger, and AxiomLedger's own verdict."""
     return (all(i["holds"] for i in ledger["invariants"]) and all(x["holds"] for x in ledger["cross_checks"])
             and ledger["axiom_ledger"]["verdict"] == "OK" and ledger["axiom_ledger"]["lean_exit_code"] == 0)
+
+
+def verdict(ledger: dict) -> str:
+    """OK only when the checks hold AND the ledger is bound to a commit: counts read off a tree no commit names are
+    UNBOUND -- true of that tree, quotable nowhere. (A review of the first version, 2026-10-10: it printed OK and
+    exited 0 for an unbound ledger, a trap for anyone taking exit 0 as "safe to quote".)"""
+    if not checks_hold(ledger):
+        return "FAIL"
+    return "OK" if ledger.get("bound_to_head", False) else "UNBOUND"
+
+
+def verdict_ok(ledger: dict) -> bool:
+    return verdict(ledger) == "OK"
+
+
+#: Exit codes: OK 0, FAIL 1, UNAVAILABLE 2, UNBOUND 3 (0 with --allow-unbound, for a working-tree gate).
+EXIT = {"OK": 0, "FAIL": 1, "UNBOUND": 3}
 
 
 def summary(ledger: dict, digest: str | None) -> list[str]:
     c, p = ledger["counts"], ledger["provenance"]
     o = ledger["outside_environment"]
-    ok = verdict_ok(ledger)
+    v = verdict(ledger)
     reasons = ", ".join(f"{k} {v}" for k, v in c["unchecked_by_reason"].items()) or "none"
     lines = [
-        f"THEOREM-LEDGER {'OK' if ok else 'FAIL'} -- MachLib {p['machlib_commit'][:12]}, sources "
+        f"THEOREM-LEDGER {v} -- MachLib {p['machlib_commit'][:12]}, sources "
         f"{p['machlib_sources'][:19]} ({'clean' if p['sources_clean'] else 'DIRTY'}), {p['lean_version']}",
         f"  axiom policy {ledger['axiom_policy']['version'][:40]}..., {ledger['axiom_ledger']['verdict']} by "
         "AxiomLedger.lean",
@@ -592,7 +610,8 @@ def cmd_generate(args: argparse.Namespace) -> int:
     if args.out:
         args.out.write_bytes(data)
     print("\n".join(summary(ledger, digest)))
-    return 0 if verdict_ok(ledger) else 1
+    v = verdict(ledger)
+    return 0 if v == "UNBOUND" and args.allow_unbound else EXIT[v]
 
 
 #: What `--check` recomputes without Lean. The axiom-policy version and the environment's module list are functions
@@ -763,6 +782,10 @@ def self_test(cap: str) -> int:
     lost = classify(None, set(pol["known"]), set(pol["trusted"]))
     check(lost == {"classification": "unchecked", "unchecked_reasons": ["footprint-not-computed"]},
           "a theorem whose footprint was not computed is unchecked, never approved")
+    unbound = {"invariants": [], "cross_checks": [], "axiom_ledger": {"verdict": "OK", "lean_exit_code": 0},
+               "bound_to_head": False}
+    check(verdict(unbound) == "UNBOUND" and not verdict_ok(unbound) and EXIT["UNBOUND"] != 0,
+          "a ledger no commit names reads UNBOUND, never OK, and does not exit 0 by default")
     broken = dict(c, kernel_checked=c["kernel_checked"] + 1)
     check(not all(ok for _, ok in invariants(broken)), "a doctored kernel_checked count fails an invariant")
     check_canaries(check)
@@ -775,6 +798,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--out", type=Path, help="write the ledger JSON (canonical, sorted keys) here")
     ap.add_argument("--check", type=Path, metavar="LEDGER", help="report whether LEDGER is still current")
     ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--allow-unbound", action="store_true",
+                    help="exit 0 for a ledger of a tree no commit names (check_all on a working tree); the headline "
+                         "still says UNBOUND, and its counts are quotable nowhere")
     ap.add_argument("--cap", default=os.environ.get("MACHLIB_LEDGER_CAP", DEFAULT_CAP),
                     help=f"memory cap for each Lean run (default {DEFAULT_CAP})")
     args = ap.parse_args(argv)

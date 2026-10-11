@@ -91,7 +91,8 @@ else
   # its #print-axioms footprint classified against AxiomLedger's policy, the seven counts' invariants checked.
   # It writes only to a temp dir. Its self-test runs a fixture with one theorem per category -- including a
   # native_decide proof, whose v4.32 `_native` axiom a name-only compiler-trust test misses.
-  run "theorem-ledger" python3 tools/theorem_ledger/ledger.py
+  # --allow-unbound: on a working tree the checks still decide, while the headline says UNBOUND (quotable nowhere).
+  run "theorem-ledger" python3 tools/theorem_ledger/ledger.py --allow-unbound
   run "theorem-ledger-selftest" python3 tools/theorem_ledger/ledger.py --self-test
   run "obligations"  bash tools/check_obligations.sh
   run "discovered"   bash scripts/check_discovered_compiles.sh 4
