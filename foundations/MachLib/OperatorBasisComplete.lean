@@ -83,8 +83,10 @@ theorem aerr_sqrt {w M E v ve m p : Real} (hw0 : 0 ≤ w)
 Like `sqrt`, `ln` is ill-conditioned at `0` (slope `1/x → ∞`), so it is guarded by a
 lower bound `0 < m ≤ arg`; on `[m, ∞)` it is `1/m`-Lipschitz. Unlike `sqrt`, `ln`'s
 output is unbounded in *sign*, so its magnitude bound is `max(|ln m|, |ln(M+E)|)` over
-the value range `[m, M+E]`. All derived from `log_mul`/`log_lt_log`/`log_le_sub_one`
-(no new axioms). -/
+the value range `[m, M+E]`. All derived from `log_mul`/`log_lt_log`/`log_le_sub_one_mvt`
+(no new axioms). `log_le_sub_one_mvt` is `log_le_sub_one` with the tangent line DERIVED from the mean value
+theorem (`ExpTangentLine`), so `ln_step` -- and through it `aerr_ln` and `aerr_pow` -- does not rest on the axiom
+`one_add_le_exp` (the owner's ruling, 2026-10-11). -/
 
 theorem log_mono {a b : Real} (ha : 0 < a) (hab : a ≤ b) : log a ≤ log b := by
   rcases lt_total a b with h | h | h
@@ -106,7 +108,7 @@ theorem ln_step {a b m : Real} (hm : 0 < m) (hmb : m ≤ b) (hba : b ≤ a) :
   have hb : 0 < b := lt_of_lt_of_le hm hmb
   rw [show log a - log b = log (a / b) from (log_div ha hb).symm]
   have hle1 : log (a / b) ≤ (a - b) / b := by
-    have h := log_le_sub_one (div_pos_of_pos_pos ha hb)
+    have h := log_le_sub_one_mvt (div_pos_of_pos_pos ha hb)
     rwa [show a / b - 1 = (a - b) / b from by
           rw [← self_div (ne_of_gt hb), div_sub_div_same (ne_of_gt hb)]] at h
   exact le_trans hle1 (div_le_div_pos (sub_nonneg_of_le hba) (le_refl _) hm hmb)
@@ -159,9 +161,9 @@ theorem aerr_ln {w M E v ve m p : Real} (hw0 : 0 ≤ w)
 
 Forge emits native `pow` (one rounding), not a decomposition. Real power is *definable*
 without a new axiom — `rpow x y := exp(y·log x)` — and native pow's single rounding is
-exactly a `RoundsW` on `exp(y·log x)`, so the `exp` rule (`exp_grow`) does the work: the
+exactly a `RoundsW` on `exp(y·log x)`, so the `exp` rule (`exp_grow_mvt`) does the work: the
 argument error `|y·log vx − y·log xe| ≤ y·(Ex/m)` (via the `ln`-Lipschitz bound) feeds
-`exp_grow`. Scoped to a guarded base (`0 < m ≤ x`) and a nonneg exact exponent `y` (the
+`exp_grow_mvt`. Scoped to a guarded base (`0 < m ≤ x`) and a nonneg exact exponent `y` (the
 common case: literal/parameter exponents like `1.83`, `4.0`, a Hill coefficient). -/
 
 /-- Real power, *defined* (not axiomatised): `x^y := exp(y·log x)`, exact for `x > 0`. -/
@@ -200,7 +202,7 @@ theorem aerr_pow {w Mx Ex vx xe y m p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
     exact sub_nonneg_of_le (le_trans he1 h2)
   refine ⟨?_, ?_⟩
   · rw [abs_of_nonneg (le_of_lt (rpow_pos xe y))]; exact hmono
-  · exact le_trans (exp_grow hw0 hw1 hEarg0 harg hp) (mul_le_mul_of_nonneg_right hmono hF0)
+  · exact le_trans (exp_grow_mvt hw0 hw1 hEarg0 harg hp) (mul_le_mul_of_nonneg_right hmono hF0)
 
 /-- `tanh`: bounded-Lipschitz (`|tanh| ≤ 1`, 1-Lipschitz by MVT), so like `sin`/`cos` —
 magnitude `1`, error `E + w`. -/

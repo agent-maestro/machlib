@@ -52,7 +52,7 @@ data-dependent obligation division alone needs (`1/y` is unbounded near 0).
 | `atan` | `aerr_atan` | **1-Lipschitz, magnitude-preserving** (`\|atan x\| ≤ \|x\|`); 3 axioms (the `atan` primitive + its derivative, like `HasDerivAt_sin`) |
 | `sqrt` | `aerr_sqrt` | **guarded** (`m ≤ arg`) — `1/(2√m)`-Lipschitz, magnitude `√M` |
 | `ln` | `aerr_ln` | **guarded** (`m ≤ arg`) — `1/m`-Lipschitz, magnitude `max(\|ln m\|,\|ln M\|)` |
-| `pow` | `aerr_pow` | native `x^y` (guarded base, `y ≥ 0`) — `rpow := exp(y·log x)`, amplifying via `exp_grow` |
+| `pow` | `aerr_pow` | native `x^y` (guarded base, `y ≥ 0`) — `rpow := exp(y·log x)`, amplifying via `exp_grow_mvt` |
 | `if` | `aerr_ite` | **branch-robust conditional** — error `max(E_then, E_else)`, magnitude `max(M_then, M_else)`; the selected branch carries, no amplification. Sound when rounding does not flip the test (`if/else-if/else` → nested `iteO`) |
 
 `exp` *amplifies* (absolute argument error → relative output factor); `sin`/`cos` stay
@@ -230,6 +230,11 @@ PYTHONPATH=<forge> python3 tools/machlib_bind/check.py --dir <eml-stdlib>
 # Run the empirical-soundness gate — asserts no bound undershoots the observed f64 error:
 PYTHONPATH=<forge> python3 -m pytest tools/machlib_bind/test_tightness_gate.py
 ```
+
+Since 2026-10-11 `gexpr_sound`'s footprint does not contain the axiom `one_add_le_exp`: the `exp`, `expU`, `pow`
+and `ln` rules take the tangent line `1 + x ≤ exp x` from `one_add_le_exp_of_mvt` (`ExpTangentLine`, derived from
+the mean value theorem and `HasDerivAt_exp`) through `exp_grow_mvt` and `log_le_sub_one_mvt`. The axiom itself
+stays, for the elementary routes that must not rest on calculus; `ExpTangentLine`'s docstring says why.
 
 The certifier spans `OperatorBasisSound` / `OperatorBasisTrans` / `OperatorBasisGeneral`
 / `DivisionError` / `OperatorBasisComplete` (the fold) · `VectorError` (n-ary reductions) ·

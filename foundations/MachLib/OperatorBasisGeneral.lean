@@ -114,7 +114,10 @@ theorem aerr_mul {w Mx Ex vx xe My Ey vy ye p : Real} (hw0 : 0 ≤ w)
 
 /-- **Amplifying `exp`** (general argument). Output magnitude `exp M`; error scales by
 `exp M` (the condition number) — `exp_grow`'s relative factor times the magnitude
-bound `exp ve ≤ exp M`. This is the case the bounded-Lipschitz fold could not reach. -/
+bound `exp ve ≤ exp M`. This is the case the bounded-Lipschitz fold could not reach.
+The factor comes from `exp_grow_mvt`, whose tangent line is DERIVED (`one_add_le_exp_of_mvt`), so this rule's
+footprint holds `rolle_ct` and `HasDerivAt_exp` and not the axiom `one_add_le_exp` (the owner's ruling,
+2026-10-11; `ExpTangentLine` says why the axiom stays). `aerr_exp_upper` below does the same. -/
 theorem aerr_exp {w M E v ve p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
     (h : AErr M E v ve) (hp : RoundsW w p (exp v)) :
     AErr (exp M) (exp M * (exp E * (1 + w) - 1)) p (exp ve) := by
@@ -133,7 +136,7 @@ theorem aerr_exp {w M E v ve p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
         le_trans hstep1 (le_trans (le_of_eq (mul_one_ax (exp E)).symm)
           (mul_le_mul_of_nonneg_left hw1' (le_of_lt (exp_pos E))))
       exact sub_nonneg_of_le hprod
-    exact le_trans (exp_grow hw0 hw1 hE0 h.2 hp) (mul_le_mul_of_nonneg_right hpre hfac0)
+    exact le_trans (exp_grow_mvt hw0 hw1 hE0 h.2 hp) (mul_le_mul_of_nonneg_right hpre hfac0)
 
 /-- **Relative (upper-bound-aware) `exp` rule.** When the argument is bounded *above* by `U`
 (`ve ≤ U`), the magnitude is the **tight** `exp U` and the error is scaled by `exp U` — not
@@ -160,7 +163,7 @@ theorem aerr_exp_upper {w M E v ve U p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
         le_trans hstep1 (le_trans (le_of_eq (mul_one_ax (exp E)).symm)
           (mul_le_mul_of_nonneg_left hw1' (le_of_lt (exp_pos E))))
       exact sub_nonneg_of_le hprod
-    exact le_trans (exp_grow hw0 hw1 hE0 h.2 hp) (mul_le_mul_of_nonneg_right hpre hfac0)
+    exact le_trans (exp_grow_mvt hw0 hw1 hE0 h.2 hp) (mul_le_mul_of_nonneg_right hpre hfac0)
 
 /-- `sin`: bounded magnitude `1`, error `E + w` (bounded-Lipschitz). -/
 theorem aerr_sin {w M E v ve p : Real} (hw0 : 0 ≤ w)

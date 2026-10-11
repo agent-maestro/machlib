@@ -8,6 +8,7 @@ import MachLib.Exp
 import MachLib.Trig
 import MachLib.TrigLipschitz
 import MachLib.ErrorAlgebra
+import MachLib.ExpTangentLine
 
 /-!
 # The transcendental rule: `exp` forward-error
@@ -31,6 +32,13 @@ hybrid the full algebra needs; `exp_grow` is its `exp` case, proved here.
 
 `sorryAx`-free; builds on `MachLib.Exp` (`exp_add`, `exp_pos`, `exp_monotone`,
 `one_add_le_exp`) + the `ErrorAlgebra`/`FPModel` toolkit.
+
+**Two tangent lines, one proof (2026-10-11).** The body is `exp_grow_of_tangent`, which takes the tangent
+inequality `1 + t ≤ exp t` as a HYPOTHESIS. `exp_grow` supplies the axiom `one_add_le_exp` (its statement and
+footprint are what they were); `exp_grow_mvt` supplies `one_add_le_exp_of_mvt` (`ExpTangentLine`, derived from the
+mean value theorem), so its footprint holds `rolle_ct` and `HasDerivAt_exp` in place of the axiom. `exp_grow_mvt`
+is what `aerr_exp`, `aerr_exp_upper` and `aerr_pow` use (the owner's ruling, 2026-10-11: Forge's lemmas move to
+the derived theorem, the axiom stays); `exp_grow`'s other consumer, `gaussian2_fwd`, is unchanged.
 -/
 
 namespace MachLib.Real
@@ -52,11 +60,10 @@ theorem et_lower {A B : Real} (h : 1 + 1 ≤ A + B) : 1 - A ≤ B - 1 := by
   rw [et_lower_ring A B] at h0
   exact le_of_sub_nonneg h0
 
-/-- **`exp` forward-error rule.** One rounded `exp` of an argument carrying
-absolute error `≤ E` lands within a *relative* factor `exp(E)·(1+w)` of the exact
-`exp(x_e)`. The absolute argument error `E` becomes the relative output factor —
-the structural reason transcendentals need a hybrid (absolute+relative) algebra. -/
-theorem exp_grow {w E xc xe p : Real}
+/-- **`exp` forward-error rule, over any tangent line.** `exp_grow`'s proof, with the tangent inequality
+`1 + t ≤ exp t` taken as the hypothesis `htan` (used twice, at `E` and `-E`), so the caller chooses where it comes
+from: the axiom (`exp_grow`) or the mean-value derivation (`exp_grow_mvt`). -/
+theorem exp_grow_of_tangent (htan : ∀ t : Real, 1 + t ≤ exp t) {w E xc xe p : Real}
     (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (hE : 0 ≤ E)
     (harg : abs (xc - xe) ≤ E)
     (hp : RoundsW w p (exp xc)) :
@@ -100,9 +107,9 @@ theorem exp_grow {w E xc xe p : Real}
     apply et_lower
     -- 2 ≤ (1-E)(1-w) + (1+E)(1+w) ≤ exp(-E)(1-w) + exp E(1+w) ≤ exp Δ(1+δ) + exp E(1+w)
     have ht1 : (1 - E) ≤ exp (-E) := by
-      have h := one_add_le_exp (-E)
+      have h := htan (-E)
       rwa [show (1 : Real) + (-E) = 1 - E from by mach_ring] at h
-    have ht2 : (1 + E) ≤ exp E := one_add_le_exp E
+    have ht2 : (1 + E) ≤ exp E := htan E
     have hlo1 : (1 - E) * (1 - w) ≤ exp (-E) * (1 - w) :=
       mul_le_mul_of_nonneg_right ht1 h1w_nn
     have hlo1' : exp (-E) * (1 - w) ≤ exp (xc - xe) * (1 + δ) :=
@@ -120,6 +127,28 @@ theorem exp_grow {w E xc xe p : Real}
     have htwo : (1 : Real) + 1 ≤ (1 + 1) + (E * w + E * w) :=
       le_add_of_nonneg_right (add_nonneg_ea (mul_nonneg hE hw0) (mul_nonneg hE hw0))
     exact le_trans htwo hsum_lo
+
+/-- **`exp` forward-error rule.** One rounded `exp` of an argument carrying
+absolute error `≤ E` lands within a *relative* factor `exp(E)·(1+w)` of the exact
+`exp(x_e)`. The absolute argument error `E` becomes the relative output factor —
+the structural reason transcendentals need a hybrid (absolute+relative) algebra.
+The tangent line is the axiom `one_add_le_exp`. -/
+theorem exp_grow {w E xc xe p : Real}
+    (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (hE : 0 ≤ E)
+    (harg : abs (xc - xe) ≤ E)
+    (hp : RoundsW w p (exp xc)) :
+    abs (p - exp xe) ≤ exp xe * (exp E * (1 + w) - 1) :=
+  exp_grow_of_tangent one_add_le_exp hw0 hw1 hE harg hp
+
+/-- **`exp` forward-error rule, tangent line DERIVED.** `exp_grow`'s statement, with the tangent line from
+`one_add_le_exp_of_mvt` (the mean value theorem and `HasDerivAt_exp`) instead of the axiom `one_add_le_exp`.
+The rule `gexpr_sound`'s `exp`, `expU` and `pow` cases use (`aerr_exp`, `aerr_exp_upper`, `aerr_pow`). -/
+theorem exp_grow_mvt {w E xc xe p : Real}
+    (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (hE : 0 ≤ E)
+    (harg : abs (xc - xe) ≤ E)
+    (hp : RoundsW w p (exp xc)) :
+    abs (p - exp xe) ≤ exp xe * (exp E * (1 + w) - 1) :=
+  exp_grow_of_tangent one_add_le_exp_of_mvt hw0 hw1 hE harg hp
 
 /-! ## the other transcendental kind: bounded-Lipschitz (`sin`, `cos`)
 
