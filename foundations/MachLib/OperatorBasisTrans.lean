@@ -1,5 +1,6 @@
 import MachLib.OperatorBasisSound
 import MachLib.ErrorAlgebraTrans
+import MachLib.ExpTangentLine
 
 /-!
 # Operator-basis soundness, extended past `{+,×}` — the bounded-Lipschitz class

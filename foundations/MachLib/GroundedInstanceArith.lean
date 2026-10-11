@@ -1,4 +1,5 @@
 import MachLib.FloatSafeInstances
+import MachLib.ExpTangentLine
 
 /-!
 # Arithmetic for instantiating the grounded certificates on the literal and libm-finiteness axioms

@@ -1,4 +1,5 @@
 import MachLib.EMLGermSign
+import MachLib.ExpTangentLine
 
 /-!
 # `F` satisfies no polynomial relation over the polynomial coefficients

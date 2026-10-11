@@ -1,6 +1,7 @@
 import MachLib.EMLDepth2InvX
 import MachLib.EMLNetlistDepth
 import MachLib.EMLDepthTameness
+import MachLib.ExpTangentLine
 
 /-!
 # The 9-node question is a question about PATHS

@@ -1,5 +1,6 @@
 import MachLib.GaussianLaplaceRoute
 import MachLib.RiemannIntegralAddition
+import MachLib.ExpTangentLine
 
 /-!
 # The full-line Gaussian integral and the normalized Gaussian density

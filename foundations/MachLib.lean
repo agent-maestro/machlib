@@ -292,6 +292,7 @@ import MachLib.Asymptotics
 import MachLib.EMLAsymptoticBound
 import MachLib.EMLHierarchyIterExp
 import MachLib.Rolle
+import MachLib.ExpTangentLine
 import MachLib.SturmNonOscillation
 import MachLib.KhovanskiiLemma
 import MachLib.MultiPolyToPoly

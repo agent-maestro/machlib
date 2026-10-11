@@ -1,5 +1,6 @@
 import MachLib.EMLDepthCost
 import MachLib.EMLSizeCost
+import MachLib.ExpTangentLine
 
 /-!
 # `1/x` at depth 2 — the uniform reduction, and the `t2`-leaf cases

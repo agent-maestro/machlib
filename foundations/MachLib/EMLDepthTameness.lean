@@ -4359,6 +4359,7 @@ theorem x_plus_one_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
 
 `evSign_of_hard` reduces sign-definiteness at every depth to one proposition. At depth ≤ 2 no
 import is needed: the exp gap plus the depth-1 classification settle it outright.
+import MachLib.ExpTangentLine
 
 Besides being the first unconditional instance, this is a check on the o-minimality reading — if
 every term of this grammar is `ℝ_exp`-definable then *all* of them are eventually sign-definite, so a

@@ -1,5 +1,6 @@
 import MachLib.EMLDecayLadderStep
 import MachLib.EMLDepth2Form
+import MachLib.ExpTangentLine
 
 /-!
 # The `const_left` cell of the depth-4 rung, from the depth-3 decaying floor

@@ -1,4 +1,5 @@
 import MachLib.GroundedInstanceArith
+import MachLib.ExpTangentLine
 
 /-!
 # Why the older float-bridge axioms had to be narrowed to finite inputs, checked

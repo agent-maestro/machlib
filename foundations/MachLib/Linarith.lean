@@ -53,6 +53,7 @@ import MachLib.Trig
 import MachLib.Lemmas
 import MachLib.Ring
 import MachLib.PolyRing
+import MachLib.ExpTangentLine
 
 namespace MachLib
 namespace Real

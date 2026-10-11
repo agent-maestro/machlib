@@ -1,5 +1,6 @@
 import MachLib.EMLDepthTameness
 import MachLib.EMLNetlistDepth
+import MachLib.ExpTangentLine
 
 /-!
 # Certified EML synthesis — the acceptance side

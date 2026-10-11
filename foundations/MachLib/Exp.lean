@@ -182,13 +182,13 @@ Asymptotics all reference this single axiom; no other module
 introduces a duplicate or near-duplicate axiom of the same shape. -/
 axiom exp_gt_one_plus_self (x : Real) (hx : 0 < x) : 1 + x < exp x
 
-/-- The exponential tangent line: `1 + x ≤ exp x` for ALL real `x` (equality at
-`x = 0`). The non-strict, unrestricted companion to `exp_gt_one_plus_self`
-(which needs `0 < x`). Closes saturating-integral nonnegativity where the
-argument is `≤ 0` — e.g. sprint distance `t − τ·(1 − e^{−t/τ}) ≥ 0`, which
-reduces to `1 − e^{−u} ≤ u`. Sound (the graph of exp lies above every tangent;
-this is the tangent at the origin). -/
-axiom one_add_le_exp (x : Real) : 1 + x ≤ exp x
+/-! `one_add_le_exp` (`1 + x ≤ exp x` for ALL real `x`) was an axiom here from 2026-06-24 until 2026-10-11. It is a
+theorem now, with the same name and type, in `ExpTangentLine.lean`: the mean value theorem on `[0, x]` / `[x, 0]`
+and `HasDerivAt_exp`. It cannot be proved in this file -- `exp_add`, `exp_lt` and `exp_surj` hold of `b^x` for every
+`b > 1`, and `1 + x ≤ b^x` holds for all `x` only at `b = e` -- and the derivative seed and the MVT sit above it in
+the import graph. `exp_gt_one_plus_self` above follows the same way (`ExpTangentLine`'s private positive case) and
+stays an axiom: `Differentiation` imports `SinNotInEMLDepth2Sweep`, which cites it, and so does
+`exp_grows_strictly_thm` below. -/
 
 /-- `x < exp x` for ALL real `x`. Pointwise version of
 `Asymptotics.exp_grows_strictly` (which is now a theorem citing this

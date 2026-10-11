@@ -8,6 +8,7 @@ import MachLib.Exp
 import MachLib.Trig
 import MachLib.TrigLipschitz
 import MachLib.ErrorAlgebra
+import MachLib.ExpTangentLine
 
 /-!
 # The transcendental rule: `exp` forward-error

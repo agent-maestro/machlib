@@ -9,11 +9,11 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-143 of them and they are all listed below.
+142 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 96 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 95 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 12 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
@@ -187,7 +187,6 @@ decides what a certificate can claim.
 | `MachLib.Real.mul_pos` | witnessed | `{a b : Real} : 0 < a → 0 < b → 0 < a * b` | fun {a b} => mul_pos |
 | `MachLib.Real.negR` | witnessed | `: Real → Real` | (Neg.neg : ℝ → ℝ) |
 | `MachLib.Real.oneR` | witnessed | `: Real` | (1 : ℝ) |
-| `MachLib.Real.one_add_le_exp` | witnessed | `(x : Real) : 1 + x ≤ exp x` | fun x => by simpa [add_comm] using Real.add_one_le_exp x |
 | `MachLib.Real.pi` | mapped | `: Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.pi_lower_bound` | witnessed | `: natCast 3141592 * (1 / natCast 1000000) < pi` | by have h := Real.pi_gt_d6; norm_num at h ⊢; linarith |
 | `MachLib.Real.pythagorean` | witnessed | `(x : Real) : sin x * sin x + cos x * cos x = 1` | fun x => by simpa [sq] using Real.sin_sq_add_cos_sq x |

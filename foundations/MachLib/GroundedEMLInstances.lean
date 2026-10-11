@@ -1,4 +1,5 @@
 import MachLib.GroundedPIDInstances
+import MachLib.ExpTangentLine
 
 /-!
 # `eml_tree_grounded` at `eml` nodes, and the `eml_var_var` family, instantiated

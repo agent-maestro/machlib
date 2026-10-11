@@ -168,7 +168,7 @@ type. The honest headline is **zero unaccounted axioms**, never "zero axioms":
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 96 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 95 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier or function symbol, interpreted rather than asserted |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | IEEE-754 facts with no model in ℝ, validated by measurement |
@@ -210,19 +210,19 @@ not a count of proved results). Measured 2026-10-10:
 
 | figure | value | source |
 |---|---|---|
-| declarations in the checked environment | 12 382 | `python3 tools/theorem_ledger/ledger.py` |
-| theorems | 9 425 | the same command: approved-policy + conditional + unchecked |
-| kernel-checked theorems | 9 424 | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited theorems | 9 424 | footprint computed and classified against the policy |
-| approved-policy proofs | 8 963 | every axiom in the footprint is in `trustedFootprint` |
+| declarations in the checked environment | 12 384 | `python3 tools/theorem_ledger/ledger.py` |
+| theorems | 9 428 | the same command: approved-policy + conditional + unchecked |
+| kernel-checked theorems | 9 427 | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited theorems | 9 427 | footprint computed and classified against the policy |
+| approved-policy proofs | 8 966 | every axiom in the footprint is in `trustedFootprint` |
 | conditional proofs | 461 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
 | unchecked theorems | 1 | the allowlisted `sorryAx` (`halve_in_unit_sorry`) |
 | Forge `@verify` corpus files, outside the checked environment | 253 | the same command; files only, none of their theorems is counted |
-| `.lean` files under `MachLib/` | 1 086 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
-| axioms pinned by the ledger | 217 | `lake env lean AxiomLedger.lean` |
-| trusted axioms, all accounted for | 143 | `AXIOM_MANIFEST.md` |
+| `.lean` files under `MachLib/` | 1 087 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
+| axioms pinned by the ledger | 216 | `lake env lean AxiomLedger.lean` |
+| trusted axioms, all accounted for | 142 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 821 of 1 086 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 822 of 1 087 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

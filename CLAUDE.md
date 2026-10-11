@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 086 `.lean` files** (811 top-level + 275 in subdirectories) /
-**259 138 lines**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 087 `.lean` files** (812 top-level + 275 in subdirectories) /
+**259 245 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -24,15 +24,15 @@ python3 tools/theorem_ledger/ledger.py --check theorem_ledger.json # is that led
 
 It reads the environment `AxiomLedger.lean` checks (`import MachLib`, `import MachLib.FPGrounding`), takes
 every theorem's `#print axioms` footprint (`Lean.collectAxioms`) and classifies it against that file's LIVE
-`trustedFootprint` and `knownAxioms`. Measured 2026-10-10 at `2d2f59c0`:
+`trustedFootprint` and `knownAxioms`. Measured 2026-10-11, after `one_add_le_exp` became a theorem:
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 382** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 425** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 424** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 424** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **8 963** | every axiom in the footprint is in `trustedFootprint` |
+| declarations | **12 384** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 428** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 427** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 427** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **8 966** | every axiom in the footprint is in `trustedFootprint` |
 | conditional | **461** | on declared axioms outside it, named per theorem (mostly `HasDerivAt2*`, `hasDerivAt_implicit`, `floor`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
@@ -62,19 +62,19 @@ frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`**
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **217 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **216 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
-185  MachLib.*   axioms in the environment after `import MachLib`
+184  MachLib.*   axioms in the environment after `import MachLib`
  32  Certcom.*   IEEE-754 floor axioms
 ---
-217  = what the ledger pins
+216  = what the ledger pins
 ```
 
 (Re-derive the split with a `#eval` over `getEnv` partitioning `.axiomInfo` by name prefix — that is
-how these two were measured, not by grep; last on 2026-10-05, after the muses' review of E made theorems of
-seven more -- see "The muses' review of E" below.)
+how these two were measured, not by grep; last on 2026-10-11, after `one_add_le_exp` became a theorem -- see
+"`one_add_le_exp` is a theorem" below.)
 
 A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
 base, not project axioms: `propext`, `Classical.choice`, `Quot.sound`, `sorryAx`, `Quot.lcInv`,
@@ -103,7 +103,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 
 | class | n | |
 |---|---|---|
-| witnessed | 96 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 95 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 12 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | **float-bridge** | **32** | about IEEE floats — **no Mathlib witness can ever discharge these** |
@@ -111,7 +111,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 | unmodeled | **0** | gate 13 fails if this is ever nonzero |
 
 **Every mathematical axiom in the trusted footprint now has a kernel-checked Mathlib witness.**
-`96 + 12 + 3 + 32 = 143` (2026-10-05; the table read `119` and `166` until then, two rounds stale -- gate 13
+`95 + 12 + 3 + 32 = 142` (2026-10-11; `143` from 2026-10-05, and `119` and `166` before that, two rounds stale -- gate 13
 counts these, nothing checks this table). The only axioms without one are the 32 float-bridge rows, which are
 unwitnessable *in principle* rather than pending — see below.
 
@@ -314,6 +314,29 @@ order of the work after it (Forge's G -> second verifier -> H -> ...).
   (muse 1: bounded automation per axiom, so "provable means proved" stops meaning "declared provable means proved");
   Flocq/Coq witnesses for the 32 float-bridge axioms (muse 1).
 
+## `one_add_le_exp` is a theorem (2026-10-11) -- and 29 registered claims say its consumers were elementary
+
+`one_add_le_exp` (`1 + x ≤ exp x`, all `x`) is proved in `MachLib/ExpTangentLine.lean` with the same name and type
+(`Expr` equality checked), from `mean_value_theorem_ct` and `HasDerivAt_exp`. Calculus is unavoidable: `exp_add`,
+`exp_lt`, `exp_surj` hold of `b^x` for every `b > 1`, and only `b = e` satisfies the inequality, so nothing below
+`Rolle` can prove it. Its footprint is 42 axioms, all trusted; pinned 217 -> 216, trusted 143 -> 142.
+
+- **The trade, measured by the theorem ledger:** 503 theorems cited it; all 503 lost the name, 447 gained `rolle_ct`,
+  `HasDerivAt_exp`, `HasDerivAt_unique` and six structural `HasDerivAt` rules (+8 axioms typical), 49 shrank by one
+  (they had the calculus already). No classification moved: every gained axiom is trusted.
+- **What it breaks: the claim audit, on 29 claims, and rightly.** CHANGELOG says the `F`-transcendence results
+  (`Fbasis_not_algebraic`, `FS_not_algebraic_of_*`, `exp_not_algebraic`, `log_not_ratGerm`, `logQueryLowerBound_holds`)
+  cost "nothing analytic -- no `HasDerivAt`" and that the decay ladder (`decayFloor_upTo_two` ... `decayFloor_of_ladderInputs`,
+  the value-gap family, `poly_zero_of_exp_decay`) is "Footprint clean -- ... no `rolle_ct`"; those claims forbid
+  `HasDerivAt_exp` / `rolle_ct`, and through this theorem the footprints now hold them. This is `zero_ne_one_ax`'s shape:
+  the tangent axiom is PRIMITIVE in the elementary-`exp` sub-theory those routes were confined to and DERIVABLE once the
+  calculus seeds are admitted. Whether to restate the 29 claims or keep the axiom as a recorded sub-theory primitive is
+  an owner ruling, not a re-pin: do not loosen their forbid lists to make the audit green.
+- `exp_gt_one_plus_self` (strict, `x > 0`) is derivable the same way (`ExpTangentLine`'s private positive case) and
+  stays an axiom: `Differentiation` imports `SinNotInEMLDepth2Sweep`, which cites it, so converting it is a module move.
+  `exp_tangent_line_strict` (`EMLAsymptoticClass`, not trusted, 44 conditional theorems) is the same inequality
+  written `x + 1 < exp x`, and follows from `exp_gt_one_plus_self` where it is declared.
+
 ## Where the content comes from
 
 Self-contained. EML semantics live in `MachLib/SinNotInEML.lean` (the `EMLTree` type and `eval`);
@@ -326,11 +349,11 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 827 jobs, ~3 s warm
+lake build                                     # 828 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
-lake env lean AxiomLedger.lean                 # "217 axioms pinned; 112 headline footprints ⊆ trusted"
+lake env lean AxiomLedger.lean                 # "216 axioms pinned; 112 headline footprints ⊆ trusted"
 python3 tools/claim_audit/claim_audit.py       # "all 579 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
@@ -490,7 +513,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**821 of 1086 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**822 of 1087 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -823,9 +846,9 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**821 of 1 086 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
+run (**822 of 1 087 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
-**217 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
+**216 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
 `u_lt_one`; then `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`, `real_exp_finite`, `real_sinh_finite`,
 `real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
@@ -893,9 +916,10 @@ whole PI/PID arc is closed: real and complex, 2x2 and 3x3, measure and datapath.
 
 **`Depth3ApproachBelow` is DISCHARGED** (`depth3ApproachBelow_holds`, `MachLib/EMLDepth2Form.lean`,
 2026-09-05) — the decaying-floor replacement for the refuted `depth_le_three_gap_below`: a depth-≤3
-tree that dips below `k` on a ray does so by at least `exp (−C − exp (exp x))`. Footprint is the
+tree that dips below `k` on a ray does so by at least `exp (−C − exp (exp x))`. Footprint was the
 plain algebra/`exp` spine (`one_add_le_exp`, `exp_gt_one_plus_self`, `mul_pos`, …), no analytic
-axiom, `sorryAx` 0. The last branch — `A = eml a₁ a₂` bounded — was sized as needing a
+axiom, `sorryAx` 0 -- until 2026-10-11: with `one_add_le_exp` a theorem it carries `rolle_ct` and `HasDerivAt_exp`
+(45 axioms, was 37). The last branch — `A = eml a₁ a₂` bounded — was sized as needing a
 rate-separation lemma the corpus lacked; it does (`d3b_sep`), and it is one lemma: both excesses
 are `Θ(1/x)`, and a first-order tie is decided *against* the hypothesis by `log (1 + y) ≤ y` versus
 `exp v − 1 ≥ v`. Ledger row added (`Depth3ApproachBelow`, discharged); `Depth3ApproachBelowEml`

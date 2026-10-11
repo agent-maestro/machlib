@@ -2,6 +2,7 @@ import MachLib.PevRoots
 import MachLib.PevSignOnCutFree
 import MachLib.EMLDepth2InvX
 import MachLib.EMLFTranscendence
+import MachLib.ExpTangentLine
 
 /-!
 # A polynomial cannot survive exponential decay at a pole

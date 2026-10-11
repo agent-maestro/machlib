@@ -1,4 +1,5 @@
 import MachLib.EMLDepthTameness
+import MachLib.ExpTangentLine
 
 /-!
 # The depth-≤2 classification, packaged as a predicate

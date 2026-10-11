@@ -1,6 +1,7 @@
 import MachLib.Differentiation
 import MachLib.Log
 import MachLib.Linarith
+import MachLib.ExpTangentLine
 
 /-
 MachLib.EntropyDuality — the exp ↔ entropy Legendre duality, machine-checked.
