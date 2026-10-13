@@ -12956,11 +12956,11 @@
 "d": "bba7e5aaa24ea6e2bf8e72a43a2ead2f"
 },
 "MachLib.Real.aerr_exp": {
-"ax": 35,
+"ax": 44,
 "d": "8323b2bba2388b773f2e59f8be42fa48"
 },
 "MachLib.Real.aerr_exp_upper": {
-"ax": 35,
+"ax": 44,
 "d": "e04aefe7a4d083282b718f4ccc554305"
 },
 "MachLib.Real.aerr_ite": {
@@ -12972,7 +12972,7 @@
 "d": "bb64270dfabf1f0f7bb08d52163f7615"
 },
 "MachLib.Real.aerr_ln": {
-"ax": 37,
+"ax": 45,
 "d": "f3952b9fc4bffd93b6d6c7e91fd2bdd9"
 },
 "MachLib.Real.aerr_mul": {
@@ -12984,7 +12984,7 @@
 "d": "ebdf99014a0955076b44c303524367d6"
 },
 "MachLib.Real.aerr_pow": {
-"ax": 42,
+"ax": 46,
 "d": "4f1c95f96cb499d597b1181bf4869a82"
 },
 "MachLib.Real.aerr_round": {
@@ -14878,6 +14878,14 @@
 "MachLib.Real.exp_grow": {
 "ax": 34,
 "d": "a8f53d28e495faab9628355ef22ac217"
+},
+"MachLib.Real.exp_grow_mvt": {
+"ax": 44,
+"d": "a8f53d28e495faab9628355ef22ac217"
+},
+"MachLib.Real.exp_grow_of_tangent": {
+"ax": 35,
+"d": "1c06dd999b0481f1e8ba0286e9442d60"
 },
 "MachLib.Real.exp_grows_strictly_thm": {
 "ax": 19,
@@ -17240,11 +17248,11 @@
 "d": "61be84b45ff3cfa136d46d721a834b43"
 },
 "MachLib.Real.ln_lipschitz_bound": {
-"ax": 37,
+"ax": 45,
 "d": "7b9b6bea7005011223a43a2ab19fce8a"
 },
 "MachLib.Real.ln_step": {
-"ax": 37,
+"ax": 45,
 "d": "a0b9c92315690ac0b2427c0735880f1c"
 },
 "MachLib.Real.lo_le_clamp": {
@@ -17397,6 +17405,10 @@
 },
 "MachLib.Real.log_le_sub_one": {
 "ax": 21,
+"d": "ad33d34f79964822dfc1cf9b6e2ac6eb"
+},
+"MachLib.Real.log_le_sub_one_mvt": {
+"ax": 44,
 "d": "ad33d34f79964822dfc1cf9b6e2ac6eb"
 },
 "MachLib.Real.log_lip_local": {
@@ -19190,6 +19202,10 @@
 "MachLib.Real.oneShiftTower_facts": {
 "ax": 25,
 "d": "f762ff7515d1d75960683b45a7c1b148"
+},
+"MachLib.Real.one_add_le_exp_of_mvt": {
+"ax": 42,
+"d": "61e6946b5e587235a27ca84c2f70c38b"
 },
 "MachLib.Real.one_add_one_pos": {
 "ax": 9,
