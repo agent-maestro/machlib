@@ -23,6 +23,11 @@ raw extraction was produced by tools/machsig/regen.py, which is what binds it to
 signature set nobody can date is the defect that left the trust gate blind from 2026-09-03 to
 2026-10-13.
 
+v0.4-wide (2026-10-13): the watched population is every theorem MachLib declares -- the theorem
+ledger's rule, applied by extract_statement.lean and extract_trust.lean, which must agree -- and
+TrustAxioms comes from extract_trust.lean for every theorem (extract.lean's census, MachLib.* only,
+remains the cross-check where it reaches). Private, Certcom and root-namespace theorems are watched.
+
 v0.4 (2026-10-13), after an independent review: every theorem record also carries
 `DefClosureDigest` (SHA-256 over the definitions its statement reaches, stopping at axioms, opaque
 constants and theorems: redefining `clamp` changed thirty watched theorems with no StatementDigest
@@ -48,7 +53,7 @@ import identity  # noqa: E402
 import trust_closure  # noqa: E402
 
 FOUND = pathlib.Path(__file__).resolve().parent.parent.parent
-VERSION = "MachSig/v0.4"
+VERSION = "MachSig/v0.4-wide"
 EXTRACTION = FOUND / "artifacts" / "machsig_extraction.json"
 RAW_FILES = ("machsig_stmt_raw.tsv", "machsig_raw.tsv", "machsig_trust_raw.tsv")
 
@@ -191,16 +196,30 @@ def trust_records(stmt: dict, dec: dict, trust: dict, closure: dict) -> list[dic
         r = sig_for(name, stmt, dec)
         if r:
             records[name] = r
+    # THE POPULATION (v0.4-wide): every theorem record is watched, and the theorem records must be
+    # exactly the theorems extract_trust.lean counts under the ledger rule -- two Lean files apply
+    # the same copied rule, and a disagreement means one of them drifted.
+    counted = {k for k, v in trust["theorems"].items() if v["aux"] == "-"}
+    stmt_thms = {k for k, r in records.items() if r["kind"] == "theorem"}
+    if counted != stmt_thms:
+        only_s, only_t = sorted(stmt_thms - counted), sorted(counted - stmt_thms)
+        raise Refused(f"extract_statement.lean and extract_trust.lean disagree on the theorem population: "
+                      f"{len(only_s)} only in the statement census (first {only_s[:1]}), {len(only_t)} only in "
+                      f"the trust population (first {only_t[:1]})")
     disagree, unclosed = [], []
     for name, r in records.items():
-        if r["kind"] != "theorem" or r["TrustAxioms"] is None:
+        if r["kind"] != "theorem":
             continue
         t = trust["theorems"].get(name)
         if t is None:
             unclosed.append(name)
             continue
-        if t["axioms"] != r["TrustAxioms"]:
+        # The census (extract.lean, MachLib.* only) is the cross-check where it reaches; the axiom
+        # set itself comes from extract_trust.lean, which covers private and Certcom theorems too.
+        if r["TrustAxioms"] is not None and t["axioms"] != r["TrustAxioms"]:
             disagree.append(name)
+        r["TrustAxioms"] = list(t["axioms"])
+        r["TrustSig"] = f"AX{len(t['axioms'])}-S{1 if 'sorryAx' in t['axioms'] else 0}"
         r["DefClosureDigest"] = closure[name]
     if disagree:
         raise Refused(f"extract.lean and extract_trust.lean disagree on the axiom set of {len(disagree)} "

@@ -5,6 +5,18 @@
   excluded the Forge-facing grammar. The scope is declared here and reported in the output so the
   omission cannot recur unnoticed.
 
+  POPULATION (MachSig v0.4-wide, 2026-10-13). Until then the scope was a NAME test -- `MachLib.*` or
+  `Certcom.*`, not `isInternal`, not matching a substring list meant to catch generated names -- and
+  the trust gate watched the theorems it kept. An independent review counted what that missed: 301
+  Certcom theorems (no axiom census), 65 hand-written theorems the substrings mistook for generated
+  ones (`.rec` caught `recip_*`, `.inj` caught `injective_*`, `.below`, `.eq_`, `proof_`), 39
+  root-namespace theorems in MachLib.SinTaylorRemainder, and every private theorem (`_private.…` names
+  are `isInternal`). Now: every constant whose MODULE is MachLib's own (or whose name is under
+  `MachLib`/`Certcom`), private ones decided by `isPrivateName` and judged by their user name, minus
+  tools/theorem_ledger's exclusion rule (`auxReason`, copied below, as in extract_trust.lean). Axioms
+  are always kept. The gate thereby watches exactly what the theorem ledger counts; sig.py refuses to
+  write a set if this file and extract_trust.lean disagree on the theorem population.
+
   DIGESTS. `ser` below is a structural encoding of the STORED Lean expression. It keeps constructor
   shape, constant names and de Bruijn indices; it DROPS binder names and `mdata`, both of which are
   cosmetic and would otherwise make a rename look like a change.
@@ -16,18 +28,34 @@
 import MachLib
 open Lean Elab Command Term
 
-private def inScope (n : Name) : Bool := (`MachLib).isPrefixOf n || (`Certcom).isPrefixOf n
+private def isOwnModule (m : Name) : Bool := (`MachLib).isPrefixOf m || m == `CertcomLibm
+
+private def lastComponent : Name → String
+  | .str _ s => s
+  | _ => ""
+
+/-- tools/theorem_ledger/probe.lean.in `auxReason`, minus the axiom-only compiler-artifact rule. -/
+private partial def auxReason (env : Environment) (ranged : Name → Bool) (n : Name) : Option String :=
+  let user := (privateToUserName? n).getD n
+  let ci? := env.find? n
+  if user.isInternalDetail then some "internal-name"
+  else if ci? matches some (.recInfo _) then some "recursor"
+  else if isAuxRecursor env n then some "aux-recursor"
+  else if isNoConfusion env n then some "no-confusion"
+  else if Meta.isMatcherCore env n then some "matcher"
+  else if isReservedName env n then some "reserved-name"
+  else if ["inj", "injEq", "sizeOf_spec"].contains (lastComponent n)
+      && (env.find? n.getPrefix matches some (.ctorInfo _)) then some "constructor-lemma"
+  else if !n.getPrefix.isAnonymous && env.contains n.getPrefix
+      && (auxReason env ranged n.getPrefix).isSome then some "child-of-auxiliary"
+  else if !ranged n then some "no-source-range"
+  else none
 
 private def kindOf : ConstantInfo → String
   | .thmInfo _ => "theorem" | .defnInfo _ => "def" | .axiomInfo _ => "axiom"
   | .opaqueInfo _ => "opaque" | .ctorInfo _ => "ctor" | .inductInfo _ => "inductive"
   | .recInfo _ => "rec" | .quotInfo _ => "quot"
 
-private def isGenerated (n : Name) : Bool :=
-  let s := n.toString
-  ["match_", ".eq_", ".eq_def", "._", "proof_", "noConfusion", ".inj", ".sizeOf_spec",
-   "brecOn", ".below", ".rec", ".casesOn", ".ndrec", ".ofNat", ".toCtorIdx"].any
-    (fun m => (s.splitOn m).length > 1)
 
 /-- Structural serialization. Binder names and mdata are deliberately dropped. -/
 private partial def ser : Expr → String
@@ -103,13 +131,26 @@ private partial def constsIn (e : Expr) (acc : NameSet) : NameSet :=
 
 run_cmd Command.liftTermElabM do
   let env ← getEnv
-  IO.println "STMT_SCOPE\tMachLib.*+Certcom.*\tgenerated_excluded=true"
+  let mods := env.header.moduleNames
+  let own (nm : Name) : Bool := match env.getModuleIdxFor? nm with
+    | some i => if h : i.toNat < mods.size then isOwnModule mods[i.toNat] else false
+    | none => false
+  IO.println "STMT_SCOPE\townModules+MachLib.*+Certcom.*\tprivate=identity\texclusion=theorem_ledger.auxReason"
   IO.println "STMT_SCHEMA\tname\tkind\tmodule\tnodes\tdepth\teqs\timps\tands\tors\texists\tdistinct_consts\tstmt_ser_len\tstmt_ser\tproof_approx_depth\tproof_expr_fp64\thas_value"
   let mut raw := 0; let mut gen := 0; let mut kept := 0
+  let mut scope : Array (Name × ConstantInfo) := #[]
+  let mut ranged : NameSet := {}
   for (nm, ci) in env.constants.toList do
-    if inScope nm && !nm.isInternal then
+    if own nm || (`MachLib).isPrefixOf nm || (`Certcom).isPrefixOf nm then
+      scope := scope.push (nm, ci)
+      if (← findDeclarationRangesCore? nm).isSome then ranged := ranged.insert nm
+  for (nm, ci) in scope do
+    do
       raw := raw + 1
-      if isGenerated nm then gen := gen + 1
+      let excluded := match ci with
+        | .axiomInfo _ => none
+        | _ => auxReason env ranged.contains nm
+      if excluded.isSome then gen := gen + 1
       else
         kept := kept + 1
         let sf := shape ci.type
