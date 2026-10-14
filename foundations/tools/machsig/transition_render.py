@@ -15,7 +15,7 @@ from pathlib import Path
 import transition as T
 
 STMT_CUT = 300
-KINDS = ("grew", "shrank", "swap", "restated", "new", "removed")
+KINDS = ("grew", "shrank", "swap", "restated", "redefined", "new", "removed")
 SCHEMA = "machsig-transition/v2"     # v2 (2026-10-13): the binding block a REVIEWED stamp is checked against
 
 
@@ -38,6 +38,10 @@ def _history(ev: dict) -> dict:
 def _file_history(ev: dict) -> dict:
     h = json.loads(ev["history"].read_text()) if "history" in ev else {}
     return h.get("files", {})
+
+
+def _redefinition(ev: dict) -> dict | None:
+    return json.loads(ev["redefinition"].read_text()) if "redefinition" in ev else None
 
 
 def _targeted(ev: dict) -> dict | None:
@@ -87,7 +91,7 @@ def as_json(t: dict, manifest: dict, ev: dict) -> str:
     sets = {}
     rows = []
     for r in t["rows"]:
-        out = {k: r[k] for k in ("theorem", "kind", "module", "entered", "left", "causes") if k in r}
+        out = {k: r[k] for k in ("theorem", "kind", "module", "entered", "left", "causes", "redefined") if k in r}
         out["trust_class"] = r.get("trust_class")
         out["group"] = r.get("group")
         for side in ("old", "new"):
@@ -115,6 +119,8 @@ def as_json(t: dict, manifest: dict, ev: dict) -> str:
                         "extractor_delta_new_revision": t["extractor_delta_new"],
                         "baseline_edits_c3046961": t["baseline_edits"]},
         "population": t["population"],
+        "axiom_moves": t["axiom_moves"],
+        "redefinition": _redefinition(ev),
         "candidate_baseline": t.get("candidate"),
         "legacy_gate_view_c3046961": t.get("legacy_gate_view_c3046961"),
         "certcom_theorems_unwatched": t.get("certcom_theorems_unwatched"),

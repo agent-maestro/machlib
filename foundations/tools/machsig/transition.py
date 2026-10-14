@@ -60,8 +60,12 @@ EVIDENCE = {
     "stale_local": "stale_local_sigs_20260903.jsonl",
     "legacy_sigs_old": "legacy_sigs_23e0d047.jsonl",
     "candidate": "trust_baseline.candidate.json",
+    "narrow_candidate": "trust_baseline.candidate-narrow.json",
+    "redefinition": "redefinition.json",
+    "population": "population.json",
 }
-OPTIONAL = {"targeted", "stale_local", "legacy_sigs_old", "candidate"}
+OPTIONAL = {"targeted", "stale_local", "legacy_sigs_old", "candidate", "narrow_candidate", "redefinition",
+            "population"}
 
 # Trust classes, in precedence order: a change belongs to the FIRST that applies.
 TRUST_CLASSES = [
@@ -69,8 +73,10 @@ TRUST_CLASSES = [
     ("other", "a compiler-trust or undeclared axiom entered or left"),
     ("assumption-conditional", "a conditional MachLib axiom (declared, OUTSIDE trustedFootprint) entered or left: "
                                "what the theorem is conditional on changed"),
+    ("assumption-promoted", "an axiom entered that is trusted NOW but was not trusted on 2026-09-03: the trust "
+                            "came from a policy change (E1 pi_lower_bound, E2 realPow), not from the proof"),
     ("assumption-foundation", "only MachLib axioms INSIDE trustedFootprint (the approved foundation) entered or "
-                              "left, possibly with standard Lean axioms"),
+                              "left, possibly with standard Lean axioms -- trusted under BOTH policies"),
     ("standard-only", "only propext / Classical.choice / Quot.sound entered or left"),
     ("no-axiom-change", "the axiom set is identical"),
 ]
@@ -96,8 +102,9 @@ def load_sigset(p: Path) -> tuple[dict, dict]:
         for part in j.get("TrustSig", "").split("-"):
             if part.startswith("AX") and part[2:].isdigit():
                 ax = int(part[2:])
-        recs[j["object"]] = {"kind": j["kind"], "module": j["module"], "d": j["StatementDigest"][:32],
-                             "ax": ax, "axioms": j.get("TrustAxioms")}
+        recs[j["object"]] = {"kind": j["kind"], "module": j["module"], "d": str(j.get("StatementDigest", ""))[:32],
+                             "ax": ax, "axioms": j.get("TrustAxioms"), "c": j.get("DefClosureDigest"),
+                             "pin": j.get("AxiomStatementDigest")}
     return head, recs
 
 
@@ -146,6 +153,8 @@ def trust_class(entered: list[str], left: list[str], p_old: dict, p_new: dict) -
         return "other"
     if "conditional" in cls:
         return "assumption-conditional"
+    if any(axiom_class(a, p_new) == "trusted" and axiom_class(a, p_old) != "trusted" for a in entered):
+        return "assumption-promoted"
     if "trusted" in cls:
         return "assumption-foundation"
     if "std" in cls:
@@ -203,19 +212,27 @@ def build(ev: dict) -> dict:
                                              if k in new_w else None)} for k in edits]
 
     rows = []
-    for k in sorted(set(base) | set(new_w)):
+    # The old side of a row is the 23e0d047 extraction where it watched the theorem (for the narrow
+    # population it equals the committed 2026-09-03 baseline exactly: ext_old is empty), else the
+    # committed baseline's counts-only entry.
+    for k in sorted(set(base) | set(old_w) | set(new_w)):
         b = base.get(k)
         o = old_w.get(k)
         n = new_w.get(k)
         old = None
-        if b is not None:
-            old = dict(b, axioms=(sorted(o["axioms"]) if o is not None and same(b, o) else None))
+        if o is not None:
+            old = {"d": o["d"], "ax": o["ax"], "axioms": sorted(o["axioms"]), "c": o.get("c")}
+        elif b is not None:
+            old = dict(b, axioms=None, c=None)
         kind = kind_of(old, n)
+        redefined = bool(old and n and old.get("c") and n.get("c") and old["c"] != n["c"])
+        if kind == "unchanged" and redefined:
+            kind = "redefined"          # same statement, same axioms, different definitions underneath
         if kind == "unchanged":
             continue
         row = {"theorem": k, "kind": kind,
                "module": (n or all_old.get(k) or {}).get("module"),
-               "old": None, "new": None, "entered": [], "left": []}
+               "old": None, "new": None, "entered": [], "left": [], "redefined": redefined}
         if old is not None:
             row["old"] = {"d": old["d"], "ax": old["ax"], "axioms": old["axioms"]}
             if old["axioms"] is not None:
@@ -237,7 +254,7 @@ def build(ev: dict) -> dict:
         if k in edits:
             causes.append("baseline-edit")
         if k in ext_old or k in ext_new:
-            causes.append("extractor")
+            causes.append("extractor" if (k in base) == (k in old_w) else "extractor-population")
         if not same(o, n) or (o is not None and n is not None and sorted(o["axioms"]) != sorted(n["axioms"])):
             causes.append("source")
         row["causes"] = causes
@@ -275,6 +292,19 @@ def build(ev: dict) -> dict:
         "known_removed": sorted(p_old["known_set"] - p_new["known_set"]),
     }
     sorry_now = sorted(k for k, v in new_w.items() if SORRY in v["axioms"])
+    pins_old = {k: v["pin"] for k, v in all_old.items() if v["kind"] == "axiom" and v.get("pin")}
+    pins_new = {k: v["pin"] for k, v in all_new.items() if v["kind"] == "axiom" and v.get("pin")}
+    used_new = collections.Counter(a for v in new_w.values() for a in v["axioms"])
+    used_old = collections.Counter(a for v in old_w.values() for a in v["axioms"])
+    axiom_moves = {
+        "restated": sorted(a for a in pins_old if a in pins_new and pins_old[a] != pins_new[a]),
+        "pinned_old": len(pins_old), "pinned_new": len(pins_new),
+        "watched_dependents_new": {a: used_new.get(a, 0) for a in sorted(set(pins_old) | set(pins_new))
+                                   if a in moved_axioms["axiom_now_not_then"]
+                                   or (a in pins_old and a in pins_new and pins_old[a] != pins_new[a])},
+        "watched_dependents_old": {a: used_old.get(a, 0) for a in sorted(pins_old)
+                                   if a in pins_new and pins_old[a] != pins_new[a]},
+    }
 
     # MECHANISM (the owner's step 6: reproducible classification of the big groups). An axiom that
     # stopped being an axiom between the revisions was DISCHARGED (proved, or made a definition); every
@@ -343,7 +373,13 @@ def build(ev: dict) -> dict:
                      "matches_signature_set": cb.get("provenance", {}).get("signature_records_sha256")
                      == head_new.get("records_sha256"),
                      "review_status": (cb.get("review") or {}).get("status")}
+    narrow = None
+    if "narrow_candidate" in ev:
+        nc = json.loads(ev["narrow_candidate"].read_text())
+        narrow = sorted(nc.get("theorems", {}))
     return {
+        "axiom_moves": axiom_moves,
+        "narrow_population": narrow,
         "binding": binding,
         "candidate": candidate,
         "legacy_gate_view_c3046961": dict(sorted(gate_view.items())),
@@ -385,9 +421,12 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--out-md", type=Path)
     ap.add_argument("--out-json", type=Path)
     ap.add_argument("--packet", type=Path)
+    ap.add_argument("--packet-widening", type=Path, help="widened population only: what the widening adds")
     a = ap.parse_args(argv)
     ev = evidence_paths(a.evidence)
     t = build(ev)
+    t["names"] = {k: (v.name if v else None) for k, v in (("md", a.out_md), ("json", a.out_json),
+                                                           ("packet", a.packet), ("packet_widening", a.packet_widening))}
     import transition_render as render
     manifest = {EVIDENCE[k]: sha256(p) for k, p in sorted(ev.items())}
     if a.out_json:
@@ -396,6 +435,9 @@ def main(argv: list[str]) -> int:
         a.out_md.write_text(render.as_markdown(t, manifest, ev))
     if a.packet:
         a.packet.write_text(render.packet(t, manifest, ev))
+    if a.packet_widening:
+        import transition_widening_text as W
+        a.packet_widening.write_text(W.packet(t, manifest, ev))
     print(render.summary_line(t))
     return 0
 

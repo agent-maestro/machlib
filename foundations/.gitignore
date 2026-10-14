@@ -6,6 +6,8 @@
 # Because the signature set is NOT in git, it carries its own source identity (first JSONL record;
 # tools/machsig/identity.py) and the trust gate refuses a set whose identity is not this tree's.
 artifacts/machsig_extraction.json
+artifacts/machsig_trust_raw.tsv
+artifacts/machsig_trust.err
 artifacts/machsig_build.log
 artifacts/machsig_build.log.err
 artifacts/*.tmp

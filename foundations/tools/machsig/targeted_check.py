@@ -25,6 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import probe  # noqa: E402
+import review_probe  # noqa: E402
 import transition as T  # noqa: E402
 
 
@@ -69,6 +70,21 @@ def main(argv: list[str]) -> int:
     need_new = [n for n in names if n in new_w]
     pa_old = probe.print_axioms(a.old_root, need_old)
     pa_new = probe.print_axioms(a.new_root, need_new)
+    # `redefined` cannot be seen by #print axioms. For each sampled one, every changed definition the
+    # closure digest says it reaches is checked by two Lean-side means that share no code with
+    # extract_trust.lean: `#print` (pp.explicit) of the definition differs between the revisions, and the
+    # theorem's statement reaches it under Lean's own getUsedConstantsAsSet (which over-approximates).
+    redef = json.loads((a.evidence / T.EVIDENCE["redefinition"]).read_text()) \
+        if (a.evidence / T.EVIDENCE["redefinition"]).is_file() else {"theorem_reaches": {}}
+    rd_names = [n for b, ns in sample.items() if b.startswith("redefined|") for n in ns]
+    rd_pairs = [(n, c) for n in rd_names for c in redef["theorem_reaches"].get(n, [])]
+    rd_defs = sorted({c for _, c in rd_pairs})
+    kinds = {c["name"]: c for c in redef.get("changed", [])}
+    have_old = [c for c in rd_defs if kinds.get(c, {}).get("old_kind")]
+    have_new = [c for c in rd_defs if kinds.get(c, {}).get("new_kind")]
+    pr_old = dict({c: "<absent>" for c in rd_defs}, **(review_probe.print_decls(a.old_root, have_old) if have_old else {}))
+    pr_new = dict({c: "<absent>" for c in rd_defs}, **(review_probe.print_decls(a.new_root, have_new) if have_new else {}))
+    reach_new = review_probe.reaches(a.new_root, rd_pairs) if rd_pairs else {}
     rows = {r["theorem"]: r for r in t["rows"]}
     results = []
     for bucket, ns in sample.items():
@@ -87,6 +103,10 @@ def main(argv: list[str]) -> int:
             else:
                 cls = "removed:" + T.tier(o_pa, p_old)[0]
             got = f"{kind}|{cls}" if kind != "unchanged" else "unchanged|control"
+            if kind == "unchanged" and n in rd_names:
+                defs = redef["theorem_reaches"].get(n, [])
+                if defs and all(pr_old.get(c) != pr_new.get(c) and reach_new.get((n, c)) for c in defs):
+                    got = "redefined|no-axiom-change"
             want = expected.get(n, "unchanged|control")
             ok = (o_pa == o_sig) and (n_pa == n_sig) and got == want
             results.append({"theorem": n, "bucket": bucket, "expected": want, "old_set_matches": o_pa == o_sig,
@@ -94,7 +114,12 @@ def main(argv: list[str]) -> int:
                             "old_ax": None if o_pa is None else len(o_pa),
                             "new_ax": None if n_pa is None else len(n_pa)})
     doc = {"seed": a.seed, "per_class": a.per_class, "method": "`#print axioms` via `lake env lean` at each "
-           "revision's built tree, parsed from text; class recomputed with transition.kind_of/trust_class",
+           "revision's built tree, parsed from text; class recomputed with transition.kind_of/trust_class; for "
+           "`redefined`, every changed definition reached must `#print` differently (pp.explicit) at the two "
+           "revisions and be reached under Lean's getUsedConstantsAsSet",
+           "redefinition_checks": {"definitions": len(rd_defs), "pairs": len(rd_pairs),
+                                   "print_differs": sum(1 for c in rd_defs if pr_old.get(c) != pr_new.get(c)),
+                                   "reached": sum(1 for v in reach_new.values() if v)},
            "bucket_sizes": {k: len(v) for k, v in bk.items()}, "sample": sample, "results": results,
            "summary": {"checked": len(results), "agree": sum(r["agrees"] for r in results),
                        "disagree": [r["theorem"] for r in results if not r["agrees"]]}}

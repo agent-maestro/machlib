@@ -71,7 +71,7 @@ def part_a() -> tuple[bool | None, list[str]]:
         ok &= cond
 
     def convictions(res):
-        return [k for k, _ in tg.CONVICTIONS if res[k]]
+        return [k for k, _ in tg.CONVICTIONS if res.get(k)]
 
     quiet = tg.compare(base, live)
     check(not convictions(quiet), f"control: the live set against itself convicts nothing ({len(live)} theorems)")
@@ -140,7 +140,8 @@ def part_a() -> tuple[bool | None, list[str]]:
     r9 = tg.judge(inj9, cur9)
     check(convictions(r9) == ["policy-violation"] and [x["theorem"] for x in r9["policy-violation"]] == [swap],
           "INJECTED sorryAx into a theorem the baseline already holds that way: `policy-violation` anyway")
-    promoted = cur["policy"]["trusted"][-1]
+    promoted = "MachLib.Real.pi_lower_bound" if "MachLib.Real.pi_lower_bound" in cur["policy"]["trusted"] \
+        else cur["policy"]["trusted"][-1]                                  # E1's own axiom when present
     inj10 = copy.deepcopy(whole)
     inj10["policy"]["trusted"] = [a for a in inj10["policy"]["trusted"] if a != promoted]
     r10 = tg.judge(inj10, cur)

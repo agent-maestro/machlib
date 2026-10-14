@@ -14,6 +14,7 @@ the evidence and get the same sha256 values the report prints.
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import re
 import subprocess
@@ -23,6 +24,44 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import probe  # noqa: E402
 import transition  # noqa: E402
+import trust_closure  # noqa: E402
+
+
+def redefinition(old_raw: Path, new_raw: Path, theorems: list[str]) -> dict:
+    """Which definitions changed between the two closure graphs, and which of them each named theorem's
+    statement reaches (in either graph). A node CHANGED when its kind or fingerprint differs, or it
+    exists on one side only. Reverse reachability from each changed node, so the cost is per change."""
+    o, n = trust_closure.parse(old_raw), trust_closure.parse(new_raw)
+    changed = sorted(c for c in set(o["nodes"]) | set(n["nodes"])
+                     if (o["nodes"].get(c) or {}).get("h") != (n["nodes"].get(c) or {}).get("h")
+                     or (o["nodes"].get(c) or {}).get("kind") != (n["nodes"].get(c) or {}).get("kind"))
+    changed = [c for c in changed if c in o["nodes"] and c in n["nodes"]] + \
+              [c for c in changed if not (c in o["nodes"] and c in n["nodes"])]
+    def reverse(graph):
+        rev = {}
+        for v, d in graph.items():
+            for w in d["deps"]:
+                rev.setdefault(w, []).append(v)
+        return rev
+    reach = {}
+    for g in (o["nodes"], n["nodes"]):
+        rev = reverse(g)
+        for c in changed:
+            seen, stack = {c}, [c]
+            while stack:
+                for u in rev.get(stack.pop(), []):
+                    if u not in seen:
+                        seen.add(u)
+                        stack.append(u)
+            reach.setdefault(c, set()).update(seen)
+    out = {}
+    for t in sorted(theorems):
+        consts = set((o["theorems"].get(t) or {}).get("stmt_consts", [])) | \
+                 set((n["theorems"].get(t) or {}).get("stmt_consts", []))
+        out[t] = sorted(c for c in changed if consts & reach[c])
+    return {"changed": [{"name": c, "old_kind": (o["nodes"].get(c) or {}).get("kind"),
+                         "new_kind": (n["nodes"].get(c) or {}).get("kind")} for c in sorted(changed)],
+            "theorem_reaches": out}
 
 
 def dump(p: Path, obj) -> None:
@@ -64,9 +103,26 @@ def main(argv: list[str]) -> int:
     t = transition.build(ev)
     need_old = sorted(r["theorem"] for r in t["rows"] if r["old"] is not None)
     need_new = sorted(r["theorem"] for r in t["rows"] if r["new"] is not None)
-    need_old += sorted(set(t["moved_axioms"]["axiom_then_not_now"]))
+    need_old += sorted(set(t["moved_axioms"]["axiom_then_not_now"]) | set(t["axiom_moves"]["restated"]))
     need_new += sorted(set(t["moved_axioms"]["axiom_now_not_then"]) | set(t["moved_axioms"]["now_theorem"])
+                       | set(t["axiom_moves"]["restated"])
                        | set(t["moved_axioms"]["now_definition"]))
+    pop = {}
+    for side, root in (("old", a.old_root), ("new", a.new_root)):
+        tr = trust_closure.parse(root / "artifacts" / "machsig_trust_raw.tsv")
+        th = tr["theorems"]
+        pop[side] = {"theorems_in_scope": len(th),
+                     "excluded_by_reason": dict(sorted(collections.Counter(v["aux"] for v in th.values()
+                                                                           if v["aux"] != "-").items())),
+                     "counted": sum(1 for v in th.values() if v["aux"] == "-"),
+                     "counted_private": sum(1 for v in th.values() if v["aux"] == "-" and v["private"]),
+                     "aux": {k: v["aux"] for k, v in sorted(th.items())},
+                     "private": sorted(k for k, v in th.items() if v["private"])}
+    dump(d / "population.json", pop)
+    redefined = sorted(r["theorem"] for r in t["rows"] if r.get("redefined"))
+    dump(d / "redefinition.json", redefinition(a.old_root / "artifacts" / "machsig_trust_raw.tsv",
+                                               a.new_root / "artifacts" / "machsig_trust_raw.tsv", redefined))
+    print(f"redefinition: {len(redefined)} watched theorems reach a changed definition")
     dump(d / "statements_23e0d047.json", probe.statements(a.old_root, need_old))
     dump(d / "statements_new.json", probe.statements(a.new_root, need_new))
     print(f"statements: {len(set(need_old))} old, {len(set(need_new))} new")
