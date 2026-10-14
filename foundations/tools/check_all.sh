@@ -119,7 +119,7 @@ else
   export MACHSIG_RUN_ID
   run "machsig-extract" python3 tools/machsig/regen.py
   run "machsig-trust-selftest" python3 tools/machsig/trust_gate.py --selftest-only
-  # DOCTRINE 4b: 40 mutant gates, each must be killed by the selftest. ~4.5 min; mutants live only in temp dirs.
+  # DOCTRINE 4b: 43 mutant gates, each must be killed by the selftest. ~7 min; mutants live only in temp dirs.
   run "machsig-trust-mutate" python3 tools/machsig/trust_gate.py --mutate
   run "machsig-trust" python3 tools/machsig/trust_gate.py
   unset MACHSIG_RUN_ID

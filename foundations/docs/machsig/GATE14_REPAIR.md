@@ -37,10 +37,23 @@ definition-closure digests, axiom statement pins, the declared policy, and the b
 
 ## Trust model — what this gate is and is not
 
-**It catches** honest mistakes and unreviewed drift: a footprint that grows, a statement or a
-definition that changes, a theorem that disappears, an axiom restated or promoted, sorry or an
-undeclared axiom anywhere, a stale or foreign signature set, a toolchain or runner change, a stamp
-that does not describe exactly the change it accepts, a review chain broken by a revert or a merge.
+**It catches** honest mistakes and unreviewed drift: a footprint that grows past the committed
+baseline, a statement or a definition that changes, a theorem that disappears, an axiom restated or
+promoted, sorry or an undeclared axiom anywhere, a stale or foreign signature set, a toolchain or
+runner change, a review chain broken by a revert or a merge, and a stamp whose report's machine rows
+are not the NET transition from the reviewed baseline at the anchor (CI: the change's base commit;
+locally: the merge-base with the main line). A footprint that grows inside one change therefore shows
+as `grew` in the report its stamp cites, however many stamped commits the change is split into
+(B62-B66, B71).
+
+**What it does not catch there.** It judges each reviewed step, not the history of a theorem. (a) A
+theorem removed in one reviewed change and re-added grown in a LATER reviewed change shows as
+`removed`, then as `new` with its whole footprint: the second reviewer sees the footprint, not that
+it grew (B69). (b) On the main line itself, every first-parent commit whose stamp is valid is a step.
+A branch fast-forwarded or rebased onto it brings its stamps onto that line, so a later run on main
+counts each one (B72); only the run anchored at the branch's base -- CI's pull-request run, CI's push
+run (`--anchor <before>`), or a local run on the branch before it lands -- judges it net (B71). Merge
+pull requests with a merge commit.
 
 **It stops a change from judging itself with an edited gate**: in CI the base commit's gate judges,
 run as `python3 -I -S` from a checkout outside the tree under test, importing nothing from it, on a
@@ -56,10 +69,23 @@ configuration, the runner, the workflow), made required by branch protection. Th
 setting and the owner's decision; nothing on this branch changes it.
 
 A stamp is likewise content-bound, not authenticated: anyone with commit access can write one and
-generate a matching report. What the gate guarantees is that a stamp cannot be reused, borrowed,
-forgotten, or made to describe less than the change it accepts. And by design it checks only the
-machine block (`gate_transition`) of a report: the human-readable rows and prose of a report could
-disagree with it, so a reviewer must read what the gate binds (the third review's row 4).
+generate a matching report. What the gate guarantees is that a stamp cannot be reused or borrowed
+(it names this baseline's own digest), cannot be forgotten (a later commit that changes the baseline
+loses it), and that the report it cites has machine rows equal to the net transition from the
+reviewed baseline AT THE ANCHOR. When the anchor is the change's base -- every CI run, and a local
+run on a branch -- that is the whole change. When it is not -- a run on the main line after a
+fast-forward, limit (b) above -- the gate checks each stamp against the step before it, no more. And
+by design it checks only the machine block (`gate_transition`) of a report: the human-readable rows
+and prose of a report could disagree with it, so a reviewer must read what the gate binds (the third
+review's row 4).
+
+**Decision (review 4): stamps inside a change do not count.** Only a stamp on the anchor's
+first-parent line, whose report starts at the latest reviewed baseline on that line, makes a
+reviewed baseline. The branch's commits are never judged as steps; the merge commit that brings the
+file onto the line is, and the stamp it carries must start at the main line's reviewed baseline. So
+stamps cannot chain inside a branch, and a change is one reviewed step whose report describes
+everything since its base. Stamping a branch's intermediate commits is harmless but useless: only
+the stamp the change ends with is judged.
 
 ## What the gate does now (MachSig v0.4)
 
@@ -69,10 +95,11 @@ extractor or another declared policy, one from another run when `MACHSIG_RUN_ID`
 that is untracked, modified, without provenance, naming a commit the repository lacks,
 self-contradicting, from another extractor, or not REVIEWED; a REVIEWED stamp not bound to this
 baseline's content [review-unbound]; a stamp whose report is not a committed machsig-transition JSON
-with `binding` and `gate_transition` [review-report-invalid]; a report that does not start at the LAST
-REVIEWED baseline, or binds a baseline to itself [review-report-mismatch]; a report whose
-`gate_transition` differs from the transition the gate recomputes between the two baselines
-[review-report-rows]; a clone too shallow to reach the pre-review origin. Missing inputs: exit 2.
+with `binding` and `gate_transition` [review-report-invalid]; a report that does not start at the
+reviewed baseline as of the anchor, or binds a baseline to itself [review-report-mismatch]; a report
+whose `gate_transition` differs from the transition the gate recomputes between the two baselines
+[review-report-rows]; an `--anchor` that is not an ancestor of HEAD [anchor-unreachable]; a clone too
+shallow to reach the pre-review origin. Missing inputs: exit 2.
 
 **FAILS (exit 1):** an axiom enters an unchanged statement's footprint (sets, so swaps too); a
 statement changes; a definition under an unchanged statement changes (`redefined`); a watched theorem
@@ -87,11 +114,13 @@ the pre-repair counts-only file. That is the true state until step 7, and check_
 watched theorem, or promoting an axiom, now needs a reviewed rebaseline. The default is closed.
 
 **What the stamp is and is not.** The gate binds CONTENT: the stamp names the baseline's own digest,
-and the report it cites must describe exactly the transition from the last REVIEWED baseline to this
-one. The gate finds that baseline by walking the file's git history forward from the pre-review
-origin (c3046961's counts-only baseline, `ORIGIN_CONTENT`), advancing only past versions whose own
-stamp passes every check; it recomputes the transition from the two baselines' content and requires
-the report's `gate_transition` to equal it row for row. That stops reusing, borrowing or forgetting a stamp. It cannot
+and the report it cites must describe exactly the transition from the reviewed baseline as of the
+anchor to this one. The gate finds that baseline by walking the file's git history forward from the
+pre-review origin (c3046961's counts-only baseline, `ORIGIN_CONTENT`) to the anchor, advancing only
+past versions on the anchor's first-parent line whose own stamp passes every check; it recomputes
+the transition from the two baselines' content and requires the report's `gate_transition` to equal
+it row for row. That stops reusing, borrowing or forgetting a stamp, and splitting a change into
+stamped hops. It cannot
 authenticate a person: anyone with commit access can write a stamp and generate a matching report.
 That a review happened remains a process recorded in git — who committed the stamp, and the packet's
 sign-off table.
@@ -102,9 +131,10 @@ regenerate the set in the same run and export `MACHSIG_RUN_ID`; `regen.py` recor
 refuses a set with another run's id. Run by hand without it, the gate prints
 `MACHSIG-TRUST ADVISORY` under its verdict.
 
-**Proof of the red paths:** `--selftest` (Part A: 9 injections + 4 controls on the real set; Part B:
-53 faults + 9 controls end to end in throwaway git repositories, including every attack of the three
-reviews that passed) and `--mutate` (40 mutant gates, each must be killed). Both run in check_all.sh.
+**Proof of the red paths:** `--selftest` (Part A: 8 injections + 4 controls on the real set; Part B:
+59 faults + 15 controls end to end in throwaway git repositories, including every attack of the four
+reviews that passed, and B72 pinning limit (b)) and `--mutate` (43 mutant gates, each must be killed).
+Both run in check_all.sh.
 
 **The gate's own code is pinned in CI (H2, reviews 2 and 3).** The proposed workflow has an
 untrusted `extract` job (build + regen.py, uploads only the signature set) and a `judge` job on a
@@ -134,6 +164,7 @@ setting, left to the owner.
 | review 3, MERGE: a pre-review branch merged, its file kept | the chain is computed over the whole commit graph; a version must be valid against every reviewed line it joins; CI also anchors on the base commit | B52, B53, B55, control B54, B56; real data: refused |
 | review 3, json.py takes over the pinned judge | judge job on a fresh runner, `python3 -I -S` outside the tree, base code only; the selftest no longer imports the tree's sig.py | B60 (isolated judge FAILS), B61 (in-tree: the attack is real); CI simulation with the workflow's judge steps verbatim: FAIL |
 | review 3, toolchain and runner not checked | `[toolchain-mismatch]` (version and commit, not platform), `[runner-changed]` (capped_lean.sh vs the baseline's provenance commit) | B57, B58, B59 |
+| review 4, QUIET TWO-HOP: drop a theorem in one stamped commit, re-add it grown in the next, each report exact for its own hop | the stamp must cite a report from the reviewed baseline AT THE ANCHOR with the NET rows; locally the anchor defaults to the merge-base with the main line; stamps off the anchor's first-parent line never count; superseded references pruned | B62-B66 (removal, empty baseline, three hops, `--anchor`, merged without CI), B71 (fast-forward, CI push run); controls B67-B70, B73 (origin reached through a merge's second parent); limit pinned: B72 |
 
 **Correction.** Version 1 of this file said all ten growths of 203cc854 sit in
 `OperatorBasisGeneral.lean`. Six do (`aerr_exp`, `aerr_exp_upper`, `aexpr_fwd_error`, `aexpr_sound`,

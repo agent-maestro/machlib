@@ -17,8 +17,10 @@
 #            or the commit before the push), downloads the signature set, and runs the BASE's gate
 #            isolated -- `python3 -I -S <base>/tools/machsig/trust_gate.py --tree <tree>` -- so no
 #            file of the tree can be imported (a tree-side json.py once took over the judge in a
-#            simulation). `--anchor <base>` requires the review chain to run through the base
-#            commit's reviewed baseline.
+#            simulation). `--anchor <base>` judges the change as ONE reviewed step: the tree's stamp
+#            must cite a report that starts at the base commit's reviewed baseline, with the NET
+#            rows since it; stamps made inside the change never count (fourth review, QUIET TWO-HOP).
+#            A push is judged from `before`, so a multi-commit push is one step too.
 #
 # WHAT THIS STOPS: honest mistakes, unreviewed drift, and a change judging itself with an edited gate.
 # WHAT IT DOES NOT STOP: a hostile committer. The extract job runs the change's code, so a change can
@@ -32,7 +34,7 @@
 #   extract: cold lake build ~12.6 min (build-time.yml: 757.52 s at c3046961); regen.py's three Lean
 #            extractors ~16-27 min (extract.lean 8.5-10.7 min locally, single-threaded; CI ~2x
 #            slower); the change's own gate tests ~8 min when the gate code changed
-#   judge:   selftest (62 throwaway git repos) ~10 s; mutation (40 mutants) ~4.5 min locally;
+#   judge:   selftest (74 throwaway git repos) ~11 s; mutation (43 mutants) ~7 min locally;
 #            gate (review-chain walk over ~3,000 commits + recompute) a few seconds
 #   total    ~40-55 min; timeouts 90 + 30.
 
