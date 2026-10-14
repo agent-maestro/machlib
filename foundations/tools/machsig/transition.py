@@ -395,10 +395,10 @@ def build(ev: dict) -> dict:
                        "new_watched": len(new_w), "legacy_new": len(legacy_new)},
         "heads": {"old": {k: head_old.get(k) for k in ("machlib_commit", "machlib_sources", "content_digest",
                                                        "extractor_digest", "lean_toolchain", "lean_version",
-                                                       "records", "records_sha256", "sources_clean")},
+                                                       "records", "records_sha256", "sources_clean", "version")},
                   "new": {k: head_new.get(k) for k in ("machlib_commit", "machlib_sources", "content_digest",
                                                        "extractor_digest", "lean_toolchain", "lean_version",
-                                                       "records", "records_sha256", "sources_clean")}},
+                                                       "records", "records_sha256", "sources_clean", "version")}},
         "policy_counts": {"old": {"known": len(p_old["known"]), "trusted": len(p_old["trusted"])},
                           "new": {"known": len(p_new["known"]), "trusted": len(p_new["trusted"])}},
     }

@@ -10,7 +10,7 @@ This is step 3-4 of the owner's ruling of 2026-10-13 (and the machinery for step
 
 * **Reconstruction: RECONSTRUCTED, byte-identical.** A cold `lake build` of 23e0d047 and that commit's own extractor chain and `--update` rebuild the committed 2026-09-03 baseline to the byte (sha256 `cc85967891a398ad…` both). The old side of this transition is therefore the historical baseline itself, not an approximation of it (7470 theorems).
 * **The set the gate read for forty days** (the 2026-09-03 local `machsig_signatures.jsonl`) is field-for-field identical to a fresh extraction at 23e0d047: 10773 objects, 0 differing. The gate compared 23e0d047 with itself on every run since.
-* **Extractor-caused changes: 0.** The same revision under the pre-v0.3 extractor and the current one (None) agrees on statement digest and axiom count for every theorem both watch, at 23e0d047 (0 differ) and at the new revision (0 differ). MachSig v0.2 moved `AX` from `ProofSig` to `TrustSig` without changing a value; v0.3 added the names, v0.4 the definition closure and axiom pins. **All 4614 changes below are source-caused.**
+* **Extractor-caused changes: 0.** The same revision under the pre-v0.3 extractor and the current one (MachSig/v0.4) agrees on statement digest and axiom count for every theorem both watch, at 23e0d047 (0 differ) and at the new revision (0 differ). MachSig v0.2 moved `AX` from `ProofSig` to `TrustSig` without changing a value; v0.3 added the names, v0.4 the definition closure and axiom pins. **All 4614 changes below are source-caused.**
 * **c3046961's hand edits: 10** entries (6 re-pinned, 4 added); 10 equal what the tree extracts. They were made against the stale set and are treated here as unreviewed: they appear in the transition like every other change.
 * **Transition (count view, the pre-v0.3 gate's own categories):** grew 1816, shrank 1642, new 480, removed 2, restated 2. **Set view adds 375 SWAPS** — same count, different axioms — which a count-only gate cannot see.
 * **Trust:** sorryAx entered or left nothing; it sits only on `MachLib.Real.halve_in_unit_sorry` (exactly the allowlist). No compiler-trust or undeclared axiom moved. 118 changes moved a standard Lean axiom. No axiom conditional under the NEW policy entered any footprint (conditional axioms only left: 342 departures over 11 axioms). **But under the 2026-09-03 policy 181 entries were of axioms that were NOT trusted then**: `MachLib.Real.pi_lower_bound` 181 (class `assumption-promoted`; E1/E2 of the review). No axiom introduced since 2026-09-03 entered an existing theorem's footprint (0 such changes).
@@ -28,7 +28,7 @@ This is step 3-4 of the owner's ruling of 2026-10-13 (and the machinery for step
 
 | | old side | new side |
 |---|---|---|
-| baseline | committed at 23e0d047 (2026-09-03) | derived from the v0.4 set below |
+| baseline | committed at 23e0d047 (2026-09-03) | derived from the MachSig/v0.4 set below |
 | binding (what a REVIEWED stamp is checked against) | replaces `sha256:4994f4eadc3a4afb5e419479f958956ef3f85ffb8a4daa8bc0f09e2f4eb1abe2` (`committed_baseline_c3046961.json`, the committed file) | `sha256:d4285150963b78dca5de8712107de58195d7c1e589ba483fbcaedfd7a44dad7e` |
 | extraction commit | `23e0d0471b7b27e62965c71b491089c261820141` | `8e836a56de6f1765bf89907662cd293153d068f8` |
 | Lean sources (Forge `machlib_sources`) | `sha256:9e30e5b742083affc4b0e58a01e586a0ea238800b6b1176cdc79cb866d34000f` | `sha256:261f3d99f6d117e91df70825de36b1e6ae319dbbae9b1503fe482d12d3c64b71` |

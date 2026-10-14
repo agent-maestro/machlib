@@ -66,10 +66,13 @@ def main(argv: list[str]) -> int:
               for k, v in bk.items()}
     expected = {r["theorem"]: f"{r['kind']}|{r.get('trust_class')}" for r in t["rows"]}
     names = sorted({n for v in sample.values() for n in v})
-    need_old = [n for n in names if n in old_w]
+    rows_by = {r["theorem"]: r for r in t["rows"]}
+    # also theorems whose old side is only the committed counts-only baseline (watched on 2026-09-03,
+    # excluded by a later population rule): their old axiom COUNT is checked
+    need_old = [n for n in names if n in old_w or (rows_by.get(n) and rows_by[n]["old"] is not None)]
     need_new = [n for n in names if n in new_w]
-    pa_old = probe.print_axioms(a.old_root, need_old)
-    pa_new = probe.print_axioms(a.new_root, need_new)
+    pa_old = review_probe.print_axioms_any(a.old_root, need_old)
+    pa_new = review_probe.print_axioms_any(a.new_root, need_new)
     # `redefined` cannot be seen by #print axioms. For each sampled one, every changed definition the
     # closure digest says it reaches is checked by two Lean-side means that share no code with
     # extract_trust.lean: `#print` (pp.explicit) of the definition differs between the revisions, and the
@@ -84,22 +87,29 @@ def main(argv: list[str]) -> int:
     have_new = [c for c in rd_defs if kinds.get(c, {}).get("new_kind")]
     pr_old = dict({c: "<absent>" for c in rd_defs}, **(review_probe.print_decls(a.old_root, have_old) if have_old else {}))
     pr_new = dict({c: "<absent>" for c in rd_defs}, **(review_probe.print_decls(a.new_root, have_new) if have_new else {}))
-    reach_new = review_probe.reaches(a.new_root, rd_pairs) if rd_pairs else {}
+    # a constant that exists only at 23e0d047 (e.g. a `_proof_1` a rewrite removed) is reached there
+    old_only = [(n, c) for n, c in rd_pairs if kinds.get(c, {}).get("old_kind") and not kinds.get(c, {}).get("new_kind")]
+    new_side = [p for p in rd_pairs if p not in old_only]
+    reach_new = review_probe.reaches(a.new_root, new_side) if new_side else {}
+    reach_new.update(review_probe.reaches(a.old_root, old_only) if old_only else {})
     rows = {r["theorem"]: r for r in t["rows"]}
     results = []
     for bucket, ns in sample.items():
         for n in ns:
+            legacy_only = n not in old_w and rows_by.get(n) is not None and rows_by[n]["old"] is not None
             o_sig = sorted(old_w[n]["axioms"]) if n in old_w else None
             n_sig = sorted(new_w[n]["axioms"]) if n in new_w else None
             o_pa, n_pa = pa_old.get(n), pa_new.get(n)
             # recompute the classification from #print axioms alone
-            old = {"d": old_w[n]["d"], "ax": len(o_pa), "axioms": o_pa} if o_pa is not None else None
+            old = {"d": old_w[n]["d"], "ax": len(o_pa), "axioms": o_pa} if o_pa is not None and not legacy_only else None
             new = {"d": new_w[n]["d"], "ax": len(n_pa), "axioms": n_pa} if n_pa is not None else None
             kind = T.kind_of(old, new)
             if old is not None and new is not None:
                 cls = T.trust_class(sorted(set(n_pa) - set(o_pa)), sorted(set(o_pa) - set(n_pa)), p_old, p_new)
             elif new is not None:
                 cls = "new:" + T.tier(n_pa, p_new)[0]
+            elif legacy_only:
+                kind, cls = ("removed", "removed:set-unknown") if new is None else (kind, cls)
             else:
                 cls = "removed:" + T.tier(o_pa, p_old)[0]
             got = f"{kind}|{cls}" if kind != "unchanged" else "unchanged|control"
@@ -108,8 +118,9 @@ def main(argv: list[str]) -> int:
                 if defs and all(pr_old.get(c) != pr_new.get(c) and reach_new.get((n, c)) for c in defs):
                     got = "redefined|no-axiom-change"
             want = expected.get(n, "unchanged|control")
-            ok = (o_pa == o_sig) and (n_pa == n_sig) and got == want
-            results.append({"theorem": n, "bucket": bucket, "expected": want, "old_set_matches": o_pa == o_sig,
+            old_ok = (o_pa is not None and len(o_pa) == rows_by[n]["old"]["ax"]) if legacy_only else (o_pa == o_sig)
+            ok = old_ok and (n_pa == n_sig) and got == want
+            results.append({"theorem": n, "bucket": bucket, "expected": want, "old_set_matches": old_ok,
                             "new_set_matches": n_pa == n_sig, "reclassified_as": got, "agrees": ok,
                             "old_ax": None if o_pa is None else len(o_pa),
                             "new_ax": None if n_pa is None else len(n_pa)})
@@ -127,7 +138,7 @@ def main(argv: list[str]) -> int:
         # Beyond the sample: every axiom set both signature sets hold, re-derived through #print axioms.
         full = {}
         for side, root, w in (("old", a.old_root, old_w), ("new", a.new_root, new_w)):
-            pa = probe.print_axioms(root, sorted(w))
+            pa = review_probe.print_axioms_any(root, sorted(w))
             bad = sorted(k for k in w if pa.get(k) != sorted(w[k]["axioms"]))
             full[side] = {"theorems": len(w), "match": len(w) - len(bad), "mismatch": bad[:50]}
         doc["full_sweep"] = full
