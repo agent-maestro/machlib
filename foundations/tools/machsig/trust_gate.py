@@ -38,7 +38,7 @@ cannot fire must not read as "checked and clean", so each of these is now its ow
     python3 tools/machsig/trust_gate.py           # the gate
     python3 tools/machsig/trust_gate.py --selftest       # red paths, then the gate
     python3 tools/machsig/trust_gate.py --selftest-only  # red paths only
-    python3 tools/machsig/trust_gate.py --mutate  # 11 mutant gates: the selftest must kill each
+    python3 tools/machsig/trust_gate.py --mutate  # 15 mutant gates: the selftest must kill each
     python3 tools/machsig/trust_gate.py --update  # write an UNREVIEWED baseline from fresh signatures
 
 NO AUTOMATIC REBASELINE. `--update` writes `review.status: UNREVIEWED`, which this gate refuses. A
@@ -74,11 +74,15 @@ PROVENANCE_FIELDS = ("machlib_commit", "machlib_sources", "content_digest", "ext
 
 def parse_records(body: bytes) -> tuple[dict, list[str]]:
     """{theorem: {"d", "ax", "axioms"}} for every theorem whose trust layer is known."""
-    out, bad = {}, []
+    out, bad, seen = {}, [], set()
     for ln in body.decode("utf-8").split("\n"):
         if not ln.strip():
             continue
         j = json.loads(ln)
+        if j.get("object") in seen:
+            bad.append(f"{j.get('object')} (twice)")   # last-write-wins would hide whichever came first
+            continue
+        seen.add(j.get("object"))
         if j.get("kind") != "theorem":
             continue          # StatementDigest is meaningless for non-theorems
         ax = None
@@ -120,8 +124,8 @@ def read_signature_set(path: Path):
                           f"truncated or edited. Regenerate: {REGEN}")
     records, bad = parse_records(body)
     if bad:
-        return head, {}, ("signatures-corrupt", f"{len(bad)} record(s) whose TrustAxioms disagree with "
-                                                f"their AX count, first {bad[0]}. Regenerate: {REGEN}")
+        return head, {}, ("signatures-corrupt", f"{len(bad)} record(s) duplicated or whose TrustAxioms "
+                                                f"disagree with their AX count, first {bad[0]}. Regenerate: {REGEN}")
     return head, records, None
 
 
@@ -195,14 +199,31 @@ def set_id(axioms) -> str:
 
 
 def review_state(b: dict, root: Path) -> list[tuple[str, str]]:
+    """The REVIEWED stamp is a process record, not authentication: anyone who can commit can write
+    one. What the gate can enforce is that it names a person and a transition report that is part of
+    the reviewed tree -- relative, inside foundations/, committed and unmodified. An absolute path
+    used to satisfy this check (`Path(root) / "/etc/hostname"` is `/etc/hostname`): found by an
+    independent review on 2026-10-13, now selftest cases B19-B20 and a mutant."""
     r = b.get("review") if isinstance(b.get("review"), dict) else {}
     rep = r.get("transition_report")
-    if r.get("status") != "REVIEWED" or not r.get("reviewer") or not rep or not (root / str(rep)).is_file():
-        return [("baseline-unreviewed",
-                 f"{BASE_REL} review.status is {r.get('status')!r}"
-                 f"{'' if r.get('reviewer') else ', no reviewer named'}"
-                 f"{'' if rep and (root / str(rep)).is_file() else ', no transition report in the tree'}. "
-                 "A baseline is accepted by a person who reviewed its transition report, never by --update.")]
+    why = []
+    if r.get("status") != "REVIEWED":
+        why.append(f"review.status is {r.get('status')!r}")
+    if not r.get("reviewer"):
+        why.append("no reviewer named")
+    if not rep or not isinstance(rep, str):
+        why.append("no transition report named")
+    elif Path(rep).is_absolute() or ".." in Path(rep).parts \
+            or not (root / rep).resolve().is_relative_to(root.resolve()):
+        why.append(f"transition report {rep!r} is not a path inside foundations/")
+    elif not (root / rep).is_file():
+        why.append(f"transition report {rep} does not exist")
+    elif not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \
+            or identity.git(root, "status", "--porcelain", "--", rep).strip():
+        why.append(f"transition report {rep} is not committed unmodified")
+    if why:
+        return [("baseline-unreviewed", f"{BASE_REL}: {'; '.join(why)}. A baseline is accepted by a person who "
+                                        "reviewed its committed transition report, never by --update.")]
     return []
 
 

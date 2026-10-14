@@ -7,7 +7,7 @@ a generated file named next to it.
 
 | step | what | state |
 |---|---|---|
-| 1 | gate refuses missing, stale, untracked baselines/signatures | **done** — `trust_gate.py`, 18 end-to-end faults + 11 mutants |
+| 1 | gate refuses missing, stale, untracked baselines/signatures | **done** — `trust_gate.py`, 22 end-to-end faults + 15 mutants |
 | 2 | regenerate signatures from an identified revision | **done** — `regen.py` at 066bb75f (Lean sources = c3046961) |
 | 3 | deterministic old-vs-new transition report | **done** — `TRANSITION_2026-10-13.md` + `.json`, byte-identical on rerun |
 | 4 | classify by type and trust implication | **done** — same report, sections 2-6 |
@@ -24,7 +24,15 @@ without provenance, naming a commit the repository lacks, self-contradicting, de
 extractor, or never reviewed. Missing inputs are UNAVAILABLE (exit 2). An axiom entering an unchanged
 statement's footprint is FAIL (exit 1) — compared as SETS, so a swap (one out, one in) is caught,
 which the count rule could not do. Proof of each red path: `--selftest` (Part A on the real set,
-Part B in a throwaway git repository); proof that the selftest notices a broken gate: `--mutate`.
+Part B: 22 faults in a throwaway git repository); proof that the selftest notices a broken gate:
+`--mutate` (15 mutants). An independent code review (2026-10-13) found two fail-open paths, both
+fixed and now cases: a REVIEWED stamp could cite an absolute path such as `/etc/hostname` (the
+report must now be relative, inside `foundations/`, committed and unmodified), and duplicate records
+were last-write-wins in sig.py, census.py and the gate (all three now refuse).
+
+The REVIEWED stamp is a process record, not authentication: anyone with commit access can write
+one. It makes acceptance explicit, attributable in `git log`, and impossible to produce with
+`--update`; it does not prove a review happened.
 
 `tools/check_all.sh` now runs `machsig-extract` (regen.py), `machsig-trust-selftest`,
 `machsig-trust-mutate` and `machsig-trust` on separate lines.

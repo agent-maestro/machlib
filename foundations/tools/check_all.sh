@@ -114,7 +114,7 @@ else
   # provenance, so a missing step reads as a failure, never as green.
   run "machsig-extract" python3 tools/machsig/regen.py
   run "machsig-trust-selftest" python3 tools/machsig/trust_gate.py --selftest-only
-  # DOCTRINE 4b: 11 mutant gates, each must be killed by the selftest. ~16 s; mutants live only in temp dirs.
+  # DOCTRINE 4b: 15 mutant gates, each must be killed by the selftest. ~20 s; mutants live only in temp dirs.
   run "machsig-trust-mutate" python3 tools/machsig/trust_gate.py --mutate
   run "machsig-trust" python3 tools/machsig/trust_gate.py
   run "claims"       python3 tools/claim_audit/claim_audit.py

@@ -235,11 +235,34 @@ def cases():
     def extractor_mismatch(repo, f):
         edit_baseline(f, lambda b: b["provenance"].update(extractor_digest="sha256:" + "1" * 64))
         commit_all(repo, "x")
-    def unreviewed(repo, f): stamp(f, "UNREVIEWED"); commit_all(repo, "x")
+    def unreviewed(repo, f):
+        # ONLY the status is wrong: reviewer and report stay valid, so no other reason can mask it
+        edit_baseline(f, lambda b: b["review"].update(status="UNREVIEWED")); commit_all(repo, "x")
+    def no_reviewer(repo, f):
+        edit_baseline(f, lambda b: b["review"].update(reviewer="")); commit_all(repo, "x")
     def truncate(repo, f):
         p = f / "artifacts" / "machsig_signatures.jsonl"
         p.write_bytes(b"".join(p.read_bytes().splitlines(keepends=True)[:-1]))
     def growth(repo, f): edit_baseline(f, grow_alpha); commit_all(repo, "baseline with a smaller alpha")
+    def report_outside(repo, f):
+        # Path(root) / "/abs" is "/abs": this file exists on any machine, so the stamp would pass
+        edit_baseline(f, lambda b: b["review"].update(transition_report=str(Path(sys.executable).resolve())))
+        commit_all(repo, "stamp cites an absolute path")
+    def report_untracked(repo, f):
+        edit_baseline(f, lambda b: b["review"].update(transition_report="docs/UNCOMMITTED.md"))
+        commit_all(repo, "stamp cites a report that is not committed")
+        (f / "docs" / "UNCOMMITTED.md").write_text("never committed\n")
+    def duplicate(repo, f):
+        p = f / "artifacts" / "machsig_signatures.jsonl"
+        lines = p.read_bytes().splitlines(keepends=True)
+        alpha = next(ln for ln in lines if b'"Fx.alpha"' in ln)
+        small = json.loads(alpha)
+        small["TrustAxioms"], small["TrustSig"] = ["propext"], "AX1-S0"
+        body = b"".join(lines[1:]) + (json.dumps(small, sort_keys=True) + "\n").encode()
+        head = json.loads(lines[0])
+        head["records"] = len(lines)
+        head["records_sha256"] = "sha256:" + hashlib.sha256(body).hexdigest()
+        p.write_bytes((json.dumps(head, sort_keys=True) + "\n").encode() + body)
     def swap(repo, f):
         def fn(b):
             # live beta rests on Fx.ax_one; the baseline says Fx.ax_three instead -- five axioms either way
@@ -270,6 +293,12 @@ def cases():
         ("B14 baseline entry contradicts itself", malformed, 3, "baseline-malformed", "Fx.beta"),
         ("B15 baseline from another extractor", extractor_mismatch, 3, "extractor-mismatch", "across extractors"),
         ("B16 baseline never reviewed", unreviewed, 3, "baseline-unreviewed", "'UNREVIEWED'"),
+        ("B19 REVIEWED stamp citing a report outside the tree (absolute path)", report_outside, 3,
+         "baseline-unreviewed", "not a path inside foundations/"),
+        ("B20 REVIEWED stamp citing an uncommitted report", report_untracked, 3, "baseline-unreviewed",
+         "not committed unmodified"),
+        ("B21 signature set naming one theorem twice", duplicate, 3, "signatures-corrupt", "Fx.alpha (twice)"),
+        ("B22 REVIEWED stamp naming no reviewer", no_reviewer, 3, "baseline-unreviewed", "no reviewer named"),
         ("B17 an axiom entered an unchanged statement", growth, 1, None, "Fx.alpha  1 -> 2  entered Fx.ax_one"),
         ("B18 swap: same count, different axiom", swap, 1, None, "Fx.beta  5 -> 5  entered Fx.ax_one"),
     ]
@@ -330,13 +359,19 @@ MUTANTS = [
      'if not identity.git_ok(root, "cat-file", "-e", f"{prov[\'machlib_commit\']}^{{commit}}"):', "if False:"),
     ("extractor-mismatch check removed",
      'and prov["extractor_digest"] != head.get("extractor_digest"):', "and False:"),
-    ("review check removed",
-     'if r.get("status") != "REVIEWED" or not r.get("reviewer") or not rep or not (root / str(rep)).is_file():',
-     "if False:"),
+    ("review status check removed", 'if r.get("status") != "REVIEWED":', "if False:"),
+    ("reviewer check removed", '    if not r.get("reviewer"):', "    if False:"),
+    ("committed-report check removed",
+     'elif not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \\\n'
+     '            or identity.git(root, "status", "--porcelain", "--", rep).strip():', "elif False:"),
     ("set ratchet weakened to the pre-2026-10-13 count rule", "        if entered:",
      '        if v["ax"] > b["ax"]:'),
     ("stale refusal stops naming what moved",
      "Moved: {', '.join(moved) or '(file list unavailable)'}", "Moved: (not named)"),
+    ("REVIEWED stamp may cite any file on the machine",
+     'elif Path(rep).is_absolute() or ".." in Path(rep).parts \\\n            or not (root / rep).resolve().is_relative_to(root.resolve()):',
+     "elif False:"),
+    ("duplicate records accepted (last write wins)", "        if j.get(\"object\") in seen:", "        if False:"),
     ("self-contradicting baseline entries accepted",
      'if axs is None or len(axs) != e.get("ax") or not isinstance(e.get("d"), str):', "if axs is None:"),
 ]

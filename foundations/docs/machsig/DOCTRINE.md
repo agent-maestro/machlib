@@ -194,9 +194,13 @@ So a gate over a generated artifact must check the artifact's **identity** befor
   same extractor as the signatures, and **reviewed** by a named person — `--update` writes
   `UNREVIEWED`, which the gate refuses, so no rebaseline can make CI green by itself;
 * the blind spot is a regression test: `trust_gate_selftest.py` case B4 extracts a set, commits a
-  Lean change, and requires `[signatures-stale]` naming the file. Eighteen such faults run end to end
-  in a throwaway git repository, and `--mutate` disables each decision in turn (11 mutants) and
-  requires the selftest to notice (4b's tier, applied here).
+  Lean change, and requires `[signatures-stale]` naming the file. Twenty-two such faults run end to
+  end in a throwaway git repository, and `--mutate` disables each decision in turn (15 mutants) and
+  requires the selftest to notice (4b's tier, applied here). The mutation tier paid at once: an
+  independent review then found that a REVIEWED stamp citing an ABSOLUTE path passed
+  (`Path(root) / "/etc/hostname"` is `/etc/hostname`) and that duplicate records were last-write-wins;
+  both are cases now (B19-B21), the rewritten review check left one mutant STALE rather than MISSED,
+  and splitting it exposed that no case had only the status wrong (B16 now does, B22 the reviewer).
 
 A refusal is not a pass, and it is not a failure of the proofs either. It says: *nothing was compared*.
 

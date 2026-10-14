@@ -36,6 +36,7 @@ class MalformedExtraction(Exception):
 def read_rows():
     rows = []
     bad = []
+    seen = set()
     total = None
     for ln in RAW.read_text().split("\n"):
         if ln.startswith("MSIG_TOTAL\t"):
@@ -48,6 +49,10 @@ def read_rows():
         if len(f) != 12:
             bad.append(f"{len(f)} columns: {ln[:120]}")
             continue
+        if f[1] in seen:
+            bad.append(f"{f[1]} appears twice")   # sig.py keys by name: the second row would win silently
+            continue
+        seen.add(f[1])
         names = sorted(a for a in f[11].split(",") if a)
         if len(names) != int(f[6]) or len(set(names)) != len(names):
             bad.append(f"axiom names {len(names)} != axiom_count {f[6]}: {f[1]}")

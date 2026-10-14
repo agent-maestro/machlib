@@ -12,7 +12,7 @@
 #   regen.py: extract_statement    ~1 min     (20-23 s locally)
 #   regen.py: extract.lean         ~15-25 min (8.5-10.4 min locally, single-threaded; CI cores are
 #                                              ~2x slower on the cold-build ratio)
-#   census + sig + selftest + gate  <1 min    (selftest builds 19 throwaway git repos, ~3 s)
+#   census + sig + selftest + gate  <1 min    (selftest builds 23 throwaway git repos, ~4 s; --mutate is not in this job)
 #   total                          ~30-40 min; timeout set at 75.
 # extract.lean dominates. Its cost is NOT the axiom walk (Lean v4.32 collectAxioms reads per-module
 # precomputed data); the c3046961 note blames the unshared constsIn traversal of proof terms. Making
@@ -64,7 +64,7 @@ jobs:
         working-directory: foundations
         run: python3 tools/machsig/regen.py
 
-      - name: Gate selftest (fault injection on the real set + 18 refusal paths)
+      - name: Gate selftest (fault injection on the real set + 22 end-to-end faults)
         working-directory: foundations
         run: python3 tools/machsig/trust_gate.py --selftest-only
 

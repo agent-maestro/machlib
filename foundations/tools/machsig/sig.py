@@ -76,6 +76,10 @@ def load():
             # v0.3 such a row was skipped silently -- a theorem the gate then never watched.
             bad.append(f[1] if len(f) > 1 else ln[:80])
             continue
+        if f[1] in stmt:
+            # a dict keyed by name keeps the LAST row: a second row would silently replace the first
+            bad.append(f"{f[1]} (twice)")
+            continue
         stmt[f[1]] = {"kind": f[2], "module": f[3], "nodes": int(f[4]), "depth": int(f[5]),
                       "eqs": int(f[6]), "imps": int(f[7]), "ands": int(f[8]), "ors": int(f[9]),
                       "exists": int(f[10]), "distinct_consts": int(f[11]),
@@ -92,6 +96,8 @@ def load():
         for ln in cen.read_text().split("\n"):
             if ln.strip():
                 j = json.loads(ln)
+                if j["identity"]["object_name"] in dec:
+                    raise Refused(f"{cen.name} names {j['identity']['object_name']} twice")
                 dec[j["identity"]["object_name"]] = j["proof_structure"]
     return stmt, dec
 
