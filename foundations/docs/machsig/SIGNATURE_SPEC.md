@@ -83,6 +83,40 @@ Real.ea_mulswap3     N77-D12-C5-I0-E3-A0   AX19-PD59-V49-S0
 That second pair is MachSig's most useful output today: two proofs of one statement, one resting on
 four axioms and the other on nineteen.
 
+## v0.3 (2026-10-13) — the axiom SET, and where a signature set came from
+
+Two additions, both forced by the trust gate going blind (2026-09-03 to 2026-10-13, see
+`TRANSITION_2026-10-13.md`). Nothing above changes value: `StatementSig`, `ProofSig`, `TrustSig`
+and both digests are computed exactly as before, which the transition report measures (zero
+extractor-caused differences at either revision).
+
+**`TrustAxioms`** — the sorted list of axiom names behind `TrustSig`'s `AX` count, from the same
+`Lean.collectAxioms` call (`extract.lean`'s 12th column). `None` exactly when `AX` is `?`. A count
+cannot say which axiom entered a footprint and cannot see a swap (one out, another in); the gate now
+compares sets.
+
+**The provenance record** — the first line of `artifacts/machsig_signatures.jsonl`:
+
+```
+{"kind": "machsig-provenance", "schema": "machsig-provenance/v1", "version": "MachSig/v0.3",
+ "machlib_commit": ..., "machlib_sources": "sha256:...",   # Forge's commit-based digest
+ "content_digest": "sha256:...", "content_files": {...},   # the bytes Lean read: the staleness key
+ "extractor_digest": "sha256:...", "extractor_files": {...},
+ "lean_toolchain": ..., "lean_version": ..., "sources_clean": ..., "dirty_source_paths": [...],
+ "raw": {"machsig_stmt_raw.tsv": sha256, "machsig_raw.tsv": sha256},
+ "records": N, "records_sha256": "sha256:..."}              # over the bytes after this line
+```
+
+Only `tools/machsig/regen.py` produces a set `sig.py` will write: it builds, runs both extractors,
+refuses if the tree moved while Lean ran, and binds the raw files to the identity. `sig.py` refuses
+raw files it cannot bind, a census built from other raw files, and malformed or truncated rows (all
+three were skipped silently before v0.3 — and a skipped theorem reads downstream as a *removal*,
+which the gate reports as INFO). Consumers skip the record: it has no `object`.
+
+```
+python3 tools/machsig/regen.py        # the only supported way to (re)generate signatures
+```
+
 ## CLI
 
 ```

@@ -174,6 +174,32 @@ unchanged afterwards.
 
 Cost is a reason a specimen is *hard to write*, not a reason a gate is *validated without one*.
 
+### 4e. A gate must know WHAT it is looking at
+
+*Added 2026-10-13, after the owner's ruling on gate 14.* Everything above is about whether a gate
+**convicts**. Gate 14 convicted perfectly — its fault injection passed every day — while comparing the
+wrong thing: the signature set is generated and gitignored, the copy on disk was extracted on
+2026-09-03, and nothing recorded which tree it described. For forty days and 215 commits the gate read
+that set against the baseline of the same day and printed OK. Regenerated, the same comparison showed
+1,810 growths. The selftest could not see it, because the selftest perturbed the baseline and used the
+very same stale set as its "real subject".
+
+So a gate over a generated artifact must check the artifact's **identity** before its **content**:
+
+* the artifact records what it was derived from (source bytes, extractor, toolchain) — `regen.py`
+  writes it, `sig.py` refuses to write a set without it;
+* the gate recomputes that identity from the live tree and **refuses** on any mismatch, with its own
+  tag and exit code (3), distinct from FAIL (1) and UNAVAILABLE (2);
+* the baseline is the same kind of artifact: committed, unmodified, with provenance, produced by the
+  same extractor as the signatures, and **reviewed** by a named person — `--update` writes
+  `UNREVIEWED`, which the gate refuses, so no rebaseline can make CI green by itself;
+* the blind spot is a regression test: `trust_gate_selftest.py` case B4 extracts a set, commits a
+  Lean change, and requires `[signatures-stale]` naming the file. Eighteen such faults run end to end
+  in a throwaway git repository, and `--mutate` disables each decision in turn (11 mutants) and
+  requires the selftest to notice (4b's tier, applied here).
+
+A refusal is not a pass, and it is not a failure of the proofs either. It says: *nothing was compared*.
+
 **Audit note (updated 2026-09-04, later).** The suite is now **18 gates** and CI runs **11
 selftests**, up from 2. `soundness`, `machsig-trust`, `hypothesis` and `absence` run their selftest *and* their gate;
 `aggregator-selftest` is a gate in its own right, because `--selftest` there **replaces** the

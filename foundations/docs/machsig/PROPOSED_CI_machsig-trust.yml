@@ -1,0 +1,86 @@
+# PROPOSED, NOT ENABLED. Step 7 of the owner's ruling of 2026-10-13: this file moves to
+# .github/workflows/machsig-trust.yml ONLY in the same change that commits the independently
+# reviewed baseline. Enabling it earlier would put a permanently red (REFUSED) job on master, or,
+# worse, invite an unreviewed --update to make it green.
+#
+# What it does: builds MachLib cold, extracts the MachSig signature set for EXACTLY the checked-out
+# revision (regen.py binds the set to its source identity), proves the gate's red paths, then runs
+# the real comparison. Every step's exit code is the job's; nothing is `|| true`.
+#
+# Runtime estimate (from 2026-10-13 local timings, scaled by the build-time job's own measurement):
+#   cold lake build                ~12.6 min  (build-time.yml measured 757.52 s at c3046961)
+#   regen.py: extract_statement    ~1 min     (20-23 s locally)
+#   regen.py: extract.lean         ~15-25 min (8.5-10.4 min locally, single-threaded; CI cores are
+#                                              ~2x slower on the cold-build ratio)
+#   census + sig + selftest + gate  <1 min    (selftest builds 19 throwaway git repos, ~3 s)
+#   total                          ~30-40 min; timeout set at 75.
+# extract.lean dominates. Its cost is NOT the axiom walk (Lean v4.32 collectAxioms reads per-module
+# precomputed data); the c3046961 note blames the unshared constsIn traversal of proof terms. Making
+# that cheaper changes the extractor (and so its digest): a separate, reviewed change.
+
+name: machsig-trust
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "foundations/**"
+      - ".github/workflows/machsig-trust.yml"
+  pull_request:
+    paths:
+      - "foundations/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      # fetch-depth 0: the gate checks that the baseline's provenance commit exists in this
+      # repository ([baseline-provenance-unresolvable]); a shallow clone would refuse.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install elan
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Cold lake build
+        working-directory: foundations
+        run: |
+          cat lean-toolchain
+          lake build
+
+      # regen.py runs `lake build` again (a no-op here), both Lean extractors, census and sig, and
+      # refuses if the tree moves while Lean runs. tools/capped_lean.sh has no user systemd scope
+      # on a runner: it says so on stderr and runs uncapped, which is acceptable on a disposable VM.
+      - name: Extract signatures for this revision
+        working-directory: foundations
+        run: python3 tools/machsig/regen.py
+
+      - name: Gate selftest (fault injection on the real set + 18 refusal paths)
+        working-directory: foundations
+        run: python3 tools/machsig/trust_gate.py --selftest-only
+
+      - name: Gate
+        working-directory: foundations
+        run: python3 tools/machsig/trust_gate.py
+
+      # The signature set is gitignored; keep the one this verdict was computed on, so a red run can
+      # be diagnosed without re-extracting.
+      - name: Keep the signature set
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: machsig-signatures-${{ github.sha }}
+          path: |
+            foundations/artifacts/machsig_signatures.jsonl
+            foundations/artifacts/machsig_extraction.json
+          if-no-files-found: warn
+          retention-days: 30
