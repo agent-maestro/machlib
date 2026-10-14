@@ -9,7 +9,14 @@
   first-class objects in the environment — a declaration does not "have" an EMLTree unless one
   appears inside it. Those need a separate term-level extractor and are absent here, not null.
 
-  Run:  lake env lean tools/machsig/extract.lean
+  AXIOM NAMES (MachSig v0.3, 2026-10-13). The last column is the axiom SET, not only its size. Until
+  v0.3 the census kept `ax.size` and threw the names away, so the trust gate could see that a
+  footprint grew but never WHICH axiom entered -- and could not see a swap at all (one axiom out,
+  another in, same count). The call is unchanged: the same `Lean.collectAxioms nm`, now printed.
+  Names are comma-separated in the order collectAxioms returns them; census.py checks that their
+  number equals the axiom_count column and refuses the row otherwise.
+
+  Run:  python3 tools/machsig/regen.py     (builds, extracts, binds the output to its source identity)
 -/
 import MachLib
 open Lean Elab Command Term Meta
@@ -38,7 +45,7 @@ private partial def constsIn (e : Expr) (acc : NameSet) : NameSet :=
 run_cmd Command.liftTermElabM do
   let env ← getEnv
   let mut seen := 0
-  IO.println "MSIG_SCHEMA\tname\tkind\tmodule\tbinder_count\tprop_binder_count\taxiom_count\tdepends_on_sorry\ttype_direct_consts\tvalue_direct_consts\thas_value"
+  IO.println "MSIG_SCHEMA\tname\tkind\tmodule\tbinder_count\tprop_binder_count\taxiom_count\tdepends_on_sorry\ttype_direct_consts\tvalue_direct_consts\thas_value\taxioms"
   for (nm, ci) in env.constants.toList do
     if isMachLib nm && !nm.isInternal then
       seen := seen + 1
@@ -64,5 +71,6 @@ run_cmd Command.liftTermElabM do
       let mod := match env.getModuleIdxFor? nm with
         | some i => (env.header.moduleNames[i.toNat]!).toString
         | none => "<current>"
-      IO.println s!"MSIG\t{nm}\t{kindOf ci}\t{mod}\t{binders}\t{props}\t{ax.size}\t{hasSorry}\t{tdeps}\t{vdeps}\t{hasVal}"
+      let axNames := ",".intercalate (ax.toList.map toString)
+      IO.println s!"MSIG\t{nm}\t{kindOf ci}\t{mod}\t{binders}\t{props}\t{ax.size}\t{hasSorry}\t{tdeps}\t{vdeps}\t{hasVal}\t{axNames}"
   IO.println s!"MSIG_TOTAL\t{seen}"

@@ -59,7 +59,9 @@ def load_sigs():
     d = {}
     for ln in p.read_text().split("\n"):
         if ln.strip():
-            j = json.loads(ln); d[j["object"]] = j
+            j = json.loads(ln)
+            if "object" in j:          # the v0.3 provenance record (first line) names no object
+                d[j["object"]] = j
     return d
 
 
@@ -94,8 +96,8 @@ def main(argv):
     as_json = "--json" in argv
     argv = [a for a in argv if a != "--json"]
     if len(argv) == 3 and argv[0] == "--snapshot":
-        A = {json.loads(l)["object"]: json.loads(l) for l in open(argv[1]) if l.strip()}
-        B = {json.loads(l)["object"]: json.loads(l) for l in open(argv[2]) if l.strip()}
+        A = {j["object"]: j for j in (json.loads(l) for l in open(argv[1]) if l.strip()) if "object" in j}
+        B = {j["object"]: j for j in (json.loads(l) for l in open(argv[2]) if l.strip()) if "object" in j}
         common = sorted(set(A) & set(B))
         changed = [(n, classify(A[n], B[n])) for n in common
                    if classify(A[n], B[n])[0] != "IDENTICAL_REPRESENTATION"]

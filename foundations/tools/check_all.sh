@@ -58,7 +58,7 @@ run() {
   # `tail -n 3` window silently dropped them. Cosmetic — SUMMARY decides pass/fail from the captured
   # rc, never from this text — but a comment that overstates what it does is how a gate's scope
   # drifts from its description.
-  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|THEOREM-LEDGER|check-[a-z]+\]|AxiomLedger" \
+  grep -hE "MACHSIG-TRUST|REGEN |SELFTEST (PASS|FAIL|UNAVAILABLE)|OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|THEOREM-LEDGER|check-[a-z]+\]|AxiomLedger" \
     "$OUT/$name.log" | tail -n 2 || true
 }
 
@@ -106,7 +106,15 @@ else
   # so it is safe inside a gated run. Do NOT add --mutate: it writes a temp file into
   # tools/, which mutates the worktree mid-run and voids this run's tree fingerprint.
   run "soundness"    python3 tools/soundness_witness_audit.py --selftest
-  run "machsig-trust" python3 tools/machsig/trust_gate.py --selftest
+  # MachSig trust ratchet (gate 14). Until 2026-10-13 this line was `trust_gate.py --selftest` alone and
+  # nothing extracted signatures: the gate compared a set extracted on 2026-09-03 with the baseline of the
+  # same day and passed for forty days. Now: extract for THIS tree (regen.py, ~9 min, writes only the
+  # gitignored artifacts/), prove the red paths, then run the real comparison on its own line -- the gate
+  # REFUSES (rc 3) a stale/unidentified set, an uncommitted or unreviewed baseline, or one without
+  # provenance, so a missing step reads as a failure, never as green.
+  run "machsig-extract" python3 tools/machsig/regen.py
+  run "machsig-trust-selftest" python3 tools/machsig/trust_gate.py --selftest-only
+  run "machsig-trust" python3 tools/machsig/trust_gate.py
   run "claims"       python3 tools/claim_audit/claim_audit.py
   # The canaries cost ~8s; `--self-test` looked unwireable only because it ALSO re-runs the full
   # 506-claim audit that the gate above already performs. `--self-test-only` is the canaries alone.

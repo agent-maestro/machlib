@@ -24,7 +24,9 @@ def load():
     sigs = {}
     for ln in (FOUND / "artifacts" / "machsig_signatures.jsonl").read_text().split("\n"):
         if ln.strip():
-            j = json.loads(ln); sigs[j["object"]] = j
+            j = json.loads(ln)
+            if "object" in j:          # the v0.3 provenance record (first line) names no object
+                sigs[j["object"]] = j
     terms = collections.defaultdict(list)
     tp = FOUND / "artifacts" / "machsig_terms.jsonl"
     if tp.exists():
