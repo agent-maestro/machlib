@@ -60,8 +60,7 @@ cannot fire must not read as "checked and clean", so each of these is now its ow
                          [signatures-not-this-run]   MACHSIG_RUN_ID is set and the set is from another run
                          [toolchain-mismatch]        extracted with another Lean than the baseline's
                          [runner-changed]            tools/capped_lean.sh differs from the baseline's commit
-                         [anchor-unreachable]        --anchor names a commit this history lacks
-                         [anchor-not-in-chain]       the review chain does not run through the anchor's
+                         [anchor-unreachable]        --anchor names a commit HEAD does not contain
   FAIL        (exit 1)   see the table above
 
 `--selftest` proves every one of these red paths by fault injection (trust_gate_selftest.py).
@@ -82,7 +81,7 @@ Run standalone (no MACHSIG_RUN_ID), the gate says its verdict is advisory.
     python3 tools/machsig/trust_gate.py           # the gate
     python3 tools/machsig/trust_gate.py --selftest       # red paths, then the gate
     python3 tools/machsig/trust_gate.py --selftest-only  # red paths only
-    python3 tools/machsig/trust_gate.py --mutate  # 15 mutant gates: the selftest must kill each
+    python3 tools/machsig/trust_gate.py --mutate  # 43 mutant gates: the selftest must kill each
     python3 tools/machsig/trust_gate.py --update  # write an UNREVIEWED baseline from fresh signatures
     python3 tools/machsig/trust_gate.py --content-digest [FILE]  # what a stamp must name
 
@@ -93,10 +92,15 @@ baseline becomes usable only when its `review` block says REVIEWED, names a revi
     attack 3 of the 2026-10-13 review, which passed -- now fails [review-unbound].
   * `transition_report` must be a committed `machsig-transition/*` JSON (tools/machsig/transition.py)
     whose `binding.new_baseline_sha256` is this baseline, whose `binding.old_baseline_sha256` is the
-    LAST REVIEWED baseline (computed over the WHOLE commit graph from the pre-review origin commit,
-    merges included, counting only versions whose own stamp passes these checks against EVERY
-    reviewed line they join), and whose `gate_transition` equals the transition
-    the gate recomputes between the two, row for row. Citing lakefile.lean -- attack 4 of the first
+    LAST REVIEWED baseline AS OF THE ANCHOR (CI: --anchor <base commit>; locally: the merge-base of
+    HEAD with the main line, MAIN_REFS) -- computed over the WHOLE commit graph from the pre-review
+    origin commit, merges included, counting only versions on the anchor's FIRST-PARENT line whose own
+    stamp passes these checks against EVERY reviewed line they join -- and whose `gate_transition`
+    equals the transition the gate recomputes between the two, row for row. So a change is ONE
+    reviewed step and its report is the NET transition since its base: stamps made inside it never
+    count (the fourth review's QUIET TWO-HOP). On the main line itself each such stamp IS a step, so a
+    branch fast-forwarded onto it is judged net only by the run anchored at its base (CI's push run).
+    Citing lakefile.lean -- attack 4 of the first
     review -- fails [review-report-invalid]; a two-commit --update-then-stamp with a hollow
     "this -> itself" report -- H1 of the second review -- fails [review-report-mismatch], and any
     report that omits a change fails [review-report-rows].
@@ -329,19 +333,21 @@ def _blobs(root: Path, commits: list[str]) -> dict:
     return out
 
 
-def reviewed_chain(root: Path, anchor: str | None = None):
-    """The reviewed state of the baseline, computed over the WHOLE commit graph reachable from HEAD.
+def reviewed_chain(root: Path, tip: str = "HEAD"):
+    """The reviewed baseline as of commit `tip`, computed over the WHOLE commit graph reachable from it.
 
     Every commit gets the set of REFERENCES it inherits -- content digests of reviewed baselines -- the
     union over ALL its parents (no history simplification: the third review's MERGE attack hid the
-    reviewed baseline by taking a pre-review branch's file in a merge, and git's default simplification
-    then dropped the reviewed line from a path-limited log). A commit that introduces a new version
-    of the file makes it the single reference only if its stamp passes every check against EVERY
-    inherited reference; otherwise the references pass through unchanged, pending a real review.
+    reviewed baseline in a merge that took a pre-review branch's file), minus any reference another one
+    was reviewed from (superseded). A commit that introduces a new version makes it the single reference
+    only if (a) the commit is on `tip`'s FIRST-PARENT line -- stamps on a side branch never count, so a
+    branch cannot chain its own stamps; only the merge that brings the branch onto the line is judged --
+    and (b) its stamp passes every check against EVERY inherited reference. Otherwise the references
+    pass through unchanged, pending a real review.
 
-    Returns (references at HEAD {digest: (label, doc)}, lineage {digest: {digests it was reviewed from}},
-    references at `anchor` or None, digest -> doc)."""
-    lines = identity.git(root, "rev-list", "--topo-order", "--reverse", "--parents", "HEAD").splitlines()
+    Returns (references at `tip` {digest: (label, doc)}, lineage {digest: {digests reviewed from}},
+    every reference ever made {digest: (label, doc)})."""
+    lines = identity.git(root, "rev-list", "--topo-order", "--reverse", "--parents", tip).splitlines()
     order, parents = [], {}
     for ln in lines:
         parts = ln.split()
@@ -350,10 +356,9 @@ def reviewed_chain(root: Path, anchor: str | None = None):
             parents[parts[0]] = parts[1:]
     if ORIGIN_COMMIT not in parents:
         why = "this is a shallow clone (fetch-depth: 0 needed)" if _is_shallow(root) else \
-            "HEAD does not descend from it"
+            f"{tip[:12]} does not descend from it"
         raise HistoryUnavailable(f"{ORIGIN_LABEL}, commit {ORIGIN_COMMIT[:12]}, is not in this history: {why}")
-    if anchor is not None and anchor not in parents:
-        raise AnchorUnreachable(anchor)
+    line = set(identity.git(root, "rev-list", "--first-parent", tip).split())
     blobs = _blobs(root, order)
     cache: dict = {}
 
@@ -367,7 +372,19 @@ def reviewed_chain(root: Path, anchor: str | None = None):
 
     refs: dict = {}
     lineage: dict = {}
-    known: dict = {}                               # every reference ever made: digest -> (label, doc)
+    known: dict = {}
+
+    def superseded(k: str, others) -> bool:
+        seen, stack = set(), [o for o in others if o != k]
+        while stack:
+            x = stack.pop()
+            if x == k:
+                return True
+            if x not in seen:
+                seen.add(x)
+                stack.extend(lineage.get(x, ()))
+        return False
+
     for c in order:
         if c == ORIGIN_COMMIT:
             d = doc(blobs[c]) if blobs[c] else None
@@ -383,9 +400,10 @@ def reviewed_chain(root: Path, anchor: str | None = None):
         if not inherited:
             refs[c] = None                         # not descended from the origin: no chain here
             continue
+        inherited = {k: v for k, v in inherited.items() if not superseded(k, inherited)}
         b = blobs[c]
-        if b is None or all(blobs.get(p) == b for p in parents[c]):
-            refs[c] = inherited                    # file absent, or unchanged against every parent
+        if c not in line or b is None or all(blobs.get(p) == b for p in parents[c]):
+            refs[c] = inherited                    # off the line, file absent, or unchanged
             continue
         v = doc(b)
         dv = baseline_content_digest(v) if v is not None else None
@@ -400,38 +418,25 @@ def reviewed_chain(root: Path, anchor: str | None = None):
             lineage.setdefault(dv, set()).update(k for k in inherited if k != dv)
         else:
             refs[c] = inherited
-    return refs[order[-1]], lineage, (refs.get(anchor) if anchor else None), known
+    return refs[order[-1]], lineage, known
 
 
 class AnchorUnreachable(Exception):
     pass
 
 
-def descends(mine: str, ref: str, lineage: dict) -> bool:
-    """Is `ref` the reviewed baseline `mine` itself, or one it was (transitively) reviewed from?"""
-    seen, stack = set(), [mine]
-    while stack:
-        x = stack.pop()
-        if x == ref:
-            return True
-        if x not in seen:
-            seen.add(x)
-            stack.extend(lineage.get(x, ()))
-    return False
+#: Where a local run (no --anchor) looks for the main line: the merge-base of HEAD with the first of
+#: these refs that exists is the anchor. CI always passes --anchor <base commit> explicitly.
+MAIN_REFS = ("refs/remotes/origin/master", "refs/heads/master", "refs/remotes/origin/main", "refs/heads/main")
 
 
-def anchor_problems(mine: str, anchor_refs: dict | None, lineage: dict) -> list[tuple[str, str]]:
-    """CI passes the BASE commit (--anchor): the committed baseline's review chain must run through the
-    base's reviewed reference. Independent of what the change's own history claims; a decision on
-    lineage alone, unit-tested on synthetic input in the selftest."""
-    if not anchor_refs:
-        return []                                  # the anchor predates the origin (bootstrap)
-    missing = [k for k in anchor_refs if not descends(mine, k, lineage)]
-    if missing:
-        return [("anchor-not-in-chain", f"the base commit's reviewed baseline {missing[0][:23]}... is not in the "
-                                        f"review chain of this baseline {mine[:23]}...: the change does not build "
-                                        "on what the base accepted")]
-    return []
+def default_anchor(root: Path) -> str | None:
+    for ref in MAIN_REFS:
+        if identity.git_ok(root, "rev-parse", "--verify", "-q", ref):
+            mb = identity.git(root, "merge-base", "HEAD", ref, check=False).strip()
+            if mb:
+                return mb
+    return None
 
 
 def _report_at(root: Path, commit: str):
@@ -601,41 +606,47 @@ def review_problems(b: dict, ref, ref_label: str, read_report) -> list[tuple[str
 
 
 def review_state(b: dict, root: Path, anchor: str | None = None) -> list[tuple[str, str]]:
-    """The committed baseline's stamp, against the reviewed references the whole history leaves at HEAD."""
+    """The committed baseline's stamp, judged as ONE reviewed step from the anchor.
+
+    The anchor is the base commit (CI: --anchor <base>; locally: the merge-base of HEAD with the main
+    line, MAIN_REFS; with no main line, HEAD itself). If the baseline changed since the anchor's
+    reviewed baseline A, the committed stamp must cite a report that starts AT A and whose
+    gate_transition equals the NET transition A -> this baseline. Stamps made in between never count:
+    the fourth review's QUIET TWO-HOP (drop a theorem in one stamped commit, re-add it grown in the
+    next, each report exact for its own hop) is judged by its net change, which shows the growth."""
     r = b.get("review") if isinstance(b.get("review"), dict) else {}
     if not (r.get("status") == "REVIEWED" and r.get("reviewer") and r.get("baseline_sha256") == baseline_content_digest(b)):
         return review_problems(b, None, ORIGIN_LABEL, _report_in_tree(root))     # fails at step 1 or 2
-    try:
-        final, lineage, anchor_refs, known = reviewed_chain(root, anchor)
-    except AnchorUnreachable as e:
-        return [("anchor-unreachable", f"the base commit {str(e)[:12]} given by --anchor is not in this history: "
+    tip = anchor or default_anchor(root) or "HEAD"
+    if anchor and not identity.git_ok(root, "merge-base", "--is-ancestor", anchor, "HEAD"):
+        return [("anchor-unreachable", f"the base commit {anchor[:12]} given by --anchor is not an ancestor of HEAD: "
                                        "the change does not contain what it is judged against")]
+    try:
+        final, lineage, known = reviewed_chain(root, tip)
     except (HistoryUnavailable, identity.Unavailable) as e:
         return [("baseline-history-unavailable", f"cannot establish the review chain: {e}")]
+    if final is None:
+        return [("baseline-history-unavailable", f"the anchor {tip[:12]} predates {ORIGIN_LABEL}")]
+    where = "HEAD" if tip == "HEAD" else f"the base {tip[:12]}"
+    if len(final) > 1:
+        return [("review-report-mismatch",
+                 f"at {where} a merge joined {len(final)} reviewed lines ({', '.join(lab for lab, _ in final.values())}) "
+                 "and no stamp since is valid against every one of them: review the merged baseline against each")]
     mine = baseline_content_digest(b)
-    if set(final) == {mine}:
-        # the content was reviewed somewhere in history; the stamp committed NOW must still be a valid
-        # one for it -- a later commit that rewrote only the review block (lakefile.lean as the report,
-        # say) does not inherit the earlier review's validity
-        preds = sorted(lineage.get(mine, ()))
-        if not preds:
-            return [("review-report-mismatch", "no review chain leads to this baseline")]
-        for k in preds:
-            label, ref = known[k]
-            probs = review_problems(b, ref, label, _report_in_tree(root))
-            if probs:
-                return probs
-    else:
-        if len(final) > 1:
-            return [("review-report-mismatch",
-                     f"a merge joined {len(final)} reviewed lines ({', '.join(lab for lab, _ in final.values())}) and "
-                     "no stamp since is valid against every one of them: review the merged baseline against each")]
-        (label, ref), = final.values()
-        probs = review_problems(b, ref, label, _report_in_tree(root))
+    (k, (label, ref)), = final.items()
+    if k != mine:
+        return review_problems(b, ref, f"{label} (as of {where})", _report_in_tree(root))
+    # unchanged since the anchor: the committed stamp must still be a valid one for this content (a
+    # later commit that rewrote only the review block does not inherit the earlier review)
+    preds = sorted(lineage.get(mine, ()))
+    if not preds:
+        return [("review-report-mismatch", "no review chain leads to this baseline")]
+    for p in preds:
+        plabel, pref = known[p]
+        probs = review_problems(b, pref, plabel, _report_in_tree(root))
         if probs:
             return probs
-        lineage.setdefault(mine, set()).update(k for k in final if k != mine)   # reviewed in the tree as it stands
-    return anchor_problems(mine, anchor_refs, lineage)
+    return []
 
 
 # ── the comparison ─────────────────────────────────────────────────────────────────────────────────

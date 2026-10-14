@@ -160,11 +160,6 @@ def part_a() -> tuple[bool | None, list[str]]:
     r10 = tg.judge(inj10, cur)
     check(judged(r10) == ["policy-widened"] and r10["policy-widened"] == [f"trustedFootprint + {promoted}"],
           f"INJECTED promotion of {promoted.split('.')[-1]} into trustedFootprint (E1/E2): `policy-widened`")
-    lin = {"m": {"a"}, "a": {"o"}}
-    check(not tg.anchor_problems("m", {"o": None}, lin) and
-          [t for t, _ in tg.anchor_problems("m", {"x": None}, lin)] == ["anchor-not-in-chain"],
-          "INJECTED base anchor outside the review chain (synthetic lineage): `anchor-not-in-chain`; an "
-          "ancestor in the chain stays silent")
     return ok, lines
 
 
@@ -650,6 +645,111 @@ def cases():
         return f.parent.parent / "pristine" / "foundations" / "tools" / "machsig" / "trust_gate.py"
     def json_isolated(repo, f): return json_py(repo, f, True)
     def json_in_tree(repo, f): return json_py(repo, f, False)
+    DROPPED = {k: v for k, v in THEOREMS.items() if k != "Fx.alpha"}
+    def hop(f, theorems, previous):
+        # one stamped step whose report is EXACT for its own hop (from `previous`)
+        write_sigs(f, theorems)
+        update(f)
+        restamp(f, previous)
+    def two_hop(repo, f, via_empty: bool = False, hops: int = 2, branch: bool = True, anchor: bool = False):
+        # QUIET TWO-HOP (review 4): drop alpha (or empty the baseline) in one stamped commit, re-add it
+        # GROWN in the next; each report exact for its own step, none showing the growth
+        l1 = committed(f)
+        base_sha = head_sha(repo)
+        if branch:
+            sh(repo, "checkout", "-q", "-b", "pr")
+        mid = {} if via_empty else DROPPED
+        hop(f, mid, l1)
+        commit_all(repo, "hop 1: alpha dropped" if not via_empty else "hop 1: baseline emptied")
+        prev = committed(f)
+        if hops == 3:
+            hop(f, THEOREMS, prev)
+            commit_all(repo, "hop 2: back as it was")
+            prev = committed(f)
+            hop(f, DROPPED, prev)
+            commit_all(repo, "hop 3: dropped again")
+            prev = committed(f)
+        hop(f, GROWN, prev)
+        commit_all(repo, "last hop: alpha back, grown")
+        return {"__args__": ["--anchor", base_sha]} if anchor else {}
+    def two_hop_removal(repo, f): return two_hop(repo, f)
+    def two_hop_empty(repo, f): return two_hop(repo, f, via_empty=True)
+    def three_hop(repo, f): return two_hop(repo, f, hops=3)
+    def two_hop_ci(repo, f): return two_hop(repo, f, anchor=True)
+    def two_hop_merged(repo, f):
+        # the same PR merged onto main with --no-ff WITHOUT CI: judged locally on main afterwards
+        two_hop(repo, f)
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr")
+    def two_hop_ff(repo, f, push_ci: bool):
+        # the same PR FAST-FORWARDED onto main: its stamps are now on the main line itself. CI's push run
+        # anchors on `before` (the old tip) and judges the net step; a later local run on main cannot tell
+        # these from two reviewed pushes and counts each (the documented limit, pinned so docs and code agree)
+        before = head_sha(repo)
+        two_hop(repo, f)
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--ff-only", "pr")
+        return {"__args__": ["--anchor", before]} if push_ci else {}
+    def two_hop_ff_push(repo, f): return two_hop_ff(repo, f, True)
+    def two_hop_ff_local(repo, f): return two_hop_ff(repo, f, False)
+    def net_one_step(repo, f):
+        # control: the same change as ONE reviewed step from the base: its report shows alpha GREW
+        l1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr")
+        hop(f, GROWN, l1)
+        commit_all(repo, "one reviewed step, net from the base")
+    def net_after_unreviewed_hop(repo, f):
+        # control: drop alpha WITHOUT a stamp, then one stamp from the base (net: alpha grew)
+        l1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr")
+        write_sigs(f, DROPPED)
+        update(f)
+        commit_all(repo, "unreviewed drop")
+        hop(f, GROWN, l1)
+        commit_all(repo, "reviewed, net from the base")
+    def two_prs(repo, f):
+        # control: two sequential PRs, each one reviewed step from its base, each merged --no-ff
+        l1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr1")
+        hop(f, DROPPED, l1)
+        commit_all(repo, "pr1: alpha dropped, reviewed from L1")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr1")
+        b1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr2")
+        hop(f, GROWN, b1)
+        commit_all(repo, "pr2: alpha back grown, reviewed from B1 (its report shows it NEW)")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr2")
+    def stale_branch(repo, f):
+        # control: a branch forked at L1 merges main after main moved (PR1 reviewed), then rebaselines
+        # from main's B1; merged --no-ff. Its stale L1 reference must be superseded, not joined.
+        l1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "late")
+        (f / "docs" / "late.md").write_text("work\n")
+        commit_all(repo, "late: unrelated work")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "checkout", "-q", "-b", "pr1")
+        hop(f, DROPPED, l1)
+        commit_all(repo, "pr1 reviewed from L1")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr1")
+        b1 = committed(f)
+        sh(repo, "checkout", "-q", "late")
+        sh(repo, "merge", "-q", "--no-edit", "main")
+        hop(f, GROWN, b1)
+        commit_all(repo, "late: reviewed from B1")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "late")
+    def origin_via_merge(repo, f):
+        # control: main's first-parent line reaches the origin only through a merge's SECOND parent (an
+        # orphan history that merged the reviewed line, its own commit first). The union over ALL parents
+        # keeps the chain; counting the first parent alone would lose it and refuse a reviewed baseline.
+        sh(repo, "checkout", "-q", "--orphan", "other")
+        sh(repo, "commit", "-q", "-m", "an unrelated root holding the same tree")
+        sh(repo, "merge", "-q", "--no-edit", "--allow-unrelated-histories", "main")
+        sh(repo, "branch", "-q", "-f", "main", "HEAD")
+        sh(repo, "checkout", "-q", "main")
     def shallow(repo, f):
         # depth-1 clone: neither the provenance commit nor the previous baseline is reachable
         clone = repo.parent / "shallow"
@@ -739,12 +839,12 @@ def cases():
         ("B51 re-commit an OLDER reviewed baseline over a newer one", recommit_older, 3, "review-report-mismatch",
          "the last reviewed baseline is the baseline reviewed at"),
         ("B52 MERGE (review 3): pre-review branch merged, its file kept, branch as first parent",
-         merge_side_first, 3, "review-report-mismatch", "a merge joined 2 reviewed lines"),
+         merge_side_first, 3, "review-report-mismatch", "the last reviewed baseline is"),
         ("B53 MERGE, reviewed line as first parent", merge_main_first, 3, "review-report-mismatch",
-         "a merge joined 2 reviewed lines"),
+         "the last reviewed baseline is"),
         ("B54 control: a branch reviewed from L1 merged with --no-ff", honest_merge, 0, None, "MACHSIG-TRUST OK"),
         ("B55 --anchor names a commit this history lacks", anchor_unreachable, 3, "anchor-unreachable",
-         "is not in this history"),
+         "is not an ancestor of HEAD"),
         ("B56 control: --anchor at the reviewed commit", anchor_ok, 0, None, "MACHSIG-TRUST OK"),
         ("B57 signatures extracted with another toolchain", toolchain, 3, "toolchain-mismatch", "4.33.0"),
         ("B58 control: same toolchain, other platform (aarch64 vs x86_64)", other_platform, 0, None,
@@ -755,6 +855,29 @@ def cases():
          1, None, "FAIL [policy-violation]"),
         ("B61 control (the attack is real): the same tree judged in-tree, unisolated, exits 0", json_in_tree, 0,
          None, ""),
+        ("B62 QUIET TWO-HOP (review 4): drop alpha, re-add it grown, one PR, local run", two_hop_removal, 3,
+         "review-report-mismatch", "the last reviewed baseline is"),
+        ("B63 QUIET TWO-HOP through an empty baseline", two_hop_empty, 3, "review-report-mismatch",
+         "the last reviewed baseline is"),
+        ("B64 three hops", three_hop, 3, "review-report-mismatch", "the last reviewed baseline is"),
+        ("B65 QUIET TWO-HOP judged the CI way (--anchor <base>)", two_hop_ci, 3, "review-report-mismatch",
+         "as of the base"),
+        ("B66 QUIET TWO-HOP merged --no-ff without CI, judged on main", two_hop_merged, 3, "review-report-mismatch",
+         "the last reviewed baseline is"),
+        ("B67 control: the same change as ONE reviewed step (its report shows alpha grew)", net_one_step, 0, None,
+         "MACHSIG-TRUST OK"),
+        ("B68 control: an unreviewed drop, then one stamp net from the base", net_after_unreviewed_hop, 0, None,
+         "MACHSIG-TRUST OK"),
+        ("B69 control: two sequential PRs, each one reviewed step, merged --no-ff", two_prs, 0, None,
+         "MACHSIG-TRUST OK"),
+        ("B70 control: a branch that merged main, then rebaselined from it, merged --no-ff", stale_branch, 0, None,
+         "MACHSIG-TRUST OK"),
+        ("B71 QUIET TWO-HOP fast-forwarded onto main, judged the CI push way (--anchor <before>)", two_hop_ff_push,
+         3, "review-report-mismatch", "as of the base"),
+        ("B72 control (the documented limit is real): that fast-forward judged on main later, each stamp a step",
+         two_hop_ff_local, 0, None, "MACHSIG-TRUST OK"),
+        ("B73 control: main reaches the origin only through a merge's second parent", origin_via_merge, 0, None,
+         "MACHSIG-TRUST OK"),
     ]
 
 
@@ -832,11 +955,22 @@ MUTANTS = [
      'refs[c] = {dv: (f"the baseline reviewed at {c[:12]}", v)}', "refs[c] = inherited"),
     ("RESTART: the origin restarts the chain wherever its content reappears",
      "        if c == ORIGIN_COMMIT:", "        if blobs.get(c) == blobs.get(ORIGIN_COMMIT):"),
+    # Since stamps off the first-parent line never count, a second parent can only bring references the
+    # line made earlier, already superseded -- so this mutant is visible only where the line reaches the
+    # origin THROUGH a merge's second parent (B73), not in any graph that reaches it by first parents.
     ("MERGE: only the first parent's references count", "        for p in parents[c]:\n            if refs.get(p):",
      "        for p in parents[c][:1]:\n            if refs.get(p):"),
-    ("MERGE: a merge taking one side's file is not judged", "if b is None or all(blobs.get(p) == b for p in parents[c]):",
-     "if b is None or any(blobs.get(p) == b for p in parents[c]):"),
-    ("anchor reachability not checked", "    if anchor is not None and anchor not in parents:", "    if False:"),
+    ("MERGE: a merge taking one side's file is not judged", "b is None or all(blobs.get(p) == b for p in parents[c]):",
+     "b is None or any(blobs.get(p) == b for p in parents[c]):"),
+    ("anchor reachability not checked",
+     '    if anchor and not identity.git_ok(root, "merge-base", "--is-ancestor", anchor, "HEAD"):', "    if False:"),
+    ("TWO-HOP: no default anchor (stamps chain inside a branch)",
+     '    tip = anchor or default_anchor(root) or "HEAD"', '    tip = anchor or "HEAD"'),
+    ("TWO-HOP: stamps off the first-parent line count", "        if c not in line or b is None or all(",
+     "        if b is None or all("),
+    ("superseded references not pruned",
+     "        inherited = {k: v for k, v in inherited.items() if not superseded(k, inherited)}",
+     "        inherited = dict(inherited)"),
     ("toolchain not compared", "    if prov.get(\"lean_toolchain\") != head.get(\"lean_toolchain\") or \\",
      "    if False and \\"),
     ("toolchain compared with the platform", "    m = LEAN_VERSION.search(str(v))", "    m = None"),
