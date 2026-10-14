@@ -119,9 +119,10 @@ decides what a certificate can claim.
 * **The `real_<f>_eps` constants are UNCONSTRAINED, except `real_abs_eps`.** Each is an `axiom` of type `MachLib.Real`
   with nothing said about it — not `0 ≤ eps`, not a relation to the unit roundoff `u`. The exception, since 2026-09-14,
   is `real_abs_eps_eq_zero`: the runtime `abs` clears the sign bit and is exact, measured so. So a
-  grounded theorem such as `Certcom.pid_sin_grounded` concludes *"within `real_sin_eps + absErr`"*,
-  which holds for any sufficiently large constant. **Its content is UNIFORMITY — one constant
-  works for every `Float` — and not accuracy.** The uniformity is real and was hard-won: the
+  grounded theorem such as `Certcom.pid_sin_grounded` concludes *"within `real_sin_eps + absErr`"*
+  (under its float side conditions `FloatSafe`, since 2026-09-14), which holds for any sufficiently
+  large constant. **Its content is UNIFORMITY — one constant works for every finite `Float` — and
+  not accuracy.** The uniformity is real and was hard-won: the
   2026-07-22 audit found it FALSE for `exp`/`log`/`sqrt`/`asin`/`acos`/`tan` and repaired those six
   with domain hypotheses, which is why they carry `R`/`lo`/`hi` and the globally-Lipschitz five do
   not. But a reader cannot get a NUMBER out of any of them.

@@ -61,7 +61,9 @@ by hand.
 5. **`eml_tree_grounded`** (added 2026-07-22, Certcom compositional handshake) — the abstract
    result connected to a REAL compiled artifact: an explicit, machine-computed closed-form error
    bound between an EML tree's exact mathematical value and a Certcom-compiled program's actual
-   `Float`-rounded output, for the full grammar (`const`/`var`/`eml`, any depth or shape).
+   `Float`-rounded output, for the full grammar (`const`/`var`/`eml`, any depth or shape), on inputs
+   where the program's floats stay finite and normal (the hypothesis `EMLTreeFloatSafe`, added
+   2026-09-14 when the float-bridge axioms it rests on were restated from a measurement).
 
 See `../EML_WITNESS_FINDING_RESEARCH_NOTE.md` for the argument in full, and
 `../EML_WITNESS_FINDING_THEOREM_MAP.md` for how these connect to the spine and everything built

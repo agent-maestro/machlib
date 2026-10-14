@@ -1,5 +1,17 @@
 # certcom Theorem A — scoping the rounding frontier (2026-07-10)
 
+> **2026-10-14 (owner ruling R1): the grounded theorems this log describes were restated on 2026-09-14/15, and say less
+> now.** This page records what each step proved when it was written. Since machlib commits fab243da, ae59d0e8,
+> bceff6ee, d50dfe15 and b0d45311 restated the float-bridge axioms (their old forms were measured false of binary64:
+> the old `tanh` axiom reached 1.26u–1.50u against a bound of `u`, the old `log10` one 1.90u–2.08u, and the old
+> `FPBridge` failed on products below `DBL_MIN`), every `*_grounded` theorem named below takes the float side
+> conditions `hsafe : FloatSafe …`: every intermediate `+`, `−`, `×` and negation computes a finite float, and no
+> product's exact value is a nonzero real below `DBL_MIN`. Some also take a finite primitive result, and several
+> rounding terms grew: `tanh`, `exp`, `log` and `tan` to `2u`, `log10` to `3u`, `sinh` and `cosh` to `4u`. So where an
+> entry below says "unconditional" or "no hypothesis", read "no `FPBridge` hypothesis, and (since 2026-09-14) under
+> `FloatSafe`". What is proved today, and on which bounded input domains `FloatSafe` is discharged, is
+> `docs/what_is_proven.md`, "Grounded floating-point certificates".
+
 A decomposition pass on the EML→C correctness stack, to find the **smallest honest next theorem**.
 Everything below was verified by `#print axioms` on the real artifact, not read off docstrings.
 
@@ -84,8 +96,10 @@ and must be a hypothesis or a disclosed axiom. This is the precise, honest locat
 
 The recommended keystone below is **done** (`MachLib/FPGrounding.lean`):
 `Certcom.realToR` + `Certcom.real_fpbridge` (the disclosed IEEE-754 axioms) + the theorem
-`Certcom.pipeline_det_grounded` — an **unconditional** forward-error certificate on the actual
-emitted-C determinant `x·y − z·w`, `#print axioms` resting on exactly `{realToR, real_fpbridge, the
+`Certcom.pipeline_det_grounded` — a forward-error certificate on the actual emitted-C determinant
+`x·y − z·w` with no `FPBridge` hypothesis (written "unconditional" on 2026-07-10; since 2026-09-14 it takes
+`hsafe : FloatSafe …`, finite intermediates and no product below `DBL_MIN`, with the same `u·(2+u)·(|X·Y| + |Z·W|)`
+bound; `pipeline_det_grounded_instantiated` discharges that on bounded, floored, finite inputs), `#print axioms` resting on exactly `{realToR, real_fpbridge, the
 ℝ-witnessed MachLib.Real axioms, u, u_nonneg}`, no `FPBridge` hypothesis, no `sorryAx`. Registered in
 `AxiomLedger` under a new `disclosedTrusted` category (distinct from the inert `disclosedUnwitnessed`):
 254 axioms pinned, 5 headline footprints ⊆ trusted (66), and a dead-disclosure check confirms the two
@@ -106,7 +120,8 @@ instantiation, not just the lever) until a later session did both:
   (first grounded transcendental kernel, `tanh`-saturated PID — globally `1`-Lipschitz, so no range
   hypothesis) — `Certcom.real_tanh_rounds`, `MachLib/FPGrounding.lean`. That axiom was restated on
   2026-09-14 from a measurement (finite inputs, within `2u`; as stated before, within `u`, it was false),
-  and `real_tanh_eps` was retired on 2026-07-22.
+  and `real_tanh_eps` was retired on 2026-07-22. Both theorems now take `FloatSafe`, and `pid_tanh_grounded`
+  concludes `2u + absErr`, not `u + absErr`.
 - **`pid_exp_grounded`** (this update) — the SECOND grounded transcendental, and the first through the
   *local*-Lipschitz lever (`pipeline_exp_of_arith`, `AbsoluteFoldLocal.lean`): `exp(PID law)`,
   conditional on the PID's computed AND exact values landing in a caller-supplied `[lo,hi]` (the
@@ -171,7 +186,8 @@ recursive-nesting piece remains the one genuinely different, harder item on this
 ## ✅ Update (2026-07-17, same session) — `cos` grounded, item 5 now 5-of-11
 
 **`pid_cos_grounded`** (`FPGrounding.lean`): `cos(1.5·e + 0.4·i + 0.05·d)` — third globally-Lipschitz
-data point (`TrigLipschitz.cos_lipschitz`, `L=1`), identical pattern to `tanh`/`sin`, unconditional.
+data point (`TrigLipschitz.cos_lipschitz`, `L=1`), identical pattern to `tanh`/`sin`, with no domain
+hypothesis (it takes `FloatSafe` since 2026-09-14).
 New disclosed axioms `Certcom.real_cos_eps`/`real_cos_rounds`. Built green first try. `AxiomLedger`:
 279 axioms pinned (was 277), 12 headline footprints ⊆ trusted (95) (was 92 — one more incidental leak
 fix, `MachLib.Real.HasDerivAt_cos`, already-known ℝ-witnessed, needed for `cos_lipschitz`'s own MVT
@@ -189,7 +205,8 @@ derived). The recursive-nesting piece remains unchanged, still the one genuinely
 
 **`pid_atan_grounded`**/**`pid_abs_grounded`** (`FPGrounding.lean`): the last two of the five
 globally-Lipschitz primitives (`InverseTrig.atan_lipschitz`, `OperatorBasisGeneral.abs_abs_sub_le`,
-both `L=1`), identical unconditional pattern to `tanh`/`sin`/`cos`. `abs` is IEEE-754-exact in
+both `L=1`), the same pattern as `tanh`/`sin`/`cos`, with no domain hypothesis (both take `FloatSafe`
+since 2026-09-14). `abs` is IEEE-754-exact in
 principle (sign-bit clear, no rounding), but disclosed the same way as every other primitive rather
 than assumed exact — the runtime call still goes through `mg_abs`/`fabs`, not a bare sign-bit op Lean
 can see. New disclosed axioms `Certcom.real_atan_eps`/`real_atan_rounds`/`real_abs_eps`/
@@ -407,8 +424,9 @@ just the flat single-primitive instances.** No further open items remain anywher
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and
 the `x²+y²` / PID kernel) at it, and register the axiom in the AxiomLedger.**
 
-Result: the **first unconditional end-to-end forward-error certificate about actual `Float`
-computations** — converting the whole `∀ toR, FPBridge toR → …` tower from "conditional, only a
+Result: the **first end-to-end forward-error certificate about actual `Float` computations with no
+`FPBridge` hypothesis** (called "unconditional" here on 2026-07-10; since 2026-09-14 it holds under the float side
+conditions `FloatSafe`) — converting the whole `∀ toR, FPBridge toR → …` tower from "conditional, only a
 degenerate witness" into "applies to the real artifact, modulo one honest, universally-accepted,
 explicitly-disclosed axiom." Why this beats the pure-proof wins as a *first* step:
 
