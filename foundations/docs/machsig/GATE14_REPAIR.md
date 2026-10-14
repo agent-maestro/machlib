@@ -13,14 +13,23 @@ a generated file named next to it.
 | 4 | classify by type and trust implication | **done** — same report |
 | 5 | independent review of removals, restatements, assumption changes | **done for the narrow candidate**: ACCEPT EXCEPT E1/E2/E3, which go to the owner (`scratchpad/MACHSIG_INDEPENDENT_REVIEW_2026-10-13.md`) |
 | 6 | reproducible classification + targeted checks of the large groups | **done**: 200/200 sampled (seed 20261013), full `#print axioms` sweep; the reviewer's own seed-777 sample 98/98 |
-| 7 | commit the reviewed baseline, enable the gate in CI | **open** — waits for the owner's rulings on E1-E3 |
+| 7 | commit the reviewed baseline, enable the gate in CI | **open** — waits for the owner's rulings on E1-E3, the choice of candidate, and (widened only) a review of the second packet |
 
-## The candidate
+## Two candidates — the owner picks
 
-`trust_baseline.candidate-narrow-2026-10-13.json`: the population the gate watched until v0.4
-(`MachLib.*` theorems passing the old name filter, 7,948), transition `TRANSITION_2026-10-13.md`,
-packet `REVIEW_PACKET_2026-10-13.md` (reviewed). A widened candidate, watching every theorem MachLib
-declares, follows in SEPARATE commits on this branch so the owner can land the hardening without it.
+| | narrow | widened |
+|---|---|---|
+| file | `trust_baseline.candidate-narrow-2026-10-13.json` | `trust_baseline.candidate-widened-2026-10-13.json` |
+| population | `MachLib.*` theorems passing the old name filter: 7,948 | every theorem MachLib declares, the theorem ledger's rule: 9,431 (adds 1,497, drops 14 generated `congr_simp`) |
+| derived from | 8e836a56 (hardening) | 30fcd3aa (widening) |
+| transition | `TRANSITION_2026-10-13.md` | `TRANSITION_WIDENED_2026-10-13.md` |
+| review packet | `REVIEW_PACKET_2026-10-13.md` (reviewed: ACCEPT EXCEPT E1-E3) | that one, plus `REVIEW_PACKET_WIDENING_2026-10-13.md` (only what the widening adds; NOT yet reviewed) |
+| lands with | the hardening commits (through cab7a801; f5b45a37 is a cosmetic report fix that cherry-picks alone) | the hardening AND the widening commits (30fcd3aa onward) |
+
+The widened candidate holds the narrow one's 7,934 shared theorems byte-identically (`ax`, `d`, `c`,
+`set`), the same 232 axiom pins and the same policy. What it adds: 301 `Certcom.*`, 1,092 private, 65
+filter-dropped and 39 root-namespace theorems; 18 of the 1,497 are conditional, none unchecked; 35
+axioms are used ONLY by them (all 16 restated in the window and all 13 added since 2026-09-03).
 
 The narrow candidate's axiom sets are byte-identical to the candidate the independent review accepted
 (the `axiom_sets` table and every theorem's `ax`/`d`/`set` are equal); v0.4 only adds per-theorem
@@ -103,7 +112,8 @@ come from 203cc854, as the review verified. The data in the packet was right; th
    provenance), copy the chosen candidate to `tools/machsig/trust_baseline.json`. If anything moved,
    do not reuse it: `regen.py`, `trust_gate.py --update`, and a new transition report.
 2. Fill its `review` block: `status` REVIEWED, `reviewer`, `transition_report` = the committed
-   transition JSON (`docs/machsig/transition_2026-10-13.json`),
+   transition JSON (`docs/machsig/transition_2026-10-13.json` for the narrow candidate,
+   `docs/machsig/transition_widened_2026-10-13.json` for the widened one),
    and `baseline_sha256` = `python3 tools/machsig/trust_gate.py --content-digest`. The report's
    `binding.old_baseline_sha256` is c3046961's committed baseline, which is what the file replaces.
 3. `MACHSIG_RUN_ID=x python3 tools/machsig/regen.py && MACHSIG_RUN_ID=x python3 tools/machsig/trust_gate.py`
@@ -111,6 +121,12 @@ come from 203cc854, as the review verified. The data in the packet was right; th
 4. Move `docs/machsig/PROPOSED_CI_machsig-trust.yml` to `.github/workflows/machsig-trust.yml` in the
    same commit (~30-40 min per run; extract.lean dominates).
 5. Do not squash-merge `machsig-gate`: the candidate's provenance commit must stay reachable.
+
+## Not done here
+
+* `extract.lean` still takes 8.5-10.7 min; `#print axioms` over every watched theorem takes ~10 s.
+  Making it cheap changes the extractor and so needs its own reviewed transition.
+* The REVIEWED stamp binds content; it cannot authenticate a reviewer (see above).
 
 ## Reproduce
 

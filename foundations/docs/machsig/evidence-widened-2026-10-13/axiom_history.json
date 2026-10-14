@@ -1,0 +1,553 @@
+{
+ "axioms": {
+  "Certcom.float_lit_0_05": [
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   }
+  ],
+  "Certcom.float_lit_0_4": [
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   }
+  ],
+  "Certcom.float_lit_1_5": [
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   }
+  ],
+  "Certcom.real_abs_eps_eq_zero": [
+   {
+    "commit": "bceff6ee8baad1cb888a5d1b7727285672e361b3",
+    "date": "2026-09-14",
+    "subject": "feat: finite-input float bridge, log at 2u, u <= 2^-52, exact abs"
+   }
+  ],
+  "Certcom.real_cosh_finite": [
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   }
+  ],
+  "Certcom.real_exp_finite": [
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   }
+  ],
+  "Certcom.real_fpfinite": [
+   {
+    "commit": "3333c7bf11df9d414f356374740a6ed52a30475e",
+    "date": "2026-09-14",
+    "subject": "feat: range axioms (N1, N2, u < 1); instantiate two grounded certificates"
+   }
+  ],
+  "Certcom.real_log_finite": [
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   }
+  ],
+  "Certcom.real_round_finite": [
+   {
+    "commit": "3333c7bf11df9d414f356374740a6ed52a30475e",
+    "date": "2026-09-14",
+    "subject": "feat: range axioms (N1, N2, u < 1); instantiate two grounded certificates"
+   }
+  ],
+  "Certcom.real_sinh_finite": [
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   }
+  ],
+  "MachLib.Real.HasDerivAt_neg": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.HasDerivAt_sub": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.archimedean": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.cos_neg": [
+   {
+    "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+    "date": "2026-10-04",
+    "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+   }
+  ],
+  "MachLib.Real.cos_periodic": [
+   {
+    "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+    "date": "2026-10-04",
+    "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+   }
+  ],
+  "MachLib.Real.cos_zero": [
+   {
+    "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+    "date": "2026-10-04",
+    "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+   }
+  ],
+  "MachLib.Real.cosh_ge_one": [
+   {
+    "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+    "date": "2026-10-04",
+    "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+   }
+  ],
+  "MachLib.Real.cosh_pos": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.div_lt_one_of_pos_lt": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.exp10": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.exp10_def": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.exp10_log10_inverse": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.exp10_zero": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.exp_pos": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.exp_zero": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.lit_one_eq": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.lit_zero_eq": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.mul_lt_mul_of_pos_right": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.natCast": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.natCast_succ": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.natCast_zero": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.neg_one_lt_tanh": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.one_div_nonneg_of_pos": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.one_div_pos_of_pos": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.pi_gt_one": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.pi_gt_three": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.pi_pos": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.realOfScientific": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.realOfScientific_clears": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.realOfScientific_le_of_nat": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.realOfScientific_lt_of_nat": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.realOfScientific_one_dot_zero": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.realOfScientific_pos": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.realOfScientific_three_dot_zero": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.realOfScientific_two_dot_zero": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   }
+  ],
+  "MachLib.Real.sin_neg": [
+   {
+    "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+    "date": "2026-10-04",
+    "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+   }
+  ],
+  "MachLib.Real.sin_periodic": [
+   {
+    "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+    "date": "2026-10-04",
+    "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+   }
+  ],
+  "MachLib.Real.sin_zero": [
+   {
+    "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+    "date": "2026-10-04",
+    "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+   }
+  ],
+  "MachLib.Real.tanh_lt_one": [
+   {
+    "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+    "date": "2026-10-04",
+    "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+   }
+  ],
+  "MachLib.Real.u_le_half": [
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   }
+  ],
+  "MachLib.Real.u_le_inv_two_pow_52": [
+   {
+    "commit": "bceff6ee8baad1cb888a5d1b7727285672e361b3",
+    "date": "2026-09-14",
+    "subject": "feat: finite-input float bridge, log at 2u, u <= 2^-52, exact abs"
+   }
+  ],
+  "MachLib.Real.u_lt_one": [
+   {
+    "commit": "3333c7bf11df9d414f356374740a6ed52a30475e",
+    "date": "2026-09-14",
+    "subject": "feat: range axioms (N1, N2, u < 1); instantiate two grounded certificates"
+   }
+  ]
+ },
+ "files": {
+  "MachLib/AcosHardwareForwardError.lean": [],
+  "MachLib/BallCubeRatio.lean": [],
+  "MachLib/Basic.lean": [
+   {
+    "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+    "date": "2026-10-04",
+    "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+   },
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   },
+   {
+    "commit": "40add282a266530a5dd879edf530c40631d788a3",
+    "date": "2026-09-08",
+    "subject": "fix: Decidable equality on Real -- `if a == b` could not compile, and nothing noticed"
+   }
+  ],
+  "MachLib/CompiledClosedLoop.lean": [
+   {
+    "commit": "fab243da3fc93e2b6d176f30212f2de1d375d635",
+    "date": "2026-09-14",
+    "subject": "fix: restate the seven float-bridge axioms measured false; their dependents carry the change"
+   },
+   {
+    "commit": "ae59d0e80d28acb8e978e67fa5de164073bafd97",
+    "date": "2026-09-14",
+    "subject": "fix: real_tanh_rounds was false by measurement; restate it, and measure every float-bridge axiom"
+   }
+  ],
+  "MachLib/Decimal.lean": [
+   {
+    "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+    "date": "2026-10-04",
+    "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+   },
+   {
+    "commit": "4b27727879e39e9411480f79007d21492d55cfa5",
+    "date": "2026-09-08",
+    "subject": "feat: mach_ofnat_numerals \u2014 a decimal goal could not reach an OfNat lemma"
+   },
+   {
+    "commit": "5c914b1a6543c689e9ae1f8daee9d11b9226f9f6",
+    "date": "2026-09-08",
+    "subject": "feat: affine bounds + mach_decimal_ofnat, so a Forge caller can use its callee's proof"
+   }
+  ],
+  "MachLib/EMLCertcomGrounded.lean": [
+   {
+    "commit": "bceff6ee8baad1cb888a5d1b7727285672e361b3",
+    "date": "2026-09-14",
+    "subject": "feat: finite-input float bridge, log at 2u, u <= 2^-52, exact abs"
+   },
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   },
+   {
+    "commit": "3333c7bf11df9d414f356374740a6ed52a30475e",
+    "date": "2026-09-14",
+    "subject": "feat: range axioms (N1, N2, u < 1); instantiate two grounded certificates"
+   },
+   {
+    "commit": "fab243da3fc93e2b6d176f30212f2de1d375d635",
+    "date": "2026-09-14",
+    "subject": "fix: restate the seven float-bridge axioms measured false; their dependents carry the change"
+   },
+   {
+    "commit": "ae59d0e80d28acb8e978e67fa5de164073bafd97",
+    "date": "2026-09-14",
+    "subject": "fix: real_tanh_rounds was false by measurement; restate it, and measure every float-bridge axiom"
+   }
+  ],
+  "MachLib/EMLRationalGerm.lean": [
+   {
+    "commit": "e7b91de737f3c1f42a50106276e950f161729a20",
+    "date": "2026-09-17",
+    "subject": "refactor: move div_one_eq where the lemma is looked for, not where it was proved"
+   }
+  ],
+  "MachLib/EMLTreeGroundedPipeline.lean": [
+   {
+    "commit": "bceff6ee8baad1cb888a5d1b7727285672e361b3",
+    "date": "2026-09-14",
+    "subject": "feat: finite-input float bridge, log at 2u, u <= 2^-52, exact abs"
+   },
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   },
+   {
+    "commit": "fab243da3fc93e2b6d176f30212f2de1d375d635",
+    "date": "2026-09-14",
+    "subject": "fix: restate the seven float-bridge axioms measured false; their dependents carry the change"
+   }
+  ],
+  "MachLib/FPGrounding.lean": [
+   {
+    "commit": "9802f19e147b227438e77ddc752f2d9eaff3abb0",
+    "date": "2026-09-22",
+    "subject": "fix: clamp is max lo (min x hi), the composition the language defines"
+   },
+   {
+    "commit": "b0d453111efa7773b03a17ea100bdb2ed91615b7",
+    "date": "2026-09-15",
+    "subject": "feat: Prims.expm1; sinh and tanh transcribed over it, as forge now runs"
+   },
+   {
+    "commit": "bceff6ee8baad1cb888a5d1b7727285672e361b3",
+    "date": "2026-09-14",
+    "subject": "feat: finite-input float bridge, log at 2u, u <= 2^-52, exact abs"
+   },
+   {
+    "commit": "d50dfe15a793645e56485b32884652269d11ebbe",
+    "date": "2026-09-14",
+    "subject": "feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families"
+   },
+   {
+    "commit": "3333c7bf11df9d414f356374740a6ed52a30475e",
+    "date": "2026-09-14",
+    "subject": "feat: range axioms (N1, N2, u < 1); instantiate two grounded certificates"
+   },
+   {
+    "commit": "fab243da3fc93e2b6d176f30212f2de1d375d635",
+    "date": "2026-09-14",
+    "subject": "fix: restate the seven float-bridge axioms measured false; their dependents carry the change"
+   },
+   {
+    "commit": "ae59d0e80d28acb8e978e67fa5de164073bafd97",
+    "date": "2026-09-14",
+    "subject": "fix: real_tanh_rounds was false by measurement; restate it, and measure every float-bridge axiom"
+   },
+   {
+    "commit": "ce68a8904fb3cc756f087ebe2c527ca35f90d4fd",
+    "date": "2026-09-13",
+    "subject": "fix: EMLToCRuntime transcribes libmonogate's overflow-safe hyperbolics"
+   }
+  ],
+  "MachLib/FixedPoint.lean": [
+   {
+    "commit": "9802f19e147b227438e77ddc752f2d9eaff3abb0",
+    "date": "2026-09-22",
+    "subject": "fix: clamp is max lo (min x hi), the composition the language defines"
+   }
+  ],
+  "MachLib/FixedPointRealBridge.lean": [],
+  "MachLib/ForgeBindingDemo.lean": [],
+  "MachLib/NatCastArith.lean": [],
+  "MachLib/OperatorBasisComplete.lean": [
+   {
+    "commit": "203cc8547449444806b883fcdb0baee1e7c4f6a9",
+    "date": "2026-10-11",
+    "subject": "feat: derived tangent line for gexpr_sound's rules; the axiom stays"
+   }
+  ],
+  "MachLib/OperatorBasisGeneral.lean": [
+   {
+    "commit": "203cc8547449444806b883fcdb0baee1e7c4f6a9",
+    "date": "2026-10-11",
+    "subject": "feat: derived tangent line for gexpr_sound's rules; the axiom stays"
+   },
+   {
+    "commit": "9802f19e147b227438e77ddc752f2d9eaff3abb0",
+    "date": "2026-09-22",
+    "subject": "fix: clamp is max lo (min x hi), the composition the language defines"
+   }
+  ],
+  "MachLib/RiemannIntegralContinuous.lean": [],
+  "MachLib/RiemannIntegralMonotone.lean": [],
+  "MachLib/RiemannIntegralRefine.lean": [],
+  "MachLib/SignTactic.lean": [
+   {
+    "commit": "3a7ce06f1d410162de1f4de5473627c5be035950",
+    "date": "2026-09-05",
+    "subject": "feat: mach_sign splits conjunction hypotheses; the Forge corpus regenerated -- 553 -> 572 closed, 77.1% -> 79.8%"
+   }
+  ],
+  "MachLib/TanTaylorRemainder.lean": [],
+  "MachLib/TanhTaylorRemainder.lean": [],
+  "MachLib/TrajectoryCertified.lean": []
+ }
+}
