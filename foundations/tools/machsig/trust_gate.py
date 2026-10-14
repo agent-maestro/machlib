@@ -38,6 +38,7 @@ cannot fire must not read as "checked and clean", so each of these is now its ow
     python3 tools/machsig/trust_gate.py           # the gate
     python3 tools/machsig/trust_gate.py --selftest       # red paths, then the gate
     python3 tools/machsig/trust_gate.py --selftest-only  # red paths only
+    python3 tools/machsig/trust_gate.py --mutate  # 11 mutant gates: the selftest must kill each
     python3 tools/machsig/trust_gate.py --update  # write an UNREVIEWED baseline from fresh signatures
 
 NO AUTOMATIC REBASELINE. `--update` writes `review.status: UNREVIEWED`, which this gate refuses. A
@@ -312,7 +313,10 @@ def update(root: Path = FOUND) -> int:
     if not sigs.is_file():
         return unavailable("no-signature-set", f"nothing to baseline. Extract first: {REGEN}")
     head, cur, problem = read_signature_set(sigs)
-    refusals = [problem] if problem else freshness(head, identity.live_identity(root))
+    try:
+        refusals = [problem] if problem else freshness(head, identity.live_identity(root))
+    except identity.Unavailable as e:
+        return unavailable("no-git", f"cannot identify the live tree: {e}")
     if not refusals and not head.get("sources_clean"):
         refusals.append(("signatures-dirty", "the signature set was extracted from uncommitted sources "
                                              f"{head.get('dirty_source_paths')[:5]}: a baseline must name a "
@@ -370,6 +374,9 @@ def dump_baseline(doc: dict) -> str:
 def main(argv: list[str]) -> int:
     if "--update" in argv:
         return update()
+    if "--mutate" in argv:
+        import trust_gate_selftest
+        return trust_gate_selftest.mutate()
     if "--selftest" in argv or "--selftest-only" in argv:
         import trust_gate_selftest
         rc = trust_gate_selftest.run()

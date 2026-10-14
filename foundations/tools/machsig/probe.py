@@ -35,17 +35,19 @@ open Lean Elab Command Meta
 set_option pp.oneline false
 run_cmd Command.liftTermElabM do
   let names ← IO.FS.lines "@@NAMES@@"
+  let env ← getEnv
   for s in names do
     if s.isEmpty then continue
     let n := s.toName
-    match (← getEnv).find? n with
+    match env.find? n with
     | none => IO.println ("MACHSIG_STMT " ++ (Json.mkObj [("n", Json.str s), ("missing", Json.bool true)]).compress)
     | some ci =>
-      let fmt ← withOptions (fun o => o.setNat `format.width 100) (ppExpr ci.type)
-      let mod := match (← getEnv).getModuleIdxFor? n with
-        | some i => ((← getEnv).header.moduleNames[i.toNat]!).toString
+      let fmt ← ppExpr ci.type
+      let mod := match env.getModuleIdxFor? n with
+        | some i => (env.header.moduleNames[i.toNat]!).toString
         | none => "<current>"
-      let line := match (← findDeclarationRanges? n) with
+      let rng ← findDeclarationRanges? n
+      let line := match rng with
         | some r => r.range.pos.line
         | none => 0
       IO.println ("MACHSIG_STMT " ++ (Json.mkObj [("n", Json.str s), ("type", Json.str (toString fmt)),
@@ -90,7 +92,9 @@ def statements(root: Path, names: list[str]) -> dict:
     return res
 
 
-AX_LINE = re.compile(r"'([^']+)' (depends on axioms: \[(.*?)\]|does not depend on any axioms)", re.S)
+# Names may end in an apostrophe (`log_nonpos_of_le_one'`), so the name is the shortest run of
+# non-space characters that is followed by "' depends" / "' does not" -- not "anything up to a quote".
+AX_LINE = re.compile(r"'(\S+?)' (depends on axioms: \[(.*?)\]|does not depend on any axioms)", re.S)
 
 
 def print_axioms(root: Path, names: list[str]) -> dict:

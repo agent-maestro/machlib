@@ -140,7 +140,7 @@ def write_sigs(found: Path, theorems: dict, header: bool = True) -> None:
     (found / "artifacts" / "machsig_signatures.jsonl").write_bytes((head.encode() if header else b"") + body)
 
 
-def build_fixture(root: Path) -> Path:
+def build_fixture(root: Path, gate_text: str | None = None) -> Path:
     repo = root / "pristine"
     found = repo / "foundations"
     (found / "MachLib").mkdir(parents=True)
@@ -153,6 +153,8 @@ def build_fixture(root: Path) -> Path:
     for rel in COPIED:
         (found / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(real / rel, found / rel)
+    if gate_text is not None:                          # --mutate: the fixture runs a mutant gate
+        (found / "tools/machsig/trust_gate.py").write_text(gate_text)
     sh(repo, "init", "-q", "-b", "main")
     sh(repo, "add", "-A")
     sh(repo, "commit", "-q", "-m", "fixture")
@@ -273,12 +275,12 @@ def cases():
     ]
 
 
-def part_b() -> tuple[bool, list[str]]:
+def part_b(gate_text: str | None = None) -> tuple[bool, list[str]]:
     lines, ok = [], True
     with tempfile.TemporaryDirectory(prefix="machsig-selftest-") as td:
         td = Path(td)
         try:
-            pristine = build_fixture(td)
+            pristine = build_fixture(td, gate_text)
         except (subprocess.CalledProcessError, RuntimeError, identity.Unavailable) as e:
             return False, [f"  [BROKEN] could not build the fixture repository: {e}"]
         work = td / "case"
@@ -311,6 +313,53 @@ def part_b() -> tuple[bool, list[str]]:
     return ok, lines
 
 
+# DOCTRINE 4b: fault injection validates the gate; MUTATION validates the selftest. Each mutant disables
+# one decision in a COPY of the gate (only inside the throwaway fixture) and Part B must then go red.
+# A mutant whose anchor no longer occurs exactly once is STALE ("the test is broken"), never MISSED.
+MUTANTS = [
+    ("content staleness check removed",
+     'if head.get("content_digest") != live["content_digest"]:', "if False:"),
+    ("extractor staleness check removed",
+     'if head.get("extractor_digest") != live["extractor_digest"]:', "if False:"),
+    ("record digest/count check removed",
+     'if digest != head.get("records_sha256") or n != head.get("records"):', "if False:"),
+    ("untracked-baseline check removed",
+     'if not identity.git_ok(root, "ls-files", "--error-unmatch", "--", BASE_REL):', "if False:"),
+    ("modified-baseline check removed", "    if st.strip():", "    if False:"),
+    ("provenance-commit resolution removed",
+     'if not identity.git_ok(root, "cat-file", "-e", f"{prov[\'machlib_commit\']}^{{commit}}"):', "if False:"),
+    ("extractor-mismatch check removed",
+     'and prov["extractor_digest"] != head.get("extractor_digest"):', "and False:"),
+    ("review check removed",
+     'if r.get("status") != "REVIEWED" or not r.get("reviewer") or not rep or not (root / str(rep)).is_file():',
+     "if False:"),
+    ("set ratchet weakened to the pre-2026-10-13 count rule", "        if entered:",
+     '        if v["ax"] > b["ax"]:'),
+    ("stale refusal stops naming what moved",
+     "Moved: {', '.join(moved) or '(file list unavailable)'}", "Moved: (not named)"),
+    ("self-contradicting baseline entries accepted",
+     'if axs is None or len(axs) != e.get("ax") or not isinstance(e.get("d"), str):', "if axs is None:"),
+]
+
+
+def mutate() -> int:
+    src = (HERE / "trust_gate.py").read_text()
+    print("=== MACHSIG-TRUST MUTATION TEST: each mutant must turn Part B red ===")
+    bad = 0
+    for name, anchor, repl in MUTANTS:
+        if src.count(anchor) != 1:
+            print(f"  [STALE ] {name} -- anchor occurs {src.count(anchor)} times; the TEST is broken")
+            bad += 1
+            continue
+        ok, lines = part_b(src.replace(anchor, repl, 1))
+        broken = [ln.strip() for ln in lines if ln.startswith("  [BROKEN]")]
+        print(f"  [{'KILLED' if not ok else 'MISSED'}] {name}"
+              f"{' -- caught by ' + broken[0].split(' -> ')[0][9:] if broken else ''}")
+        bad += ok
+    print(f"  MUTATION {'PASS' if not bad else 'FAIL'} -- {len(MUTANTS) - bad}/{len(MUTANTS)} killed")
+    return tg.OK if not bad else tg.FAIL
+
+
 def run() -> int:
     print("=== MACHSIG-TRUST SELFTEST (fault injection) ===")
     print("Part A — the decision, on the REAL signature set")
@@ -333,4 +382,4 @@ def run() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(run())
+    sys.exit(mutate() if "--mutate" in sys.argv else run())

@@ -58,7 +58,7 @@ run() {
   # `tail -n 3` window silently dropped them. Cosmetic — SUMMARY decides pass/fail from the captured
   # rc, never from this text — but a comment that overstates what it does is how a gate's scope
   # drifts from its description.
-  grep -hE "MACHSIG-TRUST|REGEN |SELFTEST (PASS|FAIL|UNAVAILABLE)|OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|THEOREM-LEDGER|check-[a-z]+\]|AxiomLedger" \
+  grep -hE "MACHSIG-TRUST|REGEN |SELFTEST (PASS|FAIL|UNAVAILABLE)|MUTATION (PASS|FAIL)|OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|THEOREM-LEDGER|check-[a-z]+\]|AxiomLedger" \
     "$OUT/$name.log" | tail -n 2 || true
 }
 
@@ -114,6 +114,8 @@ else
   # provenance, so a missing step reads as a failure, never as green.
   run "machsig-extract" python3 tools/machsig/regen.py
   run "machsig-trust-selftest" python3 tools/machsig/trust_gate.py --selftest-only
+  # DOCTRINE 4b: 11 mutant gates, each must be killed by the selftest. ~16 s; mutants live only in temp dirs.
+  run "machsig-trust-mutate" python3 tools/machsig/trust_gate.py --mutate
   run "machsig-trust" python3 tools/machsig/trust_gate.py
   run "claims"       python3 tools/claim_audit/claim_audit.py
   # The canaries cost ~8s; `--self-test` looked unwireable only because it ALSO re-runs the full
