@@ -35,6 +35,32 @@ The narrow candidate's axiom sets are byte-identical to the candidate the indepe
 (the `axiom_sets` table and every theorem's `ax`/`d`/`set` are equal); v0.4 only adds per-theorem
 definition-closure digests, axiom statement pins, the declared policy, and the binding fields.
 
+## Trust model — what this gate is and is not
+
+**It catches** honest mistakes and unreviewed drift: a footprint that grows, a statement or a
+definition that changes, a theorem that disappears, an axiom restated or promoted, sorry or an
+undeclared axiom anywhere, a stale or foreign signature set, a toolchain or runner change, a stamp
+that does not describe exactly the change it accepts, a review chain broken by a revert or a merge.
+
+**It stops a change from judging itself with an edited gate**: in CI the base commit's gate judges,
+run as `python3 -I -S` from a checkout outside the tree under test, importing nothing from it, on a
+fresh runner that never builds or executes the tree (the proposed two-job workflow).
+
+**It is NOT a boundary against a hostile committer.** The signature set is produced by building the
+change, and building MachLib runs the change's own code — `lakefile.lean`, every module (Lean
+elaboration performs arbitrary IO), the extractor, the toolchain `lean-toolchain` names. A change
+can therefore forge its own signature set, and no gate that consumes that set can tell. The boundary
+against deliberate tampering is **required human review** of every change to the paths in
+`.github/CODEOWNERS` (the gate, its extractor, the policy files, the toolchain pin, the build
+configuration, the runner, the workflow), made required by branch protection. That is a repository
+setting and the owner's decision; nothing on this branch changes it.
+
+A stamp is likewise content-bound, not authenticated: anyone with commit access can write one and
+generate a matching report. What the gate guarantees is that a stamp cannot be reused, borrowed,
+forgotten, or made to describe less than the change it accepts. And by design it checks only the
+machine block (`gate_transition`) of a report: the human-readable rows and prose of a report could
+disagree with it, so a reviewer must read what the gate binds (the third review's row 4).
+
 ## What the gate does now (MachSig v0.4)
 
 **Refuses (exit 3), one tagged line per reason, before comparing anything:** a signature set with no
@@ -76,14 +102,15 @@ regenerate the set in the same run and export `MACHSIG_RUN_ID`; `regen.py` recor
 refuses a set with another run's id. Run by hand without it, the gate prints
 `MACHSIG-TRUST ADVISORY` under its verdict.
 
-**Proof of the red paths:** `--selftest` (Part A: 8 injections + 4 controls on the real set; Part B:
-45 faults + 5 controls end to end in throwaway git repositories, including every attack of both
-reviews that passed) and `--mutate` (33 mutant gates, each must be killed). Both run in check_all.sh.
+**Proof of the red paths:** `--selftest` (Part A: 9 injections + 4 controls on the real set; Part B:
+53 faults + 9 controls end to end in throwaway git repositories, including every attack of the three
+reviews that passed) and `--mutate` (40 mutant gates, each must be killed). Both run in check_all.sh.
 
-**The gate's own code is pinned in CI (H2).** The proposed workflow runs `trust_gate.py`, its selftest
-and `identity.py` from the BASE commit against the tree under test, so a change cannot judge itself
-with a weakened gate; when the change touches those files, its own versions must also pass their own
-tests. `.github/CODEOWNERS` requests the owner's review for `foundations/tools/machsig/**`,
+**The gate's own code is pinned in CI (H2, reviews 2 and 3).** The proposed workflow has an
+untrusted `extract` job (build + regen.py, uploads only the signature set) and a `judge` job on a
+fresh runner that runs the BASE commit's gate isolated against the tree (data only), with
+`--anchor <base>`; when the change touches the gate's files, its own versions must also pass their
+own tests in the extract job. `.github/CODEOWNERS` requests the owner's review for `foundations/tools/machsig/**`,
 AxiomLedger.lean, sorry_audit.lean and the workflow; making that review REQUIRED is a repository
 setting, left to the owner.
 
@@ -103,6 +130,10 @@ setting, left to the owner.
 | doc error (below) | corrected | — |
 | H1 (review 2): `--update`, then a stamp with a 4-line "this → itself" report | reference = last REVIEWED baseline (history walk from the origin); report rows recomputed and compared | B42-B47, controls B48-B49 |
 | H2 (review 2): the gate's own code is not pinned | CI runs the base commit's gate against the tree; CODEOWNERS | simulated: a PR weakening `trust_gate.py` passes its own gate and FAILS under the pinned one |
+| review 3, RESTART: revert to the counts-only origin, rebaseline from it | the chain starts at ONE commit (c3046961); a reappearance of the origin or of an older reviewed baseline is an unreviewed version | B50, B51; real data: refused |
+| review 3, MERGE: a pre-review branch merged, its file kept | the chain is computed over the whole commit graph; a version must be valid against every reviewed line it joins; CI also anchors on the base commit | B52, B53, B55, control B54, B56; real data: refused |
+| review 3, json.py takes over the pinned judge | judge job on a fresh runner, `python3 -I -S` outside the tree, base code only; the selftest no longer imports the tree's sig.py | B60 (isolated judge FAILS), B61 (in-tree: the attack is real); CI simulation with the workflow's judge steps verbatim: FAIL |
+| review 3, toolchain and runner not checked | `[toolchain-mismatch]` (version and commit, not platform), `[runner-changed]` (capped_lean.sh vs the baseline's provenance commit) | B57, B58, B59 |
 
 **Correction.** Version 1 of this file said all ten growths of 203cc854 sit in
 `OperatorBasisGeneral.lean`. Six do (`aerr_exp`, `aerr_exp_upper`, `aexpr_fwd_error`, `aexpr_sound`,

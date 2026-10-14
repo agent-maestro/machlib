@@ -218,6 +218,16 @@ Two lessons worth keeping:
   This still does not authenticate a person, and the gate says so: it makes a stamp impossible to
   reuse or forget, while that a review happened stays a fact recorded in git.
 
+**The third round: say what the gate is NOT.** The same reviewer then reset the review chain twice
+(re-commit the pre-review origin, or merge a branch forked before the first review) and took over
+the "pinned" judge with a `json.py` placed next to it. The resets are closed (one origin commit; the
+chain computed over the whole commit graph, merges included). The judge now runs from the base
+commit, isolated, on a runner that never builds the change. But the deeper finding stands and is
+written down rather than engineered around: the signature set comes from building the change, and
+building Lean runs the change's code, so a hostile committer can forge it. A gate is evidence
+against mistakes and drift; the boundary against intent is required human review, which is a
+repository setting. Claiming more would be the gate reading as "checked and clean" where it cannot.
+
 A set's identity is self-declared, so a stale set relabelled by hand passes a standalone run. Only a
 run that regenerates the set (check_all.sh, CI: `MACHSIG_RUN_ID`) is evidence; a standalone verdict
 says ADVISORY.

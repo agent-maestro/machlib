@@ -75,7 +75,8 @@ def part_a() -> tuple[bool | None, list[str]]:
 
     quiet = tg.compare(base, live)
     check(not convictions(quiet), f"control: the live set against itself convicts nothing ({len(live)} theorems)")
-    victims = [k for k in sorted(base) if base[k]["ax"] >= 4][:2]
+    bad0 = {x["theorem"] for x in tg.policy_violations(live, cur["policy"])}
+    victims = [k for k in sorted(base) if base[k]["ax"] >= 4 and k not in bad0][:2]
     inj = copy.deepcopy(base)
     dropped = {}
     for k in victims:
@@ -119,33 +120,45 @@ def part_a() -> tuple[bool | None, list[str]]:
 
     # v0.4: the whole judgement, on the real set and the real declared policy
     whole = {"theorems": base, "axioms": dict(cur["axioms"]), "policy": copy.deepcopy(cur["policy"])}
+    # A policy violation is a property of the SUBJECT, not of a baseline: if the real set already has
+    # some, the gate will FAIL them, and the controls below must not be confused by them (DOCTRINE 4b:
+    # an already-red subject is reported, not used to convict the selftest's own controls).
+    v0 = {x["theorem"] for x in tg.policy_violations(cur["theorems"], cur["policy"])}
+    if v0:
+        lines.append(f"  [note] the real set already violates the declared policy in {len(v0)} theorem(s), first "
+                     f"{sorted(v0)[0]}: the gate FAILS them; the controls below set them aside")
+
+    def judged(res):
+        return [k for k in convictions(res) if not (k == "policy-violation" and
+                                                    {x["theorem"] for x in res[k]} <= v0)]
     ctl = tg.judge(whole, cur)
-    check(not convictions(ctl), f"control: the real set judged against itself: no conviction, no policy violation "
-                                f"({len(cur['axioms'])} axioms pinned, allowlisted sorry {cur['policy']['allowed_sorry']})")
+    check(not judged(ctl), f"control: the real set judged against itself: no conviction"
+                           f"{', no policy violation' if not v0 else ' beyond the pre-existing violations'} "
+                           f"({len(cur['axioms'])} axioms pinned, allowlisted sorry {cur['policy']['allowed_sorry']})")
     inj7 = copy.deepcopy(whole)
     inj7["theorems"][swap]["c"] = "0" * 64
     r7 = tg.judge(inj7, cur)
-    check(convictions(r7) == ["redefined"] and [x["theorem"] for x in r7["redefined"]] == [swap],
+    check(judged(r7) == ["redefined"] and [x["theorem"] for x in r7["redefined"]] == [swap],
           f"INJECTED definition change under {swap.split('.')[-1]} (E3, clamp): convicted as `redefined`")
     ax = sorted(a for a in cur["axioms"] if a.startswith(("MachLib", "Certcom")))[0]
     inj8 = copy.deepcopy(whole)
     inj8["axioms"][ax] = "0" * 64
     r8 = tg.judge(inj8, cur)
-    check(convictions(r8) == ["axiom-restated"] and r8["axiom-restated"] == [ax],
+    check(judged(r8) == ["axiom-restated"] and r8["axiom-restated"] == [ax],
           f"INJECTED restatement of axiom {ax.split('.')[-1]} under its own name: convicted as `axiom-restated`")
     cur9 = copy.deepcopy(cur)
     cur9["theorems"][swap]["axioms"] = sorted(cur9["theorems"][swap]["axioms"] + [tg.SORRY])
     inj9 = copy.deepcopy(whole)
     inj9["theorems"][swap]["axioms"] = list(cur9["theorems"][swap]["axioms"])   # grandfathered in the baseline
     r9 = tg.judge(inj9, cur9)
-    check(convictions(r9) == ["policy-violation"] and [x["theorem"] for x in r9["policy-violation"]] == [swap],
+    check(judged(r9) == ["policy-violation"] and {x["theorem"] for x in r9["policy-violation"]} == v0 | {swap},
           "INJECTED sorryAx into a theorem the baseline already holds that way: `policy-violation` anyway")
     promoted = "MachLib.Real.pi_lower_bound" if "MachLib.Real.pi_lower_bound" in cur["policy"]["trusted"] \
         else cur["policy"]["trusted"][-1]                                  # E1's own axiom when present
     inj10 = copy.deepcopy(whole)
     inj10["policy"]["trusted"] = [a for a in inj10["policy"]["trusted"] if a != promoted]
     r10 = tg.judge(inj10, cur)
-    check(convictions(r10) == ["policy-widened"] and r10["policy-widened"] == [f"trustedFootprint + {promoted}"],
+    check(judged(r10) == ["policy-widened"] and r10["policy-widened"] == [f"trustedFootprint + {promoted}"],
           f"INJECTED promotion of {promoted.split('.')[-1]} into trustedFootprint (E1/E2): `policy-widened`")
     lin = {"m": {"a"}, "a": {"o"}}
     check(not tg.anchor_problems("m", {"o": None}, lin) and
@@ -895,7 +908,8 @@ def run() -> int:
               "readable real signature set")
         return tg.UNAVAILABLE
     n_a = sum(1 for ln in a_lines if ln.startswith("  [ok] INJECTED"))
-    print(f"  SELFTEST PASS — Part A: {n_a} injections + {len(a_lines) - n_a} controls on the real set; "
+    n_ac = sum(1 for ln in a_lines if ln.startswith(("  [ok]", "  [BROKEN]"))) - n_a
+    print(f"  SELFTEST PASS — Part A: {n_a} injections + {n_ac} controls on the real set; "
           f"Part B: {n_b} injected faults + {n_bc} controls")
     return tg.OK
 
