@@ -3,29 +3,38 @@
 # reviewed baseline. Enabling it earlier would put a permanently red (REFUSED) job on master, or,
 # worse, invite an unreviewed --update to make it green.
 #
-# What it does: builds MachLib cold, extracts the MachSig signature set for EXACTLY the checked-out
-# revision (regen.py binds the set to its source identity), proves the gate's red paths, then runs
-# the real comparison. Every step's exit code is the job's; nothing is `|| true`.
+# TWO JOBS, BECAUSE THE BUILD IS UNTRUSTED (third independent review, 2026-10-14).
 #
-# THE GATE IS PINNED TO THE BASE (H2 of the second independent review, 2026-10-14). The gate's own
-# code lives in the tree it judges, so a change could weaken trust_gate.py and pass on its own say-so.
-# Here the tree under test (the PR's merge commit, or the pushed commit) supplies the Lean sources,
-# the policy files, the extractor run and the baseline; the gate, its selftest and identity.py come
-# from the BASE (the PR's base commit, or the commit before the push) and judge it. A change to those
-# three files is therefore judged by the old gate: one that alters what the gate decides is refused
-# or fails until it has landed by the owner's explicit merge (CODEOWNERS). A change to an extractor
-# file is caught by the extractor digest, which the base gate recomputes over the tree's files.
-# BOOTSTRAP: the step-7 commit itself has no pinned gate in its base; that one run uses the tree's
-# gate (the reviewed one being landed) and says so in a warning.
+#   extract  builds MachLib and runs regen.py on the tree under test (the PR's merge commit, or the
+#            pushed commit). Everything here is the change's own code -- lakefile.lean, every MachLib
+#            module (Lean elaboration performs arbitrary IO), the toolchain it names, regen.py and the
+#            rest of the extractor -- so this job's output is UNTRUSTED. It uploads only the signature
+#            set. When the change touches the gate's code, the change's own selftest and mutation test
+#            run here too: they must pass, but they do not decide.
 #
-# Runtime estimate (from 2026-10-13/14 local timings, scaled by the build-time job's own measurement):
-#   cold lake build                ~12.6 min  (build-time.yml measured 757.52 s at c3046961)
-#   regen.py: three Lean extractors ~16-27 min (extract.lean 8.5-10.7 min locally, single-threaded;
-#                                              the other two ~30 s each; CI ~2x slower)
-#   base selftest + base mutation  ~6 min     (50 throwaway git repos ~6 s; 33 mutants ~2 min 44 s locally)
-#   the tree's own selftest+mutate ~6 min     (only when the gate code differs from the base)
-#   gate (history walk + recompute) <1 min    (0.7 s locally over 9,431 theorems)
-#   total                          ~35-50 min; timeout set at 90.
+#   judge    a fresh runner that never builds or runs anything from the tree. It checks out the tree
+#            as DATA (full history, for the review chain), checks out the BASE commit (the PR's base,
+#            or the commit before the push), downloads the signature set, and runs the BASE's gate
+#            isolated -- `python3 -I -S <base>/tools/machsig/trust_gate.py --tree <tree>` -- so no
+#            file of the tree can be imported (a tree-side json.py once took over the judge in a
+#            simulation). `--anchor <base>` requires the review chain to run through the base
+#            commit's reviewed baseline.
+#
+# WHAT THIS STOPS: honest mistakes, unreviewed drift, and a change judging itself with an edited gate.
+# WHAT IT DOES NOT STOP: a hostile committer. The extract job runs the change's code, so a change can
+# forge its own signature set. That boundary is human review of every change to the paths in
+# .github/CODEOWNERS, made REQUIRED by branch protection -- a repository setting, the owner's call.
+#
+# BOOTSTRAP: the step-7 landing has no chain-aware gate in its base; that one run judges with the
+# tree's gate (the reviewed one being landed), still isolated, and says so in a warning.
+#
+# Runtime estimate (local timings 2026-10-13/14, scaled by the build-time job's own measurement):
+#   extract: cold lake build ~12.6 min (build-time.yml: 757.52 s at c3046961); regen.py's three Lean
+#            extractors ~16-27 min (extract.lean 8.5-10.7 min locally, single-threaded; CI ~2x
+#            slower); the change's own gate tests ~8 min when the gate code changed
+#   judge:   selftest (62 throwaway git repos) ~10 s; mutation (40 mutants) ~4.5 min locally;
+#            gate (review-chain walk over ~3,000 commits + recompute) a few seconds
+#   total    ~40-55 min; timeouts 90 + 30.
 
 name: machsig-trust
 
@@ -35,10 +44,12 @@ on:
     paths:
       - "foundations/**"
       - ".github/workflows/machsig-trust.yml"
+      - ".github/CODEOWNERS"
   pull_request:
     paths:
       - "foundations/**"
       - ".github/workflows/machsig-trust.yml"
+      - ".github/CODEOWNERS"
   workflow_dispatch:
     inputs:
       base_ref:
@@ -49,28 +60,26 @@ on:
 permissions:
   contents: read
 
+env:
+  # Binds the judge to the set THIS run extracted (regen.py records it; the gate refuses another run's set).
+  MACHSIG_RUN_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
+  BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || inputs.base_ref }}
+
 jobs:
-  gate:
+  extract:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    # Binds the gate to the set THIS job extracts (regen.py records it; the gate refuses another run's set).
-    env:
-      MACHSIG_RUN_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
-      # fetch-depth 0: the gate walks the baseline's history back to the last REVIEWED version and the
-      # pre-review origin, and checks that provenance commits exist; a shallow clone is refused.
       - name: Check out the tree under test
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           path: tree
 
-      - name: Check out the base, whose gate judges
+      - name: Check out the base (only to compare the gate code)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
           path: base
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || inputs.base_ref }}
+          ref: ${{ env.BASE_REF }}
 
       - name: Install elan
         run: |
@@ -78,23 +87,20 @@ jobs:
             | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
-      - name: Cold lake build
+      - name: Cold lake build (untrusted)
         working-directory: tree/foundations
         run: |
           cat lean-toolchain
           lake build
 
       # regen.py runs `lake build` again (a no-op here), the three Lean extractors, census and sig, and
-      # refuses if the tree moves while Lean runs. tools/capped_lean.sh has no user systemd scope
-      # on a runner: it says so on stderr and runs uncapped, which is acceptable on a disposable VM.
-      - name: Extract signatures for this revision
+      # refuses if the tree moves while Lean runs. tools/capped_lean.sh has no user systemd scope on a
+      # runner: it says so on stderr and runs uncapped, acceptable on a disposable VM.
+      - name: Extract signatures for this revision (untrusted)
         working-directory: tree/foundations
         run: python3 tools/machsig/regen.py
 
-      # When the change touches the gate's own code, that code must at least pass its own tests.
-      # This is NOT what decides: the base gate below does.
-      - name: The tree's own gate tests (only if the gate code changed)
-
+      - name: The change's own gate tests (only if the gate code changed; must pass, does not decide)
         run: |
           set -euo pipefail
           changed=0
@@ -110,42 +116,68 @@ jobs:
             python3 tools/machsig/trust_gate.py --mutate
           fi
 
-      - name: Pin the gate to the base
-        run: |
-          set -euo pipefail
-          B=base/foundations/tools/machsig
-          T=tree/foundations/tools/machsig
-          if [ ! -f "$B/trust_gate_selftest.py" ] || ! grep -q '^def last_reviewed' "$B/trust_gate.py"; then
-            echo "::warning::BOOTSTRAP: the base predates the pinned gate (this is the step-7 landing); the tree's own, reviewed gate judges this run"
-          else
-            for f in trust_gate.py trust_gate_selftest.py identity.py; do
-              cp "$B/$f" "$T/$f"
-            done
-            echo "gate pinned to $(git -C base rev-parse HEAD)"
-          fi
-
-      - name: Gate selftest (the base's fault injection against the tree's real set)
-        working-directory: tree/foundations
-        run: python3 tools/machsig/trust_gate.py --selftest-only
-
-      # DOCTRINE 4b: the base's mutant gates (in temp dirs only); its selftest must kill every one.
-      - name: Gate mutation test
-        working-directory: tree/foundations
-        run: python3 tools/machsig/trust_gate.py --mutate
-
-      - name: Gate
-        working-directory: tree/foundations
-        run: python3 tools/machsig/trust_gate.py
-
-      # The signature set is gitignored; keep the one this verdict was computed on, so a red run can
-      # be diagnosed without re-extracting.
-      - name: Keep the signature set
-        if: always()
+      - name: Hand over the signature set, and nothing else
         uses: actions/upload-artifact@v4
         with:
-          name: machsig-signatures-${{ github.sha }}
+          name: machsig-signatures
           path: |
             tree/foundations/artifacts/machsig_signatures.jsonl
             tree/foundations/artifacts/machsig_extraction.json
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
+
+  judge:
+    needs: extract
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # fetch-depth 0: the gate walks the WHOLE commit graph for the review chain (merges included) back
+      # to the pre-review origin, and checks provenance commits; a shallow clone is refused.
+      - name: Check out the tree under test, as data
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: tree
+
+      - name: Check out the base, whose gate judges
+        uses: actions/checkout@v4
+        with:
+          path: base
+          ref: ${{ env.BASE_REF }}
+
+      - name: Receive the signature set
+        uses: actions/download-artifact@v4
+        with:
+          name: machsig-signatures
+          path: tree/foundations/artifacts
+
+      - name: Choose the judge
+        run: |
+          set -euo pipefail
+          if grep -q '^def reviewed_chain' base/foundations/tools/machsig/trust_gate.py 2>/dev/null; then
+            echo "JUDGE=$GITHUB_WORKSPACE/base/foundations" >> "$GITHUB_ENV"
+            echo "ANCHOR=$(git -C base rev-parse HEAD)" >> "$GITHUB_ENV"
+            echo "judge: the base gate at $(git -C base rev-parse HEAD)"
+          else
+            echo "::warning::BOOTSTRAP: the base predates the chain-aware gate (this is the step-7 landing); the tree's own reviewed gate judges, isolated, copied out of the tree"
+            mkdir -p "$RUNNER_TEMP/judge/tools"
+            cp -r tree/foundations/tools/machsig "$RUNNER_TEMP/judge/tools/machsig"
+            echo "JUDGE=$RUNNER_TEMP/judge" >> "$GITHUB_ENV"
+            echo "ANCHOR=" >> "$GITHUB_ENV"
+          fi
+
+      - name: Gate selftest (the judge's fault injection, against the tree's real set)
+        run: python3 -I -S "$JUDGE/tools/machsig/trust_gate.py" --tree tree/foundations --selftest-only
+
+      # DOCTRINE 4b: the judge's mutant gates (in temp dirs only); its selftest must kill every one.
+      - name: Gate mutation test
+        run: python3 -I -S "$JUDGE/tools/machsig/trust_gate.py" --tree tree/foundations --mutate
+
+      - name: Gate
+        run: |
+          set -euo pipefail
+          if [ -n "$ANCHOR" ]; then
+            python3 -I -S "$JUDGE/tools/machsig/trust_gate.py" --tree tree/foundations --anchor "$ANCHOR"
+          else
+            python3 -I -S "$JUDGE/tools/machsig/trust_gate.py" --tree tree/foundations
+          fi

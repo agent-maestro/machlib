@@ -1,5 +1,7 @@
 # Gate 14, the MachSig trust ratchet: its code, its extractor, the declared axiom policy it judges
-# against, and the workflow that runs it. A change to any of these changes what "checked" means, so
+# against, the toolchain pin and build configuration the extraction runs under, the memory-cap runner
+# that wraps every Lean call, and the workflow that runs it (the third review, 2026-10-14, extended the
+# list: lean-toolchain, lakefile.lean, lake-manifest.json, tools/capped_lean.sh). A change to any of these changes what "checked" means, so
 # it needs the owner's review (H2 of the second independent review of the gate, 2026-10-14).
 #
 # This file only REQUESTS that review. It becomes REQUIRED only if branch protection on master is set
@@ -9,6 +11,10 @@
 /foundations/tools/machsig/                             @agent-maestro
 /foundations/AxiomLedger.lean                           @agent-maestro
 /foundations/tools/sorry_audit.lean                     @agent-maestro
+/foundations/lean-toolchain                             @agent-maestro
+/foundations/lakefile.lean                              @agent-maestro
+/foundations/lake-manifest.json                         @agent-maestro
+/foundations/tools/capped_lean.sh                       @agent-maestro
 /foundations/docs/machsig/PROPOSED_CI_machsig-trust.yml @agent-maestro
 /.github/workflows/machsig-trust.yml                    @agent-maestro
 /.github/CODEOWNERS                                     @agent-maestro
