@@ -8,7 +8,7 @@ a generated file named next to it.
 | step | what | state |
 |---|---|---|
 | 1 | gate refuses missing, stale, untracked baselines/signatures | **done** — `trust_gate.py`, 22 end-to-end faults + 15 mutants |
-| 2 | regenerate signatures from an identified revision | **done** — `regen.py` at 066bb75f (Lean sources = c3046961) |
+| 2 | regenerate signatures from an identified revision | **done** — `regen.py` at fb806c09 (Lean sources = c3046961) |
 | 3 | deterministic old-vs-new transition report | **done** — `TRANSITION_2026-10-13.md` + `.json`, byte-identical on rerun |
 | 4 | classify by type and trust implication | **done** — same report, sections 2-6 |
 | 5 | independent review of removals, restatements, assumption changes | **open** — `REVIEW_PACKET_2026-10-13.md` |
@@ -96,7 +96,7 @@ The small ones are in `evidence-2026-10-13/`; the signature sets (~11 MB each) a
 3. `python3 tools/machsig/trust_gate.py` must print `MACHSIG-TRUST OK`. Commit.
 4. Move `docs/machsig/PROPOSED_CI_machsig-trust.yml` to `.github/workflows/machsig-trust.yml` in the
    same commit. Estimated 30-40 min per run (12.6 min cold build + extract.lean, which dominates).
-5. Do not squash-merge `machsig-gate`: the candidate's provenance names 066bb75f, and the gate refuses
+5. Do not squash-merge `machsig-gate`: the candidate's provenance names fb806c09, and the gate refuses
    a baseline whose provenance commit the repository does not contain.
 
 ## Not done here, for the owner to decide

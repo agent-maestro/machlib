@@ -1097,18 +1097,18 @@
   "lean-toolchain": "2bdc48adfa58d0017e538a0ad117c5d73d35deec879978f909406a80c8037273"
  },
  "dirty_source_paths": [],
- "extractor_digest": "sha256:e40706b4aa9849dd2cfb2f17aab7b96e5469833d082816537b2006e784867d80",
+ "extractor_digest": "sha256:fd09ae46f0606ba59e5e07df027ab084afe1afd25cdddf943e4c208c9179b3f0",
  "extractor_files": {
-  "tools/machsig/census.py": "9e33448408a3823ac0865f1bcbffffefe0c05c870461a943f798b2ab240e4268",
+  "tools/machsig/census.py": "0512f45aa009fe7b091f7de4513d61b1e9a1447481c19eedc23d1be4a758afb2",
   "tools/machsig/extract.lean": "b6a70e0b57d36fcc28e139eb2d53d97fd81cd689723edf96c8b86b50cce3e0d0",
   "tools/machsig/extract_statement.lean": "c96486c30612fa24c803e770f14ab5df7cd388cf888e2b31e6e3e67064ff6ceb",
   "tools/machsig/identity.py": "e99dda86460af80806145ef38eeed6125379d1a50df47c5c02f77c6f61b62f7e",
   "tools/machsig/regen.py": "1b4ae12f679619854ed5c541b3b054dc460a032aef143804cb6249f8a924417e",
-  "tools/machsig/sig.py": "29462a5f3a081ce7239b7266a23a1ebd27819909d816a27764c6cee064e61300"
+  "tools/machsig/sig.py": "12991acf87b0406a4e0d770e8f76c6d4946a4c32ac78f53e30883216552c962d"
  },
  "lean_toolchain": "leanprover/lean4:v4.32.2",
  "lean_version": "Lean (version 4.32.2, aarch64-unknown-linux-gnu, commit f3b06c705e6c85f5314019d5d3baab0fec5b580c, Release)",
- "machlib_commit": "066bb75f2b22e5eaf2650cc68fd036ac0108db02",
+ "machlib_commit": "fb806c095ed22ed6edb8ed28e8aca7594a3f60fa",
  "machlib_sources": "sha256:261f3d99f6d117e91df70825de36b1e6ae319dbbae9b1503fe482d12d3c64b71",
  "raw": {
   "machsig_raw.tsv": "dbbb38a2a88efafe31156a652b661260feec491b5124d2906199aaecc141ed51",

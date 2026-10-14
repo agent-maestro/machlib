@@ -18,17 +18,17 @@ This is step 3-4 of the owner's ruling of 2026-10-13 (and the machinery for step
 
 **What the new baseline is.** Because the old side is reconstructed exactly and every difference is attributed, a baseline derived at the new revision is *historically continuous* with the 2026-09-03 one: this report is the complete account of the gap. It is still a NEW baseline in one respect — it records axiom SETS and provenance, which the old one never had — and it becomes the gate's baseline only after the review in steps 5-7.
 
-**The candidate baseline** (`docs/machsig/trust_baseline.candidate-2026-10-13.json`, sha256 `c16b51020ef1577f1624ae470c256f683a1cde46c117caa55d8b892e8c5fc848`): 7948 theorems, 1719 distinct axiom sets, derived from `066bb75f2b22`; it holds exactly the new side of this report, from this signature set; review status `UNREVIEWED`.
+**The candidate baseline** (`docs/machsig/trust_baseline.candidate-2026-10-13.json`, sha256 `6ed2403398784589b42a591943926d7d5986d14f1f42fb790dc83662316759de`): 7948 theorems, 1719 distinct axiom sets, derived from `fb806c095ed2`; it holds exactly the new side of this report, from this signature set; review status `UNREVIEWED`.
 
 ## 1. Identities
 
 | | old side | new side |
 |---|---|---|
 | baseline | committed at 23e0d047 (2026-09-03) | derived from the v0.3 set below |
-| extraction commit | `23e0d0471b7b27e62965c71b491089c261820141` | `066bb75f2b22e5eaf2650cc68fd036ac0108db02` |
+| extraction commit | `23e0d0471b7b27e62965c71b491089c261820141` | `fb806c095ed22ed6edb8ed28e8aca7594a3f60fa` |
 | Lean sources (Forge `machlib_sources`) | `sha256:9e30e5b742083affc4b0e58a01e586a0ea238800b6b1176cdc79cb866d34000f` | `sha256:261f3d99f6d117e91df70825de36b1e6ae319dbbae9b1503fe482d12d3c64b71` |
 | content digest (bytes Lean read) | `sha256:a16b2b2ad58a64bdd99ed8801add69e96dd37c4e2c12c2a3eb9695476fa19a88` | `sha256:88fb8df980ca43ce41055122634dbdbc54731c2ebf467c89aa2b8757fe28be3e` |
-| extractor digest | `sha256:e40706b4aa9849dd2cfb2f17aab7b96e5469833d082816537b2006e784867d80` | `sha256:e40706b4aa9849dd2cfb2f17aab7b96e5469833d082816537b2006e784867d80` |
+| extractor digest | `sha256:fd09ae46f0606ba59e5e07df027ab084afe1afd25cdddf943e4c208c9179b3f0` | `sha256:fd09ae46f0606ba59e5e07df027ab084afe1afd25cdddf943e4c208c9179b3f0` |
 | toolchain | Lean (version 4.32.2, aarch64-unknown-linux-gnu, commit f3b06c705e6c85f5314019d5d3baab0fec5b580c, Release) | Lean (version 4.32.2, aarch64-unknown-linux-gnu, commit f3b06c705e6c85f5314019d5d3baab0fec5b580c, Release) |
 | signature records | 10773 (`sha256:aaa0cca1aa362681…`) | 11630 (`sha256:416bb14bc0740253…`) |
 | watched theorems | 7470 | 7948 |
@@ -286,10 +286,10 @@ Evidence (the report is a function of exactly these bytes):
 | `legacy_sigs_23e0d047.jsonl` | `53b9c5d35901aae71409eeaf12138ffc555ec3c924a94637f02c112288d1c9f9` |
 | `policy_23e0d047.json` | `7d9042b46221b43582406a634345d6a781c2f56f04d1bceeaef914cf601cf9f7` |
 | `policy_new.json` | `0cbaf0204be630d055728f6e648be63429263d17c86c23ce4b0fc1fca08b8700` |
-| `sigs_23e0d047.jsonl` | `0b18abe7d6ac3b552371d42e8f63d509ba334d5f13f54eb67e1aafcdb7398752` |
-| `sigs_new.jsonl` | `3cb330bf698a2ee9aaca3a38d66be2bfe6fc0c2ef08e13b26e6776dedb6a4496` |
+| `sigs_23e0d047.jsonl` | `3666a59434629192b750ae541f0208cb4c09b1aa03a2ddf1b923764e0a680002` |
+| `sigs_new.jsonl` | `a853871a184db58c6b1b9cc630f2993ba812fc57d554b662222624cfdc07b2c9` |
 | `stale_local_sigs_20260903.jsonl` | `54032a62ba0052e0f488a5aa24fdbeac835756f39ea52cb6e2e597bd16f51a4e` |
 | `statements_23e0d047.json` | `57ce883f67af573f0f561af8c3d1193c7df12f4aba3a3ec9751cd535a69957a7` |
 | `statements_new.json` | `5435c15e94555a82a41d5d65c34db0490f0a12eb923c83c411dced8ababa42c9` |
 | `targeted.json` | `b0e4bb0e1461e9bcc62f5e17bd8221734e5fbda0dc5f09ca92795498c90d8477` |
-| `trust_baseline.candidate.json` | `c16b51020ef1577f1624ae470c256f683a1cde46c117caa55d8b892e8c5fc848` |
+| `trust_baseline.candidate.json` | `6ed2403398784589b42a591943926d7d5986d14f1f42fb790dc83662316759de` |
