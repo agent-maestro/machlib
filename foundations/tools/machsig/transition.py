@@ -319,10 +319,21 @@ def build(ev: dict) -> dict:
     gate_view = collections.Counter(kind_of(c3.get(k), legacy_new.get(k)) for k in set(c3) | set(legacy_new))
     certcom_unwatched = sum(1 for k, v in all_new.items()
                             if v["kind"] == "theorem" and k.startswith("Certcom.") and v["axioms"] is None)
+    # THE BINDING a REVIEWED stamp needs (trust_gate.review_state): this report describes the
+    # transition from the baseline the candidate REPLACES in git (c3046961's committed file) to the
+    # candidate. The row analysis runs against the reconstructed 2026-09-03 baseline instead, because it
+    # is exact and carries no hand edits; c3046961's ten edits are listed separately (baseline_edits).
+    import trust_gate as TG
+    binding = {"old_baseline_sha256": TG.baseline_content_digest(json.loads(ev["committed_c3"].read_text())),
+               "old_baseline_file": EVIDENCE["committed_c3"],
+               "analysis_base_sha256": TG.baseline_content_digest(json.loads(ev["committed_0903"].read_text())),
+               "analysis_base_file": EVIDENCE["committed_0903"],
+               "new_baseline_sha256": None}
     candidate = None
     if "candidate" in ev:
         # The baseline a reviewer would commit: it must hold exactly the new side of this report.
         cb = json.loads(ev["candidate"].read_text())
+        binding["new_baseline_sha256"] = TG.baseline_content_digest(cb)
         sets, thms = cb.get("axiom_sets", {}), cb.get("theorems", {})
         decoded = {k: {"d": e["d"], "ax": e["ax"], "axioms": sorted(sets.get(e["set"], []))} for k, e in thms.items()}
         want = {k: {"d": v["d"], "ax": v["ax"], "axioms": sorted(v["axioms"])} for k, v in new_w.items()}
@@ -333,6 +344,7 @@ def build(ev: dict) -> dict:
                      == head_new.get("records_sha256"),
                      "review_status": (cb.get("review") or {}).get("status")}
     return {
+        "binding": binding,
         "candidate": candidate,
         "legacy_gate_view_c3046961": dict(sorted(gate_view.items())),
         "certcom_theorems_unwatched": certcom_unwatched,

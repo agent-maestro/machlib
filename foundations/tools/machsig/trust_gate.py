@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """MachSig trust-footprint ratchet -- gate 14.
 
-FAILS when a theorem ACQUIRES an axiom while its statement is unchanged.
+FAILS when a watched theorem changes in a way that has not been reviewed.
 
   statement UNCHANGED, an axiom ENTERED   -> FAIL (the same claim now rests on something new)
   statement UNCHANGED, axioms only left   -> PASS; the baseline is stale (a reviewed rebaseline)
-  statement CHANGED                       -> INFO: a different claim, not a trust regression
-  new / removed theorem                   -> INFO
+  statement CHANGED (restated)            -> FAIL until a reviewed rebaseline, whatever its axioms
+  theorem REMOVED from the watched set    -> FAIL until a reviewed rebaseline
+  new theorem                             -> INFO
+
+CLOSED BY DEFAULT (2026-10-13, after an independent review). Until then a restatement and a removal
+were INFO, and both laundered a growth: change a statement cosmetically and let sorryAx in, or move a
+theorem out of the watched set, and the gate printed OK (attacks 5 and 6 of the review; selftest
+cases B23-B26). The cost is friction: deleting or restating a theorem now needs a reviewed
+rebaseline. The owner may relax either; the default is closed.
 
 The ratchet compares axiom SETS (MachSig v0.3). Until 2026-10-13 it compared COUNTS, which convicts
 every growth but misses a swap -- one axiom out, another in, same count -- and cannot say which axiom
@@ -30,7 +37,11 @@ cannot fire must not read as "checked and clean", so each of these is now its ow
                          [baseline-malformed]        its entries contradict themselves
                          [extractor-mismatch]        baseline and signatures from different extractors
                          [baseline-unreviewed]       written by --update, never reviewed
-  FAIL        (exit 1)   an axiom entered an unchanged statement's footprint
+                         [review-unbound]            the stamp names another baseline's content
+                         [review-report-invalid]     the stamp's report is not a transition report
+                         [review-report-mismatch]    the report does not describe this transition
+                         [baseline-history-unavailable] the previous baseline cannot be read from git
+  FAIL        (exit 1)   see the table above
 
 `--selftest` proves every one of these red paths by fault injection (trust_gate_selftest.py).
 
@@ -40,11 +51,22 @@ cannot fire must not read as "checked and clean", so each of these is now its ow
     python3 tools/machsig/trust_gate.py --selftest-only  # red paths only
     python3 tools/machsig/trust_gate.py --mutate  # 15 mutant gates: the selftest must kill each
     python3 tools/machsig/trust_gate.py --update  # write an UNREVIEWED baseline from fresh signatures
+    python3 tools/machsig/trust_gate.py --content-digest [FILE]  # what a stamp must name
 
 NO AUTOMATIC REBASELINE. `--update` writes `review.status: UNREVIEWED`, which this gate refuses. A
-baseline becomes usable only when a person sets status REVIEWED, names themselves, and points at the
-transition report they reviewed (tools/machsig/transition.py). Partial acceptance by hand-editing
-entries -- the practice of c3046961 -- is gone: an edited baseline has no single provenance.
+baseline becomes usable only when its `review` block says REVIEWED, names a reviewer, and BINDS:
+  * `baseline_sha256` must equal the baseline's own content digest (`--content-digest`: sha256 of
+    the canonical JSON without the review block). Pasting an old stamp onto a fresh `--update` --
+    attack 3 of the 2026-10-13 review, which passed -- now fails [review-unbound].
+  * `transition_report` must be a committed `machsig-transition/*` JSON (tools/machsig/transition.py)
+    whose `binding.new_baseline_sha256` is this baseline and whose `binding.old_baseline_sha256` is
+    the PREVIOUS committed baseline, read from git history. Citing lakefile.lean -- attack 4, which
+    passed -- now fails [review-report-invalid].
+WHAT THIS CANNOT DO: authenticate a person. Anyone with commit access can write a stamp and generate
+a matching report. The gate binds CONTENT -- the stamp, the report and the two baselines must
+describe one transition -- so a stamp cannot be reused, borrowed or forgotten; that a review
+HAPPENED remains a process recorded in git (who committed it, and the review packet's sign-off).
+Partial acceptance by hand-editing entries -- the practice of c3046961 -- is gone.
 """
 from __future__ import annotations
 
@@ -198,39 +220,110 @@ def set_id(axioms) -> str:
     return hashlib.sha256("\n".join(sorted(axioms)).encode()).hexdigest()[:16]
 
 
+def baseline_content_digest(doc) -> str:
+    """sha256 of the canonical JSON of a baseline WITHOUT its review block: what a stamp binds to.
+    Formatting-independent, and defined for the pre-v2 counts-only baselines too (no review key)."""
+    body = {k: v for k, v in doc.items() if k != "review"} if isinstance(doc, dict) else doc
+    return "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"),
+                                                 ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+class HistoryUnavailable(Exception):
+    pass
+
+
+def previous_baseline(root: Path):
+    """(commit that introduced the committed baseline, the baseline it replaced or None). From git
+    history: the last commit touching the file, then the file at that commit's first parent."""
+    c = identity.git(root, "log", "-1", "--format=%H", "--", BASE_REL).strip()
+    if not c:
+        raise HistoryUnavailable(f"git log shows no commit introducing {BASE_REL}")
+    here = identity.git(root, "rev-parse", f"HEAD:./{BASE_REL}", check=False).strip()
+    there = identity.git(root, "rev-parse", f"{c}:./{BASE_REL}", check=False).strip()
+    if not here or here != there:
+        raise HistoryUnavailable(f"the committed baseline is not the one {c[:12]} wrote (history simplified?)")
+    if not identity.git_ok(root, "rev-parse", "--verify", "-q", f"{c}^"):
+        if identity.git_ok(root, "rev-parse", "--is-shallow-repository") and \
+                identity.git(root, "rev-parse", "--is-shallow-repository").strip() == "true":
+            raise HistoryUnavailable(f"{c[:12]} has no parent in this shallow clone (fetch-depth: 0 needed)")
+        return c, None                      # the baseline was born in a root commit
+    if not identity.git_ok(root, "cat-file", "-e", f"{c}^:./{BASE_REL}"):
+        return c, None                      # first baseline: nothing replaced
+    txt = identity.git(root, "show", f"{c}^:./{BASE_REL}")
+    try:
+        return c, json.loads(txt)
+    except json.JSONDecodeError as e:
+        raise HistoryUnavailable(f"the previous baseline at {c[:12]}^ is not JSON: {e}")
+
+
 def review_state(b: dict, root: Path) -> list[tuple[str, str]]:
-    """The REVIEWED stamp is a process record, not authentication: anyone who can commit can write
-    one. What the gate can enforce is that it names a person and a transition report that is part of
-    the reviewed tree -- relative, inside foundations/, committed and unmodified. An absolute path
-    used to satisfy this check (`Path(root) / "/etc/hostname"` is `/etc/hostname`): found by an
-    independent review on 2026-10-13, now selftest cases B19-B20 and a mutant."""
+    """The REVIEWED stamp, checked in four steps that stop at the first failure, so each fault gives
+    exactly one tag. It is a process record bound to content, not authentication (module docstring).
+      1. status REVIEWED and a reviewer named                 else [baseline-unreviewed]
+      2. baseline_sha256 = this baseline's content digest     else [review-unbound]
+      3. the report: a relative path inside foundations/, committed unmodified, a JSON whose schema
+         is machsig-transition/* with a binding block         else [review-report-invalid]
+      4. binding.new = this baseline, binding.old = the previous committed baseline (git history)
+                                                              else [review-report-mismatch]
+    An absolute report path once satisfied step 3 (`Path(root) / "/etc/hostname"` is /etc/hostname);
+    so did any committed file (lakefile.lean). Both are selftest cases and mutants."""
     r = b.get("review") if isinstance(b.get("review"), dict) else {}
-    rep = r.get("transition_report")
     why = []
     if r.get("status") != "REVIEWED":
         why.append(f"review.status is {r.get('status')!r}")
     if not r.get("reviewer"):
         why.append("no reviewer named")
-    if not rep or not isinstance(rep, str):
-        why.append("no transition report named")
-    elif Path(rep).is_absolute() or ".." in Path(rep).parts \
-            or not (root / rep).resolve().is_relative_to(root.resolve()):
-        why.append(f"transition report {rep!r} is not a path inside foundations/")
-    elif not (root / rep).is_file():
-        why.append(f"transition report {rep} does not exist")
-    elif not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \
-            or identity.git(root, "status", "--porcelain", "--", rep).strip():
-        why.append(f"transition report {rep} is not committed unmodified")
     if why:
         return [("baseline-unreviewed", f"{BASE_REL}: {'; '.join(why)}. A baseline is accepted by a person who "
                                         "reviewed its committed transition report, never by --update.")]
+    mine = baseline_content_digest(b)
+    if r.get("baseline_sha256") != mine:
+        return [("review-unbound", f"the stamp names baseline content {str(r.get('baseline_sha256'))[:23]}..., "
+                                   f"this baseline is {mine[:23]}...: the stamp was not written for this content "
+                                   "(a stamp copied onto a fresh --update is exactly this)")]
+    rep = r.get("transition_report")
+    bad = None
+    if not rep or not isinstance(rep, str):
+        bad = "no transition report named"
+    elif Path(rep).is_absolute() or ".." in Path(rep).parts \
+            or not (root / rep).resolve().is_relative_to(root.resolve()):
+        bad = f"transition report {rep!r} is not a path inside foundations/"
+    elif not (root / rep).is_file():
+        bad = f"transition report {rep} does not exist"
+    elif not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \
+            or identity.git(root, "status", "--porcelain", "--", rep).strip():
+        bad = f"transition report {rep} is not committed unmodified"
+    report_doc = None
+    if bad is None:
+        try:
+            report_doc = json.loads((root / rep).read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            bad = f"{rep} is not JSON, so not a transition report (cite the .json transition.py writes)"
+    if bad is None and not (isinstance(report_doc, dict)
+                            and str(report_doc.get("schema", "")).startswith("machsig-transition/")
+                            and isinstance(report_doc.get("binding"), dict)):
+        bad = f"{rep} is not a machsig-transition report with a binding block"
+    if bad:
+        return [("review-report-invalid", bad)]
+    try:
+        _, prev = previous_baseline(root)
+    except (HistoryUnavailable, identity.Unavailable) as e:
+        return [("baseline-history-unavailable", f"cannot read the baseline this one replaced: {e}")]
+    want_old = baseline_content_digest(prev) if prev is not None else None
+    bind = report_doc["binding"]
+    if bind.get("new_baseline_sha256") != mine or bind.get("old_baseline_sha256") != want_old:
+        return [("review-report-mismatch",
+                 f"{rep} describes {str(bind.get('old_baseline_sha256'))[:23]}... -> "
+                 f"{str(bind.get('new_baseline_sha256'))[:23]}...; the transition being accepted is "
+                 f"{str(want_old)[:23]}... (previous committed baseline) -> {mine[:23]}... (this one)")]
     return []
 
 
 # ── the comparison ─────────────────────────────────────────────────────────────────────────────────
 
 def compare(base: dict, cur: dict) -> dict:
-    """The ratchet's whole decision. Pure: the selftest calls exactly this."""
+    """The ratchet's whole decision. Pure: the selftest calls exactly this. Every list but `shrank`
+    and `new` is a conviction."""
     acquired, shrank, restated, new = [], [], [], []
     for k in sorted(cur):
         v = cur[k]
@@ -238,11 +331,13 @@ def compare(base: dict, cur: dict) -> dict:
             new.append(k)
             continue
         b = base[k]
-        if b["d"] != v["d"]:
-            restated.append(k)
-            continue
         entered = sorted(set(v["axioms"]) - set(b["axioms"]))
         left = sorted(set(b["axioms"]) - set(v["axioms"]))
+        if b["d"] != v["d"]:
+            # A restatement is never a pass by itself any more: whatever the axioms did, the claim is
+            # different and the baseline says nothing about it until a person has looked.
+            restated.append({"theorem": k, "entered": entered, "left": left, "from": b["ax"], "to": v["ax"]})
+            continue
         if entered:
             acquired.append({"theorem": k, "entered": entered, "left": left, "from": b["ax"], "to": v["ax"]})
         elif left:
@@ -251,18 +346,43 @@ def compare(base: dict, cur: dict) -> dict:
     return {"acquired": acquired, "shrank": shrank, "restated": restated, "new": new, "removed": gone}
 
 
+CONVICTIONS = (
+    ("acquired", "same statement, an axiom ENTERED its footprint"),
+    ("restated", "statement CHANGED: a different claim the baseline has not reviewed"),
+    ("removed", "theorem LEFT the watched set (deleted, renamed, made private or moved): unreviewed"),
+)
+
+
+def _describe(key: str, item) -> str:
+    if isinstance(item, str):
+        return f"  - {item}"
+    ent = f"entered {', '.join(item['entered'][:3])}" + (f" (+{len(item['entered']) - 3} more)"
+                                                         if len(item["entered"]) > 3 else "")
+    if key == "restated":
+        moved = ent if item["entered"] else ("axioms shrank" if item["left"] else "axioms unchanged")
+        return f"  - {item['theorem']}  {item['from']} -> {item['to']}  {moved}"
+    return f"  - {item['theorem']}  {item['from']} -> {item['to']}  {ent}"
+
+
 def report(res: dict, n: int) -> int:
     print(f"  theorems compared : {n}")
-    print(f"  statement restated: {len(res['restated'])}   new: {len(res['new'])}   removed: {len(res['removed'])}")
-    print(f"  footprint shrank  : {len(res['shrank'])}")
-    print(f"  axioms ACQUIRED   : {len(res['acquired'])}")
-    if res["acquired"]:
-        print("\nMACHSIG-TRUST FAIL — same statement, an axiom entered its footprint")
-        for a in sorted(res["acquired"], key=lambda a: (-len(a["entered"]), a["theorem"]))[:12]:
-            more = f" (+{len(a['entered']) - 3} more)" if len(a["entered"]) > 3 else ""
-            print(f"  - {a['theorem']}  {a['from']} -> {a['to']}  entered {', '.join(a['entered'][:3])}{more}")
+    print(f"  new: {len(res['new'])}   footprint shrank: {len(res['shrank'])}")
+    for key, text in CONVICTIONS:
+        print(f"  {key:<17} : {len(res[key])}")
+    bad = [(k, t) for k, t in CONVICTIONS if res[k]]
+    if bad:
+        for key, text in bad:
+            print(f"\nMACHSIG-TRUST FAIL [{key}] {text}")
+            items = res[key]
+            if key in ("acquired",):
+                items = sorted(items, key=lambda a: (-len(a["entered"]), a["theorem"]))
+            for it in items[:12]:
+                print(_describe(key, it))
+            if len(items) > 12:
+                print(f"  ... and {len(items) - 12} more")
+        print(f"\nMACHSIG-TRUST FAIL — {', '.join(k for k, _ in bad)}; a reviewed rebaseline is the only way through.")
         return FAIL
-    print("\nMACHSIG-TRUST OK — no theorem acquired an axiom without its statement changing.")
+    print("\nMACHSIG-TRUST OK — no watched theorem was restated, removed or acquired an axiom.")
     return OK
 
 
@@ -297,7 +417,8 @@ def gate(root: Path = FOUND) -> int:
         refusals.append(problem)
     else:
         refusals += freshness(head, live)
-    refusals += baseline_git_state(root)
+    git_refusals = baseline_git_state(root)
+    refusals += git_refusals
     try:
         raw = json.loads(base_p.read_text())
     except json.JSONDecodeError as e:
@@ -318,7 +439,8 @@ def gate(root: Path = FOUND) -> int:
                                  f"the baseline was derived with extractor {prov['extractor_digest'][7:23]}..., the "
                                  f"signatures with {str(head.get('extractor_digest'))[7:23]}...: a comparison "
                                  "across extractors measures the extractor, not the proofs. Rebaseline and review."))
-            refusals += review_state(raw, root)
+            if not git_refusals:        # a stamp binds the COMMITTED baseline; a local edit has none
+                refusals += review_state(raw, root)
     if refusals:
         return refuse(refusals)
     print(f"  signatures: {head['version']} from {head['machlib_commit'][:12]} "
@@ -360,9 +482,10 @@ def update(root: Path = FOUND) -> int:
             "lean_version": head["lean_version"], "signature_version": head["version"],
             "signature_records_sha256": head["records_sha256"],
         },
-        "review": {"status": "UNREVIEWED", "reviewer": None, "transition_report": None,
+        "review": {"status": "UNREVIEWED", "reviewer": None, "transition_report": None, "baseline_sha256": None,
                    "note": "written by trust_gate.py --update; the gate refuses it until a person who "
-                           "reviewed the transition report sets status REVIEWED and names themselves"},
+                           "reviewed the transition report sets status REVIEWED, names themselves, cites the "
+                           "committed transition JSON and copies --content-digest into baseline_sha256"},
         "axiom_sets": sets,
         "theorems": thms,
     }
@@ -393,6 +516,11 @@ def dump_baseline(doc: dict) -> str:
 
 
 def main(argv: list[str]) -> int:
+    if "--content-digest" in argv:
+        rest = [a for a in argv if a != "--content-digest"]
+        p = Path(rest[0]) if rest else BASE
+        print(baseline_content_digest(json.loads(p.read_text())))
+        return OK
     if "--update" in argv:
         return update()
     if "--mutate" in argv:
