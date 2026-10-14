@@ -206,8 +206,9 @@ def report(t: dict, manifest: dict, ev: dict) -> str:
     w("|---|---|---|")
     w(f"| baseline | committed at 23e0d047 (2026-09-03) | derived from the {t['heads']['new'].get('version') or 'v0.4'} set below |")
     b = t["binding"]
-    w(f"| binding (what a REVIEWED stamp is checked against) | replaces `{b['old_baseline_sha256']}` "
-      f"(`{b['old_baseline_file']}`, the committed file) | `{b['new_baseline_sha256']}` |")
+    w(f"| binding (what a REVIEWED stamp is checked against) | from `{b['old_baseline_sha256']}` "
+      f"(`{b['old_baseline_file']}`: the last reviewed baseline, here the pre-review origin) | "
+      f"`{b['new_baseline_sha256']}` |")
     w(f"| extraction commit | `{ho['machlib_commit']}` | `{hn['machlib_commit']}` |")
     w(f"| Lean sources (Forge `machlib_sources`) | `{ho['machlib_sources']}` | `{hn['machlib_sources']}` |")
     w(f"| content digest (bytes Lean read) | `{ho['content_digest']}` | `{hn['content_digest']}` |")
@@ -225,6 +226,16 @@ def report(t: dict, manifest: dict, ev: dict) -> str:
       "worktree of 23e0d047 (extractor digest equal on both sides). The rows compare against the reconstructed "
       "2026-09-03 baseline (`analysis_base_sha256` in the JSON binding); c3046961's committed file, which the "
       "candidate replaces in git, is that baseline plus the ten hand edits listed in packet section F.")
+    gt = t.get("gate_transition")
+    if gt:
+        gk = collections.Counter(r[1] for r in gt["theorems"])
+        w("")
+        w(f"**What the gate itself checks (version 3).** A REVIEWED stamp citing this report is accepted only if "
+          f"the JSON's `gate_transition` equals the transition the gate recomputes from the last reviewed "
+          f"baseline (the {gt['old_format']} origin) to the candidate: {len(gt['theorems'])} theorem rows ("
+          + ", ".join(f"{k} {n}" for k, n in sorted(gk.items())) + "). Against a counts-only origin a swap or a "
+          "redefinition is invisible to that recompute; the rows of this report, computed against the "
+          "reconstructed 2026-09-03 baseline with axiom sets, are the full account.")
     w("")
     w("## 2. Counts")
     w("")

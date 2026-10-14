@@ -29,7 +29,7 @@ This is step 3-4 of the owner's ruling of 2026-10-13 (and the machinery for step
 | | old side | new side |
 |---|---|---|
 | baseline | committed at 23e0d047 (2026-09-03) | derived from the MachSig/v0.4 set below |
-| binding (what a REVIEWED stamp is checked against) | replaces `sha256:4994f4eadc3a4afb5e419479f958956ef3f85ffb8a4daa8bc0f09e2f4eb1abe2` (`committed_baseline_c3046961.json`, the committed file) | `sha256:d4285150963b78dca5de8712107de58195d7c1e589ba483fbcaedfd7a44dad7e` |
+| binding (what a REVIEWED stamp is checked against) | from `sha256:4994f4eadc3a4afb5e419479f958956ef3f85ffb8a4daa8bc0f09e2f4eb1abe2` (`committed_baseline_c3046961.json`: the last reviewed baseline, here the pre-review origin) | `sha256:d4285150963b78dca5de8712107de58195d7c1e589ba483fbcaedfd7a44dad7e` |
 | extraction commit | `23e0d0471b7b27e62965c71b491089c261820141` | `8e836a56de6f1765bf89907662cd293153d068f8` |
 | Lean sources (Forge `machlib_sources`) | `sha256:9e30e5b742083affc4b0e58a01e586a0ea238800b6b1176cdc79cb866d34000f` | `sha256:261f3d99f6d117e91df70825de36b1e6ae319dbbae9b1503fe482d12d3c64b71` |
 | content digest (bytes Lean read) | `sha256:f62e84f93d8a0a2fe78bddd70b6ac9ff2227a0b9e01c6bec65d97bbe63ef800b` | `sha256:2ab67ce4febed96454fcc079f1ab442b53e2a6411b79a8285191a86e7de27b87` |
@@ -40,6 +40,8 @@ This is step 3-4 of the owner's ruling of 2026-10-13 (and the machinery for step
 | AxiomLedger known / trusted | 243 / 149 | 217 / 143 |
 
 The new side was extracted on branch `machsig-gate` at the commit above, whose Lean sources are byte-identical to master c3046961 (the Forge digest is the same value at both commits); the last commit touching Lean sources is 203cc854. The old side ran the same extractor files, unchanged, in a clean worktree of 23e0d047 (extractor digest equal on both sides). The rows compare against the reconstructed 2026-09-03 baseline (`analysis_base_sha256` in the JSON binding); c3046961's committed file, which the candidate replaces in git, is that baseline plus the ten hand edits listed in packet section F.
+
+**What the gate itself checks (version 3).** A REVIEWED stamp citing this report is accepted only if the JSON's `gate_transition` equals the transition the gate recomputes from the last reviewed baseline (the legacy-counts origin) to the candidate: 3932 theorem rows (grew 1810, new 476, removed 2, restated 2, shrank 1642). Against a counts-only origin a swap or a redefinition is invisible to that recompute; the rows of this report, computed against the reconstructed 2026-09-03 baseline with axiom sets, are the full account.
 
 ## 2. Counts
 

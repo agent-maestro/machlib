@@ -53,7 +53,9 @@ cannot fire must not read as "checked and clean", so each of these is now its ow
                          [baseline-unreviewed]       written by --update, never reviewed
                          [review-unbound]            the stamp names another baseline's content
                          [review-report-invalid]     the stamp's report is not a transition report
-                         [review-report-mismatch]    the report does not describe this transition
+                         [review-report-mismatch]    the report does not start at the last REVIEWED
+                                                     baseline, or binds this baseline to itself
+                         [review-report-rows]        its gate_transition rows differ from the recompute
                          [baseline-history-unavailable] the previous baseline cannot be read from git
                          [signatures-not-this-run]   MACHSIG_RUN_ID is set and the set is from another run
   FAIL        (exit 1)   see the table above
@@ -79,9 +81,13 @@ baseline becomes usable only when its `review` block says REVIEWED, names a revi
     the canonical JSON without the review block). Pasting an old stamp onto a fresh `--update` --
     attack 3 of the 2026-10-13 review, which passed -- now fails [review-unbound].
   * `transition_report` must be a committed `machsig-transition/*` JSON (tools/machsig/transition.py)
-    whose `binding.new_baseline_sha256` is this baseline and whose `binding.old_baseline_sha256` is
-    the PREVIOUS committed baseline, read from git history. Citing lakefile.lean -- attack 4, which
-    passed -- now fails [review-report-invalid].
+    whose `binding.new_baseline_sha256` is this baseline, whose `binding.old_baseline_sha256` is the
+    LAST REVIEWED baseline in git history (walked forward from the pre-review origin, counting only
+    versions whose own stamp passes these checks), and whose `gate_transition` equals the transition
+    the gate recomputes between the two, row for row. Citing lakefile.lean -- attack 4 of the first
+    review -- fails [review-report-invalid]; a two-commit --update-then-stamp with a hollow
+    "this -> itself" report -- H1 of the second review -- fails [review-report-mismatch], and any
+    report that omits a change fails [review-report-rows].
 WHAT THIS CANNOT DO: authenticate a person. Anyone with commit access can write a stamp and generate
 a matching report. The gate binds CONTENT -- the stamp, the report and the two baselines must
 describe one transition -- so a stamp cannot be reused, borrowed or forgotten; that a review
@@ -281,41 +287,167 @@ class HistoryUnavailable(Exception):
     pass
 
 
-def previous_baseline(root: Path):
-    """(commit that introduced the committed baseline, the baseline it replaced or None). From git
-    history: the last commit touching the file, then the file at that commit's first parent."""
-    c = identity.git(root, "log", "-1", "--format=%H", "--", BASE_REL).strip()
-    if not c:
+#: THE PRE-REVIEW ORIGIN. Every chain of reviewed baselines starts here: the counts-only baseline
+#: committed at c3046961 on 2026-10-13 (the 2026-09-03 baseline of 23e0d047 plus ten hand edits,
+#: never reviewed as such). Named by CONTENT digest, so no rewrite of history can move it; the commit
+#: is a label. A version whose content equals it restarts the chain.
+ORIGIN_CONTENT = "sha256:4994f4eadc3a4afb5e419479f958956ef3f85ffb8a4daa8bc0f09e2f4eb1abe2"
+ORIGIN_LABEL = "the pre-review origin (c3046961's counts-only baseline)"
+
+
+def baseline_history(root: Path) -> list[tuple[str, object]]:
+    """[(commit, parsed baseline or None)], oldest first: every commit reachable from HEAD that changed
+    the baseline file, in topological order."""
+    out = identity.git(root, "rev-list", "--reverse", "--topo-order", "HEAD", "--", BASE_REL)
+    hist = []
+    for c in out.split():
+        doc = None
+        if identity.git_ok(root, "cat-file", "-e", f"{c}:./{BASE_REL}"):
+            try:
+                doc = json.loads(identity.git(root, "show", f"{c}:./{BASE_REL}"))
+            except json.JSONDecodeError:
+                doc = None
+        hist.append((c, doc))
+    return hist
+
+
+def _is_shallow(root: Path) -> bool:
+    return identity.git_ok(root, "rev-parse", "--is-shallow-repository") and \
+        identity.git(root, "rev-parse", "--is-shallow-repository").strip() == "true"
+
+
+def last_reviewed(root: Path) -> tuple[str, object]:
+    """(label, baseline) of the most recent baseline BEFORE the committed one that a VALID review
+    accepted. Walks forward from the pre-review origin; a version counts only if its own stamp passes
+    every check against the last version that counted -- so an unreviewed --update, or a stamp whose
+    report does not cover the change since the last real review, never becomes the reference.
+
+    Until 2026-10-14 the reference was simply the previous committed version, and a second
+    independent review laundered a footprint growth in two commits: --update (unreviewed), then a
+    stamp citing a hand-written four-line report "this baseline -> itself" (selftest B42-B47)."""
+    hist = baseline_history(root)
+    if not hist:
         raise HistoryUnavailable(f"git log shows no commit introducing {BASE_REL}")
     here = identity.git(root, "rev-parse", f"HEAD:./{BASE_REL}", check=False).strip()
-    there = identity.git(root, "rev-parse", f"{c}:./{BASE_REL}", check=False).strip()
+    there = identity.git(root, "rev-parse", f"{hist[-1][0]}:./{BASE_REL}", check=False).strip()
     if not here or here != there:
-        raise HistoryUnavailable(f"the committed baseline is not the one {c[:12]} wrote (history simplified?)")
-    if not identity.git_ok(root, "rev-parse", "--verify", "-q", f"{c}^"):
-        if identity.git_ok(root, "rev-parse", "--is-shallow-repository") and \
-                identity.git(root, "rev-parse", "--is-shallow-repository").strip() == "true":
-            raise HistoryUnavailable(f"{c[:12]} has no parent in this shallow clone (fetch-depth: 0 needed)")
-        return c, None                      # the baseline was born in a root commit
-    if not identity.git_ok(root, "cat-file", "-e", f"{c}^:./{BASE_REL}"):
-        return c, None                      # first baseline: nothing replaced
-    txt = identity.git(root, "show", f"{c}^:./{BASE_REL}")
-    try:
-        return c, json.loads(txt)
-    except json.JSONDecodeError as e:
-        raise HistoryUnavailable(f"the previous baseline at {c[:12]}^ is not JSON: {e}")
+        raise HistoryUnavailable(f"the committed baseline is not the one {hist[-1][0][:12]} wrote (history simplified?)")
+    starts = [i for i, (_, doc) in enumerate(hist[:-1])
+              if doc is not None and baseline_content_digest(doc) == ORIGIN_CONTENT]
+    if not starts:
+        why = "this is a shallow clone (fetch-depth: 0 needed)" if _is_shallow(root) else \
+            "no earlier version of the baseline is it"
+        raise HistoryUnavailable(f"{ORIGIN_LABEL}, {ORIGIN_CONTENT[:23]}..., is not in this history: {why}")
+    label, ref = ORIGIN_LABEL, hist[starts[-1]][1]
+    for c, doc in hist[starts[-1] + 1:-1]:
+        if doc is None:
+            continue
+        if not review_problems(doc, ref, label, _report_at(root, c)):
+            label, ref = f"the baseline reviewed at {c[:12]}", doc
+    return label, ref
 
 
-def review_state(b: dict, root: Path) -> list[tuple[str, str]]:
-    """The REVIEWED stamp, checked in four steps that stop at the first failure, so each fault gives
-    exactly one tag. It is a process record bound to content, not authentication (module docstring).
-      1. status REVIEWED and a reviewer named                 else [baseline-unreviewed]
-      2. baseline_sha256 = this baseline's content digest     else [review-unbound]
-      3. the report: a relative path inside foundations/, committed unmodified, a JSON whose schema
-         is machsig-transition/* with a binding block         else [review-report-invalid]
-      4. binding.new = this baseline, binding.old = the previous committed baseline (git history)
-                                                              else [review-report-mismatch]
-    An absolute report path once satisfied step 3 (`Path(root) / "/etc/hostname"` is /etc/hostname);
-    so did any committed file (lakefile.lean). Both are selftest cases and mutants."""
+def _report_at(root: Path, commit: str):
+    """Report reader for a HISTORICAL stamp: the file as committed in that commit."""
+    def read(rep: str):
+        if not identity.git_ok(root, "cat-file", "-e", f"{commit}:./{rep}"):
+            return None, f"transition report {rep} does not exist at {commit[:12]}"
+        return identity.git(root, "show", f"{commit}:./{rep}"), None
+    return read
+
+
+def _report_in_tree(root: Path):
+    """Report reader for the COMMITTED baseline: the file in the tree, which must be committed unmodified."""
+    def read(rep: str):
+        if not (root / rep).is_file():
+            return None, f"transition report {rep} does not exist"
+        if not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \
+                or identity.git(root, "status", "--porcelain", "--", rep).strip():
+            return None, f"transition report {rep} is not committed unmodified"
+        return (root / rep).read_text(encoding="utf-8"), None
+    return read
+
+
+def _theorems_of(doc) -> tuple[dict, dict | None, dict | None, str]:
+    """Any baseline -> ({theorem: d/ax/c/axioms}, axiom pins, policy, format). Never raises: a
+    malformed entry decodes with missing fields and shows up in the rows."""
+    if isinstance(doc, dict) and doc.get("schema") == BASELINE_SCHEMA:
+        sets = doc.get("axiom_sets") if isinstance(doc.get("axiom_sets"), dict) else {}
+        out = {}
+        for k, e in (doc.get("theorems") or {}).items():
+            e = e if isinstance(e, dict) else {}
+            axs = sets.get(e.get("set"))
+            out[k] = {"d": e.get("d"), "ax": e.get("ax"), "c": e.get("c"),
+                      "axioms": sorted(axs) if isinstance(axs, list) else None}
+        return out, doc.get("axiom_statements"), doc.get("policy"), "v3"
+    if isinstance(doc, dict) and all(isinstance(v, dict) and "ax" in v and "d" in v for v in doc.values()):
+        return ({k: {"d": v["d"], "ax": v["ax"], "c": None, "axioms": None} for k, v in doc.items()},
+                None, None, "legacy-counts")
+    return {}, None, None, "unreadable"
+
+
+def gate_transition(old_doc, new_doc) -> dict:
+    """The transition between two baselines, recomputed from their content alone: what a REVIEWED
+    stamp's report must reproduce EXACTLY (`gate_transition` in machsig-transition/v3), so a report
+    can no longer be a pair of hashes around nothing. Where the old side is the counts-only origin,
+    kinds come from statement digests and counts (a swap or a redefinition is invisible there)."""
+    o, opins, opol, ofmt = _theorems_of(old_doc)
+    n, npins, npol, nfmt = _theorems_of(new_doc)
+    rows = []
+    for k in sorted(set(o) | set(n)):
+        a, b = o.get(k), n.get(k)
+        ent, left = [], []
+        if a is None:
+            kind = "new"
+        elif b is None:
+            kind = "removed"
+        else:
+            sets = a["axioms"] is not None and b["axioms"] is not None
+            if sets:
+                ent = sorted(set(b["axioms"]) - set(a["axioms"]))
+                left = sorted(set(a["axioms"]) - set(b["axioms"]))
+            if a["d"] != b["d"]:
+                kind = "restated"
+            elif a["c"] and b["c"] and a["c"] != b["c"]:
+                kind = "redefined"
+            elif sets:
+                kind = "swap" if ent and left and len(ent) == len(left) else \
+                    "grew" if ent else "shrank" if left else "unchanged"
+            else:
+                kind = "grew" if (b["ax"] or 0) > (a["ax"] or 0) else \
+                    "shrank" if (b["ax"] or 0) < (a["ax"] or 0) else "unchanged"
+            if kind == "unchanged" and a["ax"] != b["ax"]:
+                kind = "malformed"
+        if kind == "unchanged":
+            continue
+        rows.append([k, kind, None if a is None else a["ax"], None if b is None else b["ax"], ent, left])
+    if isinstance(opins, dict) and isinstance(npins, dict):
+        axioms = {"restated": sorted(x for x in opins if x in npins and opins[x] != npins[x]),
+                  "new": sorted(x for x in npins if x not in opins), "gone": sorted(x for x in opins if x not in npins)}
+    else:
+        axioms = {"established": sorted(npins) if isinstance(npins, dict) else None}
+    if isinstance(opol, dict) and isinstance(npol, dict):
+        policy = {lst: {"added": sorted(set(npol.get(lst, [])) - set(opol.get(lst, []))),
+                        "removed": sorted(set(opol.get(lst, [])) - set(npol.get(lst, [])))}
+                  for lst in ("known", "trusted", "allowed_sorry")}
+    else:
+        policy = {"established": npol if isinstance(npol, dict) else None}
+    return {"schema": "machsig-gate-transition/v1", "old_format": ofmt, "new_format": nfmt,
+            "theorems": rows, "axioms": axioms, "policy": policy}
+
+
+def review_problems(b: dict, ref, ref_label: str, read_report) -> list[tuple[str, str]]:
+    """A REVIEWED stamp, checked in steps that stop at the first failure (one tag per fault). It is a
+    process record bound to content, not authentication (module docstring).
+      1. status REVIEWED and a reviewer named                       else [baseline-unreviewed]
+      2. baseline_sha256 = this baseline's content digest           else [review-unbound]
+      3. the report: a relative path inside foundations/, present (and, for the committed baseline,
+         committed unmodified), JSON, schema machsig-transition/*, with `binding` and
+         `gate_transition` blocks                                    else [review-report-invalid]
+      4. binding.new = this baseline; not a self-binding that hides rows; binding.old = the LAST
+         REVIEWED baseline `ref` (last_reviewed)                    else [review-report-mismatch]
+      5. gate_transition = the transition recomputed from `ref` to this baseline, row for row
+                                                                    else [review-report-rows]"""
     r = b.get("review") if isinstance(b.get("review"), dict) else {}
     why = []
     if r.get("status") != "REVIEWED":
@@ -331,41 +463,67 @@ def review_state(b: dict, root: Path) -> list[tuple[str, str]]:
                                    f"this baseline is {mine[:23]}...: the stamp was not written for this content "
                                    "(a stamp copied onto a fresh --update is exactly this)")]
     rep = r.get("transition_report")
-    bad = None
+    bad, report_doc = None, None
     if not rep or not isinstance(rep, str):
         bad = "no transition report named"
     elif Path(rep).is_absolute() or ".." in Path(rep).parts \
-            or not (root / rep).resolve().is_relative_to(root.resolve()):
+            or not (FOUND / rep).resolve().is_relative_to(FOUND.resolve()):
         bad = f"transition report {rep!r} is not a path inside foundations/"
-    elif not (root / rep).is_file():
-        bad = f"transition report {rep} does not exist"
-    elif not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \
-            or identity.git(root, "status", "--porcelain", "--", rep).strip():
-        bad = f"transition report {rep} is not committed unmodified"
-    report_doc = None
     if bad is None:
-        try:
-            report_doc = json.loads((root / rep).read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            bad = f"{rep} is not JSON, so not a transition report (cite the .json transition.py writes)"
+        text, bad = read_report(rep)
+        if bad is None:
+            try:
+                report_doc = json.loads(text)
+            except (json.JSONDecodeError, TypeError):
+                bad = f"{rep} is not JSON, so not a transition report (cite the .json transition.py writes)"
     if bad is None and not (isinstance(report_doc, dict)
                             and str(report_doc.get("schema", "")).startswith("machsig-transition/")
-                            and isinstance(report_doc.get("binding"), dict)):
-        bad = f"{rep} is not a machsig-transition report with a binding block"
+                            and isinstance(report_doc.get("binding"), dict)
+                            and isinstance(report_doc.get("gate_transition"), dict)):
+        bad = (f"{rep} is not a machsig-transition report with `binding` and `gate_transition` blocks "
+               "(transition.py v3 writes both)")
     if bad:
         return [("review-report-invalid", bad)]
-    try:
-        _, prev = previous_baseline(root)
-    except (HistoryUnavailable, identity.Unavailable) as e:
-        return [("baseline-history-unavailable", f"cannot read the baseline this one replaced: {e}")]
-    want_old = baseline_content_digest(prev) if prev is not None else None
+    want_old = baseline_content_digest(ref)
     bind = report_doc["binding"]
-    if bind.get("new_baseline_sha256") != mine or bind.get("old_baseline_sha256") != want_old:
+    recomputed = gate_transition(ref, b)
+    if bind.get("new_baseline_sha256") != mine:
+        return [("review-report-mismatch", f"{rep} describes a transition to {str(bind.get('new_baseline_sha256'))[:23]}..., "
+                                           f"not to this baseline {mine[:23]}...")]
+    if bind.get("old_baseline_sha256") == bind.get("new_baseline_sha256") and \
+            (report_doc["gate_transition"].get("theorems") or want_old != mine):
+        return [("review-report-mismatch", f"{rep} is a self-binding ({mine[:23]}... -> itself), but "
+                                           f"{len(recomputed['theorems'])} theorem row(s) separate this baseline from "
+                                           f"{ref_label}: a report must start at the last reviewed baseline")]
+    if bind.get("old_baseline_sha256") != want_old:
         return [("review-report-mismatch",
-                 f"{rep} describes {str(bind.get('old_baseline_sha256'))[:23]}... -> "
-                 f"{str(bind.get('new_baseline_sha256'))[:23]}...; the transition being accepted is "
-                 f"{str(want_old)[:23]}... (previous committed baseline) -> {mine[:23]}... (this one)")]
+                 f"{rep} starts at {str(bind.get('old_baseline_sha256'))[:23]}...; the last reviewed baseline is "
+                 f"{ref_label}, {want_old[:23]}... (an unreviewed --update in between does not count)")]
+    if report_doc["gate_transition"] != recomputed:
+        got = report_doc["gate_transition"].get("theorems")
+        got = got if isinstance(got, list) else []
+        want = recomputed["theorems"]
+        names = sorted({r[0] for r in got if isinstance(r, list) and r} ^ {r[0] for r in want}
+                       | {w[0] for g, w in zip(got, want) if g != w})
+        return [("review-report-rows",
+                 f"{rep}'s gate_transition does not reproduce the transition from {ref_label} to this baseline: "
+                 f"{len(got)} theorem row(s) reported, {len(want)} recomputed"
+                 + (f"; first difference at {names[0]}" if names else "; the axiom or policy part differs")
+                 + ". A report must list every change the stamp accepts.")]
     return []
+
+
+def review_state(b: dict, root: Path) -> list[tuple[str, str]]:
+    """The committed baseline's stamp, against the last reviewed baseline in git history."""
+    r = b.get("review") if isinstance(b.get("review"), dict) else {}
+    if r.get("status") == "REVIEWED" and r.get("reviewer") and r.get("baseline_sha256") == baseline_content_digest(b):
+        try:
+            label, ref = last_reviewed(root)
+        except (HistoryUnavailable, identity.Unavailable) as e:
+            return [("baseline-history-unavailable", f"cannot find the last reviewed baseline: {e}")]
+    else:
+        label, ref = ORIGIN_LABEL, None          # steps 1-2 fail before the reference matters
+    return review_problems(b, ref, label, _report_in_tree(root))
 
 
 # ── the comparison ─────────────────────────────────────────────────────────────────────────────────

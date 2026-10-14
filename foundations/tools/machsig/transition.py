@@ -354,16 +354,23 @@ def build(ev: dict) -> dict:
     # candidate. The row analysis runs against the reconstructed 2026-09-03 baseline instead, because it
     # is exact and carries no hand edits; c3046961's ten edits are listed separately (baseline_edits).
     import trust_gate as TG
-    binding = {"old_baseline_sha256": TG.baseline_content_digest(json.loads(ev["committed_c3"].read_text())),
+    c3_doc = json.loads(ev["committed_c3"].read_text())
+    if TG.baseline_content_digest(c3_doc) != TG.ORIGIN_CONTENT:
+        raise SystemExit("transition: committed_baseline_c3046961.json is not the gate's pre-review origin")
+    binding = {"old_baseline_sha256": TG.baseline_content_digest(c3_doc),
                "old_baseline_file": EVIDENCE["committed_c3"],
+               "old_baseline_role": "the LAST REVIEWED baseline the gate walks back to; no baseline has been "
+                                    "reviewed yet, so it is the pre-review origin (trust_gate.ORIGIN_CONTENT)",
                "analysis_base_sha256": TG.baseline_content_digest(json.loads(ev["committed_0903"].read_text())),
                "analysis_base_file": EVIDENCE["committed_0903"],
                "new_baseline_sha256": None}
-    candidate = None
+    candidate, gate_rows = None, None
     if "candidate" in ev:
         # The baseline a reviewer would commit: it must hold exactly the new side of this report.
         cb = json.loads(ev["candidate"].read_text())
         binding["new_baseline_sha256"] = TG.baseline_content_digest(cb)
+        # what the gate recomputes from the two baselines alone; a stamp's report must equal it
+        gate_rows = TG.gate_transition(c3_doc, cb)
         sets, thms = cb.get("axiom_sets", {}), cb.get("theorems", {})
         decoded = {k: {"d": e["d"], "ax": e["ax"], "axioms": sorted(sets.get(e["set"], []))} for k, e in thms.items()}
         want = {k: {"d": v["d"], "ax": v["ax"], "axioms": sorted(v["axioms"])} for k, v in new_w.items()}
@@ -378,6 +385,7 @@ def build(ev: dict) -> dict:
         nc = json.loads(ev["narrow_candidate"].read_text())
         narrow = sorted(nc.get("theorems", {}))
     return {
+        "gate_transition": gate_rows,
         "axiom_moves": axiom_moves,
         "narrow_population": narrow,
         "binding": binding,

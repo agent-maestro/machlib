@@ -159,6 +159,8 @@ COPIED = ("tools/machsig/trust_gate.py", "tools/machsig/trust_gate_selftest.py")
 THEOREMS = {"Fx.alpha": ["Fx.ax_one", "propext"],
             "Fx.beta": ["Classical.choice", "Fx.ax_one", "Fx.ax_two", "Quot.sound", "propext"],
             "Fx.gamma": ["sorryAx"]}                       # allowlisted below, like halve_in_unit_sorry
+#: the fixture's counts-only pre-review origin (same statement digests write_sigs gives)
+LEGACY = {k: {"ax": len(v), "d": hashlib.sha256(k.encode()).hexdigest()[:32]} for k, v in THEOREMS.items()}
 AXIOMS = {a: hashlib.sha256(("stmt:" + a).encode()).hexdigest()
           for a in ("Classical.choice", "Quot.sound", "propext", "sorryAx", "Fx.ax_one", "Fx.ax_two", "Fx.ax_three")}
 POLICY = {"known": ["Fx.ax_one", "Fx.ax_three", "Fx.ax_two"],
@@ -220,16 +222,22 @@ def build_fixture(root: Path, gate_text: str | None = None) -> Path:
         shutil.copy2(real / rel, found / rel)
     if gate_text is not None:                          # --mutate: the fixture runs a mutant gate
         (found / "tools/machsig/trust_gate.py").write_text(gate_text)
+    # The fixture's own pre-review origin: a counts-only baseline committed first, as c3046961's is in
+    # MachLib; the fixture's gate copy is pointed at it (ORIGIN_CONTENT is a constant of the gate).
+    gp = found / "tools/machsig/trust_gate.py"
+    gp.write_text(re.sub(r'^ORIGIN_CONTENT = ".*"$', f'ORIGIN_CONTENT = "{tg.baseline_content_digest(LEGACY)}"',
+                         gp.read_text(), count=1, flags=re.M))
+    (found / tg.BASE_REL).write_text(json.dumps(LEGACY, sort_keys=True, indent=0))
     sh(repo, "init", "-q", "-b", "main")
     sh(repo, "add", "-A")
-    sh(repo, "commit", "-q", "-m", "fixture")
+    sh(repo, "commit", "-q", "-m", "fixture, with the counts-only origin baseline")
     write_sigs(found, THEOREMS)
     rc = subprocess.run([sys.executable, str(found / "tools/machsig/trust_gate.py"), "--update"],
                         cwd=found, env=env(), capture_output=True, text=True)
     if rc.returncode != 0:
         raise RuntimeError(f"fixture --update failed: {rc.stdout}{rc.stderr}")
     (found / "docs").mkdir()
-    restamp(found, previous=None)
+    restamp(found, previous=LEGACY)
     sh(repo, "add", "-A")
     sh(repo, "commit", "-q", "-m", "reviewed baseline")
     return repo
@@ -238,18 +246,19 @@ def build_fixture(root: Path, gate_text: str | None = None) -> Path:
 REPORT = "docs/transition.json"
 
 
-def restamp(found: Path, previous) -> None:
-    """A correct REVIEWED stamp: binds the baseline's content, and cites a transition report whose
-    binding is (previous committed baseline -> this one). `previous` is the committed baseline the
-    new one replaces (a parsed dict), or None for the first."""
+def restamp(found: Path, previous, report: dict | None = None, reviewer: str = "selftest") -> None:
+    """A REVIEWED stamp bound to the baseline's content, citing a transition report. By default the
+    report is CORRECT: binding (previous -> this) and gate_transition recomputed between them, where
+    `previous` is the last reviewed baseline (a parsed dict). `report` replaces it wholesale (attacks)."""
     p = found / tg.BASE_REL
     b = json.loads(p.read_text())
     mine = tg.baseline_content_digest(b)
-    (found / REPORT).write_text(json.dumps({
-        "schema": "machsig-transition/v2",
-        "binding": {"old_baseline_sha256": tg.baseline_content_digest(previous) if previous is not None else None,
-                    "new_baseline_sha256": mine}}, sort_keys=True) + "\n")
-    b["review"] = {"status": "REVIEWED", "reviewer": "selftest", "transition_report": REPORT, "baseline_sha256": mine}
+    if report is None:
+        report = {"schema": "machsig-transition/v3",
+                  "binding": {"old_baseline_sha256": tg.baseline_content_digest(previous), "new_baseline_sha256": mine},
+                  "gate_transition": tg.gate_transition(previous, b)}
+    (found / REPORT).write_text(json.dumps(report, sort_keys=True) + "\n")
+    b["review"] = {"status": "REVIEWED", "reviewer": reviewer, "transition_report": REPORT, "baseline_sha256": mine}
     p.write_text(tg.dump_baseline(b))
 
 
@@ -420,6 +429,91 @@ def cases():
     def same_run(repo, f):
         write_sigs(f, THEOREMS, run_id="run-A")
         return {"MACHSIG_RUN_ID": "run-A"}
+    def committed(f):
+        return json.loads((f / tg.BASE_REL).read_text())
+    def update(f):
+        subprocess.run([sys.executable, str(f / "tools/machsig/trust_gate.py"), "--update"], cwd=f, env=env(),
+                       capture_output=True, check=True)
+    GROWN = dict(THEOREMS, **{"Fx.alpha": THEOREMS["Fx.alpha"] + ["Fx.ax_two"]})   # a trusted axiom enters
+    SHRUNK = dict(GROWN, **{"Fx.beta": [a for a in THEOREMS["Fx.beta"] if a != "Quot.sound"]})
+    def grow_unreviewed(repo, f):
+        # commit 1 of H1: a real growth, rebaselined by --update and committed UNREVIEWED
+        write_sigs(f, GROWN)
+        update(f)
+        commit_all(repo, "rebaseline after a growth (unreviewed)")
+        return committed(f)
+    def h1_exact(repo, f):
+        # the second review's attack, verbatim: commit 2 stamps it with a 4-line "this -> itself" report
+        d = tg.baseline_content_digest(grow_unreviewed(repo, f))
+        restamp(f, None, report={"schema": "machsig-transition/v2",
+                                 "binding": {"old_baseline_sha256": d, "new_baseline_sha256": d}}, reviewer="x")
+        commit_all(repo, "stamp")
+    def h1_v3_hollow_self(repo, f):
+        # the same, but shaped like a v3 report: self-binding with the (empty) recompute D -> D
+        b = grow_unreviewed(repo, f)
+        d = tg.baseline_content_digest(b)
+        restamp(f, None, report={"schema": "machsig-transition/v3",
+                                 "binding": {"old_baseline_sha256": d, "new_baseline_sha256": d},
+                                 "gate_transition": tg.gate_transition(b, b)})
+        commit_all(repo, "stamp")
+    def h1_self_with_rows(repo, f):
+        # self-binding that even carries the true rows: still not a transition FROM the last review
+        pristine = committed(f)
+        b = grow_unreviewed(repo, f)
+        d = tg.baseline_content_digest(b)
+        restamp(f, None, report={"schema": "machsig-transition/v3",
+                                 "binding": {"old_baseline_sha256": d, "new_baseline_sha256": d},
+                                 "gate_transition": tg.gate_transition(pristine, b)})
+        commit_all(repo, "stamp")
+    def h1_hollow_rows(repo, f):
+        # correct binding (last reviewed -> this), but rows that omit the growth
+        pristine = committed(f)
+        b = grow_unreviewed(repo, f)
+        hollow = tg.gate_transition(pristine, pristine)
+        restamp(f, None, report={"schema": "machsig-transition/v3",
+                                 "binding": {"old_baseline_sha256": tg.baseline_content_digest(pristine),
+                                             "new_baseline_sha256": tg.baseline_content_digest(b)},
+                                 "gate_transition": hollow})
+        commit_all(repo, "stamp with a hollow report")
+    def h1_three_commits(repo, f):
+        # c1 unreviewed growth; c2 a stamp whose report is self-bound (invalid); c3 a further change
+        # stamped with an HONEST report from c2 -- c2 must not count as reviewed
+        b1 = grow_unreviewed(repo, f)
+        d1 = tg.baseline_content_digest(b1)
+        restamp(f, None, report={"schema": "machsig-transition/v3",
+                                 "binding": {"old_baseline_sha256": d1, "new_baseline_sha256": d1},
+                                 "gate_transition": tg.gate_transition(b1, b1)})
+        commit_all(repo, "c2: stamped, self-bound")
+        b2 = committed(f)
+        write_sigs(f, SHRUNK)
+        update(f)
+        restamp(f, b2)
+        commit_all(repo, "c3: honest report from c2")
+    def h1_intermediate(repo, f):
+        # c1 unreviewed growth; c2 a further change stamped with an honest report FROM c1
+        b1 = grow_unreviewed(repo, f)
+        write_sigs(f, SHRUNK)
+        update(f)
+        restamp(f, b1)
+        commit_all(repo, "c2: report from the unreviewed c1")
+    def honest_two_step(repo, f):
+        # control: c1 unreviewed --update; c2 stamps it with a report from the last REVIEWED baseline
+        pristine = committed(f)
+        grow_unreviewed(repo, f)
+        restamp(f, pristine)
+        commit_all(repo, "c2: reviewed, report from the last reviewed baseline")
+    def honest_chain(repo, f):
+        # control: two reviewed rebaselines in a row; the second's report starts at the first
+        pristine = committed(f)
+        write_sigs(f, GROWN)
+        update(f)
+        restamp(f, pristine)
+        commit_all(repo, "r1 reviewed")
+        r1 = committed(f)
+        write_sigs(f, SHRUNK)
+        update(f)
+        restamp(f, r1)
+        commit_all(repo, "r2 reviewed, from r1")
     def shallow(repo, f):
         # depth-1 clone: neither the provenance commit nor the previous baseline is reachable
         clone = repo.parent / "shallow"
@@ -463,9 +557,9 @@ def cases():
          "review-report-invalid", "lakefile.lean is not JSON"),
         ("B25 a JSON file that is not a transition report", json_not_report, 3, "review-report-invalid",
          "not a machsig-transition report"),
-        ("B26 report describing another baseline", report_wrong_new, 3, "review-report-mismatch", "this one"),
+        ("B26 report describing another baseline", report_wrong_new, 3, "review-report-mismatch", "not to this baseline"),
         ("B27 report against the wrong predecessor", report_wrong_old, 3, "review-report-mismatch",
-         "previous committed baseline"),
+         "the last reviewed baseline is"),
         ("B28 ATTACK 5: statement changed AND sorryAx entered", restate_sorry, 1, None,
          "Fx.alpha  2 -> 3  entered sorryAx"),
         ("B29 statement changed, axioms unchanged", restate_only, 1, None, "Fx.alpha  2 -> 2  axioms unchanged"),
@@ -488,6 +582,22 @@ def cases():
          "signatures-not-this-run", "'run-A'"),
         ("B41 control: the set this run regenerated passes, without ADVISORY", same_run, 0, None,
          "regenerated in this run (run-A)"),
+        ("B42 H1 (review 2), verbatim: --update, then a stamp citing a 4-line 'this -> itself' report",
+         h1_exact, 3, "review-report-invalid", "gate_transition"),
+        ("B43 H1, v3-shaped: self-binding with an empty recompute", h1_v3_hollow_self, 3,
+         "review-report-mismatch", "self-binding"),
+        ("B44 H1, self-binding that carries the true rows", h1_self_with_rows, 3, "review-report-mismatch",
+         "self-binding"),
+        ("B45 H1, correct binding but rows that omit the growth", h1_hollow_rows, 3, "review-report-rows",
+         "first difference at Fx.alpha"),
+        ("B46 H1, three commits: an invalid stamp in the middle is not a reference", h1_three_commits, 3,
+         "review-report-mismatch", "an unreviewed --update in between does not count"),
+        ("B47 H1, an unreviewed intermediate under an honest stamp", h1_intermediate, 3,
+         "review-report-mismatch", "an unreviewed --update in between does not count"),
+        ("B48 control: --update, then a stamp reporting from the last reviewed baseline", honest_two_step, 0,
+         None, "MACHSIG-TRUST OK"),
+        ("B49 control: two reviewed rebaselines, the second reporting from the first", honest_chain, 0, None,
+         "MACHSIG-TRUST OK"),
     ]
 
 
@@ -553,9 +663,19 @@ MUTANTS = [
     ("stamp-to-content binding removed", 'if r.get("baseline_sha256") != mine:', "if False:"),
     ("report-must-be-a-transition-JSON check removed",
      'if bad is None and not (isinstance(report_doc, dict)', 'if False and not (isinstance(report_doc, dict)'),
-    ("report binding checks removed",
-     'if bind.get("new_baseline_sha256") != mine or bind.get("old_baseline_sha256") != want_old:', "if False:"),
-    ("report's predecessor not checked", 'or bind.get("old_baseline_sha256") != want_old:', ":"),
+    ("report's new side not checked", 'if bind.get("new_baseline_sha256") != mine:', "if False:"),
+    ("report's old side not checked", 'if bind.get("old_baseline_sha256") != want_old:', "if False:"),
+    ("self-binding check removed",
+     'if bind.get("old_baseline_sha256") == bind.get("new_baseline_sha256") and \\', "if False and \\"),
+    ("report rows not compared with the recompute", 'if report_doc["gate_transition"] != recomputed:', "if False:"),
+    ("H1 pre-fix: the reference is the previous committed version",
+     "    label, ref = ORIGIN_LABEL, hist[starts[-1]][1]",
+     "    label, ref = ORIGIN_LABEL, (hist[-2][1] if len(hist) > 1 else hist[starts[-1]][1])"),
+    ("historical stamps counted without checking their reports",
+     "if not review_problems(doc, ref, label, _report_at(root, c)):",
+     'if (doc.get("review") or {}).get("status") == "REVIEWED" if isinstance(doc, dict) else False:'),
+    ("the walk never advances past the origin",
+     'label, ref = f"the baseline reviewed at {c[:12]}", doc', "pass"),
     ("restatement passes again (pre-2026-10-13)",
      '("restated", "statement CHANGED: a different claim the baseline has not reviewed"),', ""),
     ("removal passes again (pre-2026-10-13)",
@@ -569,14 +689,14 @@ MUTANTS = [
      'res["policy-widened"] = [f"trustedFootprint + {a}" for a in []'),
     ("run binding removed", 'if run_id and head.get("run_id") != run_id:', "if False:"),
     ("committed-report check removed",
-     'elif not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \\\n'
-     '            or identity.git(root, "status", "--porcelain", "--", rep).strip():', "elif False:"),
+     'if not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \\\n'
+     '                or identity.git(root, "status", "--porcelain", "--", rep).strip():', "if False:"),
     ("set ratchet weakened to the pre-2026-10-13 count rule", "        if entered:",
      '        if v["ax"] > b["ax"]:'),
     ("stale refusal stops naming what moved",
      "Moved: {', '.join(moved) or '(file list unavailable)'}", "Moved: (not named)"),
     ("REVIEWED stamp may cite any file on the machine",
-     'elif Path(rep).is_absolute() or ".." in Path(rep).parts \\\n            or not (root / rep).resolve().is_relative_to(root.resolve()):',
+     'elif Path(rep).is_absolute() or ".." in Path(rep).parts \\\n            or not (FOUND / rep).resolve().is_relative_to(FOUND.resolve()):',
      "elif False:"),
     ("duplicate records accepted (last write wins)", "        if j.get(\"object\") in seen:", "        if False:"),
     ("self-contradicting baseline entries accepted",
@@ -611,17 +731,18 @@ def run() -> int:
     print("Part B — the refusals, end to end in a throwaway git repository")
     b_ok, b_lines = part_b()
     print("\n".join(b_lines))
-    n_b = sum(1 for ln in b_lines if ln.startswith("  [")) - 1
+    n_b = sum(1 for ln in b_lines if ln.startswith("  [") and "control" not in ln)
+    n_bc = sum(1 for ln in b_lines if ln.startswith("  [") and "control" in ln)
     if a_ok is False or not b_ok:
         print("  SELFTEST FAIL — a red path did not fire as specified, or a control fired")
         return tg.FAIL
     if a_ok is None:
-        print(f"  SELFTEST UNAVAILABLE — Part B passed ({n_b} injected faults + control); Part A needs a "
+        print(f"  SELFTEST UNAVAILABLE — Part B passed ({n_b} injected faults + {n_bc} controls); Part A needs a "
               "readable real signature set")
         return tg.UNAVAILABLE
     n_a = sum(1 for ln in a_lines if ln.startswith("  [ok] INJECTED"))
     print(f"  SELFTEST PASS — Part A: {n_a} injections + {len(a_lines) - n_a} controls on the real set; "
-          f"Part B: {n_b} injected faults + 1 control")
+          f"Part B: {n_b} injected faults + {n_bc} controls")
     return tg.OK
 
 

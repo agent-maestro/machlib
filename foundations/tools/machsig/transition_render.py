@@ -16,7 +16,7 @@ import transition as T
 
 STMT_CUT = 300
 KINDS = ("grew", "shrank", "swap", "restated", "redefined", "new", "removed")
-SCHEMA = "machsig-transition/v2"     # v2 (2026-10-13): the binding block a REVIEWED stamp is checked against
+SCHEMA = "machsig-transition/v3"     # v2: the binding block; v3 (2026-10-14): gate_transition, checked row for row
 
 
 def _set_id(axs) -> str:
@@ -112,6 +112,7 @@ def as_json(t: dict, manifest: dict, ev: dict) -> str:
     doc = {
         "schema": SCHEMA,
         "binding": t["binding"],
+        "gate_transition": t["gate_transition"],
         "evidence_sha256": manifest,
         "reconstruction": {"byte_identical": t["recon_identical"], "value_diffs": t["recon_value_diffs"],
                            "stale_local_set": stale_set_check(ev["sigs_old"].parent)},
