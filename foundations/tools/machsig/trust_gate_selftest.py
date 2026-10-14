@@ -58,10 +58,11 @@ def part_a() -> tuple[bool | None, list[str]]:
     lines = []
     if not tg.SIGS.is_file():
         return None, ["  [UNAVAILABLE] no real signature set; run tools/machsig/regen.py"]
-    head, live, problem = tg.read_signature_set(tg.SIGS)
+    head, cur, problem = tg.read_signature_set(tg.SIGS)
     if problem:
         return None, [f"  [UNAVAILABLE] the real signature set is unusable for injection: [{problem[0]}]"]
-    base = {k: {"d": v["d"], "ax": v["ax"], "axioms": list(v["axioms"])} for k, v in live.items()}
+    live = cur["theorems"]
+    base = {k: {"d": v["d"], "c": v["c"], "ax": v["ax"], "axioms": list(v["axioms"])} for k, v in live.items()}
     ok = True
 
     def check(cond: bool, text: str) -> None:
@@ -115,6 +116,36 @@ def part_a() -> tuple[bool | None, list[str]]:
     inj5 = {k: v for k, v in base.items() if k != swap}
     res5 = tg.compare(inj5, live)
     check(not convictions(res5) and res5["new"] == [swap], "control: a new theorem on declared axioms stays green")
+
+    # v0.4: the whole judgement, on the real set and the real declared policy
+    whole = {"theorems": base, "axioms": dict(cur["axioms"]), "policy": copy.deepcopy(cur["policy"])}
+    ctl = tg.judge(whole, cur)
+    check(not convictions(ctl), f"control: the real set judged against itself: no conviction, no policy violation "
+                                f"({len(cur['axioms'])} axioms pinned, allowlisted sorry {cur['policy']['allowed_sorry']})")
+    inj7 = copy.deepcopy(whole)
+    inj7["theorems"][swap]["c"] = "0" * 64
+    r7 = tg.judge(inj7, cur)
+    check(convictions(r7) == ["redefined"] and [x["theorem"] for x in r7["redefined"]] == [swap],
+          f"INJECTED definition change under {swap.split('.')[-1]} (E3, clamp): convicted as `redefined`")
+    ax = sorted(a for a in cur["axioms"] if a.startswith(("MachLib", "Certcom")))[0]
+    inj8 = copy.deepcopy(whole)
+    inj8["axioms"][ax] = "0" * 64
+    r8 = tg.judge(inj8, cur)
+    check(convictions(r8) == ["axiom-restated"] and r8["axiom-restated"] == [ax],
+          f"INJECTED restatement of axiom {ax.split('.')[-1]} under its own name: convicted as `axiom-restated`")
+    cur9 = copy.deepcopy(cur)
+    cur9["theorems"][swap]["axioms"] = sorted(cur9["theorems"][swap]["axioms"] + [tg.SORRY])
+    inj9 = copy.deepcopy(whole)
+    inj9["theorems"][swap]["axioms"] = list(cur9["theorems"][swap]["axioms"])   # grandfathered in the baseline
+    r9 = tg.judge(inj9, cur9)
+    check(convictions(r9) == ["policy-violation"] and [x["theorem"] for x in r9["policy-violation"]] == [swap],
+          "INJECTED sorryAx into a theorem the baseline already holds that way: `policy-violation` anyway")
+    promoted = cur["policy"]["trusted"][-1]
+    inj10 = copy.deepcopy(whole)
+    inj10["policy"]["trusted"] = [a for a in inj10["policy"]["trusted"] if a != promoted]
+    r10 = tg.judge(inj10, cur)
+    check(convictions(r10) == ["policy-widened"] and r10["policy-widened"] == [f"trustedFootprint + {promoted}"],
+          f"INJECTED promotion of {promoted.split('.')[-1]} into trustedFootprint (E1/E2): `policy-widened`")
     return ok, lines
 
 
@@ -126,12 +157,19 @@ GIT_ENV = {"GIT_AUTHOR_NAME": "machsig-selftest", "GIT_AUTHOR_EMAIL": "selftest@
 COPIED = ("tools/machsig/trust_gate.py", "tools/machsig/trust_gate_selftest.py") + identity.EXTRACTOR_FILES
 THEOREMS = {"Fx.alpha": ["Fx.ax_one", "propext"],
             "Fx.beta": ["Classical.choice", "Fx.ax_one", "Fx.ax_two", "Quot.sound", "propext"],
-            "Fx.gamma": []}
+            "Fx.gamma": ["sorryAx"]}                       # allowlisted below, like halve_in_unit_sorry
+AXIOMS = {a: hashlib.sha256(("stmt:" + a).encode()).hexdigest()
+          for a in ("Classical.choice", "Quot.sound", "propext", "sorryAx", "Fx.ax_one", "Fx.ax_two", "Fx.ax_three")}
+POLICY = {"known": ["Fx.ax_one", "Fx.ax_three", "Fx.ax_two"],
+          "trusted": ["Classical.choice", "Fx.ax_one", "Fx.ax_two", "Quot.sound", "propext"],
+          "allowed_sorry": ["Fx.gamma"]}
 
 
-def env() -> dict:
-    e = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+def env(extra: dict | None = None) -> dict:
+    # MACHSIG_RUN_ID is dropped: check_all.sh exports it for the REAL set, not for these fixtures
+    e = {k: v for k, v in os.environ.items() if not k.startswith("GIT_") and k != "MACHSIG_RUN_ID"}
     e.update(GIT_ENV)
+    e.update(extra or {})
     return e
 
 
@@ -140,17 +178,26 @@ def sh(repo: Path, *args: str) -> None:
                    capture_output=True)
 
 
-def write_sigs(found: Path, theorems: dict, header: bool = True, digests: dict | None = None) -> None:
+def write_sigs(found: Path, theorems: dict, header: bool = True, digests: dict | None = None,
+               closures: dict | None = None, axioms: dict | None = None, policy: dict | None = None,
+               run_id: str | None = None) -> None:
+    """A synthetic v0.4 signature set with the real writer's provenance header. `digests` / `closures`
+    perturb a theorem's StatementDigest / DefClosureDigest by name; `axioms` / `policy` replace the pins
+    and the declared policy."""
     sys.path.insert(0, str(found / "tools" / "machsig"))
     import sig                                         # the real writer's provenance format
     live = identity.live_identity(found)
-    ext = dict(live, lean_version="selftest", raw={})
-    lines = []
-    for name in sorted(theorems):
+    ext = dict(live, lean_version="selftest", raw={}, policy=policy or POLICY, run_id=run_id)
+    records = {}
+    for name in theorems:
         axs = sorted(theorems[name])
-        lines.append(json.dumps({"kind": "theorem", "object": name, "version": sig.VERSION,
-                                 "StatementDigest": hashlib.sha256((name + (digests or {}).get(name, "")).encode()).hexdigest(),
-                                 "TrustSig": f"AX{len(axs)}-S0", "TrustAxioms": axs}, sort_keys=True) + "\n")
+        records[name] = {"kind": "theorem", "object": name, "version": sig.VERSION,
+                         "StatementDigest": hashlib.sha256((name + (digests or {}).get(name, "")).encode()).hexdigest(),
+                         "DefClosureDigest": hashlib.sha256(("c:" + name + (closures or {}).get(name, "")).encode()).hexdigest(),
+                         "TrustSig": f"AX{len(axs)}-S0", "TrustAxioms": axs}
+    for a, h in (axioms or AXIOMS).items():
+        records[a] = {"kind": "axiom", "object": a, "version": sig.VERSION, "AxiomStatementDigest": h}
+    lines = [json.dumps(records[k], sort_keys=True) + "\n" for k in sorted(records)]
     body = "".join(lines).encode()
     head = json.dumps(sig.provenance_record(ext, body, len(lines)), sort_keys=True) + "\n"
     (found / "artifacts").mkdir(exist_ok=True)
@@ -205,8 +252,8 @@ def restamp(found: Path, previous) -> None:
     p.write_text(tg.dump_baseline(b))
 
 
-def run_gate(found: Path) -> tuple[int, str]:
-    r = subprocess.run([sys.executable, str(found / "tools/machsig/trust_gate.py")], cwd=found, env=env(),
+def run_gate(found: Path, extra: dict | None = None) -> tuple[int, str]:
+    r = subprocess.run([sys.executable, str(found / "tools/machsig/trust_gate.py")], cwd=found, env=env(extra),
                        capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
@@ -342,6 +389,36 @@ def cases():
         write_sigs(f, {k: v for k, v in THEOREMS.items() if k != "Fx.gamma"})
     def add_new(repo, f):
         write_sigs(f, dict(THEOREMS, **{"Fx.delta": ["propext"]}))
+    def sorry_new(repo, f):
+        write_sigs(f, dict(THEOREMS, **{"Fx.delta": ["propext", "sorryAx"]}))
+    def native_new(repo, f):
+        # DECLARED in knownAxioms, so only the compiler-trust rule can catch it (as theorem_ledger does)
+        nat = "Fx.delta._native.native_decide.ax_1_1"
+        write_sigs(f, dict(THEOREMS, **{"Fx.delta": [nat]}), policy=dict(POLICY, known=sorted(POLICY["known"] + [nat])),
+                   axioms=dict(AXIOMS, **{nat: hashlib.sha256(nat.encode()).hexdigest()}))
+    def undeclared_grandfathered(repo, f):
+        # the baseline itself holds the undeclared axiom: no baseline can make it pass
+        previous = json.loads((f / tg.BASE_REL).read_text())
+        ths = dict(THEOREMS, **{"Fx.beta": THEOREMS["Fx.beta"] + ["Fx.undeclared"]})
+        write_sigs(f, ths)
+        subprocess.run([sys.executable, str(f / "tools/machsig/trust_gate.py"), "--update"], cwd=f, env=env(),
+                       capture_output=True, check=True)
+        restamp(f, previous)
+        commit_all(repo, "a reviewed baseline that holds an undeclared axiom")
+    def axiom_restated(repo, f):
+        write_sigs(f, THEOREMS, axioms=dict(AXIOMS, **{"Fx.ax_one": hashlib.sha256(b"restated").hexdigest()}))
+    def redefined(repo, f):
+        write_sigs(f, THEOREMS, closures={"Fx.alpha": "clamp redefined"})
+    def promoted(repo, f):
+        write_sigs(f, THEOREMS, policy=dict(POLICY, trusted=sorted(POLICY["trusted"] + ["Fx.ax_three"])))
+    def sorry_allowlisted(repo, f):
+        write_sigs(f, THEOREMS, policy=dict(POLICY, allowed_sorry=["Fx.alpha", "Fx.gamma"]))
+    def other_run(repo, f):
+        write_sigs(f, THEOREMS, run_id="run-A")
+        return {"MACHSIG_RUN_ID": "run-B"}
+    def same_run(repo, f):
+        write_sigs(f, THEOREMS, run_id="run-A")
+        return {"MACHSIG_RUN_ID": "run-A"}
     def shallow(repo, f):
         # depth-1 clone: neither the provenance commit nor the previous baseline is reachable
         clone = repo.parent / "shallow"
@@ -395,6 +472,21 @@ def cases():
         ("B31 shallow clone: provenance and previous baseline unreachable", shallow, 3,
          ["baseline-provenance-unresolvable", "baseline-history-unavailable"], "fetch-depth: 0"),
         ("B32 control: a new theorem on declared axioms passes", add_new, 0, None, "MACHSIG-TRUST OK"),
+        ("B33 sorryAx in a NEW theorem (not allowlisted)", sorry_new, 1, None, "Fx.delta  rests on sorryAx"),
+        ("B34 native_decide's compiler-trust axiom in a NEW theorem, even when declared", native_new, 1, None,
+         "Fx.delta  rests on Fx.delta._native.native_decide.ax_1_1"),
+        ("B35 an UNDECLARED axiom the reviewed baseline already holds", undeclared_grandfathered, 1, None,
+         "Fx.beta  rests on Fx.undeclared"),
+        ("B36 an axiom restated under its own name (16 Certcom axioms, this window)", axiom_restated, 1, None,
+         "FAIL [axiom-restated]"),
+        ("B37 statement unchanged, a definition under it changed (E3, clamp)", redefined, 1, None,
+         "Fx.alpha  2 -> 2  axioms unchanged"),
+        ("B38 an axiom promoted into trustedFootprint (E1, E2)", promoted, 1, None, "trustedFootprint + Fx.ax_three"),
+        ("B39 the sorry allowlist grew", sorry_allowlisted, 1, None, "allowedSorry + Fx.alpha"),
+        ("B40 ATTACK 2 in a regenerating run: the set is from another run", other_run, 3,
+         "signatures-not-this-run", "'run-A'"),
+        ("B41 control: the set this run regenerated passes, without ADVISORY", same_run, 0, None,
+         "regenerated in this run (run-A)"),
     ]
 
 
@@ -409,9 +501,9 @@ def part_b(gate_text: str | None = None) -> tuple[bool, list[str]]:
         work = td / "case"
         shutil.copytree(pristine, work, symlinks=True)
         rc, out = run_gate(work / "foundations")
-        control = rc == 0 and "MACHSIG-TRUST OK" in out and not TAG.search(out)
+        control = rc == 0 and "MACHSIG-TRUST OK" in out and not TAG.search(out) and "MACHSIG-TRUST ADVISORY" in out
         lines.append(f"  [{'ok' if control else 'BROKEN'}] B0 control: fresh set, reviewed committed baseline "
-                     f"-> OK (rc {rc})")
+                     f"-> OK (rc {rc}), and a standalone run says ADVISORY")
         ok &= control
         if not control:
             lines.append("        " + out.strip().replace("\n", "\n        ")[:1500])
@@ -419,15 +511,16 @@ def part_b(gate_text: str | None = None) -> tuple[bool, list[str]]:
             shutil.rmtree(work)
             shutil.copytree(pristine, work, symlinks=True)
             try:
-                fault(work, work / "foundations")
+                extra = fault(work, work / "foundations")
             except (subprocess.CalledProcessError, OSError) as e:
                 lines.append(f"  [BROKEN] {name}: the fault could not be injected ({e})")
                 ok = False
                 continue
-            rc, out = run_gate(work / "foundations")
+            rc, out = run_gate(work / "foundations", extra if isinstance(extra, dict) else None)
             tags = TAG.findall(out)
             want_tags = [] if want_tag is None else (want_tag if isinstance(want_tag, list) else [want_tag])
-            good = rc == want_rc and tags == want_tags and want_text in out
+            good = rc == want_rc and tags == want_tags and want_text in out \
+                and not (name.startswith("B41") and "ADVISORY" in out)
             lines.append(f"  [{'ok' if good else 'BROKEN'}] {name} -> rc {rc}"
                          f"{', [' + tags[0] + ']' if len(tags) == 1 else (', tags ' + str(tags) if tags else '')}")
             if not good:
@@ -466,6 +559,14 @@ MUTANTS = [
      '("restated", "statement CHANGED: a different claim the baseline has not reviewed"),', ""),
     ("removal passes again (pre-2026-10-13)",
      '("removed", "theorem LEFT the watched set (deleted, renamed, made private or moved): unreviewed"),', ""),
+    ("definition-closure comparison removed", 'if b.get("c") != v.get("c"):', "if False:"),
+    ("sorryAx outside the allowlist accepted", '(a == SORRY and k not in allowed) or ', ""),
+    ("compiler-trust axioms accepted", "or is_compiler_trust(a)\n", "\n"),
+    ("undeclared axioms accepted", "or (a != SORRY and a not in declared))", ")"),
+    ("axiom statements not compared", "and base[\"axioms\"][a] != cur[\"axioms\"][a])", "and False)"),
+    ("trustedFootprint growth ignored", 'res["policy-widened"] = [f"trustedFootprint + {a}" for a in cur["policy"]["trusted"]',
+     'res["policy-widened"] = [f"trustedFootprint + {a}" for a in []'),
+    ("run binding removed", 'if run_id and head.get("run_id") != run_id:', "if False:"),
     ("committed-report check removed",
      'elif not identity.git_ok(root, "ls-files", "--error-unmatch", "--", rep) \\\n'
      '            or identity.git(root, "status", "--porcelain", "--", rep).strip():', "elif False:"),
@@ -478,7 +579,8 @@ MUTANTS = [
      "elif False:"),
     ("duplicate records accepted (last write wins)", "        if j.get(\"object\") in seen:", "        if False:"),
     ("self-contradicting baseline entries accepted",
-     'if axs is None or len(axs) != e.get("ax") or not isinstance(e.get("d"), str):', "if axs is None:"),
+     'axs is None or len(axs) != e.get("ax") or not isinstance(e.get("d"), str) \\\n'
+     '                or not HEX64.match(str(e.get("c"))):', "axs is None:"),
 ]
 
 

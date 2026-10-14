@@ -112,11 +112,17 @@ else
   # gitignored artifacts/), prove the red paths, then run the real comparison on its own line -- the gate
   # REFUSES (rc 3) a stale/unidentified set, an uncommitted or unreviewed baseline, or one without
   # provenance, so a missing step reads as a failure, never as green.
+  # MACHSIG_RUN_ID binds the gate to THIS run's extraction: regen.py records it, the gate refuses a set with
+  # another run's id. A set's identity is self-declared (a stale set can be relabelled -- attack 2 of the
+  # 2026-10-13 review), so only regenerating in the same run makes the verdict more than advisory.
+  MACHSIG_RUN_ID="check_all-$(date -u +%Y%m%dT%H%M%SZ)-$$-${RANDOM}"
+  export MACHSIG_RUN_ID
   run "machsig-extract" python3 tools/machsig/regen.py
   run "machsig-trust-selftest" python3 tools/machsig/trust_gate.py --selftest-only
-  # DOCTRINE 4b: 15 mutant gates, each must be killed by the selftest. ~20 s; mutants live only in temp dirs.
+  # DOCTRINE 4b: 28 mutant gates, each must be killed by the selftest. ~95 s; mutants live only in temp dirs.
   run "machsig-trust-mutate" python3 tools/machsig/trust_gate.py --mutate
   run "machsig-trust" python3 tools/machsig/trust_gate.py
+  unset MACHSIG_RUN_ID
   run "claims"       python3 tools/claim_audit/claim_audit.py
   # The canaries cost ~8s; `--self-test` looked unwireable only because it ALSO re-runs the full
   # 506-claim audit that the gate above already performs. `--self-test-only` is the canaries alone.

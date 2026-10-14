@@ -6,8 +6,22 @@ FAILS when a watched theorem changes in a way that has not been reviewed.
   statement UNCHANGED, an axiom ENTERED   -> FAIL (the same claim now rests on something new)
   statement UNCHANGED, axioms only left   -> PASS; the baseline is stale (a reviewed rebaseline)
   statement CHANGED (restated)            -> FAIL until a reviewed rebaseline, whatever its axioms
+  statement same, DEFINITIONS changed     -> FAIL until a reviewed rebaseline (redefined)
   theorem REMOVED from the watched set    -> FAIL until a reviewed rebaseline
-  new theorem                             -> INFO
+  sorryAx (not allowlisted), compiler
+    trust or an UNDECLARED axiom in ANY
+    watched theorem, new or old           -> FAIL, always (policy-violation)
+  an AXIOM restated under the same name   -> FAIL until a reviewed rebaseline (axiom-restated)
+  trustedFootprint or the sorry allowlist
+    GREW since the baseline               -> FAIL until a reviewed rebaseline (policy-widened)
+  new theorem on declared axioms          -> INFO
+
+v0.4 (2026-10-13). `redefined` closes E3 of the independent review: StatementDigest hashes the stored
+type, so redefining `clamp` changed thirty watched theorems' meaning with no digest change; each
+theorem now also carries a DefClosureDigest over the definitions its statement reaches.
+`axiom-restated` closes the pinning gap: sixteen Certcom axioms were restated under their old names
+in one window. `policy-widened` makes E1/E2 visible: `pi_lower_bound` and `realPow` entered
+trustedFootprint in the very commits that started using them, and the gate classed nothing.
 
 CLOSED BY DEFAULT (2026-10-13, after an independent review). Until then a restatement and a removal
 were INFO, and both laundered a growth: change a statement cosmetically and let sorryAx in, or move a
@@ -41,9 +55,15 @@ cannot fire must not read as "checked and clean", so each of these is now its ow
                          [review-report-invalid]     the stamp's report is not a transition report
                          [review-report-mismatch]    the report does not describe this transition
                          [baseline-history-unavailable] the previous baseline cannot be read from git
+                         [signatures-not-this-run]   MACHSIG_RUN_ID is set and the set is from another run
   FAIL        (exit 1)   see the table above
 
 `--selftest` proves every one of these red paths by fault injection (trust_gate_selftest.py).
+
+STANDALONE RUNS ARE ADVISORY. The set's identity is self-declared: a stale set relabelled with a fresh
+header passes (attack 2 of the review). check_all.sh and CI therefore regenerate the set in the same
+run and export MACHSIG_RUN_ID; regen.py records it and the gate refuses a set with another run's id.
+Run standalone (no MACHSIG_RUN_ID), the gate says its verdict is advisory.
 
     python3 tools/machsig/regen.py               # extract signatures for THIS tree
     python3 tools/machsig/trust_gate.py           # the gate
@@ -72,6 +92,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -84,7 +105,12 @@ BASE_REL = "tools/machsig/trust_baseline.json"
 BASE = FOUND / BASE_REL
 SIGS = FOUND / "artifacts" / "machsig_signatures.jsonl"
 OK, FAIL, UNAVAILABLE, REFUSED = 0, 1, 2, 3
-BASELINE_SCHEMA = "machsig-trust-baseline/v2"
+BASELINE_SCHEMA = "machsig-trust-baseline/v3"
+SORRY = "sorryAx"
+#: tools/theorem_ledger/ledger.py's compiler-trust test, copied: native_decide leaves `_native...ax_N`.
+COMPILER_TRUST = ("Lean.ofReduceBool", "Lean.ofReduceNat", "Lean.trustCompiler")
+NATIVE_AXIOM = re.compile(r"(^|\.)_native\..+\.ax(_\d+)*$")
+HEX64 = re.compile(r"^[0-9a-f]{64}$")
 REGEN = "python3 tools/machsig/regen.py"
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -94,9 +120,10 @@ PROVENANCE_FIELDS = ("machlib_commit", "machlib_sources", "content_digest", "ext
 
 # ── the signature set ──────────────────────────────────────────────────────────────────────────────
 
-def parse_records(body: bytes) -> tuple[dict, list[str]]:
-    """{theorem: {"d", "ax", "axioms"}} for every theorem whose trust layer is known."""
-    out, bad, seen = {}, [], set()
+def parse_records(body: bytes) -> tuple[dict, dict, list[str]]:
+    """({theorem: {"d", "c", "ax", "axioms"}} for every theorem whose trust layer is known,
+        {axiom: statement digest}, problems)."""
+    out, axioms_pinned, bad, seen = {}, {}, [], set()
     for ln in body.decode("utf-8").split("\n"):
         if not ln.strip():
             continue
@@ -105,6 +132,12 @@ def parse_records(body: bytes) -> tuple[dict, list[str]]:
             bad.append(f"{j.get('object')} (twice)")   # last-write-wins would hide whichever came first
             continue
         seen.add(j.get("object"))
+        if j.get("kind") == "axiom":
+            if not HEX64.match(str(j.get("AxiomStatementDigest"))):
+                bad.append(f"{j.get('object')} (axiom without a statement digest)")
+            else:
+                axioms_pinned[j["object"]] = j["AxiomStatementDigest"]
+            continue
         if j.get("kind") != "theorem":
             continue          # StatementDigest is meaningless for non-theorems
         ax = None
@@ -117,15 +150,16 @@ def parse_records(body: bytes) -> tuple[dict, list[str]]:
         axioms = j.get("TrustAxioms")
         if ax is None or axioms is None:
             continue          # trust layer unknown (out of the census's scope): not watched
-        if len(axioms) != ax:
+        if len(axioms) != ax or not HEX64.match(str(j.get("DefClosureDigest"))):
             bad.append(j["object"])
             continue
-        out[j["object"]] = {"d": j["StatementDigest"][:32], "ax": ax, "axioms": sorted(axioms)}
-    return out, bad
+        out[j["object"]] = {"d": j["StatementDigest"][:32], "c": j["DefClosureDigest"], "ax": ax,
+                            "axioms": sorted(axioms)}
+    return out, axioms_pinned, bad
 
 
 def read_signature_set(path: Path):
-    """(provenance or None, records, refusal or None)."""
+    """(provenance or None, {"theorems", "axioms", "policy"}, refusal or None)."""
     data = path.read_bytes()
     nl = data.find(b"\n")
     try:
@@ -144,11 +178,21 @@ def read_signature_set(path: Path):
                           f"{path.name} holds {n} records (sha256 {digest[7:23]}...) but its header "
                           f"records {head.get('records')} ({str(head.get('records_sha256'))[7:23]}...): "
                           f"truncated or edited. Regenerate: {REGEN}")
-    records, bad = parse_records(body)
+    theorems, axioms_pinned, bad = parse_records(body)
     if bad:
-        return head, {}, ("signatures-corrupt", f"{len(bad)} record(s) duplicated or whose TrustAxioms "
-                                                f"disagree with their AX count, first {bad[0]}. Regenerate: {REGEN}")
-    return head, records, None
+        return head, {}, ("signatures-corrupt", f"{len(bad)} record(s) duplicated, lacking a v0.4 digest, or whose "
+                                                f"TrustAxioms disagree with their AX count, first {bad[0]}. "
+                                                f"Regenerate: {REGEN}")
+    policy = head.get("policy")
+    if not (isinstance(policy, dict) and all(isinstance(policy.get(k), list)
+                                             for k in ("known", "trusted", "allowed_sorry"))):
+        return head, {}, ("signatures-unidentified", f"{path.name} records no declared axiom policy (pre-v0.4): "
+                                                     f"the gate cannot judge footprints. Regenerate: {REGEN}")
+    return head, {"theorems": theorems, "axioms": axioms_pinned, "policy": norm_policy(policy)}, None
+
+
+def norm_policy(p: dict) -> dict:
+    return {k: sorted(set(p[k])) for k in ("known", "trusted", "allowed_sorry")}
 
 
 def freshness(head: dict, live: dict) -> list[tuple[str, str]]:
@@ -197,15 +241,20 @@ def decode_baseline(b) -> tuple[dict | None, dict | None, tuple[str, str] | None
                             f"{BASE_REL} provenance is incomplete or malformed (missing {missing or 'none'}; "
                             "commit must be 40 hex, digests sha256:<64 hex>)")
     sets, thms = b.get("axiom_sets"), b.get("theorems")
-    if not isinstance(sets, dict) or not isinstance(thms, dict):
-        return prov, None, ("baseline-malformed", f"{BASE_REL} lacks axiom_sets/theorems tables")
+    pins, policy = b.get("axiom_statements"), b.get("policy")
+    if not isinstance(sets, dict) or not isinstance(thms, dict) or not isinstance(pins, dict) \
+            or not (isinstance(policy, dict) and all(isinstance(policy.get(k), list)
+                                                     for k in ("known", "trusted", "allowed_sorry"))):
+        return prov, None, ("baseline-malformed", f"{BASE_REL} lacks axiom_sets/theorems/axiom_statements/policy")
     out, bad = {}, []
     for name, e in thms.items():
         axs = sets.get(e.get("set")) if isinstance(e, dict) else None
-        if axs is None or len(axs) != e.get("ax") or not isinstance(e.get("d"), str):
+        if axs is None or len(axs) != e.get("ax") or not isinstance(e.get("d"), str) \
+                or not HEX64.match(str(e.get("c"))):
             bad.append(name)
             continue
-        out[name] = {"d": e["d"], "ax": e["ax"], "axioms": list(axs)}
+        out[name] = {"d": e["d"], "c": e["c"], "ax": e["ax"], "axioms": list(axs)}
+    bad += [f"axiom pin {a}" for a, h in pins.items() if not HEX64.match(str(h))]
     for sid, axs in sets.items():
         if set_id(axs) != sid:
             bad.append(f"axiom set {sid}")
@@ -213,7 +262,7 @@ def decode_baseline(b) -> tuple[dict | None, dict | None, tuple[str, str] | None
         return prov, None, ("baseline-malformed", f"{len(bad)} entr(ies) in {BASE_REL} contradict themselves "
                                                   f"(set missing, count != set size, or set id != content), "
                                                   f"first {bad[0]}")
-    return prov, out, None
+    return prov, {"theorems": out, "axioms": dict(pins), "policy": norm_policy(policy)}, None
 
 
 def set_id(axioms) -> str:
@@ -324,7 +373,7 @@ def review_state(b: dict, root: Path) -> list[tuple[str, str]]:
 def compare(base: dict, cur: dict) -> dict:
     """The ratchet's whole decision. Pure: the selftest calls exactly this. Every list but `shrank`
     and `new` is a conviction."""
-    acquired, shrank, restated, new = [], [], [], []
+    acquired, shrank, restated, redefined, new = [], [], [], [], []
     for k in sorted(cur):
         v = cur[k]
         if k not in base:
@@ -338,27 +387,72 @@ def compare(base: dict, cur: dict) -> dict:
             # different and the baseline says nothing about it until a person has looked.
             restated.append({"theorem": k, "entered": entered, "left": left, "from": b["ax"], "to": v["ax"]})
             continue
+        if b.get("c") != v.get("c"):
+            # Same stored statement, different definitions under it: the claim's MEANING moved.
+            redefined.append({"theorem": k, "entered": entered, "left": left, "from": b["ax"], "to": v["ax"]})
         if entered:
             acquired.append({"theorem": k, "entered": entered, "left": left, "from": b["ax"], "to": v["ax"]})
-        elif left:
+        elif left and b.get("c") == v.get("c"):
             shrank.append(k)
     gone = sorted(k for k in base if k not in cur)
-    return {"acquired": acquired, "shrank": shrank, "restated": restated, "new": new, "removed": gone}
+    return {"acquired": acquired, "shrank": shrank, "restated": restated, "redefined": redefined, "new": new,
+            "removed": gone}
+
+
+def is_compiler_trust(a: str) -> bool:
+    return a in COMPILER_TRUST or bool(NATIVE_AXIOM.search(a))
+
+
+def policy_violations(theorems: dict, policy: dict) -> list[dict]:
+    """theorem_ledger's `unchecked` reasons, in ANY watched theorem: sorryAx outside the allowlist, a
+    compiler-trust axiom, an axiom the policy does not declare. Judged against the policy the tree
+    declares now (the signature set's), so no baseline can grandfather one in."""
+    declared = set(policy["known"]) | set(policy["trusted"])
+    allowed = set(policy["allowed_sorry"])
+    out = []
+    for k in sorted(theorems):
+        bad = sorted(a for a in theorems[k]["axioms"]
+                     if (a == SORRY and k not in allowed) or is_compiler_trust(a)
+                     or (a != SORRY and a not in declared))
+        if bad:
+            out.append({"theorem": k, "axioms": bad})
+    return out
+
+
+def judge(base: dict, cur: dict) -> dict:
+    """Everything the gate decides, from a decoded baseline and a read signature set. Pure."""
+    res = compare(base["theorems"], cur["theorems"])
+    res["policy-violation"] = policy_violations(cur["theorems"], cur["policy"])
+    res["axiom-restated"] = sorted(a for a in base["axioms"] if a in cur["axioms"]
+                                   and base["axioms"][a] != cur["axioms"][a])
+    res["axioms-gone"] = sorted(a for a in base["axioms"] if a not in cur["axioms"])
+    res["axioms-new"] = sorted(a for a in cur["axioms"] if a not in base["axioms"])
+    res["policy-widened"] = [f"trustedFootprint + {a}" for a in cur["policy"]["trusted"]
+                             if a not in base["policy"]["trusted"]] + \
+                            [f"allowedSorry + {a}" for a in cur["policy"]["allowed_sorry"]
+                             if a not in base["policy"]["allowed_sorry"]]
+    return res
 
 
 CONVICTIONS = (
     ("acquired", "same statement, an axiom ENTERED its footprint"),
     ("restated", "statement CHANGED: a different claim the baseline has not reviewed"),
+    ("redefined", "statement unchanged, but a DEFINITION it rests on changed: its meaning moved"),
     ("removed", "theorem LEFT the watched set (deleted, renamed, made private or moved): unreviewed"),
+    ("policy-violation", "sorryAx outside the allowlist, compiler trust or an UNDECLARED axiom in a watched theorem"),
+    ("axiom-restated", "an AXIOM's statement changed under the same name"),
+    ("policy-widened", "trustedFootprint or the sorry allowlist GREW since the baseline"),
 )
 
 
 def _describe(key: str, item) -> str:
     if isinstance(item, str):
         return f"  - {item}"
+    if key == "policy-violation":
+        return f"  - {item['theorem']}  rests on {', '.join(item['axioms'])}"
     ent = f"entered {', '.join(item['entered'][:3])}" + (f" (+{len(item['entered']) - 3} more)"
                                                          if len(item["entered"]) > 3 else "")
-    if key == "restated":
+    if key in ("restated", "redefined"):
         moved = ent if item["entered"] else ("axioms shrank" if item["left"] else "axioms unchanged")
         return f"  - {item['theorem']}  {item['from']} -> {item['to']}  {moved}"
     return f"  - {item['theorem']}  {item['from']} -> {item['to']}  {ent}"
@@ -366,7 +460,8 @@ def _describe(key: str, item) -> str:
 
 def report(res: dict, n: int) -> int:
     print(f"  theorems compared : {n}")
-    print(f"  new: {len(res['new'])}   footprint shrank: {len(res['shrank'])}")
+    print(f"  new: {len(res['new'])}   footprint shrank: {len(res['shrank'])}   "
+          f"axioms gone: {len(res.get('axioms-gone', []))}   axioms new: {len(res.get('axioms-new', []))}")
     for key, text in CONVICTIONS:
         print(f"  {key:<17} : {len(res[key])}")
     bad = [(k, t) for k, t in CONVICTIONS if res[k]]
@@ -382,7 +477,8 @@ def report(res: dict, n: int) -> int:
                 print(f"  ... and {len(items) - 12} more")
         print(f"\nMACHSIG-TRUST FAIL — {', '.join(k for k, _ in bad)}; a reviewed rebaseline is the only way through.")
         return FAIL
-    print("\nMACHSIG-TRUST OK — no watched theorem was restated, removed or acquired an axiom.")
+    print("\nMACHSIG-TRUST OK — no watched theorem was restated, redefined, removed or acquired an axiom; "
+          "no axiom was restated; the policy did not widen; nothing rests on sorry or an undeclared axiom.")
     return OK
 
 
@@ -413,10 +509,15 @@ def gate(root: Path = FOUND) -> int:
         return unavailable("no-git", f"cannot identify the live tree: {e}")
     refusals: list[tuple[str, str]] = []
     head, cur, problem = read_signature_set(sigs)
+    run_id = os.environ.get("MACHSIG_RUN_ID") or None
     if problem:
         refusals.append(problem)
     else:
         refusals += freshness(head, live)
+        if run_id and head.get("run_id") != run_id:
+            refusals.append(("signatures-not-this-run",
+                             f"MACHSIG_RUN_ID is {run_id!r} but the signature set was extracted in run "
+                             f"{head.get('run_id')!r}: this run did not regenerate it. Regenerate: {REGEN}"))
     git_refusals = baseline_git_state(root)
     refusals += git_refusals
     try:
@@ -444,10 +545,16 @@ def gate(root: Path = FOUND) -> int:
     if refusals:
         return refuse(refusals)
     print(f"  signatures: {head['version']} from {head['machlib_commit'][:12]} "
-          f"(sources {head['content_digest'][7:23]}..., matches this tree)")
+          f"(sources {head['content_digest'][7:23]}..., matches this tree)"
+          + (f", regenerated in this run ({run_id})" if run_id else ""))
     print(f"  baseline  : derived from {raw['provenance']['machlib_commit'][:12]}, reviewed by "
           f"{raw['review']['reviewer']} ({raw['review']['transition_report']})")
-    return report(compare(base, cur), len(cur))
+    rc = report(judge(base, cur), len(cur["theorems"]))
+    if not run_id:
+        print("MACHSIG-TRUST ADVISORY — standalone run: MACHSIG_RUN_ID is unset, so nothing shows this run "
+              "regenerated the signature set; its identity is self-declared. The verdict holds only for a set "
+              "regen.py extracted from this tree. check_all.sh and CI regenerate it in the same run.")
+    return rc
 
 
 def update(root: Path = FOUND) -> int:
@@ -469,10 +576,14 @@ def update(root: Path = FOUND) -> int:
         return refuse(refusals)
     sets: dict[str, list[str]] = {}
     thms = {}
-    for k, v in cur.items():
+    for k, v in cur["theorems"].items():
         sid = set_id(v["axioms"])
         sets[sid] = v["axioms"]
-        thms[k] = {"ax": v["ax"], "d": v["d"], "set": sid}
+        thms[k] = {"ax": v["ax"], "c": v["c"], "d": v["d"], "set": sid}
+    viol = policy_violations(cur["theorems"], cur["policy"])
+    if viol:
+        print(f"MACHSIG-TRUST WARNING — {len(viol)} theorem(s) violate the declared policy (first "
+              f"{viol[0]['theorem']}: {', '.join(viol[0]['axioms'])}); the gate FAILS on them whatever the baseline says.")
     doc = {
         "schema": BASELINE_SCHEMA,
         "provenance": {
@@ -486,6 +597,8 @@ def update(root: Path = FOUND) -> int:
                    "note": "written by trust_gate.py --update; the gate refuses it until a person who "
                            "reviewed the transition report sets status REVIEWED, names themselves, cites the "
                            "committed transition JSON and copies --content-digest into baseline_sha256"},
+        "policy": cur["policy"],
+        "axiom_statements": dict(sorted(cur["axioms"].items())),
         "axiom_sets": sets,
         "theorems": thms,
     }
@@ -502,7 +615,7 @@ def dump_baseline(doc: dict) -> str:
     for i, k in enumerate(keys):
         tail = "," if i < len(keys) - 1 else ""
         v = doc[k]
-        if k in ("axiom_sets", "theorems"):
+        if k in ("axiom_sets", "theorems", "axiom_statements"):
             lines.append(f"{json.dumps(k)}: {{")
             items = sorted(v.items())
             for j, (name, e) in enumerate(items):

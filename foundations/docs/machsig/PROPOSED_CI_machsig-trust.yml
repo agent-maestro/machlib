@@ -12,7 +12,7 @@
 #   regen.py: extract_statement    ~1 min     (20-23 s locally)
 #   regen.py: extract.lean         ~15-25 min (8.5-10.4 min locally, single-threaded; CI cores are
 #                                              ~2x slower on the cold-build ratio)
-#   census + sig + selftest + gate  <1 min    (selftest: 23 throwaway git repos ~4 s; --mutate ~20 s)
+#   census + sig + selftest + gate  <1 min    (selftest: 42 throwaway git repos ~5 s; --mutate 28 mutants ~95 s)
 #   total                          ~30-40 min; timeout set at 75.
 # extract.lean dominates. Its cost is NOT the axiom walk (Lean v4.32 collectAxioms reads per-module
 # precomputed data); the c3046961 note blames the unshared constsIn traversal of proof terms. Making
@@ -38,6 +38,9 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     timeout-minutes: 75
+    # Binds the gate to the set THIS job extracts (regen.py records it; the gate refuses another run's set).
+    env:
+      MACHSIG_RUN_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       # fetch-depth 0: the gate checks that the baseline's provenance commit exists in this
       # repository ([baseline-provenance-unresolvable]); a shallow clone would refuse.
@@ -64,11 +67,11 @@ jobs:
         working-directory: foundations
         run: python3 tools/machsig/regen.py
 
-      - name: Gate selftest (fault injection on the real set + 22 end-to-end faults)
+      - name: Gate selftest (fault injection on the real set + 41 end-to-end faults)
         working-directory: foundations
         run: python3 tools/machsig/trust_gate.py --selftest-only
 
-      # DOCTRINE 4b: 15 mutant gates (in temp dirs only); the selftest must kill every one. ~20 s.
+      # DOCTRINE 4b: 28 mutant gates (in temp dirs only); the selftest must kill every one. ~95 s.
       - name: Gate mutation test
         working-directory: foundations
         run: python3 tools/machsig/trust_gate.py --mutate

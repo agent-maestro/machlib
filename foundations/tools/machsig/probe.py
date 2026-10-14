@@ -77,6 +77,15 @@ def policy(root: Path) -> dict:
     raise RuntimeError(f"policy probe printed no MACHSIG_POLICY line (rc {rc}): {out[-800:]}")
 
 
+def allowed_sorry(root: Path) -> list[str]:
+    """tools/sorry_audit.lean's `allowedSorry`, read as text: the backticked names in the list."""
+    src = (root / "tools" / "sorry_audit.lean").read_text(encoding="utf-8")
+    if "def allowedSorry" not in src:
+        raise RuntimeError("tools/sorry_audit.lean defines no allowedSorry")
+    block = src.split("def allowedSorry", 1)[1].split("]", 1)[0]
+    return sorted(set(re.findall(r"^\s*`([A-Za-z0-9_.'\u00ab\u00bb]+)", block, re.M)))
+
+
 def statements(root: Path, names: list[str]) -> dict:
     with tempfile.TemporaryDirectory(prefix="machsig-names-") as td:
         nf = Path(td) / "names.txt"

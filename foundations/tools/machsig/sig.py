@@ -23,6 +23,15 @@ raw extraction was produced by tools/machsig/regen.py, which is what binds it to
 signature set nobody can date is the defect that left the trust gate blind from 2026-09-03 to
 2026-10-13.
 
+v0.4 (2026-10-13), after an independent review: every theorem record also carries
+`DefClosureDigest` (SHA-256 over the definitions its statement reaches, stopping at axioms, opaque
+constants and theorems: redefining `clamp` changed thirty watched theorems with no StatementDigest
+change), every axiom record `AxiomStatementDigest` (sixteen axioms were restated under the same
+name in one window), and the header the declared POLICY the gate judges footprints against. Axiom
+records are added for axioms outside the statement census (Lean's own, and any the name filter
+dropped). TrustAxioms must agree with extract_trust.lean's independent collectAxioms call on every
+theorem both cover, or nothing is written.
+
 TWO LAYERS, NOT THREE. Phase 2 established that the canonical layer has no referent in this corpus
 (docs/machsig/CANONICALIZER_BRIDGE.md), so `CanonicalSig` is reported as explicitly UNAVAILABLE
 rather than silently filled with the source form.
@@ -36,11 +45,12 @@ import json, hashlib, sys, pathlib, collections
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import identity  # noqa: E402
+import trust_closure  # noqa: E402
 
 FOUND = pathlib.Path(__file__).resolve().parent.parent.parent
-VERSION = "MachSig/v0.3"
+VERSION = "MachSig/v0.4"
 EXTRACTION = FOUND / "artifacts" / "machsig_extraction.json"
-RAW_FILES = ("machsig_stmt_raw.tsv", "machsig_raw.tsv")
+RAW_FILES = ("machsig_stmt_raw.tsv", "machsig_raw.tsv", "machsig_trust_raw.tsv")
 
 # field abbreviation -> (source key, meaning). Documented in docs/machsig/SIGNATURE_SPEC.md.
 STMT_FIELDS = [("N", "nodes",           "statement_expr_node_count"),
@@ -166,11 +176,49 @@ def extraction_identity() -> dict:
 
 def provenance_record(ext: dict, body: bytes, n: int) -> dict:
     keep = ("machlib_commit", "machlib_sources", "sources_clean", "dirty_source_paths", "content_digest",
-            "content_files", "extractor_digest", "extractor_files", "lean_toolchain", "lean_version", "raw")
+            "content_files", "extractor_digest", "extractor_files", "lean_toolchain", "lean_version", "raw",
+            "policy", "run_id")
     rec = {k: ext[k] for k in keep}
     rec.update({"kind": identity.PROVENANCE_KIND, "schema": identity.PROVENANCE_SCHEMA, "version": VERSION,
                 "records": n, "records_sha256": "sha256:" + hashlib.sha256(body).hexdigest()})
     return rec
+
+
+def trust_records(stmt: dict, dec: dict, trust: dict, closure: dict) -> list[dict]:
+    """Every signature record, sorted by object, with the v0.4 trust fields joined in."""
+    records = {}
+    for name in sorted(stmt):
+        r = sig_for(name, stmt, dec)
+        if r:
+            records[name] = r
+    disagree, unclosed = [], []
+    for name, r in records.items():
+        if r["kind"] != "theorem" or r["TrustAxioms"] is None:
+            continue
+        t = trust["theorems"].get(name)
+        if t is None:
+            unclosed.append(name)
+            continue
+        if t["axioms"] != r["TrustAxioms"]:
+            disagree.append(name)
+        r["DefClosureDigest"] = closure[name]
+    if disagree:
+        raise Refused(f"extract.lean and extract_trust.lean disagree on the axiom set of {len(disagree)} "
+                      f"theorem(s), first {disagree[0]}: two calls of collectAxioms must agree")
+    if unclosed:
+        raise Refused(f"{len(unclosed)} watched theorem(s) absent from extract_trust.lean's population, "
+                      f"first {unclosed[0]}")
+    for name, a in trust["axioms"].items():
+        r = records.get(name)
+        if r is None:
+            records[name] = {"version": VERSION, "object": name, "kind": "axiom", "module": a["module"],
+                             "AxiomStatementDigest": a["statement_sha256"],
+                             "note": "axiom outside the statement census: pinned, no StatementSig"}
+        elif r["kind"] == "axiom":
+            r["AxiomStatementDigest"] = a["statement_sha256"]
+        else:
+            raise Refused(f"{name} is an axiom to extract_trust.lean but a {r['kind']} to the statement census")
+    return [records[k] for k in sorted(records)]
 
 
 def main(argv):
@@ -204,12 +252,15 @@ def main(argv):
         except Refused as e:
             print(f"sig: REFUSED -- {e}", file=sys.stderr)
             return 1
+        try:
+            trust = trust_closure.parse(FOUND / "artifacts" / "machsig_trust_raw.tsv")
+            closure = trust_closure.closure_digests(trust)
+            records = trust_records(stmt, dec, trust, closure)
+        except (Refused, trust_closure.Malformed) as e:
+            print(f"sig: REFUSED -- {e}", file=sys.stderr)
+            return 1
         out = FOUND / "artifacts" / "machsig_signatures.jsonl"
-        lines = []
-        for name in sorted(stmt):
-            r = sig_for(name, stmt, dec)
-            if r:
-                lines.append(json.dumps(r, sort_keys=True) + "\n")
+        lines = [json.dumps(r, sort_keys=True) + "\n" for r in records]
         n = len(lines)
         body = "".join(lines).encode("utf-8")
         head = json.dumps(provenance_record(ext, body, n), sort_keys=True) + "\n"

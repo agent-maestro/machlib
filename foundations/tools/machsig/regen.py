@@ -21,6 +21,13 @@ WHAT IT DOES, IN ORDER, AND WHY EACH STEP
   5. publishes the raw files with artifacts/machsig_extraction.json (identity + raw digests), then
      runs census.py --no-report and sig.py sigs.
 
+v0.4 (2026-10-13): a third extractor, extract_trust.lean (axiom statements, the theorem population,
+the definition-closure graph), and the declared POLICY -- AxiomLedger's knownAxioms and
+trustedFootprint (probe.policy, AxiomLedger.lean's own text plus a probe) and sorry_audit.lean's
+allowedSorry -- recorded in the identity, because the gate now judges every footprint against it.
+MACHSIG_RUN_ID, when set (check_all.sh and CI set it), is recorded too: the gate then refuses a set
+some other run produced, and without it prints that its verdict is advisory.
+
 It writes only under artifacts/ (gitignored), so it is safe inside check_all.sh's tree freeze.
 
 EXIT STATUS: 0 signature set written; 1 a step failed or the tree moved (nothing published);
@@ -38,11 +45,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import identity  # noqa: E402
+import probe  # noqa: E402
 
 FOUND = identity.FOUND
 ART = FOUND / "artifacts"
 CAPPED = FOUND / "tools" / "capped_lean.sh"
 EXTRACTORS = (("tools/machsig/extract_statement.lean", "machsig_stmt_raw.tsv", "machsig_stmt.err"),
+              ("tools/machsig/extract_trust.lean", "machsig_trust_raw.tsv", "machsig_trust.err"),
               ("tools/machsig/extract.lean", "machsig_raw.tsv", "machsig_raw.err"))
 ID_KEYS = ("machlib_commit", "content_digest", "extractor_digest", "lean_toolchain")
 
@@ -96,6 +105,15 @@ def main(argv: list[str]) -> int:
         if rc != 0:
             print(f"REGEN FAILED -- {src} exit {rc} (see artifacts/{err}); nothing published")
             return 1
+    t0 = time.monotonic()
+    try:
+        pol = probe.policy(FOUND)
+        policy = {"known": pol["known"], "trusted": pol["trusted"], "allowed_sorry": probe.allowed_sorry(FOUND),
+                  "axiom_ledger_rc": pol["axiom_ledger_rc"]}
+    except (RuntimeError, OSError) as e:
+        print(f"REGEN FAILED -- could not read the declared axiom policy: {e}")
+        return 1
+    timings["policy probe"] = time.monotonic() - t0
     post = identity.live_identity(FOUND)
     moved = [k for k in ID_KEYS if pre[k] != post[k]]
     if moved:
@@ -109,7 +127,8 @@ def main(argv: list[str]) -> int:
         os.replace(ART / (out + ".tmp"), ART / out)
         raw[out] = identity.sha256_file(ART / out)
     ident = {k: pre[k] for k in pre}
-    ident.update({"schema": "machsig-extraction/v1", "lean_version": lean_version, "raw": raw})
+    ident.update({"schema": "machsig-extraction/v2", "lean_version": lean_version, "raw": raw, "policy": policy,
+                  "run_id": os.environ.get("MACHSIG_RUN_ID") or None})
     tmp = ART / "machsig_extraction.json.tmp"
     tmp.write_text(json.dumps(ident, sort_keys=True, indent=1) + "\n")
     tmp.replace(ART / "machsig_extraction.json")

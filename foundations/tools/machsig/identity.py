@@ -26,6 +26,10 @@ THE IDENTITY
                      comparison -- that is the second way this gate went blind (AX moved from
                      ProofSig to TrustSig in v0.2 and the gate read an empty field).
   lean_toolchain     the pin. It is also inside content_digest (lean-toolchain is a source).
+
+v0.4 (2026-10-13): content_digest also covers POLICY_FILES -- AxiomLedger.lean (knownAxioms,
+trustedFootprint) and tools/sorry_audit.lean (allowedSorry). The gate now judges footprints against
+the declared policy recorded at extraction, so a policy edit after extraction makes the set stale.
 """
 from __future__ import annotations
 
@@ -41,11 +45,15 @@ FOUND = Path(__file__).resolve().parent.parent.parent
 MACHLIB_SOURCES = ("MachLib", "MachLib.lean", "CertcomLibm.lean", "lakefile.lean", "lean-toolchain",
                    "lake-manifest.json")
 
+#: The declared axiom policy the gate judges footprints against (read at extraction by probe.py).
+POLICY_FILES = ("AxiomLedger.lean", "tools/sorry_audit.lean")
+
 #: Everything that decides what a signature SAYS. trust_gate.py (the comparator) and the report tools
 #: are deliberately absent: changing how signatures are COMPARED does not change what they record.
 EXTRACTOR_FILES = ("tools/machsig/extract.lean", "tools/machsig/extract_statement.lean",
-                   "tools/machsig/census.py", "tools/machsig/sig.py", "tools/machsig/regen.py",
-                   "tools/machsig/identity.py")
+                   "tools/machsig/extract_trust.lean", "tools/machsig/trust_closure.py",
+                   "tools/machsig/probe.py", "tools/machsig/census.py", "tools/machsig/sig.py",
+                   "tools/machsig/regen.py", "tools/machsig/identity.py")
 
 PROVENANCE_KIND = "machsig-provenance"
 PROVENANCE_SCHEMA = "machsig-provenance/v1"
@@ -100,7 +108,7 @@ def content_files(root: Path = FOUND) -> dict[str, str]:
     """{path relative to foundations/: sha256 hex or 'absent'} for every non-ignored file under
     MACHLIB_SOURCES. A tracked file deleted on disk is recorded as 'absent', never skipped."""
     out = git(root, "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--",
-              *MACHLIB_SOURCES)
+              *MACHLIB_SOURCES, *POLICY_FILES)
     files: dict[str, str] = {}
     for rel in sorted(set(p for p in out.split("\0") if p)):
         p = root / rel
@@ -137,7 +145,7 @@ def forge_sources_digest(root: Path = FOUND, commit: str = "HEAD") -> str:
 
 
 def dirty_sources(root: Path = FOUND) -> list[str]:
-    out = git(root, "status", "--porcelain", "--untracked-files=all", "--", *MACHLIB_SOURCES)
+    out = git(root, "status", "--porcelain", "--untracked-files=all", "--", *MACHLIB_SOURCES, *POLICY_FILES)
     return sorted(line[3:] for line in out.splitlines() if line.strip())
 
 
