@@ -6,8 +6,10 @@
 #
 # This file only REQUESTS that review. It becomes REQUIRED only if branch protection on master is set
 # to require code-owner review -- a repository setting this file does not change; that is the owner's
-# call. The proposed workflow additionally runs the gate from the base commit, so a change cannot
-# judge itself with its own gate.
+# call. The workflow (.github/workflows/machsig-trust.yml, enabled by the step-7 landing) additionally
+# runs the gate from the base commit, so a change cannot judge itself with its own gate. With one GitHub
+# account shared by the owner and the agents, a required review proves nothing about a second pair of
+# eyes; foundations/docs/machsig/OWNER_RULINGS_2026-10-14.md records that limit.
 /foundations/tools/machsig/                             @agent-maestro
 /foundations/AxiomLedger.lean                           @agent-maestro
 /foundations/tools/sorry_audit.lean                     @agent-maestro
@@ -15,6 +17,5 @@
 /foundations/lakefile.lean                              @agent-maestro
 /foundations/lake-manifest.json                         @agent-maestro
 /foundations/tools/capped_lean.sh                       @agent-maestro
-/foundations/docs/machsig/PROPOSED_CI_machsig-trust.yml @agent-maestro
 /.github/workflows/machsig-trust.yml                    @agent-maestro
 /.github/CODEOWNERS                                     @agent-maestro

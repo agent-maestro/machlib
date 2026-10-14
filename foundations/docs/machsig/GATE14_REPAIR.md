@@ -11,9 +11,9 @@ a generated file named next to it.
 | 2 | regenerate signatures from an identified revision | **done** — `regen.py`, MachSig v0.4, Lean sources = c3046961 |
 | 3 | deterministic old-vs-new transition report | **done** — `TRANSITION_2026-10-13.md` + `.json` (version 2), byte-identical on rerun |
 | 4 | classify by type and trust implication | **done** — same report |
-| 5 | independent review of removals, restatements, assumption changes | **done for the narrow candidate**: ACCEPT EXCEPT E1/E2/E3, which go to the owner (`scratchpad/MACHSIG_INDEPENDENT_REVIEW_2026-10-13.md`) |
+| 5 | independent review of removals, restatements, assumption changes | **done**: both candidates and the gate, five passes (`INDEPENDENT_REVIEW_2026-10-13.md`, `INDEPENDENT_REVIEW_2_2026-10-14.md`); the escalations went to the owner |
 | 6 | reproducible classification + targeted checks of the large groups | **done**: 200/200 sampled (seed 20261013), full `#print axioms` sweep; the reviewer's own seed-777 sample 98/98 |
-| 7 | commit the reviewed baseline, enable the gate in CI | **open** — waits for the owner's rulings on E1-E3, the choice of candidate, and (widened only) a review of the second packet |
+| 7 | commit the reviewed baseline, enable the gate in CI | **prepared on this branch** after the owner's rulings of 2026-10-14 (`OWNER_RULINGS_2026-10-14.md`): the WIDENED candidate, stamped REVIEWED, is `tools/machsig/trust_baseline.json`, and the workflow is `.github/workflows/machsig-trust.yml`. The owner merges to master (below) |
 
 ## Two candidates — the owner picks
 
@@ -78,7 +78,7 @@ run that prints any ADVISORY as UNAVAILABLE, never green.
 
 **It stops a change from judging itself with an edited gate**: in CI the base commit's gate judges,
 run as `python3 -I -S` from a checkout outside the tree under test, importing nothing from it, on a
-fresh runner that never builds or executes the tree (the proposed two-job workflow).
+fresh runner that never builds or executes the tree (the two-job workflow, `.github/workflows/machsig-trust.yml`).
 
 **It is NOT a boundary against a hostile committer.** The signature set is produced by building the
 change, and building MachLib runs the change's own code — `lakefile.lean`, every module (Lean
@@ -126,8 +126,9 @@ leaves the set; sorryAx outside the allowlist, a compiler-trust axiom or an unde
 watched theorem, however old (`policy-violation`); an axiom restated under its name; trustedFootprint
 or the sorry allowlist grows (`policy-widened`).
 
-**On this branch the gate refuses `[baseline-provenance-absent]`**: the committed baseline is still
-the pre-repair counts-only file. That is the true state until step 7, and check_all.sh says so.
+**Since step 7 the gate passes on this tree**: the committed baseline is the widened candidate,
+stamped REVIEWED from the pre-review origin. Before it, the gate refused `[baseline-provenance-absent]`
+on the counts-only file, and check_all.sh said so.
 
 **Friction, by design (the owner can relax it):** deleting, renaming, restating or redefining a
 watched theorem, or promoting an axiom, now needs a reviewed rebaseline. The default is closed.
@@ -146,7 +147,7 @@ That a review happened remains a process recorded in git — who committed the s
 sign-off table.
 
 **Standalone runs are advisory.** A signature set's identity is self-declared, so a stale set given
-a fresh header passes (the review's attack 2). `tools/check_all.sh` and the proposed CI job therefore
+a fresh header passes (the review's attack 2). `tools/check_all.sh` and the CI workflow therefore
 regenerate the set in the same run and export `MACHSIG_RUN_ID`; `regen.py` records it and the gate
 refuses a set with another run's id. Run by hand without it, the gate prints
 `MACHSIG-TRUST ADVISORY` under its verdict.
@@ -155,7 +156,7 @@ refuses a set with another run's id. Run by hand without it, the gate prints
 70 faults + 19 controls end to end in throwaway git repositories, including every attack of the five
 reviews that passed) and `--mutate` (49 mutant gates, each must be killed). Both run in check_all.sh.
 
-**The gate's own code is pinned in CI (H2, reviews 2 and 3).** The proposed workflow has an
+**The gate's own code is pinned in CI (H2, reviews 2 and 3).** The workflow has an
 untrusted `extract` job (build + regen.py, uploads only the signature set) and a `judge` job on a
 fresh runner that runs the BASE commit's gate isolated against the tree (data only), with
 `--anchor <base>`; when the change touches the gate's files, its own versions must also pass their
@@ -204,7 +205,13 @@ come from 203cc854, as the review verified. The data in the packet was right; th
   and every other definition that changed under unchanged statements (natCast becoming a definition
   reaches 845 watched theorems).
 
-## Step 7 — after the owner rules and picks a candidate
+## Step 7 — the procedure, as carried out on this branch (2026-10-14)
+
+The owner ruled on 2026-10-14 (`OWNER_RULINGS_2026-10-14.md`): E1, E2 and E2b ratified, E3 and R1
+accepted, U1 deferred to its own change after the landing, the widened candidate, strictness kept,
+branch protection after the landing. Steps 1-4 below are done in one commit on `machsig-gate`. The
+stamp's review block also cites the two reviews, the rulings and the review packets. Step 5 is the
+owner's.
 
 1. On a tree whose Lean sources and policy still equal the candidate's (`content_digest` in its
    provenance), copy the chosen candidate to `tools/machsig/trust_baseline.json`. If anything moved,
@@ -221,10 +228,13 @@ come from 203cc854, as the review verified. The data in the packet was right; th
    `ADVISORY [anchor-before-landing]` (check_all.sh: UNAVAILABLE): expected for this one change, the
    only one judged against the pre-review origin.
 4. Move `docs/machsig/PROPOSED_CI_machsig-trust.yml` to `.github/workflows/machsig-trust.yml` in the
-   same commit (~30-40 min per run; extract.lean dominates).
-5. Do not squash-merge `machsig-gate`: the candidate's provenance commit must stay reachable. The
-   landing counts as a reviewed baseline whether it arrives as a plain commit or in a merge commit;
-   every later change locks a reviewed baseline in only through a merge commit (review 5).
+   same commit (~45-75 min per run; extract.lean and the judge's mutation test dominate). Its check
+   names are `machsig-trust-extract` and `machsig-trust-judge`; the judge is the one that decides.
+5. Merge with `git merge --no-ff machsig-gate` on master. Do not squash or rebase: the candidate's
+   provenance commit must stay reachable, and only a merge commit or the landing makes a reviewed
+   baseline (review 5). The push run is the BOOTSTRAP: the base, c3046961, predates the chain-aware
+   gate, so the landed gate judges itself, isolated, with a warning. Then turn on branch protection
+   with `machsig-trust-judge` (and `machsig-trust-extract`) as required checks.
 
 ## Not done here
 

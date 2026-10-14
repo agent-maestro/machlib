@@ -1,7 +1,16 @@
-# PROPOSED, NOT ENABLED. Step 7 of the owner's ruling of 2026-10-13: this file moves to
-# .github/workflows/machsig-trust.yml ONLY in the same change that commits the independently
-# reviewed baseline. Enabling it earlier would put a permanently red (REFUSED) job on master, or,
-# worse, invite an unreviewed --update to make it green.
+# GATE 14, the MachSig trust ratchet, in CI. Enabled by the step-7 landing, the same change that
+# committed the independently reviewed baseline (owner rulings of 2026-10-14:
+# foundations/docs/machsig/OWNER_RULINGS_2026-10-14.md; the repair and its trust model:
+# foundations/docs/machsig/GATE14_REPAIR.md).
+#
+# REQUIRED-CHECK NAMES (stable; branch protection matches on them): `machsig-trust-judge` decides.
+# `machsig-trust-extract` must succeed for it to have anything to judge. The judge runs even when
+# extract fails (`if: always()`), and then fails, so it is never "skipped". A skipped required check
+# would count as passing. Require at least the judge; requiring both costs nothing.
+#
+# NO `paths:` FILTER, ON PURPOSE. A workflow skipped by a path filter leaves its required checks
+# pending forever, which would block every pull request that touches only site/, docs/ or reproduction/.
+# Public repository: the minutes are free.
 #
 # TWO JOBS, BECAUSE THE BUILD IS UNTRUSTED (third independent review, 2026-10-14).
 #
@@ -26,36 +35,30 @@
 #
 # WHAT THIS STOPS: honest mistakes, unreviewed drift, and a change judging itself with an edited gate.
 # WHAT IT DOES NOT STOP: a hostile committer. The extract job runs the change's code, so a change can
-# forge its own signature set. That boundary is human review of every change to the paths in
-# .github/CODEOWNERS, made REQUIRED by branch protection -- a repository setting, the owner's call.
+# forge its own signature set. That boundary would be human review of every change to the paths in
+# .github/CODEOWNERS, made REQUIRED by branch protection. With one GitHub account shared by the owner
+# and the agents, a required review proves nothing; OWNER_RULINGS_2026-10-14.md records that limit.
 #
-# BOOTSTRAP: the step-7 landing has no chain-aware gate in its base; that one run judges with the
-# tree's gate (the reviewed one being landed), still isolated, and says so in a warning. On a pull
+# BOOTSTRAP: the step-7 landing has no chain-aware gate in its base (c3046961); that one run judges with
+# the tree's gate (the reviewed one being landed), still isolated, and says so in a warning. On a pull
 # request that run also prints ADVISORY [anchor-before-landing]: expected, the landing is the one change
-# judged against the pre-review origin.
+# judged against the pre-review origin. On the push to master it anchors on master itself.
 #
 # Runtime estimate (local timings 2026-10-13/14, scaled by the build-time job's own measurement):
 #   extract: cold lake build ~12.6 min (build-time.yml: 757.52 s at c3046961); regen.py's three Lean
 #            extractors ~16-27 min (extract.lean 8.5-10.7 min locally, single-threaded; CI ~2x
-#            slower); the change's own gate tests ~8 min when the gate code changed
-#   judge:   selftest (90 throwaway git repos) ~15 s; mutation (49 mutants) ~10 min locally;
-#            gate (review-chain walk over ~3,000 commits + recompute) a few seconds
-#   total    ~40-55 min; timeouts 90 + 30.
+#            slower); the change's own gate tests ~10-20 min, only when the gate code changed
+#   judge:   selftest (90 throwaway git repos) ~15 s; mutation (49 mutants) ~10 min locally, up to
+#            ~20 on a runner; gate (review-chain walk over ~3,000 commits + recompute) a few seconds
+#   total    ~45-75 min (the landing's own run, which also runs the gate tests, the longest); timeouts
+#            150 + 60.
 
 name: machsig-trust
 
 on:
   push:
     branches: [master]
-    paths:
-      - "foundations/**"
-      - ".github/workflows/machsig-trust.yml"
-      - ".github/CODEOWNERS"
   pull_request:
-    paths:
-      - "foundations/**"
-      - ".github/workflows/machsig-trust.yml"
-      - ".github/CODEOWNERS"
   workflow_dispatch:
     inputs:
       base_ref:
@@ -73,8 +76,9 @@ env:
 
 jobs:
   extract:
+    name: machsig-trust-extract
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     steps:
       - name: Check out the tree under test
         uses: actions/checkout@v4
@@ -133,10 +137,19 @@ jobs:
           retention-days: 30
 
   judge:
+    name: machsig-trust-judge
     needs: extract
+    # never "skipped": a required check that is skipped counts as passing on GitHub
+    if: ${{ always() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
+      - name: No verdict without a successful extract
+        if: ${{ needs.extract.result != 'success' }}
+        run: |
+          echo "::error::the extract job finished '${{ needs.extract.result }}': there is no signature set for this tree, so no verdict"
+          exit 1
+
       # fetch-depth 0: the gate walks the WHOLE commit graph for the review chain (merges included) back
       # to the pre-review origin, and checks provenance commits; a shallow clone is refused.
       - name: Check out the tree under test, as data
