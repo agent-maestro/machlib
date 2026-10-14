@@ -544,7 +544,9 @@ def cases():
         restamp(f, pristine)
         commit_all(repo, "c2: reviewed, report from the last reviewed baseline")
     def honest_chain(repo, f):
-        # control: two reviewed rebaselines in a row; the second's report starts at the first
+        # two reviewed rebaselines committed straight on main, the second's report from the first. Since
+        # the fifth review a plain commit's stamp never becomes a reference (in git this IS the two-hop
+        # fast-forward), so the second must report from the last COUNTED baseline: refused
         pristine = committed(f)
         write_sigs(f, GROWN)
         update(f)
@@ -570,18 +572,26 @@ def cases():
         update(f)
         restamp(f, LEGACY)
         commit_all(repo, "rebaseline from the origin")
-    def recommit_older(repo, f):
-        # re-commit an OLDER reviewed baseline (L1, with its own stamp and report) over a newer one (L2)
+    def recommit_older(repo, f, merged: bool = True):
+        # re-commit an OLDER reviewed baseline (L1, with its own stamp and report) over a newer one (L2).
+        # L2 arrives in a merge commit, so it is a counted reference; `merged=False` is the plain-commit
+        # variant, where L2 never counted and L1 back is a net-zero step (the documented cost)
         l1_base, l1_rep = (f / tg.BASE_REL).read_text(), (f / REPORT).read_text()
         pristine = committed(f)
+        if merged:
+            sh(repo, "checkout", "-q", "-b", "l2")
         write_sigs(f, GROWN)
         update(f)
         restamp(f, pristine)
         commit_all(repo, "L2 reviewed from L1")
+        if merged:
+            sh(repo, "checkout", "-q", "main")
+            sh(repo, "merge", "-q", "--no-ff", "--no-edit", "l2")
         write_sigs(f, THEOREMS)
         (f / tg.BASE_REL).write_text(l1_base)
         (f / REPORT).write_text(l1_rep)
         commit_all(repo, "put L1 back, stamp and report included")
+    def recommit_older_plain(repo, f): recommit_older(repo, f, merged=False)
     def merge_attack(repo, f, side_first: bool):
         # MERGE (review 3): a branch forked BEFORE the first review rebaselines against the origin; it is
         # merged with the reviewed line and its file wins
@@ -681,17 +691,144 @@ def cases():
         two_hop(repo, f)
         sh(repo, "checkout", "-q", "main")
         sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr")
-    def two_hop_ff(repo, f, push_ci: bool):
-        # the same PR FAST-FORWARDED onto main: its stamps are now on the main line itself. CI's push run
-        # anchors on `before` (the old tip) and judges the net step; a later local run on main cannot tell
-        # these from two reviewed pushes and counts each (the documented limit, pinned so docs and code agree)
+    def later_push(repo, f):
+        # a later, unrelated push on top of main: CI anchors on its `before`, the old tip
+        before = head_sha(repo)
+        (f / "docs" / "later.md").write_text("unrelated\n")
+        commit_all(repo, "a later, unrelated push")
+        return {"__args__": ["--anchor", before]}
+    def two_hop_ff(repo, f, run: str):
+        # the reviewer's exact limit (b): the two-hop PR FAST-FORWARDED onto main. Its push run anchors on
+        # `before`; a later run anchors on the new tip. Plain commits' stamps never count, so EVERY run stays
+        # red until the change is re-stamped net from main's last counted baseline
         before = head_sha(repo)
         two_hop(repo, f)
         sh(repo, "checkout", "-q", "main")
         sh(repo, "merge", "-q", "--ff-only", "pr")
-        return {"__args__": ["--anchor", before]} if push_ci else {}
-    def two_hop_ff_push(repo, f): return two_hop_ff(repo, f, True)
-    def two_hop_ff_local(repo, f): return two_hop_ff(repo, f, False)
+        if run == "push":
+            return {"__args__": ["--anchor", before]}
+        return later_push(repo, f) if run == "later-push" else {}
+    def two_hop_ff_push(repo, f): return two_hop_ff(repo, f, "push")
+    def two_hop_ff_local(repo, f): return two_hop_ff(repo, f, "local")
+    def two_hop_ff_later_push(repo, f): return two_hop_ff(repo, f, "later-push")
+    def two_hop_ff_restamped(repo, f):
+        # control: the fast-forwarded two-hop, then re-stamped NET from main's last counted baseline
+        l1 = committed(f)
+        two_hop_ff(repo, f, "local")
+        restamp(f, l1)
+        commit_all(repo, "re-stamped net from L1")
+        return later_push(repo, f)
+    def single_ff(repo, f, run: str):
+        # control: ONE stamp, net from main's last counted baseline, fast-forwarded onto main
+        l1, before = committed(f), head_sha(repo)
+        sh(repo, "checkout", "-q", "-b", "pr")
+        hop(f, GROWN, l1)
+        commit_all(repo, "one stamp, net from L1")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--ff-only", "pr")
+        if run == "push":
+            return {"__args__": ["--anchor", before]}
+        return later_push(repo, f) if run == "later-push" else {}
+    def single_ff_push(repo, f): return single_ff(repo, f, "push")
+    def single_ff_later(repo, f): return single_ff(repo, f, "later-push")
+    def single_ff_twice(repo, f, net: bool):
+        # a second single-stamp fast-forward after the first. From the last COUNTED baseline (L1): accepted
+        # (reports accumulate until a merge). From the first fast-forward's baseline: refused -- in git it
+        # is the very same commits as the two-hop fast-forward, so it cannot be told apart
+        l1 = committed(f)
+        hop(f, DROPPED, l1)
+        commit_all(repo, "ff 1: one stamp from L1")
+        b1 = committed(f)
+        hop(f, GROWN, l1 if net else b1)
+        commit_all(repo, "ff 2: one stamp, " + ("net from L1" if net else "from ff 1"))
+        return later_push(repo, f)
+    def single_ff_twice_net(repo, f): return single_ff_twice(repo, f, True)
+    def single_ff_twice_chained(repo, f): return single_ff_twice(repo, f, False)
+    def merge_then_ff(repo, f):
+        # control: a merge commit COUNTS -- a PR with one net stamp merged --no-ff, then a single-stamp
+        # fast-forward reviewed from the merged baseline
+        l1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr1")
+        hop(f, DROPPED, l1)
+        commit_all(repo, "pr1: one stamp from L1")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr1")
+        hop(f, GROWN, committed(f))
+        commit_all(repo, "ff: one stamp from the merged baseline")
+        return later_push(repo, f)
+    def two_hop_unrelated_merge(repo, f):
+        # the two-hop on main with an UNRELATED merge between the hops: the merge leaves the file as its
+        # first parent had it, so it must not turn the first hop into a counted reference
+        l1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "side")
+        (f / "docs" / "side.md").write_text("side\n")
+        commit_all(repo, "side: unrelated")
+        sh(repo, "checkout", "-q", "main")
+        hop(f, DROPPED, l1)
+        commit_all(repo, "hop 1 on main")
+        b1 = committed(f)
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "side")
+        hop(f, GROWN, b1)
+        commit_all(repo, "hop 2 on main, from hop 1")
+        return later_push(repo, f)
+    def two_hop_sub_merge(repo, f, onto_main: bool = False):
+        # the two-hop with its first hop arriving in a MERGE INTO THE BRANCH (from a sub-branch), the second
+        # a plain commit from it. A merge counts only on the ANCHOR's first-parent line, and locally the
+        # anchor is the main line's merge-base -- so neither the branch run nor main after the merge counts it
+        l1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr")
+        sh(repo, "checkout", "-q", "-b", "sub")
+        hop(f, DROPPED, l1)
+        commit_all(repo, "sub: hop 1 from L1")
+        sh(repo, "checkout", "-q", "pr")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "sub")
+        b1 = committed(f)
+        hop(f, GROWN, b1)
+        commit_all(repo, "pr: hop 2 from hop 1")
+        if onto_main:
+            sh(repo, "checkout", "-q", "main")
+            sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr")
+    def two_hop_sub_merge_main(repo, f): two_hop_sub_merge(repo, f, True)
+    def h1_merged(repo, f):
+        # H1 through MERGE commits (merges are what count now): PR1 carries a self-bound REVIEWED stamp and
+        # is merged; PR2 reports honestly from PR1's baseline and is merged. PR1's merge must not count
+        sh(repo, "checkout", "-q", "-b", "pr1")
+        b1 = grow_unreviewed(repo, f)
+        d1 = tg.baseline_content_digest(b1)
+        restamp(f, None, report={"schema": "machsig-transition/v3",
+                                 "binding": {"old_baseline_sha256": d1, "new_baseline_sha256": d1},
+                                 "gate_transition": tg.gate_transition(b1, b1)})
+        commit_all(repo, "pr1: stamped, self-bound")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr1")
+        b2 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr2")
+        write_sigs(f, SHRUNK)
+        update(f)
+        restamp(f, b2)
+        commit_all(repo, "pr2: honest report from pr1's baseline")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr2")
+    def no_main_ref(repo, f):
+        # T3'' (fifth review): a clone with no main-line ref -- the anchor falls back to HEAD
+        sh(repo, "branch", "-q", "-m", "main", "trunk")
+    def stale_main_ref(repo, f):
+        # T9 (fifth review): local main still at the pre-review origin; a branch rebaselined from the origin
+        sh(repo, "checkout", "-q", "-b", "work")
+        sh(repo, "branch", "-q", "-f", "main", origin_sha(repo))
+    def readded(repo, f):
+        # limit (a), made visible: PR1 drops alpha (reviewed, merged); PR2 re-adds it grown, judged on its
+        # branch -- its report shows alpha NEW; the gate notes its last reviewed footprint
+        l1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr1")
+        hop(f, DROPPED, l1)
+        commit_all(repo, "pr1: alpha dropped")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "pr1")
+        b1 = committed(f)
+        sh(repo, "checkout", "-q", "-b", "pr2")
+        hop(f, GROWN, b1)
+        commit_all(repo, "pr2: alpha back, grown")
     def net_one_step(repo, f):
         # control: the same change as ONE reviewed step from the base: its report shows alpha GREW
         l1 = committed(f)
@@ -827,16 +964,16 @@ def cases():
         ("B45 H1, correct binding but rows that omit the growth", h1_hollow_rows, 3, "review-report-rows",
          "first difference at Fx.alpha"),
         ("B46 H1, three commits: an invalid stamp in the middle is not a reference", h1_three_commits, 3,
-         "review-report-mismatch", "an unreviewed --update in between does not count"),
+         "review-report-mismatch", "neither an unreviewed --update nor a stamp on a plain commit"),
         ("B47 H1, an unreviewed intermediate under an honest stamp", h1_intermediate, 3,
-         "review-report-mismatch", "an unreviewed --update in between does not count"),
+         "review-report-mismatch", "neither an unreviewed --update nor a stamp on a plain commit"),
         ("B48 control: --update, then a stamp reporting from the last reviewed baseline", honest_two_step, 0,
          None, "MACHSIG-TRUST OK"),
-        ("B49 control: two reviewed rebaselines, the second reporting from the first", honest_chain, 0, None,
-         "MACHSIG-TRUST OK"),
+        ("B49 two reviewed rebaselines as plain commits on main, the second from the first (review 5)",
+         honest_chain, 3, "review-report-mismatch", "the last reviewed baseline is"),
         ("B50 RESTART (review 3): re-commit the origin, then rebaseline from it", restart, 3,
          "review-report-mismatch", "the last reviewed baseline is"),
-        ("B51 re-commit an OLDER reviewed baseline over a newer one", recommit_older, 3, "review-report-mismatch",
+        ("B51 re-commit an OLDER reviewed baseline over a newer (merged) one", recommit_older, 3, "review-report-mismatch",
          "the last reviewed baseline is the baseline reviewed at"),
         ("B52 MERGE (review 3): pre-review branch merged, its file kept, branch as first parent",
          merge_side_first, 3, "review-report-mismatch", "the last reviewed baseline is"),
@@ -874,10 +1011,38 @@ def cases():
          "MACHSIG-TRUST OK"),
         ("B71 QUIET TWO-HOP fast-forwarded onto main, judged the CI push way (--anchor <before>)", two_hop_ff_push,
          3, "review-report-mismatch", "as of the base"),
-        ("B72 control (the documented limit is real): that fast-forward judged on main later, each stamp a step",
-         two_hop_ff_local, 0, None, "MACHSIG-TRUST OK"),
+        ("B72 LIMIT (b) CLOSED (review 5): that fast-forward judged on main later (local run)", two_hop_ff_local,
+         3, "review-report-mismatch", "the last reviewed baseline is"),
         ("B73 control: main reaches the origin only through a merge's second parent", origin_via_merge, 0, None,
          "MACHSIG-TRUST OK"),
+        ("B74 the fast-forwarded two-hop, then a LATER push (--anchor <its tip>): still refused",
+         two_hop_ff_later_push, 3, "review-report-mismatch", "the last reviewed baseline is"),
+        ("B75 control: the fast-forwarded two-hop re-stamped net from L1, then a later push", two_hop_ff_restamped,
+         0, None, "MACHSIG-TRUST OK"),
+        ("B76 control: a single-stamp fast-forward, its push run", single_ff_push, 0, None, "MACHSIG-TRUST OK"),
+        ("B77 control: a single-stamp fast-forward, a later push", single_ff_later, 0, None, "MACHSIG-TRUST OK"),
+        ("B78 control: two single-stamp fast-forwards, the second net from the last COUNTED baseline",
+         single_ff_twice_net, 0, None, "MACHSIG-TRUST OK"),
+        ("B79 two single-stamp fast-forwards, the second from the first (in git, the two-hop itself)",
+         single_ff_twice_chained, 3, "review-report-mismatch", "the last reviewed baseline is"),
+        ("B80 control: a merge commit counts -- a merged PR, then a fast-forward from its baseline", merge_then_ff,
+         0, None, "MACHSIG-TRUST OK"),
+        ("B81 the two-hop on main with an unrelated merge between the hops", two_hop_unrelated_merge, 3,
+         "review-report-mismatch", "the last reviewed baseline is"),
+        ("B82 control (the documented cost): an older baseline re-committed over a newer PLAIN-commit one",
+         recommit_older_plain, 0, None, "MACHSIG-TRUST OK"),
+        ("B83 no main-line ref: OK, but ADVISORY [anchor-none]", no_main_ref, 0, None,
+         "MACHSIG-TRUST ADVISORY [anchor-none]"),
+        ("B84 main ref before the first reviewed baseline: OK, but ADVISORY [anchor-before-landing]",
+         stale_main_ref, 0, None, "MACHSIG-TRUST ADVISORY [anchor-before-landing]"),
+        ("B85 limit (a) shown: a re-added theorem is noted with its last reviewed footprint", readded, 0, None,
+         "MACHSIG-TRUST NOTE [readded] Fx.alpha is new against"),
+        ("B86 two-hop whose first hop is merged INTO the branch, local run on the branch", two_hop_sub_merge, 3,
+         "review-report-mismatch", "the last reviewed baseline is"),
+        ("B87 that branch merged --no-ff into main, judged on main", two_hop_sub_merge_main, 3,
+         "review-report-mismatch", "the last reviewed baseline is"),
+        ("B88 H1 through merge commits: a self-bound stamp merged, then a PR reporting from it, merged", h1_merged,
+         3, "review-report-mismatch", "the last reviewed baseline is"),
     ]
 
 
@@ -965,9 +1130,19 @@ MUTANTS = [
     ("anchor reachability not checked",
      '    if anchor and not identity.git_ok(root, "merge-base", "--is-ancestor", anchor, "HEAD"):', "    if False:"),
     ("TWO-HOP: no default anchor (stamps chain inside a branch)",
-     '    tip = anchor or default_anchor(root) or "HEAD"', '    tip = anchor or "HEAD"'),
+     '    tip = anchor or main_anchor or "HEAD"', '    tip = anchor or "HEAD"'),
     ("TWO-HOP: stamps off the first-parent line count", "        if c not in line or b is None or all(",
      "        if b is None or all("),
+    ("LIMIT (b): plain commits' stamps count on the line",
+     "        if not landing and (len(parents[c]) < 2 or b == blobs.get(parents[c][0])):", "        if False:"),
+    ("LIMIT (b): a merge counts a version its first parent already had",
+     "(len(parents[c]) < 2 or b == blobs.get(parents[c][0])):", "(len(parents[c]) < 2):"),
+    ("the step-7 landing never counts", "        landing = set(inherited) == {ORIGIN_CONTENT}",
+     "        landing = False"),
+    ("ADVISORY [anchor-none] removed", "    if not anchor and not main_anchor:", "    if False:"),
+    ("ADVISORY [anchor-before-landing] removed", '    if set(final) == {ORIGIN_CONTENT} and tip != "HEAD":',
+     "    if False:"),
+    ("NOTE [readded] removed", "            notes.extend(readded_notes(b, k, lineage, known))", "            pass"),
     ("superseded references not pruned",
      "        inherited = {k: v for k, v in inherited.items() if not superseded(k, inherited)}",
      "        inherited = dict(inherited)"),

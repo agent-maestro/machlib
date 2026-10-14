@@ -75,13 +75,16 @@ review (CODEOWNERS made required by branch protection), a repository setting.
 STANDALONE RUNS ARE ADVISORY. The set's identity is self-declared: a stale set relabelled with a fresh
 header passes (attack 2 of the review). check_all.sh and CI therefore regenerate the set in the same
 run and export MACHSIG_RUN_ID; regen.py records it and the gate refuses a set with another run's id.
-Run standalone (no MACHSIG_RUN_ID), the gate says its verdict is advisory.
+Run standalone (no MACHSIG_RUN_ID), the gate says its verdict is advisory. So does a run whose anchor
+is too weak to stand for the main line (fifth review): no main-line ref at all, ADVISORY [anchor-none];
+an anchor whose reviewed baseline is still the pre-review origin, ADVISORY [anchor-before-landing].
+check_all.sh lists any rc-0 run that prints MACHSIG-TRUST ADVISORY as UNAVAILABLE, never green.
 
     python3 tools/machsig/regen.py               # extract signatures for THIS tree
     python3 tools/machsig/trust_gate.py           # the gate
     python3 tools/machsig/trust_gate.py --selftest       # red paths, then the gate
     python3 tools/machsig/trust_gate.py --selftest-only  # red paths only
-    python3 tools/machsig/trust_gate.py --mutate  # 43 mutant gates: the selftest must kill each
+    python3 tools/machsig/trust_gate.py --mutate  # 49 mutant gates: the selftest must kill each
     python3 tools/machsig/trust_gate.py --update  # write an UNREVIEWED baseline from fresh signatures
     python3 tools/machsig/trust_gate.py --content-digest [FILE]  # what a stamp must name
 
@@ -98,8 +101,9 @@ baseline becomes usable only when its `review` block says REVIEWED, names a revi
     stamp passes these checks against EVERY reviewed line they join -- and whose `gate_transition`
     equals the transition the gate recomputes between the two, row for row. So a change is ONE
     reviewed step and its report is the NET transition since its base: stamps made inside it never
-    count (the fourth review's QUIET TWO-HOP). On the main line itself each such stamp IS a step, so a
-    branch fast-forwarded onto it is judged net only by the run anchored at its base (CI's push run).
+    count (the fourth review's QUIET TWO-HOP). On that line only a MERGE commit that brings a new
+    version, or the step-7 landing, makes a reviewed baseline (fifth review): a plain commit's stamp
+    never does, so a multi-stamp fast-forward stays refused on every later run too.
     Citing lakefile.lean -- attack 4 of the first
     review -- fails [review-report-invalid]; a two-commit --update-then-stamp with a hollow
     "this -> itself" report -- H1 of the second review -- fails [review-report-mismatch], and any
@@ -346,7 +350,10 @@ def reviewed_chain(root: Path, tip: str = "HEAD"):
     pass through unchanged, pending a real review.
 
     Returns (references at `tip` {digest: (label, doc)}, lineage {digest: {digests reviewed from}},
-    every reference ever made {digest: (label, doc)})."""
+    every reference ever made {digest: (label, doc)}).
+
+    Only a MERGE commit that brings a new version onto the line, or the step-7 landing, makes a
+    reference there (fifth review, limit (b)): see the comment in the loop."""
     lines = identity.git(root, "rev-list", "--topo-order", "--reverse", "--parents", tip).splitlines()
     order, parents = [], {}
     for ln in lines:
@@ -404,6 +411,17 @@ def reviewed_chain(root: Path, tip: str = "HEAD"):
         b = blobs[c]
         if c not in line or b is None or all(blobs.get(p) == b for p in parents[c]):
             refs[c] = inherited                    # off the line, file absent, or unchanged
+            continue
+        # LIMIT (b), CLOSED (fifth review). On the line a new version becomes a reference only where a
+        # change is JOINED: a merge commit whose own tree brings it (its file differs from its first
+        # parent's), or the step-7 landing (the only reference before it is the origin). A plain
+        # commit's stamp never becomes one. In git, two stamped commits fast-forwarded in one push are
+        # the same objects as two pushes, so counting either kind would launder a two-hop for every run
+        # after the one anchored at its base. A single-stamp fast-forward still passes as HEAD, judged
+        # against the last counted reference (review_state), so reports accumulate until a merge.
+        landing = set(inherited) == {ORIGIN_CONTENT}
+        if not landing and (len(parents[c]) < 2 or b == blobs.get(parents[c][0])):
+            refs[c] = inherited
             continue
         v = doc(b)
         dv = baseline_content_digest(v) if v is not None else None
@@ -590,7 +608,9 @@ def review_problems(b: dict, ref, ref_label: str, read_report) -> list[tuple[str
     if bind.get("old_baseline_sha256") != want_old:
         return [("review-report-mismatch",
                  f"{rep} starts at {str(bind.get('old_baseline_sha256'))[:23]}...; the last reviewed baseline is "
-                 f"{ref_label}, {want_old[:23]}... (an unreviewed --update in between does not count)")]
+                 f"{ref_label}, {want_old[:23]}... (neither an unreviewed --update nor a stamp on a plain commit "
+                 "since then counts: only a merge commit or the step-7 landing makes a reviewed baseline, so a "
+                 "change's report is NET from it)")]
     if report_doc["gate_transition"] != recomputed:
         got = report_doc["gate_transition"].get("theorems")
         got = got if isinstance(got, list) else []
@@ -605,7 +625,8 @@ def review_problems(b: dict, ref, ref_label: str, read_report) -> list[tuple[str
     return []
 
 
-def review_state(b: dict, root: Path, anchor: str | None = None) -> list[tuple[str, str]]:
+def review_state(b: dict, root: Path, anchor: str | None = None,
+                 notes: list | None = None) -> list[tuple[str, str]]:
     """The committed baseline's stamp, judged as ONE reviewed step from the anchor.
 
     The anchor is the base commit (CI: --anchor <base>; locally: the merge-base of HEAD with the main
@@ -613,11 +634,18 @@ def review_state(b: dict, root: Path, anchor: str | None = None) -> list[tuple[s
     reviewed baseline A, the committed stamp must cite a report that starts AT A and whose
     gate_transition equals the NET transition A -> this baseline. Stamps made in between never count:
     the fourth review's QUIET TWO-HOP (drop a theorem in one stamped commit, re-add it grown in the
-    next, each report exact for its own hop) is judged by its net change, which shows the growth."""
+    next, each report exact for its own hop) is judged by its net change, which shows the growth.
+
+    `notes` collects (kind, tag, text) lines printed under the verdict: ADVISORY when the anchor is too
+    weak for the verdict to stand for the main line (no main ref; an anchor before the first reviewed
+    baseline) -- check_all.sh counts a run that prints one as NOT green -- and NOTE [readded] for a
+    theorem that is `new` against the reference but was in an earlier reviewed baseline (limit (a))."""
+    notes = notes if notes is not None else []
     r = b.get("review") if isinstance(b.get("review"), dict) else {}
     if not (r.get("status") == "REVIEWED" and r.get("reviewer") and r.get("baseline_sha256") == baseline_content_digest(b)):
         return review_problems(b, None, ORIGIN_LABEL, _report_in_tree(root))     # fails at step 1 or 2
-    tip = anchor or default_anchor(root) or "HEAD"
+    main_anchor = None if anchor else default_anchor(root)
+    tip = anchor or main_anchor or "HEAD"
     if anchor and not identity.git_ok(root, "merge-base", "--is-ancestor", anchor, "HEAD"):
         return [("anchor-unreachable", f"the base commit {anchor[:12]} given by --anchor is not an ancestor of HEAD: "
                                        "the change does not contain what it is judged against")]
@@ -628,6 +656,17 @@ def review_state(b: dict, root: Path, anchor: str | None = None) -> list[tuple[s
     if final is None:
         return [("baseline-history-unavailable", f"the anchor {tip[:12]} predates {ORIGIN_LABEL}")]
     where = "HEAD" if tip == "HEAD" else f"the base {tip[:12]}"
+    if not anchor and not main_anchor:
+        notes.append(("ADVISORY", "anchor-none",
+                      "no main-line ref (" + ", ".join(r.split("/", 2)[2] for r in MAIN_REFS) + ") in this clone, "
+                      "so the stamp was judged from HEAD's own history, not as one step from the main line. "
+                      "Fetch the main line or pass --anchor <base>; until then this OK is not a gate result."))
+    if set(final) == {ORIGIN_CONTENT} and tip != "HEAD":
+        notes.append(("ADVISORY", "anchor-before-landing",
+                      f"the anchor {tip[:12]} predates the first reviewed baseline (it still holds {ORIGIN_LABEL}), "
+                      "so this stamp was judged against the origin, not against the reviewed main line. "
+                      "Update the main ref (git fetch) or pass --anchor <base>; until then this OK is not a gate "
+                      "result."))
     if len(final) > 1:
         return [("review-report-mismatch",
                  f"at {where} a merge joined {len(final)} reviewed lines ({', '.join(lab for lab, _ in final.values())}) "
@@ -635,7 +674,10 @@ def review_state(b: dict, root: Path, anchor: str | None = None) -> list[tuple[s
     mine = baseline_content_digest(b)
     (k, (label, ref)), = final.items()
     if k != mine:
-        return review_problems(b, ref, f"{label} (as of {where})", _report_in_tree(root))
+        probs = review_problems(b, ref, f"{label} (as of {where})", _report_in_tree(root))
+        if not probs:
+            notes.extend(readded_notes(b, k, lineage, known))
+        return probs
     # unchanged since the anchor: the committed stamp must still be a valid one for this content (a
     # later commit that rewrote only the review block does not inherit the earlier review)
     preds = sorted(lineage.get(mine, ()))
@@ -647,6 +689,36 @@ def review_state(b: dict, root: Path, anchor: str | None = None) -> list[tuple[s
         if probs:
             return probs
     return []
+
+
+def readded_notes(b: dict, k: str, lineage: dict, known: dict) -> list[tuple[str, str, str]]:
+    """Limit (a), made visible: a theorem `new` against the reference k that an EARLIER reviewed baseline
+    held (removed in one reviewed change, re-added in this one). The report shows it as new with its
+    whole footprint; this says what its last reviewed footprint was. Informational, never a verdict."""
+    cur, _, _, _ = _theorems_of(b)
+    ref, _, _, _ = _theorems_of(known[k][1])
+    fresh = sorted(set(cur) - set(ref))
+    out, seen, frontier = [], {k}, [k]
+    while fresh and frontier:                  # breadth-first: the most recent reviewed baseline first
+        nxt = []
+        for d in frontier:
+            for p in sorted(lineage.get(d, ())):
+                if p in seen or p not in known:
+                    continue
+                seen.add(p)
+                nxt.append(p)
+                old, _, _, _ = _theorems_of(known[p][1])
+                for name in [n for n in fresh if n in old]:
+                    was, now = old[name], cur[name]
+                    grew = sorted(set(now["axioms"] or ()) - set(was["axioms"] or ())) if was["axioms"] is not None else None
+                    out.append(("NOTE", "readded",
+                                f"{name} is new against {known[k][0]}, but {known[p][0]} held it with "
+                                f"{was['ax']} axiom(s); now {now['ax']}"
+                                + (f", entered: {', '.join(grew)}" if grew else "")
+                                + ("" if was["d"] == now["d"] else "; its statement differs")))
+                    fresh.remove(name)
+        frontier = nxt
+    return out
 
 
 # ── the comparison ─────────────────────────────────────────────────────────────────────────────────
@@ -828,6 +900,7 @@ def gate(root: Path = FOUND, anchor: str | None = None) -> int:
     except identity.Unavailable as e:
         return unavailable("no-git", f"cannot identify the live tree: {e}")
     refusals: list[tuple[str, str]] = []
+    notes: list[tuple[str, str, str]] = []
     head, cur, problem = read_signature_set(sigs)
     run_id = os.environ.get("MACHSIG_RUN_ID") or None
     if problem:
@@ -863,7 +936,7 @@ def gate(root: Path = FOUND, anchor: str | None = None) -> int:
             if head is not None and problem is None:
                 refusals += provenance_problems(root, prov, head)
             if not git_refusals:        # a stamp binds the COMMITTED baseline; a local edit has none
-                refusals += review_state(raw, root, anchor)
+                refusals += review_state(raw, root, anchor, notes)
     if refusals:
         return refuse(refusals)
     print(f"  signatures: {head['version']} from {head['machlib_commit'][:12]} "
@@ -872,6 +945,8 @@ def gate(root: Path = FOUND, anchor: str | None = None) -> int:
     print(f"  baseline  : derived from {raw['provenance']['machlib_commit'][:12]}, reviewed by "
           f"{raw['review']['reviewer']} ({raw['review']['transition_report']})")
     rc = report(judge(base, cur), len(cur["theorems"]))
+    for kind, tag, text in notes:
+        print(f"MACHSIG-TRUST {kind} [{tag}] {text}")
     if not run_id:
         print("MACHSIG-TRUST ADVISORY — standalone run: MACHSIG_RUN_ID is unset, so nothing shows this run "
               "regenerated the signature set; its identity is self-declared. The verdict holds only for a set "

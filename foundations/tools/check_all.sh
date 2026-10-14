@@ -39,7 +39,10 @@ UNAVAIL=()
 PASSED=()
 
 # run NAME COMMAND...
-#   Captures rc immediately. rc 0 = pass, rc 2 = unavailable, anything else = fail.
+#   Captures rc immediately. rc 0 = pass, rc 2 = unavailable, anything else = fail -- except that an rc 0
+#   whose log carries a "MACHSIG-TRUST ADVISORY" line is NOT a pass: the gate said its OK does not stand
+#   for the main line (no main-line ref, or an anchor before the first reviewed baseline; fifth review).
+#   It is listed as UNAVAILABLE, so "all green" cannot be claimed from it.
 run() {
   local name="$1"; shift
   if ! command -v "${1}" >/dev/null 2>&1 && [ ! -e "${1}" ]; then
@@ -49,7 +52,11 @@ run() {
   "$@" >"$OUT/$name.log" 2>&1
   local rc=$?
   case "$rc" in
-    0) PASSED+=("$name") ;;
+    0) if grep -q "^MACHSIG-TRUST ADVISORY" "$OUT/$name.log"; then
+         UNAVAIL+=("$name (rc 0 but ADVISORY: $(grep -m1 -o '^MACHSIG-TRUST ADVISORY [^ ]*' "$OUT/$name.log" | cut -d' ' -f3))")
+       else
+         PASSED+=("$name")
+       fi ;;
     2) UNAVAIL+=("$name (rc 2)") ;;
     *) FAILED+=("$name (rc $rc)") ;;
   esac
@@ -71,6 +78,7 @@ if [ "${1:-}" = "--selftest" ]; then
   echo "=== SELFTEST: an injected failing gate must drive this script's own exit code ==="
   run "canary-pass" true
   run "canary-fail" false
+  run "canary-advisory" echo "MACHSIG-TRUST ADVISORY [canary] an rc-0 run that says ADVISORY must not count as green"
 else
   echo "=== MachLib: all gates + measurement harnesses ==="
   run "build"        lake build
@@ -119,7 +127,7 @@ else
   export MACHSIG_RUN_ID
   run "machsig-extract" python3 tools/machsig/regen.py
   run "machsig-trust-selftest" python3 tools/machsig/trust_gate.py --selftest-only
-  # DOCTRINE 4b: 43 mutant gates, each must be killed by the selftest. ~7 min; mutants live only in temp dirs.
+  # DOCTRINE 4b: 49 mutant gates, each must be killed by the selftest. ~10 min; mutants live only in temp dirs.
   run "machsig-trust-mutate" python3 tools/machsig/trust_gate.py --mutate
   run "machsig-trust" python3 tools/machsig/trust_gate.py
   unset MACHSIG_RUN_ID
