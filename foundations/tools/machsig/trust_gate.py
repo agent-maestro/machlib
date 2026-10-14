@@ -58,9 +58,20 @@ cannot fire must not read as "checked and clean", so each of these is now its ow
                          [review-report-rows]        its gate_transition rows differ from the recompute
                          [baseline-history-unavailable] the previous baseline cannot be read from git
                          [signatures-not-this-run]   MACHSIG_RUN_ID is set and the set is from another run
+                         [toolchain-mismatch]        extracted with another Lean than the baseline's
+                         [runner-changed]            tools/capped_lean.sh differs from the baseline's commit
+                         [anchor-unreachable]        --anchor names a commit this history lacks
+                         [anchor-not-in-chain]       the review chain does not run through the anchor's
   FAIL        (exit 1)   see the table above
 
 `--selftest` proves every one of these red paths by fault injection (trust_gate_selftest.py).
+
+TRUST MODEL (third independent review, 2026-10-14). This gate catches honest mistakes and unreviewed
+drift, and -- run from the base commit, isolated (`python3 -I -S <base>/.../trust_gate.py --tree T
+--anchor <base>`) -- stops a change from judging itself with an edited gate. It is NOT a boundary
+against a hostile committer: the signature set is produced by building the change, and Lean
+elaboration runs arbitrary code, so a change can forge its own set. That boundary is required human
+review (CODEOWNERS made required by branch protection), a repository setting.
 
 STANDALONE RUNS ARE ADVISORY. The set's identity is self-declared: a stale set relabelled with a fresh
 header passes (attack 2 of the review). check_all.sh and CI therefore regenerate the set in the same
@@ -82,8 +93,9 @@ baseline becomes usable only when its `review` block says REVIEWED, names a revi
     attack 3 of the 2026-10-13 review, which passed -- now fails [review-unbound].
   * `transition_report` must be a committed `machsig-transition/*` JSON (tools/machsig/transition.py)
     whose `binding.new_baseline_sha256` is this baseline, whose `binding.old_baseline_sha256` is the
-    LAST REVIEWED baseline in git history (walked forward from the pre-review origin, counting only
-    versions whose own stamp passes these checks), and whose `gate_transition` equals the transition
+    LAST REVIEWED baseline (computed over the WHOLE commit graph from the pre-review origin commit,
+    merges included, counting only versions whose own stamp passes these checks against EVERY
+    reviewed line they join), and whose `gate_transition` equals the transition
     the gate recomputes between the two, row for row. Citing lakefile.lean -- attack 4 of the first
     review -- fails [review-report-invalid]; a two-commit --update-then-stamp with a hollow
     "this -> itself" report -- H1 of the second review -- fails [review-report-mismatch], and any
@@ -100,6 +112,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -287,28 +300,14 @@ class HistoryUnavailable(Exception):
     pass
 
 
-#: THE PRE-REVIEW ORIGIN. Every chain of reviewed baselines starts here: the counts-only baseline
-#: committed at c3046961 on 2026-10-13 (the 2026-09-03 baseline of 23e0d047 plus ten hand edits,
-#: never reviewed as such). Named by CONTENT digest, so no rewrite of history can move it; the commit
-#: is a label. A version whose content equals it restarts the chain.
+#: THE PRE-REVIEW ORIGIN. Every chain of reviewed baselines starts here, ONCE: the counts-only baseline
+#: committed at c3046961 on 2026-10-13 (the 2026-09-03 baseline of 23e0d047 plus ten hand edits, never
+#: reviewed as such). Named by COMMIT and checked by CONTENT. The chain starts at that commit and
+#: nowhere else: a later commit that re-commits the same content (a "revert", or an orphan history
+#: holding it) is an unreviewed version like any other -- the third review's RESTART attack.
+ORIGIN_COMMIT = "c3046961e6c253759611621e559de150be275f42"
 ORIGIN_CONTENT = "sha256:4994f4eadc3a4afb5e419479f958956ef3f85ffb8a4daa8bc0f09e2f4eb1abe2"
 ORIGIN_LABEL = "the pre-review origin (c3046961's counts-only baseline)"
-
-
-def baseline_history(root: Path) -> list[tuple[str, object]]:
-    """[(commit, parsed baseline or None)], oldest first: every commit reachable from HEAD that changed
-    the baseline file, in topological order."""
-    out = identity.git(root, "rev-list", "--reverse", "--topo-order", "HEAD", "--", BASE_REL)
-    hist = []
-    for c in out.split():
-        doc = None
-        if identity.git_ok(root, "cat-file", "-e", f"{c}:./{BASE_REL}"):
-            try:
-                doc = json.loads(identity.git(root, "show", f"{c}:./{BASE_REL}"))
-            except json.JSONDecodeError:
-                doc = None
-        hist.append((c, doc))
-    return hist
 
 
 def _is_shallow(root: Path) -> bool:
@@ -316,35 +315,123 @@ def _is_shallow(root: Path) -> bool:
         identity.git(root, "rev-parse", "--is-shallow-repository").strip() == "true"
 
 
-def last_reviewed(root: Path) -> tuple[str, object]:
-    """(label, baseline) of the most recent baseline BEFORE the committed one that a VALID review
-    accepted. Walks forward from the pre-review origin; a version counts only if its own stamp passes
-    every check against the last version that counted -- so an unreviewed --update, or a stamp whose
-    report does not cover the change since the last real review, never becomes the reference.
+def _blobs(root: Path, commits: list[str]) -> dict:
+    """{commit: blob sha of the baseline file, or None}, in one git process."""
+    prefix = identity.git(root, "rev-parse", "--show-prefix").strip()
+    inp = "".join(f"{c}:{prefix}{BASE_REL}\n" for c in commits)
+    r = subprocess.run(["git", "cat-file", "--batch-check"], cwd=root, input=inp, capture_output=True,
+                       text=True, env=identity._git_env())
+    if r.returncode != 0:
+        raise HistoryUnavailable(f"git cat-file --batch-check failed: {r.stderr.strip()[:200]}")
+    out = {}
+    for c, ln in zip(commits, r.stdout.splitlines()):
+        out[c] = None if ln.endswith(" missing") else ln.split()[0]
+    return out
 
-    Until 2026-10-14 the reference was simply the previous committed version, and a second
-    independent review laundered a footprint growth in two commits: --update (unreviewed), then a
-    stamp citing a hand-written four-line report "this baseline -> itself" (selftest B42-B47)."""
-    hist = baseline_history(root)
-    if not hist:
-        raise HistoryUnavailable(f"git log shows no commit introducing {BASE_REL}")
-    here = identity.git(root, "rev-parse", f"HEAD:./{BASE_REL}", check=False).strip()
-    there = identity.git(root, "rev-parse", f"{hist[-1][0]}:./{BASE_REL}", check=False).strip()
-    if not here or here != there:
-        raise HistoryUnavailable(f"the committed baseline is not the one {hist[-1][0][:12]} wrote (history simplified?)")
-    starts = [i for i, (_, doc) in enumerate(hist[:-1])
-              if doc is not None and baseline_content_digest(doc) == ORIGIN_CONTENT]
-    if not starts:
+
+def reviewed_chain(root: Path, anchor: str | None = None):
+    """The reviewed state of the baseline, computed over the WHOLE commit graph reachable from HEAD.
+
+    Every commit gets the set of REFERENCES it inherits -- content digests of reviewed baselines -- the
+    union over ALL its parents (no history simplification: the third review's MERGE attack hid the
+    reviewed baseline by taking a pre-review branch's file in a merge, and git's default simplification
+    then dropped the reviewed line from a path-limited log). A commit that introduces a new version
+    of the file makes it the single reference only if its stamp passes every check against EVERY
+    inherited reference; otherwise the references pass through unchanged, pending a real review.
+
+    Returns (references at HEAD {digest: (label, doc)}, lineage {digest: {digests it was reviewed from}},
+    references at `anchor` or None, digest -> doc)."""
+    lines = identity.git(root, "rev-list", "--topo-order", "--reverse", "--parents", "HEAD").splitlines()
+    order, parents = [], {}
+    for ln in lines:
+        parts = ln.split()
+        if parts:
+            order.append(parts[0])
+            parents[parts[0]] = parts[1:]
+    if ORIGIN_COMMIT not in parents:
         why = "this is a shallow clone (fetch-depth: 0 needed)" if _is_shallow(root) else \
-            "no earlier version of the baseline is it"
-        raise HistoryUnavailable(f"{ORIGIN_LABEL}, {ORIGIN_CONTENT[:23]}..., is not in this history: {why}")
-    label, ref = ORIGIN_LABEL, hist[starts[-1]][1]
-    for c, doc in hist[starts[-1] + 1:-1]:
-        if doc is None:
+            "HEAD does not descend from it"
+        raise HistoryUnavailable(f"{ORIGIN_LABEL}, commit {ORIGIN_COMMIT[:12]}, is not in this history: {why}")
+    if anchor is not None and anchor not in parents:
+        raise AnchorUnreachable(anchor)
+    blobs = _blobs(root, order)
+    cache: dict = {}
+
+    def doc(blob):
+        if blob not in cache:
+            try:
+                cache[blob] = json.loads(identity.git(root, "cat-file", "-p", blob))
+            except (json.JSONDecodeError, identity.Unavailable):
+                cache[blob] = None
+        return cache[blob]
+
+    refs: dict = {}
+    lineage: dict = {}
+    known: dict = {}                               # every reference ever made: digest -> (label, doc)
+    for c in order:
+        if c == ORIGIN_COMMIT:
+            d = doc(blobs[c]) if blobs[c] else None
+            if d is None or baseline_content_digest(d) != ORIGIN_CONTENT:
+                raise HistoryUnavailable(f"commit {ORIGIN_COMMIT[:12]} does not hold the origin content")
+            refs[c] = {ORIGIN_CONTENT: (ORIGIN_LABEL, d)}
+            known.update(refs[c])
             continue
-        if not review_problems(doc, ref, label, _report_at(root, c)):
-            label, ref = f"the baseline reviewed at {c[:12]}", doc
-    return label, ref
+        inherited: dict = {}
+        for p in parents[c]:
+            if refs.get(p):
+                inherited.update(refs[p])
+        if not inherited:
+            refs[c] = None                         # not descended from the origin: no chain here
+            continue
+        b = blobs[c]
+        if b is None or all(blobs.get(p) == b for p in parents[c]):
+            refs[c] = inherited                    # file absent, or unchanged against every parent
+            continue
+        v = doc(b)
+        dv = baseline_content_digest(v) if v is not None else None
+        if v is None or all(dv == k for k in inherited):
+            refs[c] = inherited
+            continue
+        if all(dv == k or not review_problems(v, rdoc, label, _report_at(root, c))
+               for k, (label, rdoc) in inherited.items()):
+            refs[c] = {dv: (f"the baseline reviewed at {c[:12]}", v)}
+            known.update(refs[c])
+            known.update(inherited)
+            lineage.setdefault(dv, set()).update(k for k in inherited if k != dv)
+        else:
+            refs[c] = inherited
+    return refs[order[-1]], lineage, (refs.get(anchor) if anchor else None), known
+
+
+class AnchorUnreachable(Exception):
+    pass
+
+
+def descends(mine: str, ref: str, lineage: dict) -> bool:
+    """Is `ref` the reviewed baseline `mine` itself, or one it was (transitively) reviewed from?"""
+    seen, stack = set(), [mine]
+    while stack:
+        x = stack.pop()
+        if x == ref:
+            return True
+        if x not in seen:
+            seen.add(x)
+            stack.extend(lineage.get(x, ()))
+    return False
+
+
+def anchor_problems(mine: str, anchor_refs: dict | None, lineage: dict) -> list[tuple[str, str]]:
+    """CI passes the BASE commit (--anchor): the committed baseline's review chain must run through the
+    base's reviewed reference. Independent of what the change's own history claims; a decision on
+    lineage alone, unit-tested on synthetic input in the selftest."""
+    if not anchor_refs:
+        return []                                  # the anchor predates the origin (bootstrap)
+    missing = [k for k in anchor_refs if not descends(mine, k, lineage)]
+    if missing:
+        return [("anchor-not-in-chain", f"the base commit's reviewed baseline {missing[0][:23]}... is not in the "
+                                        f"review chain of this baseline {mine[:23]}...: the change does not build "
+                                        "on what the base accepted")]
+    return []
 
 
 def _report_at(root: Path, commit: str):
@@ -445,7 +532,7 @@ def review_problems(b: dict, ref, ref_label: str, read_report) -> list[tuple[str
          committed unmodified), JSON, schema machsig-transition/*, with `binding` and
          `gate_transition` blocks                                    else [review-report-invalid]
       4. binding.new = this baseline; not a self-binding that hides rows; binding.old = the LAST
-         REVIEWED baseline `ref` (last_reviewed)                    else [review-report-mismatch]
+         REVIEWED baseline `ref` (reviewed_chain)                   else [review-report-mismatch]
       5. gate_transition = the transition recomputed from `ref` to this baseline, row for row
                                                                     else [review-report-rows]"""
     r = b.get("review") if isinstance(b.get("review"), dict) else {}
@@ -513,17 +600,42 @@ def review_problems(b: dict, ref, ref_label: str, read_report) -> list[tuple[str
     return []
 
 
-def review_state(b: dict, root: Path) -> list[tuple[str, str]]:
-    """The committed baseline's stamp, against the last reviewed baseline in git history."""
+def review_state(b: dict, root: Path, anchor: str | None = None) -> list[tuple[str, str]]:
+    """The committed baseline's stamp, against the reviewed references the whole history leaves at HEAD."""
     r = b.get("review") if isinstance(b.get("review"), dict) else {}
-    if r.get("status") == "REVIEWED" and r.get("reviewer") and r.get("baseline_sha256") == baseline_content_digest(b):
-        try:
-            label, ref = last_reviewed(root)
-        except (HistoryUnavailable, identity.Unavailable) as e:
-            return [("baseline-history-unavailable", f"cannot find the last reviewed baseline: {e}")]
+    if not (r.get("status") == "REVIEWED" and r.get("reviewer") and r.get("baseline_sha256") == baseline_content_digest(b)):
+        return review_problems(b, None, ORIGIN_LABEL, _report_in_tree(root))     # fails at step 1 or 2
+    try:
+        final, lineage, anchor_refs, known = reviewed_chain(root, anchor)
+    except AnchorUnreachable as e:
+        return [("anchor-unreachable", f"the base commit {str(e)[:12]} given by --anchor is not in this history: "
+                                       "the change does not contain what it is judged against")]
+    except (HistoryUnavailable, identity.Unavailable) as e:
+        return [("baseline-history-unavailable", f"cannot establish the review chain: {e}")]
+    mine = baseline_content_digest(b)
+    if set(final) == {mine}:
+        # the content was reviewed somewhere in history; the stamp committed NOW must still be a valid
+        # one for it -- a later commit that rewrote only the review block (lakefile.lean as the report,
+        # say) does not inherit the earlier review's validity
+        preds = sorted(lineage.get(mine, ()))
+        if not preds:
+            return [("review-report-mismatch", "no review chain leads to this baseline")]
+        for k in preds:
+            label, ref = known[k]
+            probs = review_problems(b, ref, label, _report_in_tree(root))
+            if probs:
+                return probs
     else:
-        label, ref = ORIGIN_LABEL, None          # steps 1-2 fail before the reference matters
-    return review_problems(b, ref, label, _report_in_tree(root))
+        if len(final) > 1:
+            return [("review-report-mismatch",
+                     f"a merge joined {len(final)} reviewed lines ({', '.join(lab for lab, _ in final.values())}) and "
+                     "no stamp since is valid against every one of them: review the merged baseline against each")]
+        (label, ref), = final.values()
+        probs = review_problems(b, ref, label, _report_in_tree(root))
+        if probs:
+            return probs
+        lineage.setdefault(mine, set()).update(k for k in final if k != mine)   # reviewed in the tree as it stands
+    return anchor_problems(mine, anchor_refs, lineage)
 
 
 # ── the comparison ─────────────────────────────────────────────────────────────────────────────────
@@ -654,7 +766,46 @@ def unavailable(tag: str, msg: str) -> int:
     return UNAVAILABLE
 
 
-def gate(root: Path = FOUND) -> int:
+#: Scripts the extraction executes that are not extractor files (identity.EXTRACTOR_FILES is part of the
+#: extractor digest; changing that list would change the digest both reviewed candidates carry). They
+#: must equal the files at the baseline's provenance commit, which a review accepted.
+RUNNER_FILES = ("tools/capped_lean.sh",)
+LEAN_VERSION = re.compile(r"version\s+(\S+?),.*commit\s+([0-9a-f]+)")
+
+
+def toolchain_key(v) -> str:
+    """The toolchain that ran, minus the platform: 'Lean (version 4.32.2, aarch64-unknown-linux-gnu, commit
+    f3b06c70..., Release)' -> '4.32.2 f3b06c70...', so a baseline made on aarch64 matches a CI run on x86_64."""
+    m = LEAN_VERSION.search(str(v))
+    return f"{m.group(1)} {m.group(2)}" if m else str(v)
+
+
+def provenance_problems(root: Path, prov: dict, head: dict) -> list[tuple[str, str]]:
+    out = []
+    if prov.get("lean_toolchain") != head.get("lean_toolchain") or \
+            toolchain_key(prov.get("lean_version")) != toolchain_key(head.get("lean_version")):
+        out.append(("toolchain-mismatch",
+                    f"the signatures were extracted with {head.get('lean_toolchain')} / {head.get('lean_version')}, the "
+                    f"baseline with {prov.get('lean_toolchain')} / {prov.get('lean_version')}: a toolchain change moves "
+                    "footprints and needs a reviewed rebaseline"))
+    moved = []
+    for rel in RUNNER_FILES:
+        here = identity.sha256_file(root / rel) if (root / rel).is_file() else "absent"
+        there = "absent"
+        if identity.git_ok(root, "cat-file", "-e", f"{prov['machlib_commit']}:./{rel}"):
+            r = subprocess.run(["git", "show", f"{prov['machlib_commit']}:./{rel}"], cwd=root, capture_output=True,
+                               env=identity._git_env())
+            there = hashlib.sha256(r.stdout).hexdigest()
+        if here != there:
+            moved.append(rel)
+    if moved:
+        out.append(("runner-changed", f"{', '.join(moved)} differ(s) from the baseline's provenance commit "
+                                      f"{prov['machlib_commit'][:12]}: the extraction ran other code than the "
+                                      "reviewed baseline's. Rebaseline and review."))
+    return out
+
+
+def gate(root: Path = FOUND, anchor: str | None = None) -> int:
     sigs, base_p = root / "artifacts" / "machsig_signatures.jsonl", root / BASE_REL
     if not sigs.is_file():
         return unavailable("no-signature-set", f"no signature set at artifacts/{sigs.name} (generated, "
@@ -698,8 +849,10 @@ def gate(root: Path = FOUND) -> int:
                                  f"the baseline was derived with extractor {prov['extractor_digest'][7:23]}..., the "
                                  f"signatures with {str(head.get('extractor_digest'))[7:23]}...: a comparison "
                                  "across extractors measures the extractor, not the proofs. Rebaseline and review."))
+            if head is not None and problem is None:
+                refusals += provenance_problems(root, prov, head)
             if not git_refusals:        # a stamp binds the COMMITTED baseline; a local edit has none
-                refusals += review_state(raw, root)
+                refusals += review_state(raw, root, anchor)
     if refusals:
         return refuse(refusals)
     print(f"  signatures: {head['version']} from {head['machlib_commit'][:12]} "
@@ -786,14 +939,39 @@ def dump_baseline(doc: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def set_tree(path) -> None:
+    """Judge another tree than the one this file sits in (CI runs the BASE's gate, isolated, from
+    outside the tree under test: `python3 -I -S <base>/tools/machsig/trust_gate.py --tree <tree>`)."""
+    global FOUND, BASE, SIGS
+    FOUND = Path(path).resolve()
+    BASE = FOUND / BASE_REL
+    SIGS = FOUND / "artifacts" / "machsig_signatures.jsonl"
+
+
+def _opt(argv: list[str], name: str) -> str | None:
+    if name in argv:
+        i = argv.index(name)
+        if i + 1 >= len(argv):
+            raise SystemExit(f"{name} needs a value")
+        return argv[i + 1]
+    return None
+
+
 def main(argv: list[str]) -> int:
+    tree, anchor = _opt(argv, "--tree"), _opt(argv, "--anchor")
+    if tree:
+        set_tree(tree)
+        import trust_gate as _self               # the module the selftest imports is not __main__
+        _self.set_tree(tree)
+    if anchor and not re.fullmatch(r"[0-9a-f]{40}", anchor):
+        raise SystemExit("--anchor takes a full 40-hex commit id")
     if "--content-digest" in argv:
         rest = [a for a in argv if a != "--content-digest"]
         p = Path(rest[0]) if rest else BASE
         print(baseline_content_digest(json.loads(p.read_text())))
         return OK
     if "--update" in argv:
-        return update()
+        return update(FOUND)
     if "--mutate" in argv:
         import trust_gate_selftest
         return trust_gate_selftest.mutate()
@@ -802,7 +980,7 @@ def main(argv: list[str]) -> int:
         rc = trust_gate_selftest.run()
         if rc != OK or "--selftest-only" in argv:
             return rc
-    return gate()
+    return gate(FOUND, anchor)
 
 
 if __name__ == "__main__":

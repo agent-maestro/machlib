@@ -147,6 +147,11 @@ def part_a() -> tuple[bool | None, list[str]]:
     r10 = tg.judge(inj10, cur)
     check(convictions(r10) == ["policy-widened"] and r10["policy-widened"] == [f"trustedFootprint + {promoted}"],
           f"INJECTED promotion of {promoted.split('.')[-1]} into trustedFootprint (E1/E2): `policy-widened`")
+    lin = {"m": {"a"}, "a": {"o"}}
+    check(not tg.anchor_problems("m", {"o": None}, lin) and
+          [t for t, _ in tg.anchor_problems("m", {"x": None}, lin)] == ["anchor-not-in-chain"],
+          "INJECTED base anchor outside the review chain (synthetic lineage): `anchor-not-in-chain`; an "
+          "ancestor in the chain stays silent")
     return ok, lines
 
 
@@ -181,28 +186,43 @@ def sh(repo: Path, *args: str) -> None:
                    capture_output=True)
 
 
+SIG_VERSION = "MachSig/v0.4-wide"
+LEAN_V = "Lean (version 4.32.2, aarch64-unknown-linux-gnu, commit f3b06c705e6c, Release)"
+
+
+def provenance_record(ext: dict, body: bytes, n: int) -> dict:
+    """sig.py's provenance header, rebuilt from its documented fields (SIGNATURE_SPEC v0.3/v0.4)."""
+    keep = ("machlib_commit", "machlib_sources", "sources_clean", "dirty_source_paths", "content_digest",
+            "content_files", "extractor_digest", "extractor_files", "lean_toolchain", "lean_version", "raw",
+            "policy", "run_id")
+    rec = {k: ext[k] for k in keep}
+    rec.update({"kind": identity.PROVENANCE_KIND, "schema": identity.PROVENANCE_SCHEMA, "version": SIG_VERSION,
+                "records": n, "records_sha256": "sha256:" + hashlib.sha256(body).hexdigest()})
+    return rec
+
+
 def write_sigs(found: Path, theorems: dict, header: bool = True, digests: dict | None = None,
                closures: dict | None = None, axioms: dict | None = None, policy: dict | None = None,
-               run_id: str | None = None) -> None:
+               run_id: str | None = None, lean_version: str = LEAN_V) -> None:
     """A synthetic v0.4 signature set with the real writer's provenance header. `digests` / `closures`
     perturb a theorem's StatementDigest / DefClosureDigest by name; `axioms` / `policy` replace the pins
     and the declared policy."""
-    sys.path.insert(0, str(found / "tools" / "machsig"))
-    import sig                                         # the real writer's provenance format
+    # The provenance header is built HERE, not by importing the tree's sig.py: the selftest is part of
+    # the judge, and the judge imports nothing from a tree (the third review's json.py/sig.py routes).
     live = identity.live_identity(found)
-    ext = dict(live, lean_version="selftest", raw={}, policy=policy or POLICY, run_id=run_id)
+    ext = dict(live, lean_version=lean_version, raw={}, policy=policy or POLICY, run_id=run_id)
     records = {}
     for name in theorems:
         axs = sorted(theorems[name])
-        records[name] = {"kind": "theorem", "object": name, "version": sig.VERSION,
+        records[name] = {"kind": "theorem", "object": name, "version": SIG_VERSION,
                          "StatementDigest": hashlib.sha256((name + (digests or {}).get(name, "")).encode()).hexdigest(),
                          "DefClosureDigest": hashlib.sha256(("c:" + name + (closures or {}).get(name, "")).encode()).hexdigest(),
                          "TrustSig": f"AX{len(axs)}-S0", "TrustAxioms": axs}
     for a, h in (axioms or AXIOMS).items():
-        records[a] = {"kind": "axiom", "object": a, "version": sig.VERSION, "AxiomStatementDigest": h}
+        records[a] = {"kind": "axiom", "object": a, "version": SIG_VERSION, "AxiomStatementDigest": h}
     lines = [json.dumps(records[k], sort_keys=True) + "\n" for k in sorted(records)]
     body = "".join(lines).encode()
-    head = json.dumps(sig.provenance_record(ext, body, len(lines)), sort_keys=True) + "\n"
+    head = json.dumps(provenance_record(ext, body, len(lines)), sort_keys=True) + "\n"
     (found / "artifacts").mkdir(exist_ok=True)
     (found / "artifacts" / "machsig_signatures.jsonl").write_bytes((head.encode() if header else b"") + body)
 
@@ -231,6 +251,10 @@ def build_fixture(root: Path, gate_text: str | None = None) -> Path:
     sh(repo, "init", "-q", "-b", "main")
     sh(repo, "add", "-A")
     sh(repo, "commit", "-q", "-m", "fixture, with the counts-only origin baseline")
+    origin = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, env=env(), capture_output=True, text=True,
+                            check=True).stdout.strip()
+    gp.write_text(re.sub(r'^ORIGIN_COMMIT = ".*"$', f'ORIGIN_COMMIT = "{origin}"', gp.read_text(), count=1,
+                         flags=re.M))
     write_sigs(found, THEOREMS)
     rc = subprocess.run([sys.executable, str(found / "tools/machsig/trust_gate.py"), "--update"],
                         cwd=found, env=env(), capture_output=True, text=True)
@@ -257,14 +281,23 @@ def restamp(found: Path, previous, report: dict | None = None, reviewer: str = "
         report = {"schema": "machsig-transition/v3",
                   "binding": {"old_baseline_sha256": tg.baseline_content_digest(previous), "new_baseline_sha256": mine},
                   "gate_transition": tg.gate_transition(previous, b)}
+    (found / REPORT).parent.mkdir(parents=True, exist_ok=True)
     (found / REPORT).write_text(json.dumps(report, sort_keys=True) + "\n")
     b["review"] = {"status": "REVIEWED", "reviewer": reviewer, "transition_report": REPORT, "baseline_sha256": mine}
     p.write_text(tg.dump_baseline(b))
 
 
 def run_gate(found: Path, extra: dict | None = None) -> tuple[int, str]:
-    r = subprocess.run([sys.executable, str(found / "tools/machsig/trust_gate.py")], cwd=found, env=env(extra),
-                       capture_output=True, text=True)
+    """A fault may return env vars, plus `__args__` (extra gate arguments) and `__judge__` (a directory
+    holding a copy of the gate: run it ISOLATED, `python3 -I -S`, from outside the tree, with --tree)."""
+    extra = dict(extra or {})
+    args = extra.pop("__args__", [])
+    judge = extra.pop("__judge__", None)
+    if judge:
+        cmd = [sys.executable, "-I", "-S", str(Path(judge) / "tools/machsig/trust_gate.py"), "--tree", str(found)]
+    else:
+        cmd = [sys.executable, str(found / "tools/machsig/trust_gate.py")]
+    r = subprocess.run(cmd + args, cwd=found, env=env(extra), capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
 
@@ -514,6 +547,96 @@ def cases():
         update(f)
         restamp(f, r1)
         commit_all(repo, "r2 reviewed, from r1")
+    def head_sha(repo):
+        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, env=env(), capture_output=True, text=True,
+                              check=True).stdout.strip()
+    def origin_sha(repo):
+        return subprocess.run(["git", "rev-list", "--max-parents=0", "HEAD"], cwd=repo, env=env(),
+                              capture_output=True, text=True, check=True).stdout.split()[0]
+    def restart(repo, f):
+        # RESTART (review 3): re-commit the counts-only origin (a "revert"), then rebaseline with a growth
+        # and an honest report FROM THE ORIGIN -- the old walk restarted the chain at the last origin
+        (f / tg.BASE_REL).write_text(json.dumps(LEGACY, sort_keys=True, indent=0))
+        commit_all(repo, "revert the baseline to the counts-only origin")
+        write_sigs(f, GROWN)
+        update(f)
+        restamp(f, LEGACY)
+        commit_all(repo, "rebaseline from the origin")
+    def recommit_older(repo, f):
+        # re-commit an OLDER reviewed baseline (L1, with its own stamp and report) over a newer one (L2)
+        l1_base, l1_rep = (f / tg.BASE_REL).read_text(), (f / REPORT).read_text()
+        pristine = committed(f)
+        write_sigs(f, GROWN)
+        update(f)
+        restamp(f, pristine)
+        commit_all(repo, "L2 reviewed from L1")
+        write_sigs(f, THEOREMS)
+        (f / tg.BASE_REL).write_text(l1_base)
+        (f / REPORT).write_text(l1_rep)
+        commit_all(repo, "put L1 back, stamp and report included")
+    def merge_attack(repo, f, side_first: bool):
+        # MERGE (review 3): a branch forked BEFORE the first review rebaselines against the origin; it is
+        # merged with the reviewed line and its file wins
+        sh(repo, "checkout", "-q", "-b", "side", origin_sha(repo))
+        write_sigs(f, GROWN)
+        update(f)
+        restamp(f, LEGACY)
+        commit_all(repo, "side: rebaseline from the origin")
+        if side_first:
+            sh(repo, "merge", "-q", "--no-edit", "-X", "ours", "main")
+        else:
+            sh(repo, "checkout", "-q", "main")
+            sh(repo, "merge", "-q", "--no-edit", "-X", "theirs", "side")
+        write_sigs(f, GROWN)
+    def merge_side_first(repo, f): merge_attack(repo, f, True)
+    def merge_main_first(repo, f): merge_attack(repo, f, False)
+    def honest_merge(repo, f):
+        # control: a branch forked AFTER the review, reviewed from it, merged with --no-ff
+        pristine = committed(f)
+        sh(repo, "checkout", "-q", "-b", "feature")
+        write_sigs(f, GROWN)
+        update(f)
+        restamp(f, pristine)
+        commit_all(repo, "feature: reviewed from L1")
+        sh(repo, "checkout", "-q", "main")
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", "feature")
+        write_sigs(f, GROWN)
+    def anchor_unreachable(repo, f):
+        sh(repo, "checkout", "-q", "-b", "elsewhere")
+        (f / "docs" / "note.md").write_text("not merged\n")
+        commit_all(repo, "a commit HEAD will not contain")
+        other = head_sha(repo)
+        sh(repo, "checkout", "-q", "main")
+        return {"__args__": ["--anchor", other]}
+    def anchor_ok(repo, f):
+        return {"__args__": ["--anchor", head_sha(repo)]}
+    def toolchain(repo, f):
+        write_sigs(f, THEOREMS, lean_version="Lean (version 4.33.0, aarch64-unknown-linux-gnu, commit 0123456789ab, Release)")
+    def other_platform(repo, f):
+        write_sigs(f, THEOREMS, lean_version=LEAN_V.replace("aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"))
+    def runner(repo, f):
+        (f / "tools" / "capped_lean.sh").write_text("#!/bin/sh\nexec \"$@\"\n")
+        commit_all(repo, "a changed runner")
+    JSON_PY = "import os\nos._exit(0)\n"           # the review's payload, in its simplest form
+    def json_py(repo, f, isolated: bool):
+        # H2 (review 3): a change adds tools/machsig/json.py (and replaces trust_gate.py) to take over the
+        # judge's imports, plus a sorryAx growth. The ISOLATED judge, a copy of the pristine gate outside
+        # the tree, must still FAIL it.
+        judge = repo.parent / "judge"
+        if isolated:
+            shutil.copytree(f / "tools" / "machsig", judge / "tools" / "machsig",
+                            ignore=shutil.ignore_patterns("trust_baseline.json", "__pycache__"))
+        (f / "tools" / "machsig" / "json.py").write_text(JSON_PY)
+        (f / "tools" / "machsig" / "trust_gate.py").write_text(JSON_PY)
+        write_sigs(f, dict(THEOREMS, **{"Fx.alpha": THEOREMS["Fx.alpha"] + ["sorryAx"]}))
+        if not isolated:
+            # the in-tree run executes the replaced gate itself; restore it so only json.py attacks
+            shutil.copy2(judge_src(f), f / "tools" / "machsig" / "trust_gate.py")
+        return {"__judge__": str(judge)} if isolated else {}
+    def judge_src(f):
+        return f.parent.parent / "pristine" / "foundations" / "tools" / "machsig" / "trust_gate.py"
+    def json_isolated(repo, f): return json_py(repo, f, True)
+    def json_in_tree(repo, f): return json_py(repo, f, False)
     def shallow(repo, f):
         # depth-1 clone: neither the provenance commit nor the previous baseline is reachable
         clone = repo.parent / "shallow"
@@ -598,6 +721,27 @@ def cases():
          None, "MACHSIG-TRUST OK"),
         ("B49 control: two reviewed rebaselines, the second reporting from the first", honest_chain, 0, None,
          "MACHSIG-TRUST OK"),
+        ("B50 RESTART (review 3): re-commit the origin, then rebaseline from it", restart, 3,
+         "review-report-mismatch", "the last reviewed baseline is"),
+        ("B51 re-commit an OLDER reviewed baseline over a newer one", recommit_older, 3, "review-report-mismatch",
+         "the last reviewed baseline is the baseline reviewed at"),
+        ("B52 MERGE (review 3): pre-review branch merged, its file kept, branch as first parent",
+         merge_side_first, 3, "review-report-mismatch", "a merge joined 2 reviewed lines"),
+        ("B53 MERGE, reviewed line as first parent", merge_main_first, 3, "review-report-mismatch",
+         "a merge joined 2 reviewed lines"),
+        ("B54 control: a branch reviewed from L1 merged with --no-ff", honest_merge, 0, None, "MACHSIG-TRUST OK"),
+        ("B55 --anchor names a commit this history lacks", anchor_unreachable, 3, "anchor-unreachable",
+         "is not in this history"),
+        ("B56 control: --anchor at the reviewed commit", anchor_ok, 0, None, "MACHSIG-TRUST OK"),
+        ("B57 signatures extracted with another toolchain", toolchain, 3, "toolchain-mismatch", "4.33.0"),
+        ("B58 control: same toolchain, other platform (aarch64 vs x86_64)", other_platform, 0, None,
+         "MACHSIG-TRUST OK"),
+        ("B59 tools/capped_lean.sh differs from the baseline's provenance commit", runner, 3, "runner-changed",
+         "tools/capped_lean.sh"),
+        ("B60 H2 (review 3): json.py in the tree; the ISOLATED judge still FAILS the sorryAx growth", json_isolated,
+         1, None, "FAIL [policy-violation]"),
+        ("B61 control (the attack is real): the same tree judged in-tree, unisolated, exits 0", json_in_tree, 0,
+         None, ""),
     ]
 
 
@@ -668,14 +812,24 @@ MUTANTS = [
     ("self-binding check removed",
      'if bind.get("old_baseline_sha256") == bind.get("new_baseline_sha256") and \\', "if False and \\"),
     ("report rows not compared with the recompute", 'if report_doc["gate_transition"] != recomputed:', "if False:"),
-    ("H1 pre-fix: the reference is the previous committed version",
-     "    label, ref = ORIGIN_LABEL, hist[starts[-1]][1]",
-     "    label, ref = ORIGIN_LABEL, (hist[-2][1] if len(hist) > 1 else hist[starts[-1]][1])"),
     ("historical stamps counted without checking their reports",
-     "if not review_problems(doc, ref, label, _report_at(root, c)):",
-     'if (doc.get("review") or {}).get("status") == "REVIEWED" if isinstance(doc, dict) else False:'),
+     "if all(dv == k or not review_problems(v, rdoc, label, _report_at(root, c))",
+     'if all(dv == k or (v.get("review") or {}).get("status") == "REVIEWED"'),
     ("the walk never advances past the origin",
-     'label, ref = f"the baseline reviewed at {c[:12]}", doc', "pass"),
+     'refs[c] = {dv: (f"the baseline reviewed at {c[:12]}", v)}', "refs[c] = inherited"),
+    ("RESTART: the origin restarts the chain wherever its content reappears",
+     "        if c == ORIGIN_COMMIT:", "        if blobs.get(c) == blobs.get(ORIGIN_COMMIT):"),
+    ("MERGE: only the first parent's references count", "        for p in parents[c]:\n            if refs.get(p):",
+     "        for p in parents[c][:1]:\n            if refs.get(p):"),
+    ("MERGE: a merge taking one side's file is not judged", "if b is None or all(blobs.get(p) == b for p in parents[c]):",
+     "if b is None or any(blobs.get(p) == b for p in parents[c]):"),
+    ("anchor reachability not checked", "    if anchor is not None and anchor not in parents:", "    if False:"),
+    ("toolchain not compared", "    if prov.get(\"lean_toolchain\") != head.get(\"lean_toolchain\") or \\",
+     "    if False and \\"),
+    ("toolchain compared with the platform", "    m = LEAN_VERSION.search(str(v))", "    m = None"),
+    ("runner scripts not compared", "        if here != there:", "        if False:"),
+    ("the judge puts the tree on its import path", "    FOUND = Path(path).resolve()",
+     '    FOUND = Path(path).resolve()\n    sys.path.insert(0, str(FOUND / "tools" / "machsig"))'),
     ("restatement passes again (pre-2026-10-13)",
      '("restated", "statement CHANGED: a different claim the baseline has not reviewed"),', ""),
     ("removal passes again (pre-2026-10-13)",
