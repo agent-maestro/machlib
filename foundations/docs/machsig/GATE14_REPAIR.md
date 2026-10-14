@@ -43,8 +43,10 @@ extractor or another declared policy, one from another run when `MACHSIG_RUN_ID`
 that is untracked, modified, without provenance, naming a commit the repository lacks,
 self-contradicting, from another extractor, or not REVIEWED; a REVIEWED stamp not bound to this
 baseline's content [review-unbound]; a stamp whose report is not a committed machsig-transition JSON
-[review-report-invalid]; a report whose binding is not (previous committed baseline → this one)
-[review-report-mismatch]; a clone too shallow to read the previous baseline. Missing inputs: exit 2.
+with `binding` and `gate_transition` [review-report-invalid]; a report that does not start at the LAST
+REVIEWED baseline, or binds a baseline to itself [review-report-mismatch]; a report whose
+`gate_transition` differs from the transition the gate recomputes between the two baselines
+[review-report-rows]; a clone too shallow to reach the pre-review origin. Missing inputs: exit 2.
 
 **FAILS (exit 1):** an axiom enters an unchanged statement's footprint (sets, so swaps too); a
 statement changes; a definition under an unchanged statement changes (`redefined`); a watched theorem
@@ -59,8 +61,11 @@ the pre-repair counts-only file. That is the true state until step 7, and check_
 watched theorem, or promoting an axiom, now needs a reviewed rebaseline. The default is closed.
 
 **What the stamp is and is not.** The gate binds CONTENT: the stamp names the baseline's own digest,
-and the report it cites must describe exactly the transition from the previous committed baseline
-(read from git) to this one. That stops reusing, borrowing or forgetting a stamp. It cannot
+and the report it cites must describe exactly the transition from the last REVIEWED baseline to this
+one. The gate finds that baseline by walking the file's git history forward from the pre-review
+origin (c3046961's counts-only baseline, `ORIGIN_CONTENT`), advancing only past versions whose own
+stamp passes every check; it recomputes the transition from the two baselines' content and requires
+the report's `gate_transition` to equal it row for row. That stops reusing, borrowing or forgetting a stamp. It cannot
 authenticate a person: anyone with commit access can write a stamp and generate a matching report.
 That a review happened remains a process recorded in git — who committed the stamp, and the packet's
 sign-off table.
@@ -72,8 +77,15 @@ refuses a set with another run's id. Run by hand without it, the gate prints
 `MACHSIG-TRUST ADVISORY` under its verdict.
 
 **Proof of the red paths:** `--selftest` (Part A: 8 injections + 4 controls on the real set; Part B:
-41 faults + 1 control end to end in throwaway git repositories, including every attack of the
-review that passed) and `--mutate` (28 mutant gates, each must be killed). Both run in check_all.sh.
+45 faults + 5 controls end to end in throwaway git repositories, including every attack of both
+reviews that passed) and `--mutate` (33 mutant gates, each must be killed). Both run in check_all.sh.
+
+**The gate's own code is pinned in CI (H2).** The proposed workflow runs `trust_gate.py`, its selftest
+and `identity.py` from the BASE commit against the tree under test, so a change cannot judge itself
+with a weakened gate; when the change touches those files, its own versions must also pass their own
+tests. `.github/CODEOWNERS` requests the owner's review for `foundations/tools/machsig/**`,
+AxiomLedger.lean, sorry_audit.lean and the workflow; making that review REQUIRED is a repository
+setting, left to the owner.
 
 ## Hardening after the independent review (2026-10-13)
 
@@ -89,6 +101,8 @@ review that passed) and `--mutate` (28 mutant gates, each must be killed). Both 
 | E1/E2: promotions invisible (not a listed item) | policy pinned; `policy-widened` | B38, B39, Part A |
 | attack 2: relabelled stale set | `MACHSIG_RUN_ID` binding in check_all/CI; ADVISORY standalone | B40, B41, B0 |
 | doc error (below) | corrected | — |
+| H1 (review 2): `--update`, then a stamp with a 4-line "this → itself" report | reference = last REVIEWED baseline (history walk from the origin); report rows recomputed and compared | B42-B47, controls B48-B49 |
+| H2 (review 2): the gate's own code is not pinned | CI runs the base commit's gate against the tree; CODEOWNERS | simulated: a PR weakening `trust_gate.py` passes its own gate and FAILS under the pinned one |
 
 **Correction.** Version 1 of this file said all ten growths of 203cc854 sit in
 `OperatorBasisGeneral.lean`. Six do (`aerr_exp`, `aerr_exp_upper`, `aexpr_fwd_error`, `aexpr_sound`,
@@ -111,7 +125,9 @@ come from 203cc854, as the review verified. The data in the packet was right; th
 1. On a tree whose Lean sources and policy still equal the candidate's (`content_digest` in its
    provenance), copy the chosen candidate to `tools/machsig/trust_baseline.json`. If anything moved,
    do not reuse it: `regen.py`, `trust_gate.py --update`, and a new transition report.
-2. Fill its `review` block: `status` REVIEWED, `reviewer`, `transition_report` = the committed
+2. Fill its `review` block (the cited report's `binding.old` is the last reviewed baseline -- for the
+   first review, the pre-review origin -- and its `gate_transition` must match the gate's recompute;
+   transition.py writes both): `status` REVIEWED, `reviewer`, `transition_report` = the committed
    transition JSON (`docs/machsig/transition_2026-10-13.json` for the narrow candidate,
    `docs/machsig/transition_widened_2026-10-13.json` for the widened one),
    and `baseline_sha256` = `python3 tools/machsig/trust_gate.py --content-digest`. The report's

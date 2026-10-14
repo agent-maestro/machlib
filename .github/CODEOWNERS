@@ -1,0 +1,14 @@
+# Gate 14, the MachSig trust ratchet: its code, its extractor, the declared axiom policy it judges
+# against, and the workflow that runs it. A change to any of these changes what "checked" means, so
+# it needs the owner's review (H2 of the second independent review of the gate, 2026-10-14).
+#
+# This file only REQUESTS that review. It becomes REQUIRED only if branch protection on master is set
+# to require code-owner review -- a repository setting this file does not change; that is the owner's
+# call. The proposed workflow additionally runs the gate from the base commit, so a change cannot
+# judge itself with its own gate.
+/foundations/tools/machsig/                             @agent-maestro
+/foundations/AxiomLedger.lean                           @agent-maestro
+/foundations/tools/sorry_audit.lean                     @agent-maestro
+/foundations/docs/machsig/PROPOSED_CI_machsig-trust.yml @agent-maestro
+/.github/workflows/machsig-trust.yml                    @agent-maestro
+/.github/CODEOWNERS                                     @agent-maestro
