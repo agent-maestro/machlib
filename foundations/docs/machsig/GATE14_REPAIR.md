@@ -7,103 +7,115 @@ a generated file named next to it.
 
 | step | what | state |
 |---|---|---|
-| 1 | gate refuses missing, stale, untracked baselines/signatures | **done** — `trust_gate.py`, 22 end-to-end faults + 15 mutants |
-| 2 | regenerate signatures from an identified revision | **done** — `regen.py` at fb806c09 (Lean sources = c3046961) |
-| 3 | deterministic old-vs-new transition report | **done** — `TRANSITION_2026-10-13.md` + `.json`, byte-identical on rerun |
-| 4 | classify by type and trust implication | **done** — same report, sections 2-6 |
-| 5 | independent review of removals, restatements, assumption changes | **open** — `REVIEW_PACKET_2026-10-13.md` |
-| 6 | reproducible classification + targeted checks of the large groups | machinery **done** (mechanism, `targeted_check.py`); sign-off **open** |
-| 7 | commit the reviewed baseline, enable the gate in CI | **open** — candidate + proposed workflow below |
+| 1 | gate refuses missing, stale, untracked baselines/signatures | **done**, then hardened after the independent review (below) |
+| 2 | regenerate signatures from an identified revision | **done** — `regen.py`, MachSig v0.4, Lean sources = c3046961 |
+| 3 | deterministic old-vs-new transition report | **done** — `TRANSITION_2026-10-13.md` + `.json` (version 2), byte-identical on rerun |
+| 4 | classify by type and trust implication | **done** — same report |
+| 5 | independent review of removals, restatements, assumption changes | **done for the narrow candidate**: ACCEPT EXCEPT E1/E2/E3, which go to the owner (`scratchpad/MACHSIG_INDEPENDENT_REVIEW_2026-10-13.md`) |
+| 6 | reproducible classification + targeted checks of the large groups | **done**: 200/200 sampled (seed 20261013), full `#print axioms` sweep; the reviewer's own seed-777 sample 98/98 |
+| 7 | commit the reviewed baseline, enable the gate in CI | **open** — waits for the owner's rulings on E1-E3 |
 
-## What the gate does now
+## The candidate
 
-`tools/machsig/trust_gate.py` refuses (exit 3, one tagged line per reason) before it compares
-anything: a signature set with no provenance record, one whose recorded source bytes or extractor
-differ from the live tree, a truncated or edited set, a baseline that is untracked, locally modified,
-without provenance, naming a commit the repository lacks, self-contradicting, derived with another
-extractor, or never reviewed. Missing inputs are UNAVAILABLE (exit 2). An axiom entering an unchanged
-statement's footprint is FAIL (exit 1) — compared as SETS, so a swap (one out, one in) is caught,
-which the count rule could not do. Proof of each red path: `--selftest` (Part A on the real set,
-Part B: 22 faults in a throwaway git repository); proof that the selftest notices a broken gate:
-`--mutate` (15 mutants). An independent code review (2026-10-13) found two fail-open paths, both
-fixed and now cases: a REVIEWED stamp could cite an absolute path such as `/etc/hostname` (the
-report must now be relative, inside `foundations/`, committed and unmodified), and duplicate records
-were last-write-wins in sig.py, census.py and the gate (all three now refuse).
+`trust_baseline.candidate-narrow-2026-10-13.json`: the population the gate watched until v0.4
+(`MachLib.*` theorems passing the old name filter, 7,948), transition `TRANSITION_2026-10-13.md`,
+packet `REVIEW_PACKET_2026-10-13.md` (reviewed). A widened candidate, watching every theorem MachLib
+declares, follows in SEPARATE commits on this branch so the owner can land the hardening without it.
 
-The REVIEWED stamp is a process record, not authentication: anyone with commit access can write
-one. It makes acceptance explicit, attributable in `git log`, and impossible to produce with
-`--update`; it does not prove a review happened.
+The narrow candidate's axiom sets are byte-identical to the candidate the independent review accepted
+(the `axiom_sets` table and every theorem's `ax`/`d`/`set` are equal); v0.4 only adds per-theorem
+definition-closure digests, axiom statement pins, the declared policy, and the binding fields.
 
-`tools/check_all.sh` now runs `machsig-extract` (regen.py), `machsig-trust-selftest`,
-`machsig-trust-mutate` and `machsig-trust` on separate lines.
+## What the gate does now (MachSig v0.4)
 
-**On this branch the gate refuses `[baseline-provenance-absent]`.** The committed baseline is still
-the pre-repair counts-only file, which records no provenance. That is the true state and stays so
-until step 7.
+**Refuses (exit 3), one tagged line per reason, before comparing anything:** a signature set with no
+provenance, a truncated/edited/duplicated one, one extracted from other Lean sources, another
+extractor or another declared policy, one from another run when `MACHSIG_RUN_ID` is set; a baseline
+that is untracked, modified, without provenance, naming a commit the repository lacks,
+self-contradicting, from another extractor, or not REVIEWED; a REVIEWED stamp not bound to this
+baseline's content [review-unbound]; a stamp whose report is not a committed machsig-transition JSON
+[review-report-invalid]; a report whose binding is not (previous committed baseline → this one)
+[review-report-mismatch]; a clone too shallow to read the previous baseline. Missing inputs: exit 2.
 
-## Findings (from `TRANSITION_2026-10-13.md`)
+**FAILS (exit 1):** an axiom enters an unchanged statement's footprint (sets, so swaps too); a
+statement changes; a definition under an unchanged statement changes (`redefined`); a watched theorem
+leaves the set; sorryAx outside the allowlist, a compiler-trust axiom or an undeclared axiom in ANY
+watched theorem, however old (`policy-violation`); an axiom restated under its name; trustedFootprint
+or the sorry allowlist grows (`policy-widened`).
 
-* The 2026-09-03 baseline is **reconstructed byte-identically** (cold build of 23e0d047 + its own
-  extractor). The stale local set the gate read for forty days equals a fresh 23e0d047 extraction.
-* **0 extractor-caused changes** at either revision; all 4,317 are source changes.
-* grew 1,816 / shrank 1,642 / **swap 375** (invisible to the old gate) / restated 2 / new 480 / removed 2.
-* No sorryAx, compiler-trust or undeclared axiom moved; no conditional axiom entered any footprint; no
-  axiom created since 2026-09-03 entered an existing theorem; 119 theorems went conditional→approved,
-  none the other way.
-* 39 axioms were discharged on 2026-10-04 (5841ea60, 2d2f59c0, e25e0cd1). That explains 3,761 of the
-  3,835 grew/shrank/swap/restated changes mechanically. The other 74 are listed in full in the packet
-  (C1, plus one restatement in B). The 10 growths among them all sit in `OperatorBasisGeneral.lean`,
-  whose only commits in the window are 203cc854 (derived tangent line) and 9802f19e (clamp): the axiom
-  `one_add_le_exp` left and `HasDerivAt_*` / `rolle_ct` entered, as that file's own comment at line 119
-  says it should. Six of the ten are the entries c3046961 accepted by hand against the stale set.
-* Targeted checks: 168/168 sampled theorems (seed 20261013, 10 per class, every class, all 74
-  unexplained) reproduce through `#print axioms`; full sweep 7,470/7,470 and 7,948/7,948.
+**On this branch the gate refuses `[baseline-provenance-absent]`**: the committed baseline is still
+the pre-repair counts-only file. That is the true state until step 7, and check_all.sh says so.
 
-## Step 5 — the review (not done by the agent that built this)
+**Friction, by design (the owner can relax it):** deleting, renaming, restating or redefining a
+watched theorem, or promoting an axiom, now needs a reviewed rebaseline. The default is closed.
 
-Read `REVIEW_PACKET_2026-10-13.md` (sections A-F) and fill in its sign-off table. The packet's
-primer is written for someone who has never seen MachLib. Things that deserve a person's eyes first:
+**What the stamp is and is not.** The gate binds CONTENT: the stamp names the baseline's own digest,
+and the report it cites must describe exactly the transition from the previous committed baseline
+(read from git) to this one. That stops reusing, borrowing or forgetting a stamp. It cannot
+authenticate a person: anyone with commit access can write a stamp and generate a matching report.
+That a review happened remains a process recorded in git — who committed the stamp, and the packet's
+sign-off table.
 
-* **B. Restatements.** `clamp_le_hi` GAINED the hypothesis `lo ≤ hi` (a weaker statement) and
-  `lo_le_clamp` LOST it (stronger); both from 9802f19e "clamp is max lo (min x hi)". Intended?
-* **A. Removals.** `MachLib.div_one_eq` moved to `MachLib.Real.div_one_eq` (same statement digest,
-  e7b91de7); `MachLib.Real.mul_succ_eq` was deleted in 5841ea60 with no successor.
-* **C1.** The 10 growths and 64 other unexplained changes.
+**Standalone runs are advisory.** A signature set's identity is self-declared, so a stale set given
+a fresh header passes (the review's attack 2). `tools/check_all.sh` and the proposed CI job therefore
+regenerate the set in the same run and export `MACHSIG_RUN_ID`; `regen.py` records it and the gate
+refuses a set with another run's id. Run by hand without it, the gate prints
+`MACHSIG-TRUST ADVISORY` under its verdict.
 
-## Step 6 — reproduce the classification
+**Proof of the red paths:** `--selftest` (Part A: 8 injections + 4 controls on the real set; Part B:
+41 faults + 1 control end to end in throwaway git repositories, including every attack of the
+review that passed) and `--mutate` (28 mutant gates, each must be killed). Both run in check_all.sh.
 
-```
-python3 tools/machsig/collect_evidence.py --evidence EV --old-root OLD/foundations \
-    --new-root NEW/foundations --old-rev 23e0d047 --new-rev c3046961
-python3 tools/machsig/targeted_check.py --evidence EV --old-root OLD/foundations \
-    --new-root NEW/foundations --seed 20261013 --per-class 10 --full
-python3 tools/machsig/transition.py --evidence EV --out-md T.md --out-json T.json --packet P.md
-```
+## Hardening after the independent review (2026-10-13)
 
-`TRANSITION_2026-10-13.md` section 9 lists how each evidence file is produced, and the sha256 of each.
-The small ones are in `evidence-2026-10-13/`; the signature sets (~11 MB each) are regenerated with
-`regen.py` (their record digest, `records_sha256`, is the cross-platform comparator: the header's
-`lean_version` names the machine).
+| review item | fix | regression test |
+|---|---|---|
+| attack 3: `--update`, paste the old stamp | stamp carries `baseline_sha256`; gate recomputes | B23 |
+| attack 4: reviewer "x", lakefile.lean as report | report must be a committed machsig-transition JSON bound to (previous → this) | B24-B27 |
+| attack 5: restatement launders sorryAx | restatement FAILS whatever its axioms | B28, B29, Part A |
+| attack 6: theorem leaves the watched set | removal FAILS | B30, Part A |
+| axiom statements not pinned (16 restated) | `AxiomStatementDigest` per axiom; `axiom-restated` | B36, Part A |
+| E3: definition changes invisible | `DefClosureDigest`; `redefined` | B37, Part A |
+| sorryAx / outside the policy in any theorem | `policy-violation`, judged against the declared policy | B33-B35, Part A |
+| E1/E2: promotions invisible (not a listed item) | policy pinned; `policy-widened` | B38, B39, Part A |
+| attack 2: relabelled stale set | `MACHSIG_RUN_ID` binding in check_all/CI; ADVISORY standalone | B40, B41, B0 |
+| doc error (below) | corrected | — |
 
-## Step 7 — commit the reviewed baseline and enable CI (after step 5 signs off)
+**Correction.** Version 1 of this file said all ten growths of 203cc854 sit in
+`OperatorBasisGeneral.lean`. Six do (`aerr_exp`, `aerr_exp_upper`, `aexpr_fwd_error`, `aexpr_sound`,
+`cos_sq_mixed_via_meta`, `exp_sq_via_meta`); four (`aerr_ln`, `aerr_pow`, `ln_step`,
+`ln_lipschitz_bound`) are in `OperatorBasisComplete.lean`. All ten
+come from 203cc854, as the review verified. The data in the packet was right; the prose was not.
 
-1. On a tree whose Lean sources still equal the candidate's (`content_digest` in its provenance),
-   copy `docs/machsig/trust_baseline.candidate-2026-10-13.json` to `tools/machsig/trust_baseline.json`.
-   If the sources moved, do not reuse the candidate: run `regen.py`, `trust_gate.py --update`, and a
-   new transition report against this one.
-2. Set its `review` record by hand: `{"status": "REVIEWED", "reviewer": "<name>",
-   "transition_report": "docs/machsig/TRANSITION_2026-10-13.md"}` (plus a date if wanted).
-3. `python3 tools/machsig/trust_gate.py` must print `MACHSIG-TRUST OK`. Commit.
+## For the owner (from the review)
+
+* **E1** `MachLib.Real.pi_lower_bound` joined trustedFootprint in 5841ea60, the commit that started
+  using it; it entered 181 existing footprints. The report now classes these `assumption-promoted`.
+* **E2** `realPow`, `realPow_nonneg` joined trustedFootprint in e25e0cd1.
+* **E3** `clamp`'s definition changed in 9802f19e. The report's packet section G lists every theorem
+  whose statement reaches it (33 by the gate's edge rule; the review counted 32 with its own walk),
+  and every other definition that changed under unchanged statements (natCast becoming a definition
+  reaches 845 watched theorems).
+
+## Step 7 — after the owner rules and picks a candidate
+
+1. On a tree whose Lean sources and policy still equal the candidate's (`content_digest` in its
+   provenance), copy the chosen candidate to `tools/machsig/trust_baseline.json`. If anything moved,
+   do not reuse it: `regen.py`, `trust_gate.py --update`, and a new transition report.
+2. Fill its `review` block: `status` REVIEWED, `reviewer`, `transition_report` = the committed
+   transition JSON (`docs/machsig/transition_2026-10-13.json`),
+   and `baseline_sha256` = `python3 tools/machsig/trust_gate.py --content-digest`. The report's
+   `binding.old_baseline_sha256` is c3046961's committed baseline, which is what the file replaces.
+3. `MACHSIG_RUN_ID=x python3 tools/machsig/regen.py && MACHSIG_RUN_ID=x python3 tools/machsig/trust_gate.py`
+   must print `MACHSIG-TRUST OK`. Commit.
 4. Move `docs/machsig/PROPOSED_CI_machsig-trust.yml` to `.github/workflows/machsig-trust.yml` in the
-   same commit. Estimated 30-40 min per run (12.6 min cold build + extract.lean, which dominates).
-5. Do not squash-merge `machsig-gate`: the candidate's provenance names fb806c09, and the gate refuses
-   a baseline whose provenance commit the repository does not contain.
+   same commit (~30-40 min per run; extract.lean dominates).
+5. Do not squash-merge `machsig-gate`: the candidate's provenance commit must stay reachable.
 
-## Not done here, for the owner to decide
+## Reproduce
 
-* **Population.** The gate does not watch the 301 `Certcom.*` theorems (no axiom extraction in
-  `extract.lean`'s scope) nor ~70 hand-written `MachLib.*` theorems that `extract_statement.lean`'s
-  substring filter mistakes for generated ones (`.rec`→`recip_*`, `.inj`→`injective_*`, `.below`,
-  `.eq_`, `proof_`). Fixing it is an extractor change and so its own reviewed transition.
-* **Cost.** `extract.lean` takes 8.5-10.7 min locally; `#print axioms` over every watched theorem takes
-  seconds. Making it cheap is another extractor change.
+See section 9 of each transition report. In short: cold-build 23e0d047 in its own worktree, copy this
+branch's extractor files into it, run `regen.py` in both trees, then `collect_evidence.py`,
+`targeted_check.py --full` and `transition.py`. The small evidence files are in
+`evidence-2026-10-13/`; the signature sets (~11 MB each) are regenerated, and their `records_sha256`
+is the cross-machine comparator.

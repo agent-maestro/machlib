@@ -117,6 +117,24 @@ which the gate reports as INFO). Consumers skip the record: it has no `object`.
 python3 tools/machsig/regen.py        # the only supported way to (re)generate signatures
 ```
 
+## v0.4 (2026-10-13) — definitions, axiom statements, policy, run
+
+After an independent review found the gate blind to three kinds of change, each signature set also
+carries (all from `tools/machsig/extract_trust.lean`, ~30 s):
+
+| field | on | what |
+|---|---|---|
+| `DefClosureDigest` | theorem | SHA-256 over the definitions its statement reaches through definition bodies, stopping at axioms, opaque constants and theorems; per constant a 128-bit structural fingerprint (two `mixHash` lanes; binder names, binder info and mdata excluded), combined per strongly connected component (`trust_closure.py`) |
+| `AxiomStatementDigest` | axiom | SHA-256 of the axiom's canonical type serialization (universe levels kept, string literals quoted) |
+| `policy` | header | AxiomLedger's `knownAxioms` and `trustedFootprint`, sorry_audit's `allowedSorry`, read at extraction |
+| `run_id` | header | `MACHSIG_RUN_ID` when set: check_all.sh and CI bind the gate to the set they just extracted |
+
+`StatementDigest` is unchanged, so v0.4 compares with every earlier baseline on statements and axiom
+sets; the closure digest is compared from the first v0.4 baseline onward. `TrustAxioms` must equal
+extract_trust.lean's own `collectAxioms` call on every theorem both cover, or `sig.py` writes nothing.
+AxiomLedger.lean and tools/sorry_audit.lean join the content digest, so a policy edit after extraction
+makes the set stale.
+
 ## CLI
 
 ```

@@ -109,11 +109,14 @@ New axioms (7): `Classical.choice`, `MachLib.Real`, `MachLib.Real.leR`, `MachLib
 | kind | class | count |
 |---|---|---:|
 | grew | assumption-conditional | 91 |
-| grew | assumption-foundation | 1725 |
+| grew | assumption-foundation | 1649 |
+| grew | assumption-promoted | 76 |
 | shrank | assumption-conditional | 89 |
-| shrank | assumption-foundation | 1553 |
+| shrank | assumption-foundation | 1457 |
+| shrank | assumption-promoted | 96 |
 | swap | assumption-conditional | 12 |
-| swap | assumption-foundation | 363 |
+| swap | assumption-foundation | 361 |
+| swap | assumption-promoted | 2 |
 
 ### C1. Not explained by a discharged axiom (73) — read each
 
@@ -398,7 +401,7 @@ New axioms (24): `MachLib.Real`, `MachLib.Real.addR`, `MachLib.Real.add_assoc`, 
 
 #### `MachLib.Real.bcRatio_even_le`
 
-* kind **shrank**, trust class `assumption-foundation`, mechanism `discharge+proof-change`; cause: source
+* kind **shrank**, trust class `assumption-promoted`, mechanism `discharge+proof-change`; cause: source
 * where: old `MachLib/BallCubeRatio.lean:95`, new `MachLib/BallCubeRatio.lean:95`
 * footprint: 38 → 32 axioms; tier conditional on 1 → conditional on 1
 * entered: `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
@@ -438,7 +441,7 @@ New axioms (31): `MachLib.Real`, `MachLib.Real.addR`, `MachLib.Real.add_assoc`, 
 
 #### `MachLib.Real.bcRatio_odd_le`
 
-* kind **shrank**, trust class `assumption-foundation`, mechanism `discharge+proof-change`; cause: source
+* kind **shrank**, trust class `assumption-promoted`, mechanism `discharge+proof-change`; cause: source
 * where: old `MachLib/BallCubeRatio.lean:111`, new `MachLib/BallCubeRatio.lean:111`
 * footprint: 38 → 32 axioms; tier conditional on 1 → conditional on 1
 * entered: `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
@@ -458,7 +461,7 @@ New axioms (32): `MachLib.Real`, `MachLib.Real.addR`, `MachLib.Real.add_assoc`, 
 
 #### `MachLib.Real.bcRatio_step_le`
 
-* kind **shrank**, trust class `assumption-foundation`, mechanism `discharge+proof-change`; cause: source
+* kind **shrank**, trust class `assumption-promoted`, mechanism `discharge+proof-change`; cause: source
 * where: old `MachLib/BallCubeRatio.lean:83`, new `MachLib/BallCubeRatio.lean:83`
 * footprint: 38 → 32 axioms; tier conditional on 1 → conditional on 1
 * entered: `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
@@ -4055,7 +4058,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.radialIntegral_zero` | `MachLib/GaussianRadialIntegral.lean:77` | 48→43 | approved_policy→approved_policy | MachLib.Real.radialIntegral 0 ⋯ = 0 |
 | `MachLib.Real.radial_integral_exists` | `MachLib/GaussianRadialIntegral.lean:44` | 48→43 | approved_policy→approved_policy | ∀ (x : MachLib.Real) (hx : 0 ≤ x), ∃ I, (∀ (k : Nat), MachLib.Real.lowerSumCont (fun r => r * (-(r * r)).exp) 0 x hx ⋯ (2 ^ k) ⋯ ≤ I ∧ I ≤ MachLib.Real.upperSum … [407 chars; full text in the statements evidence] |
 
-#### G047 — 12 theorem(s), `assumption-foundation`
+#### G047 — 12 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.cos_neg` (trusted, now a THEOREM), `MachLib.Real.cos_zero` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -4258,7 +4261,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.MultiVarMod.rung1_one_exp_solution_bound` | `MachLib/MultiVarRung1Count.lean:50` | 45→44 | approved_policy→approved_policy | ∀ (P Q : MachLib.MultiVarMod.MultiVar 3) (a b : MachLib.Real), a < b → (∃ x, a < x ∧ x < b ∧ (MachLib.MultiVarMod.toExpPoly (MachLib.MultiVarMod.prsResultant3 P … [1096 chars; full text in the statements evidence] |
 | `MachLib.MultiVarMod.rung1_one_exp_xcoord_bound` | `MachLib/MultiVarRung1.lean:33` | 45→44 | approved_policy→approved_policy | ∀ (P Q : MachLib.MultiVarMod.MultiVar 3) (a b : MachLib.Real), a < b → (∃ x, a < x ∧ x < b ∧ (MachLib.MultiVarMod.toExpPoly (MachLib.MultiVarMod.prsResultant3 P … [687 chars; full text in the statements evidence] |
 
-#### G057 — 10 theorem(s), `assumption-foundation`
+#### G057 — 10 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.cos_zero` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -4742,7 +4745,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.IterExpDepthN.reductMult_congr` | `MachLib/IterExpDepthNReductExtract.lean:21` | 7→8 | approved_policy→approved_policy | ∀ (d d' : Nat → Nat) (c z : MachLib.Real) (m : Nat), (∀ (j : Nat), j < m → d j = d' j) → MachLib.IterExpDepthN.reductMult d c z m = MachLib.IterExpDepthN.reduct … [173 chars; full text in the statements evidence] |
 | `MachLib.PfaffianGeneralReduce.gradedMultStep_eval` | `MachLib/PfaffianGeneralReduce.lean:510` | 5→6 | approved_policy→approved_policy | ∀ {N : Nat} (G : MachLib.MultiPolyMod.MultiPoly N) (top : Fin N) (p mLow : MachLib.MultiPolyMod.MultiPoly N) (x : MachLib.Real) (env : Fin N → MachLib.Real), (M … [331 chars; full text in the statements evidence] |
 
-#### G084 — 8 theorem(s), `assumption-foundation`
+#### G084 — 8 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -5512,7 +5515,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.queryGerm_pos_branch_uniform` | `MachLib/EMLQueryGermUniform.lean:69` | 69→62 | conditional on 1→conditional on 1 | ∀ (N : List (List MachLib.Real)) (P Q : List MachLib.Real) (X : MachLib.Real), 1 ≤ X → (∀ (x : MachLib.Real), X ≤ x → MachLib.pev Q x ≠ 0) → (∀ (x : MachLib.Rea … [487 chars; full text in the statements evidence] |
 | `MachLib.queryTerm_zero_bound` | `MachLib/EMLQueryGermTerm.lean:133` | 68→61 | approved_policy→approved_policy | ∀ (N : List (List MachLib.Real)) (P Q : List MachLib.Real) (a b : MachLib.Real), a < b → (∀ (x : MachLib.Real), MachLib.Icc a b x → MachLib.pev Q x ≠ 0) → (∀ (x … [586 chars; full text in the statements evidence] |
 
-#### G136 — 5 theorem(s), `assumption-foundation`
+#### G136 — 5 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM)
@@ -5526,7 +5529,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.no_tree_eq_oneShiftTower_unconditional` | `MachLib/WitnessResidualNestedTargetTower.lean:91` | 76→73 | approved_policy→approved_policy | ∀ (n : Nat) (T : MachLib.EMLTree), (∀ (x : MachLib.Real), T.eval x = MachLib.nestedTarget (MachLib.Real.oneShiftTower n) x) → False |
 | `MachLib.Real.no_tree_eq_sin_unconditional_via_family` | `MachLib/WitnessResidualNestedTargetTailSign.lean:166` | 76→73 | approved_policy→approved_policy | ∀ (T : MachLib.EMLTree), (∀ (x : MachLib.Real), T.eval x = x.sin) → False |
 
-#### G137 — 5 theorem(s), `assumption-foundation`
+#### G137 — 5 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -5888,7 +5891,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.Rasin6_deriv` | `MachLib/AsinTaylorRemainder.lean:387` | 47→42 | conditional on 1→conditional on 1 | ∀ (c : MachLib.Real), c.abs < 1 → MachLib.Real.HasDerivAt MachLib.Real.Rasin6 c.Rasin7 c |
 | `MachLib.Real.Rasin7_deriv` | `MachLib/AsinTaylorRemainder.lean:305` | 47→42 | conditional on 1→conditional on 1 | ∀ (c : MachLib.Real), c.abs < 1 → MachLib.Real.HasDerivAt MachLib.Real.Rasin7 c.gAsin8 c |
 
-#### G164 — 4 theorem(s), `assumption-foundation`
+#### G164 — 4 theorem(s), `assumption-promoted`
 
 * entered: `Classical.choice` (std), `MachLib.Real.add_comm` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.subR` (trusted), `MachLib.Real.sub_def` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `Quot.sound` (std), `propext` (std)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -5901,7 +5904,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.sin_not_eventually_dominates_any` | `MachLib/EMLOscillationBarrier.lean:122` | 31→40 | approved_policy→approved_policy | ¬MachLib.EventuallyDominatesAny MachLib.Real.sin |
 | `MachLib.sin_not_eventually_negative` | `MachLib/EMLOscillationBarrier.lean:116` | 31→40 | approved_policy→approved_policy | ¬MachLib.EventuallyNegative MachLib.Real.sin |
 
-#### G165 — 4 theorem(s), `assumption-foundation`
+#### G165 — 4 theorem(s), `assumption-promoted`
 
 * entered: `Classical.choice` (std), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `Quot.sound` (std)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.cos_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -5992,7 +5995,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.SingleExpKhovanskii.ExpPoly.expPoly_zero_count_bound_length_one` | `MachLib/SingleExpKhovanskii.lean:422` | 37→42 | approved_policy→approved_policy | ∀ (p : MachLib.PolynomialEvidence.Poly) (a b : MachLib.Real), a < b → (∃ x, { coeffs := [p] }.eval x ≠ 0) → ∀ (zeros : List MachLib.Real), zeros.Nodup → (∀ (z : … [292 chars; full text in the statements evidence] |
 | `MachLib.SingleExpKhovanskii.ExpPoly.expPoly_zero_count_bound_length_one_simplified` | `MachLib/SingleExpKhovanskii.lean:716` | 37→42 | approved_policy→approved_policy | ∀ (p : MachLib.PolynomialEvidence.Poly) (a b : MachLib.Real), a < b → (∃ x, { coeffs := [p] }.eval x ≠ 0) → ∀ (zeros : List MachLib.Real), zeros.Nodup → (∀ (z : … [335 chars; full text in the statements evidence] |
 
-#### G173 — 4 theorem(s), `assumption-foundation`
+#### G173 — 4 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -6135,7 +6138,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.nonMonotonicWitness_x0_neg` | `MachLib/WitnessResidualExpWrappedNonMonotonicClosed.lean:49` | 20→34 | approved_policy→approved_policy | MachLib.Real.nonMonotonicWitness_x0 < 0 |
 | `MachLib.Real.nonMonotonicWitness_xc_exp` | `MachLib/WitnessResidualNonMonotonic.lean:224` | 19→33 | approved_policy→approved_policy | MachLib.Real.nonMonotonicWitness_xc.exp = (1 + 1).log + (1 + 1) |
 
-#### G184 — 4 theorem(s), `assumption-foundation`
+#### G184 — 4 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_comm` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -6213,7 +6216,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.IterExpDepthN.vehicleN_zero_iff` | `MachLib/IterExpDepthNVehicle.lean:29` | 21→29 | approved_policy→approved_policy | ∀ (f : MachLib.PfaffianChainMod.PfaffianFn) (d : Nat → Nat) (c : MachLib.Real) (m : Nat) (x : MachLib.Real), MachLib.IterExpDepthN.vehicleN f d c m x = 0 ↔ f.ev … [168 chars; full text in the statements evidence] |
 | `MachLib.SingleExpKhovanskii.ExpPoly.mulNegExpX_zero_iff` | `MachLib/SingleExpKhovanskii.lean:218` | 21→29 | approved_policy→approved_policy | ∀ (ep : MachLib.SingleExpKhovanskii.ExpPoly) (c x : MachLib.Real), ep.mulNegExpX c x = 0 ↔ ep.eval x = 0 |
 
-#### G190 — 4 theorem(s), `assumption-foundation`
+#### G190 — 4 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_comm` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.subR` (trusted), `MachLib.Real.sub_def` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -6291,7 +6294,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.boundedEmlCell_var_Q` | `MachLib/EMLDepthTameness.lean:8361` | 24→35 | approved_policy→approved_policy | ∀ (A B : MachLib.EMLTree) (K XK : MachLib.Real), (∀ (x : MachLib.Real), XK ≤ x → ((A.eml B).eval x).exp ≤ K) → ∃ C X₀, 1 ≤ X₀ ∧ ∀ (x : MachLib.Real), X₀ ≤ x → 1 … [324 chars; full text in the statements evidence] |
 | `MachLib.cell_of_Q_above_target` | `MachLib/EMLDepthTameness.lean:9452` | 23→34 | approved_policy→approved_policy | ∀ (A B Q : MachLib.EMLTree) (X₁ : MachLib.Real), (∀ (x : MachLib.Real), X₁ ≤ x → ((A.eml B).eval x).exp.exp ≤ Q.eval x) → ∃ C X₀, 1 ≤ X₀ ∧ ∀ (x : MachLib.Real), … [281 chars; full text in the statements evidence] |
 
-#### G196 — 4 theorem(s), `assumption-foundation`
+#### G196 — 4 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -6520,7 +6523,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.sin_lengthsq2_via_meta` | `MachLib/OperatorBasisTrans.lean:184` | 47→49 | approved_policy→approved_policy | ∀ {w x y px py s p : MachLib.Real}, 0 ≤ w → w ≤ 1 → w.RoundsW px (x * x) → w.RoundsW py (y * y) → w.RoundsW s (px + py) → w.RoundsW p s.sin → (p - (x * x + y *  … [229 chars; full text in the statements evidence] |
 | `MachLib.Real.texpr_sound` | `MachLib/OperatorBasisTrans.lean:164` | 47→49 | approved_policy→approved_policy | ∀ {w : MachLib.Real}, 0 ≤ w → w ≤ 1 → ∀ {t : MachLib.Real.TExpr} {v : MachLib.Real}, w.TRoundedEval t v → t.Valid → (v - t.texact).abs ≤ MachLib.Real.TExpr.terr … [164 chars; full text in the statements evidence] |
 
-#### G217 — 3 theorem(s), `assumption-foundation`
+#### G217 — 3 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -6532,7 +6535,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.weierstrassTerm1_lipschitz` | `MachLib/WeierstrassTermByTerm.lean:170` | 47→49 | approved_policy→approved_policy | ∀ (t : MachLib.Real) (n : Nat) (c x : MachLib.Real), (t.weierstrassTerm1 n c - t.weierstrassTerm1 n x).abs ≤ t.weierstrassAmp2 n * (c - x).abs |
 | `MachLib.Real.weierstrassTerm2_lipschitz` | `MachLib/WeierstrassTermByTerm.lean:760` | 47→49 | approved_policy→approved_policy | ∀ (t : MachLib.Real) (n : Nat) (c x : MachLib.Real), (t.weierstrassTerm2 n c - t.weierstrassTerm2 n x).abs ≤ t.weierstrassAmp3 n * (c - x).abs |
 
-#### G218 — 3 theorem(s), `assumption-foundation`
+#### G218 — 3 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -6544,7 +6547,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.hasDerivAt_gaussianDensity` | `MachLib/GaussianDensityIntegral.lean:602` | 44→46 | approved_policy→approved_policy | ∀ (mu sig2 : MachLib.Real), 0 < sig2 → ∀ (x : MachLib.Real), MachLib.Real.HasDerivAt (mu.gaussianDensity sig2) (-((x - mu) / sig2) * mu.gaussianDensity sig2 x)  … [161 chars; full text in the statements evidence] |
 | `MachLib.Real.hasDerivAt_meanAnti` | `MachLib/GaussianDensityIntegral.lean:937` | 44→46 | approved_policy→approved_policy | ∀ (mu sig2 : MachLib.Real), 0 < sig2 → ∀ (x : MachLib.Real), MachLib.Real.HasDerivAt (fun y => -(sig2 * mu.gaussianDensity sig2 y)) ((x - mu) * mu.gaussianDensi … [172 chars; full text in the statements evidence] |
 
-#### G219 — 3 theorem(s), `assumption-foundation`
+#### G219 — 3 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -6676,7 +6679,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.IterExpDepth3Rolle.zero_count_polyMultReduce3_transfer_raw` | `MachLib/IterExpDepth3Rolle.lean:63` | 38→43 | approved_policy→approved_policy | ∀ (f : MachLib.PfaffianChainMod.PfaffianFn) (d2 d1 : Nat) (c a b : MachLib.Real), a < b → f.chain.IsCoherentOn a b → ∀ (N : Nat), (∀ (zeros' : List MachLib.Real … [492 chars; full text in the statements evidence] |
 | `MachLib.IterExpDepthN.zero_count_vehicleN_transfer_raw` | `MachLib/IterExpDepthNRolle.lean:41` | 38→43 | approved_policy→approved_policy | ∀ (f : MachLib.PfaffianChainMod.PfaffianFn) (d : Nat → Nat) (c : MachLib.Real) (m : Nat) (a b : MachLib.Real), a < b → f.chain.IsCoherentOn a b → ∀ (N : Nat), ( … [511 chars; full text in the statements evidence] |
 
-#### G230 — 3 theorem(s), `assumption-foundation`
+#### G230 — 3 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM)
@@ -6904,7 +6907,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.f64_u_nonneg` | `MachLib/FPModel.lean:930` | 22→25 | approved_policy→approved_policy | 0 ≤ MachLib.Real.f64_u |
 | `MachLib.Real.q16_step_nonneg` | `MachLib/FixedPoint.lean:402` | 22→25 | approved_policy→approved_policy | 0 ≤ MachLib.Real.q16_step |
 
-#### G249 — 3 theorem(s), `assumption-foundation`
+#### G249 — 3 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_lt_add_left` (trusted), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_trans_ax` (trusted), `MachLib.Real.mulR` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -7012,7 +7015,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.nestedTarget_sub_natCast_mul_two_pi` | `MachLib/WitnessResidualNestedTargetTailSign.lean:73` | 27→28 | approved_policy→approved_policy | ∀ (cs : List MachLib.Real) (y : MachLib.Real) (k : Nat), MachLib.nestedTarget cs (y - MachLib.Real.natCast k * ((1 + 1) * MachLib.Real.pi)) = MachLib.nestedTarg … [167 chars; full text in the statements evidence] |
 | `MachLib.Real.sin_sub_natCast_mul_two_pi` | `MachLib/WitnessResidualEntireCrossingFamilyClosed.lean:89` | 22→23 | approved_policy→approved_policy | ∀ (y : MachLib.Real) (k : Nat), (y - MachLib.Real.natCast k * ((1 + 1) * MachLib.Real.pi)).sin = y.sin |
 
-#### G258 — 3 theorem(s), `assumption-foundation`
+#### G258 — 3 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -7310,7 +7313,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.intUpTo_continuousAt_zero` | `MachLib/GaussianLaplaceRoute.lean:505` | 41→34 | approved_policy→approved_policy | ∀ {g : MachLib.Real → MachLib.Real} (hgcont : ∀ (x : MachLib.Real), MachLib.Real.ContinuousAt g x) {M : MachLib.Real}, (∀ (x : MachLib.Real), g x ≤ M) → (∀ (x : … [254 chars; full text in the statements evidence] |
 | `MachLib.Real.intUpTo_le_bound_mul` | `MachLib/GaussianLaplaceRoute.lean:463` | 41→34 | approved_policy→approved_policy | ∀ {g : MachLib.Real → MachLib.Real} (hgcont : ∀ (x : MachLib.Real), MachLib.Real.ContinuousAt g x) {M : MachLib.Real}, (∀ (x : MachLib.Real), g x ≤ M) → ∀ (s :  … [222 chars; full text in the statements evidence] |
 
-#### G287 — 2 theorem(s), `assumption-foundation`
+#### G287 — 2 theorem(s), `assumption-promoted`
 
 * entered: `Classical.choice` (std), `MachLib.Real.add_comm` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.subR` (trusted), `MachLib.Real.sub_def` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `Quot.sound` (std), `propext` (std)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -7321,7 +7324,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.sin_zero_beyond` | `MachLib/TailSignCriterion.lean:88` | 30→40 | approved_policy→approved_policy | ∀ (R : MachLib.Real), ∃ x, R < x ∧ x.sin = 0 |
 | `MachLib.sin_has_arbitrarily_large_zeros` | `MachLib/EMLOscillationBarrier.lean:95` | 30→40 | approved_policy→approved_policy | MachLib.HasArbitrarilyLargeZeros MachLib.Real.sin |
 
-#### G288 — 2 theorem(s), `assumption-foundation`
+#### G288 — 2 theorem(s), `assumption-promoted`
 
 * entered: `Classical.choice` (std), `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.cos_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -7398,7 +7401,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.derivTree_hasDerivAt` | `MachLib/EMLDerivClosure.lean:46` | 45→45 | approved_policy→approved_policy | ∀ (t : MachLib.EMLTree) (x : MachLib.Real), MachLib.LogPos t x → MachLib.Real.HasDerivAt (fun y => t.eval y) ((MachLib.derivTree t).eval x) x |
 | `MachLib.eml_closed_under_deriv` | `MachLib/EMLDerivClosure.lean:85` | 45→45 | approved_policy→approved_policy | ∀ (t : MachLib.EMLTree), ∃ s, ∀ (x : MachLib.Real), MachLib.LogPos t x → MachLib.Real.HasDerivAt (fun y => t.eval y) (s.eval x) x |
 
-#### G296 — 2 theorem(s), `assumption-foundation`
+#### G296 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -7409,7 +7412,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.boundedNonConstantWitness_closes_via_strictMono` | `MachLib/WitnessResidualStrictMonoT1.lean:87` | 51→54 | approved_policy→approved_policy | ∀ {c : MachLib.Real}, 1 < c → c.log < 1 → ∀ {S3 : MachLib.EMLTree} {c2 : MachLib.Real}, (∀ (x : MachLib.Real), (c.boundedNonConstantWitness.eml ((MachLib.EMLTre … [219 chars; full text in the statements evidence] |
 | `MachLib.Real.boundedNonConstantWitness_ne_shifted_sin_target` | `MachLib/WitnessResidualBoundedNonConstant.lean:280` | 51→54 | approved_policy→approved_policy | ∀ {c : MachLib.Real}, 1 < c → c.log < 1 → ∀ (c2 : MachLib.Real), ¬∀ (x : MachLib.Real), c.boundedNonConstantWitness.eval x = (c2 + x.sin).log |
 
-#### G297 — 2 theorem(s), `assumption-foundation`
+#### G297 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -7651,7 +7654,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.PfaffianGeneralReduce.exp_hard_of_measure` | `MachLib/PfaffianExpStepMixed.lean:159` | 42→45 | approved_policy→approved_policy | ∀ {k : Nat} (c : MachLib.PfaffianChainMod.PfaffianChain (k + 1)) (a b : MachLib.Real), a < b → c.IsCoherentOn a b → ∀ (G : MachLib.MultiPolyMod.MultiPoly (k + 1 … [1725 chars; full text in the statements evidence] |
 | `MachLib.PfaffianGeneralReduce.exp_reduce_step_concrete` | `MachLib/PfaffianExpStepMixed.lean:131` | 42→45 | approved_policy→approved_policy | ∀ {n : Nat} (c : MachLib.PfaffianChainMod.PfaffianChain n) (top : Fin n) (G p : MachLib.MultiPolyMod.MultiPoly n) (a b : MachLib.Real), a < b → c.relations top  … [1108 chars; full text in the statements evidence] |
 
-#### G319 — 2 theorem(s), `assumption-foundation`
+#### G319 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -7662,7 +7665,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.no_eml_A_B_eq_nested_target_of_no_crossing_and_le_at_point` | `MachLib/WitnessResidualGlobalSignDichotomy.lean:115` | 82→74 | approved_policy→approved_policy | ∀ (A B : MachLib.EMLTree), (∀ (x : MachLib.Real), MachLib.EMLNoCrossingAt (A.eml B) x) → ∀ (x0 : MachLib.Real), B.eval x0 ≤ 0 → ∀ (cs : List MachLib.Real), Mach … [284 chars; full text in the statements evidence] |
 | `MachLib.Real.no_tree_eq_nested_target_of_BChainTriple` | `MachLib/WitnessResidualTripleChain.lean:154` | 82→74 | approved_policy→approved_policy | ∀ (T : MachLib.EMLTree), MachLib.Real.BChainTriple T → ∀ (cs : List MachLib.Real), MachLib.nestedWF cs → (∀ (x : MachLib.Real), T.eval x = MachLib.nestedTarget  … [173 chars; full text in the statements evidence] |
 
-#### G320 — 2 theorem(s), `assumption-foundation`
+#### G320 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -7706,7 +7709,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.MultiVarMod.TwoExp.nonlinearCurveChain_slice_finite` | `MachLib/TwoExpNonlinearCurveInstance.lean:224` | 48→45 | approved_policy→approved_policy | ∀ (c k a b : MachLib.Real), a < b → (∃ z, a < z ∧ z < b ∧ (MachLib.PfaffianGeneralReduce.pfaffianChainFn (MachLib.MultiVarMod.TwoExp.nonlinearCurveChain c) ((Ma … [410 chars; full text in the statements evidence] |
 | `MachLib.MultiVarMod.TwoExp.sumC_intersection_finite` | `MachLib/TwoExpGlobalSumIntersection.lean:159` | 58→55 | conditional on 9→conditional on 9 | ∀ (c a b : MachLib.Real), 0 ≤ c → a < b → (∃ z, a < z ∧ z < b ∧ (MachLib.PfaffianGeneralReduce.pfaffianChainFn MachLib.MultiVarMod.TwoExp.repChain (MachLib.Mult … [881 chars; full text in the statements evidence] |
 
-#### G324 — 2 theorem(s), `assumption-foundation`
+#### G324 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -7893,7 +7896,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.crossing_at_log_log_c` | `MachLib/EMLPfaffianValidOnCrossingObstruction.lean:81` | 21→33 | approved_policy→approved_policy | ∀ {c : MachLib.Real}, 1 < c → (MachLib.EMLTree.var.eml (MachLib.EMLTree.const c)).eval c.log.log = 0 |
 | `MachLib.Real.expWrappedNonMonotonicWitnessC_validon_false` | `MachLib/EMLPfaffianValidOnCrossingObstruction.lean:91` | 21→33 | approved_policy→approved_policy | ∀ {c b : MachLib.Real}, 1 < c → 0 < c.log.log → c.log.log < b → ¬MachLib.EMLPfaffianValidOn c.expWrappedNonMonotonicWitnessC 0 b |
 
-#### G341 — 2 theorem(s), `assumption-foundation`
+#### G341 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_comm` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -8146,7 +8149,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.interval_scale_upper` | `MachLib/Forge.lean:537` | 13→16 | approved_policy→approved_policy | ∀ (x k b : MachLib.Real), 0 < k → x ≤ b → x * k ≤ b * k |
 | `MachLib.Real.mul_le_mul_of_nonneg_right` | `MachLib/Forge.lean:314` | 13→16 | approved_policy→approved_policy | ∀ {a b c : MachLib.Real}, a ≤ b → 0 ≤ c → a * c ≤ b * c |
 
-#### G364 — 2 theorem(s), `assumption-foundation`
+#### G364 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_comm` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM)
@@ -8190,7 +8193,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.sqrt_continuousAt_zero` | `MachLib/GaussianDiskSandwich.lean:51` | 32→32 | conditional on 2→conditional on 2 | MachLib.Real.ContinuousAt MachLib.Real.sqrt 0 |
 | `MachLib.Real.tailSign_scale` | `MachLib/EMLScalingBarrier.lean:62` | 22→22 | approved_policy→approved_policy | ∀ {f : MachLib.Real → MachLib.Real} {c : MachLib.Real}, 0 < c → MachLib.Real.TailSign f → MachLib.Real.TailSign fun x => c * f x |
 
-#### G368 — 2 theorem(s), `assumption-foundation`
+#### G368 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_lt_add_left` (trusted), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.mulR` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -8289,7 +8292,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.log_le_of_le_exp_mul` | `MachLib/EMLDepth2InvX.lean:2976` | 26→35 | approved_policy→approved_policy | ∀ {y x D : MachLib.Real}, 1 ≤ x → 1 ≤ D → y ≤ x.exp * D → y.log ≤ x + D.log |
 | `MachLib.log_le_of_le_exp_mul'` | `MachLib/EMLDepth2InvX.lean:4960` | 26→35 | approved_policy→approved_policy | ∀ {y z D : MachLib.Real}, 0 ≤ z → 1 ≤ D → y ≤ z.exp * D → y.log ≤ z + D.log |
 
-#### G377 — 2 theorem(s), `assumption-foundation`
+#### G377 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM)
@@ -8300,7 +8303,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.nestedTarget_lo_past` | `MachLib/WitnessResidualNestedTargetTailSign.lean:108` | 38→44 | approved_policy→approved_policy | ∀ (cs : List MachLib.Real), MachLib.nestedWF cs → ∀ (R : MachLib.Real), ∃ x, R < x ∧ MachLib.nestedTarget cs x = MachLib.nestedLo cs |
 | `MachLib.Real.sin_neg_one_recurring` | `MachLib/QuantitativeNonApproximation.lean:60` | 38→44 | approved_policy→approved_policy | ∀ (M : MachLib.Real), ∃ x, M < x ∧ x.sin = -1 |
 
-#### G378 — 2 theorem(s), `assumption-foundation`
+#### G378 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.mulR` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -8311,7 +8314,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.sin_not_in_eml_t1_cv_t2_eml_vc` | `MachLib/SinNotInEMLDepth2Sweep.lean:677` | 31→43 | approved_policy→approved_policy | ∀ (c1 d : MachLib.Real), ¬∀ (x : MachLib.Real), (((MachLib.EMLTree.const c1).eml MachLib.EMLTree.var).eml (MachLib.EMLTree.var.eml (MachLib.EMLTree.const d))).e … [173 chars; full text in the statements evidence] |
 | `MachLib.sin_not_in_eml_t1_vc_t2_eml_cv` | `MachLib/SinNotInEMLDepth2Sweep.lean:482` | 31→43 | approved_policy→approved_policy | ∀ (d1 c : MachLib.Real), ¬∀ (x : MachLib.Real), ((MachLib.EMLTree.var.eml (MachLib.EMLTree.const d1)).eml ((MachLib.EMLTree.const c).eml MachLib.EMLTree.var)).e … [173 chars; full text in the statements evidence] |
 
-#### G379 — 2 theorem(s), `assumption-foundation`
+#### G379 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.mulR` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -8597,7 +8600,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.MultiVarMod.TwoExp.expSumFy_bivar_nonzero_somewhere` | `MachLib/TwoExpPfaffianExpSum.lean:625` | 31→31 | approved_policy→approved_policy | ∀ (c a b : MachLib.Real), a < b → ∃ z, a < z ∧ z < b ∧ (MachLib.PfaffianGeneralReduce.pfaffianChainFn (MachLib.MultiVarMod.TwoExp.expSumLineChain c) (MachLib.Mu … [531 chars; full text in the statements evidence] |
 | `MachLib.gIntervalProperRel_inhabited` | `MachLib/GermIntervalWitness.lean:29` | 30→30 | approved_policy→approved_policy | ∀ {a b : MachLib.Real}, a < b → MachLib.GIntervalProperRel (fun x => 0) [fun x => 0, fun x => 1] a b |
 
-#### G407 — 2 theorem(s), `assumption-foundation`
+#### G407 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -8608,7 +8611,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.HighDimensional.high_dim_ball_cube_ratio_tends_zero` | `MachLib/HighDimensional.lean:411` | 40→36 | conditional on 1→conditional on 1 | MachLib.HighDimensional.TendstoTo MachLib.HighDimensional.ballCubeRatio 0 |
 | `MachLib.Real.bcRatio_tendsto_zero` | `MachLib/BallCubeRatio.lean:128` | 40→36 | conditional on 1→conditional on 1 | MachLib.Real.TendstoTo MachLib.Real.bcRatio 0 |
 
-#### G408 — 2 theorem(s), `assumption-foundation`
+#### G408 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -8619,7 +8622,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.Real.jointDensity_conjugacy` | `MachLib/GaussianConjugacy.lean:241` | 41→42 | approved_policy→approved_policy | ∀ (mu sig2 r2 x y : MachLib.Real), 0 < sig2 → 0 < r2 → mu.jointDensity sig2 r2 x y = mu.gaussianDensity (sig2.margVar r2) y * (mu.postMean sig2 r2 y).gaussianDe … [185 chars; full text in the statements evidence] |
 | `MachLib.Real.kalman_recursive_step` | `MachLib/KalmanRecursive.lean:61` | 41→42 | approved_policy→approved_policy | ∀ (mu sig2 r1 r2 y1 x2 y2 : MachLib.Real), 0 < sig2 → 0 < r1 → 0 < r2 → (mu.postMean sig2 r1 y1).jointDensity (sig2.postVar r1) r2 x2 y2 = (mu.postMean sig2 r1  … [325 chars; full text in the statements evidence] |
 
-#### G409 — 2 theorem(s), `assumption-foundation`
+#### G409 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -8729,7 +8732,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 | `MachLib.depth2_u3_w2_absurd` | `MachLib/EMLDepth2InvX.lean:1116` | 35→35 | approved_policy→approved_policy | ∀ {c₂ a' : MachLib.Real}, (∀ (x : MachLib.Real), 0 < x → ((MachLib.EMLTree.var.eml (MachLib.EMLTree.const c₂)).eml ((MachLib.EMLTree.const a').eml MachLib.EMLTr … [192 chars; full text in the statements evidence] |
 | `MachLib.right_var_logB` | `MachLib/EMLSizeNineShape.lean:1503` | 36→36 | approved_policy→approved_policy | ∀ (K : MachLib.Real) (A B : MachLib.EMLTree), (∀ (x : MachLib.Real), 0 < x → x.exp - ((A.eml B).eval x).log = (K - 1 / x).exp) → ∀ (x : MachLib.Real), 1 + K.exp … [235 chars; full text in the statements evidence] |
 
-#### G419 — 2 theorem(s), `assumption-foundation`
+#### G419 — 2 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -8825,7 +8828,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Forge.ButlerVolmer.overpotential_zero_when_current_zero` | `MachLib/Applications/ButlerVolmerKhovanskii.lean:98` | 28→27 | conditional on 1→approved_policy | ∀ (i₀ α_a α_c η T : MachLib.Real), i₀ > 0 → α_a > 0 → α_c > 0 → MachLib.Forge.ButlerVolmer.R_GAS * T ≠ 0 → MachLib.Forge.ButlerVolmer.F_FARAD ≠ 0 → MachLib.Forg … [217 chars; full text in the statements evidence] |
 
-#### G431 — 1 theorem(s), `assumption-foundation`
+#### G431 — 1 theorem(s), `assumption-promoted`
 
 * entered: `Classical.choice` (std), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9165,7 +9168,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.g_atMostOneZero_right` | `MachLib/EMLZeroCrossingBothCompound.lean:116` | 42→45 | approved_policy→approved_policy | ∀ (c1' c2' : MachLib.Real), 1 < c2' → ∀ (d : MachLib.Real) (zeros : List MachLib.Real), zeros.Nodup → (∀ (z : MachLib.Real), z ∈ zeros → c2'.log.log < z ∧ z < d … [232 chars; full text in the statements evidence] |
 
-#### G466 — 1 theorem(s), `assumption-foundation`
+#### G466 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9185,7 +9188,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.exp_sub_inv_atMostOneZero` | `MachLib/EMLZeroCrossingDepth1.lean:120` | 42→45 | approved_policy→approved_policy | ∀ (B : MachLib.Real) (zeros : List MachLib.Real), zeros.Nodup → (∀ (z : MachLib.Real), z ∈ zeros → 0 < z ∧ z < B ∧ z.exp - 1 / z = 0) → zeros.length ≤ 1 |
 
-#### G468 — 1 theorem(s), `assumption-foundation`
+#### G468 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9225,7 +9228,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.GFn_pointwise_bound` | `MachLib/GaussianLaplaceRoute.lean:1073` | 46→46 | approved_policy→approved_policy | ∀ {t0 T L : MachLib.Real}, 0 < T → t0.abs ≤ T → L = 1 + 1 + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * T * T → ∀ (y : MachLib.Real), y.abs ≤ T → ∀ (x : MachLib.Real), 0  … [412 chars; full text in the statements evidence] |
 
-#### G472 — 1 theorem(s), `assumption-foundation`
+#### G472 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9245,7 +9248,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.radialImproperIntegral_eq_half` | `MachLib/GaussianRadialIntegral.lean:203` | 57→50 | approved_policy→approved_policy | ∃ G, G = 1 / (1 + 1) ∧ (∀ (x : MachLib.Real) (hx : 0 ≤ x), x.radialIntegral hx ≤ G) ∧ ∀ (ε : MachLib.Real), 0 < ε → ∃ x hx, G - ε < x.radialIntegral hx |
 
-#### G474 — 1 theorem(s), `assumption-foundation`
+#### G474 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.cos_neg` (trusted, now a THEOREM), `MachLib.Real.cos_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9255,7 +9258,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.atan_one_eq_piQuarter` | `MachLib/GaussianLaplaceRoute.lean:207` | 72→63 | approved_policy→approved_policy | MachLib.Real.atan 1 = MachLib.Real.pi / (1 + 1) / (1 + 1) |
 
-#### G475 — 1 theorem(s), `assumption-foundation`
+#### G475 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9265,7 +9268,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.continuousAt_jointDensity_x` | `MachLib/GaussianConjugacy.lean:311` | 53→51 | approved_policy→approved_policy | ∀ (mu sig2 r2 y : MachLib.Real), 0 < sig2 → 0 < r2 → ∀ (z : MachLib.Real), MachLib.Real.ContinuousAt (fun x => mu.jointDensity sig2 r2 x y) z |
 
-#### G476 — 1 theorem(s), `assumption-foundation`
+#### G476 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9275,7 +9278,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.continuousAt_gaussianDensity` | `MachLib/GaussianDensityIntegral.lean:435` | 48→47 | approved_policy→approved_policy | ∀ (mu sig2 : MachLib.Real), 0 < sig2 → ∀ (x : MachLib.Real), MachLib.Real.ContinuousAt (mu.gaussianDensity sig2) x |
 
-#### G477 — 1 theorem(s), `assumption-foundation`
+#### G477 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9285,7 +9288,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.tan_piQuarter_eq_one` | `MachLib/GaussianLaplaceRoute.lean:161` | 52→52 | approved_policy→approved_policy | (MachLib.Real.pi / (1 + 1) / (1 + 1)).tan = 1 |
 
-#### G478 — 1 theorem(s), `assumption-foundation`
+#### G478 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9345,7 +9348,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.sinh_mono` | `MachLib/HyperbolicLipschitz.lean:131` | 47→49 | approved_policy→approved_policy | ∀ {a b : MachLib.Real}, a ≤ b → a.sinh ≤ b.sinh |
 
-#### G484 — 1 theorem(s), `assumption-foundation`
+#### G484 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9565,7 +9568,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.PfaffianLogIdN.idN_log_add_step` | `MachLib/PfaffianLogIdN.lean:69` | 22→25 | approved_policy→approved_policy | ∀ {N : Nat} (c : MachLib.PfaffianChainMod.PfaffianChain N) (top : Fin N) (x : MachLib.Real), c.IsCoherentAt x → ∀ (p q : MachLib.MultiPolyMod.MultiPoly N), (∀ ( … [351 chars; full text in the statements evidence] |
 
-#### G506 — 1 theorem(s), `assumption-foundation`
+#### G506 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9575,7 +9578,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.no_tree_eq_sinSq_unconditional` | `MachLib/NonRepresentabilityCensusSinSq.lean:51` | 81→74 | approved_policy→approved_policy | ∀ (T : MachLib.EMLTree), (∀ (x : MachLib.Real), T.eval x = x.sin * x.sin) → False |
 
-#### G507 — 1 theorem(s), `assumption-foundation`
+#### G507 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9585,7 +9588,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.no_tree_eq_sin_via_periodic_barrier` | `MachLib/GeneralPeriodicTargetBarrier.lean:123` | 78→74 | approved_policy→approved_policy | ∀ (T : MachLib.EMLTree), (∀ (x : MachLib.Real), T.eval x = x.sin) → False |
 
-#### G508 — 1 theorem(s), `assumption-foundation`
+#### G508 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM)
@@ -9595,7 +9598,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.eml_depth2_witness_of_const_gt_one_sibling_unconditional` | `MachLib/WitnessResidualConstSiblingUnconditional.lean:39` | 78→73 | approved_policy→approved_policy | ∀ {T1 S3 : MachLib.EMLTree} {c2 : MachLib.Real}, 1 < c2 → c2 ≤ 1 + 1 → (∀ (x : MachLib.Real), (T1.eml ((MachLib.EMLTree.const c2).eml S3)).eval x = x.sin) → ∃ x … [177 chars; full text in the statements evidence] |
 
-#### G509 — 1 theorem(s), `assumption-foundation`
+#### G509 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9605,7 +9608,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.sin_not_expChainFn` | `MachLib/TowerSeparation.lean:144` | 54→53 | approved_policy→approved_policy | ¬MachLib.IsExpChainFn MachLib.Real.sin |
 
-#### G510 — 1 theorem(s), `assumption-foundation`
+#### G510 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9615,7 +9618,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.no_tree_eq_nested_target_of_BChainOrPositive` | `MachLib/WitnessResidualChainOrPositive.lean:63` | 78→71 | approved_policy→approved_policy | ∀ (T : MachLib.EMLTree), MachLib.Real.BChainOrPositive T → ∀ (cs : List MachLib.Real), MachLib.nestedWF cs → (∀ (x : MachLib.Real), T.eval x = MachLib.nestedTar … [177 chars; full text in the statements evidence] |
 
-#### G511 — 1 theorem(s), `assumption-foundation`
+#### G511 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9645,7 +9648,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.no_tree_eq_periodic_target` | `MachLib/GeneralPeriodicTargetBarrier.lean:87` | 70→63 | approved_policy→approved_policy | ∀ (TARGET : MachLib.Real → MachLib.Real) (p : MachLib.Real), 0 < p → (∀ (x : MachLib.Real), MachLib.Real.ContinuousAt TARGET x) → MachLib.Real.Periodic TARGET p … [274 chars; full text in the statements evidence] |
 
-#### G514 — 1 theorem(s), `assumption-foundation`
+#### G514 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_neg` (trusted, now a THEOREM), `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.cos_neg` (trusted, now a THEOREM), `MachLib.Real.cos_zero` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9655,7 +9658,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.GFn_zero_eq` | `MachLib/GaussianLaplaceRoute.lean:2107` | 77→67 | approved_policy→approved_policy | MachLib.Real.GFn 0 = MachLib.Real.pi / (1 + 1) / (1 + 1) |
 
-#### G515 — 1 theorem(s), `assumption-foundation`
+#### G515 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9665,7 +9668,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.weierstrass_deriv_estimate` | `MachLib/WeierstrassTermByTerm.lean:361` | 51→51 | approved_policy→approved_policy | ∀ (t : MachLib.Real), 0 < t → ∀ (W D : MachLib.Real → MachLib.Real), (∀ (ε : MachLib.Real), 0 < ε → ∃ N, ∀ (n : Nat), N ≤ n → ∀ (z : MachLib.Real), (W z - MachL … [827 chars; full text in the statements evidence] |
 
-#### G516 — 1 theorem(s), `assumption-foundation`
+#### G516 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9705,7 +9708,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.PfaffianLogIdN.idN_log_sub_step` | `MachLib/PfaffianLogIdN.lean:100` | 24→24 | approved_policy→approved_policy | ∀ {N : Nat} (c : MachLib.PfaffianChainMod.PfaffianChain N) (top : Fin N) (x : MachLib.Real), c.IsCoherentAt x → ∀ (p q : MachLib.MultiPolyMod.MultiPoly N), (∀ ( … [351 chars; full text in the statements evidence] |
 
-#### G520 — 1 theorem(s), `assumption-foundation`
+#### G520 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.cos_neg` (trusted, now a THEOREM), `MachLib.Real.cos_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -9715,7 +9718,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.integral_kFn_eq_piQuarter` | `MachLib/GaussianLaplaceRoute.lean:257` | 73→63 | approved_policy→approved_policy | Classical.choose ⋯ = MachLib.Real.pi / (1 + 1) / (1 + 1) |
 
-#### G521 — 1 theorem(s), `assumption-foundation`
+#### G521 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.HasDerivAt_of_eq` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -9965,7 +9968,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.ofSci_eq` | `MachLib/Decimal.lean:113` | 2→6 | conditional on 1→approved_policy | ∀ (m e : Nat), OfScientific.ofScientific m true e = MachLib.Real.realOfScientific m true e |
 
-#### G546 — 1 theorem(s), `assumption-foundation`
+#### G546 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_comm` (trusted), `MachLib.Real.add_lt_add_left` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.add_zero` (trusted), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.lt_trans_ax` (trusted), `MachLib.Real.mulR` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sub_def` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted)
 * left: `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -10125,7 +10128,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.exp_exp_one_gt_exp_one_add_one` | `MachLib/EMLDepth2Case9RowU2.lean:113` | 20→32 | approved_policy→approved_policy | MachLib.Real.exp 1 + 1 < (MachLib.Real.exp 1).exp |
 
-#### G562 — 1 theorem(s), `assumption-foundation`
+#### G562 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_comm` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.lt_trans_ax` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10135,7 +10138,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.pi_lt_two_pi` | `MachLib/WitnessResidualNestedTargetFullyUnconditional.lean:54` | 13→29 | approved_policy→approved_policy | MachLib.Real.pi < (1 + 1) * MachLib.Real.pi |
 
-#### G563 — 1 theorem(s), `assumption-foundation`
+#### G563 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_comm` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10145,7 +10148,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.weierstrassFreq_pos` | `MachLib/WeierstrassTermByTerm.lean:101` | 13→29 | approved_policy→approved_policy | ∀ (n : Nat), 0 < MachLib.Real.weierstrassFreq n |
 
-#### G564 — 1 theorem(s), `assumption-foundation`
+#### G564 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_comm` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10155,7 +10158,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.natCast_mul_pi_lt` | `MachLib/EMLPfaffian.lean:509` | 19→31 | approved_policy→approved_policy | ∀ {j k : Nat}, j < k → MachLib.Real.natCast j * MachLib.Real.pi < MachLib.Real.natCast k * MachLib.Real.pi |
 
-#### G565 — 1 theorem(s), `assumption-foundation`
+#### G565 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_comm` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10235,7 +10238,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.depth0_absurd` | `MachLib/EMLDepth2InvX.lean:1141` | 22→30 | conditional on 1→approved_policy | ∀ {t : MachLib.EMLTree}, t.depth = 0 → (∀ (x : MachLib.Real), 0 < x → t.eval x = 1 / x) → False |
 
-#### G573 — 1 theorem(s), `assumption-foundation`
+#### G573 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_comm` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10455,7 +10458,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.log10_eq_log_div_log_ten` | `MachLib/Log10Lipschitz.lean:50` | 34→38 | approved_policy→approved_policy | ∀ {x : MachLib.Real}, 0 < x → x.log10 = x.log / (MachLib.Real.natCast 10).log |
 
-#### G595 — 1 theorem(s), `assumption-foundation`
+#### G595 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10465,7 +10468,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.cos_half_odd_pi_lt` | `MachLib/CosNotInEMLAnyDepth.lean:104` | 21→31 | approved_policy→approved_policy | ∀ {j k : Nat}, j < k → MachLib.Real.natCast j * MachLib.Real.pi + MachLib.Real.pi / (1 + 1) < MachLib.Real.natCast k * MachLib.Real.pi + MachLib.Real.pi / (1 +  … [162 chars; full text in the statements evidence] |
 
-#### G596 — 1 theorem(s), `assumption-foundation`
+#### G596 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.add_neg` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.negR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10575,7 +10578,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.mul_exp_neg_lt_one` | `MachLib/EMLDepth2InvX.lean:4129` | 25→35 | approved_policy→approved_policy | ∀ {b : MachLib.Real}, 0 < b → b * (-b).exp < 1 |
 
-#### G607 — 1 theorem(s), `assumption-foundation`
+#### G607 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10655,7 +10658,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.inv_x_not_in_eml_2_all_constants` | `MachLib/InvXNotInEML.lean:295` | 29→33 | approved_policy→approved_policy | ∀ (a b a' b' : MachLib.Real), ¬∀ (x : MachLib.Real), (((MachLib.EMLTree.const a).eml (MachLib.EMLTree.const b)).eml ((MachLib.EMLTree.const a').eml (MachLib.EML … [201 chars; full text in the statements evidence] |
 
-#### G615 — 1 theorem(s), `assumption-foundation`
+#### G615 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_assoc` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10935,7 +10938,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.sin_natCast_mul_pi` | `MachLib/EMLPfaffian.lean:43` | 21→25 | approved_policy→approved_policy | ∀ (k : Nat), (MachLib.Real.natCast k * MachLib.Real.pi).sin = 0 |
 
-#### G643 — 1 theorem(s), `assumption-foundation`
+#### G643 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_comm` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.sub_def` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -10975,7 +10978,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.npow_le_one_half` | `MachLib/Limits.lean:56` | 27→27 | approved_policy→approved_policy | ∀ (n : Nat), MachLib.Real.npow n (1 / (1 + 1)) ≤ 1 |
 
-#### G647 — 1 theorem(s), `assumption-foundation`
+#### G647 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_lt_add_left` (trusted), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.mulR` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.oneR` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -10985,7 +10988,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.eml_depth2_witness_of_const_sibling_strictMono_T1` | `MachLib/WitnessResidualStrictMonoT1.lean:30` | 28→43 | approved_policy→approved_policy | ∀ {T1 S3 : MachLib.EMLTree} {c2 : MachLib.Real}, ((∀ (x y : MachLib.Real), x < y → T1.eval x < T1.eval y) ∨ ∀ (x y : MachLib.Real), x < y → T1.eval y < T1.eval  … [271 chars; full text in the statements evidence] |
 
-#### G648 — 1 theorem(s), `assumption-foundation`
+#### G648 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.add_lt_add_left` (trusted), `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_trans_ax` (trusted), `MachLib.Real.mulR` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -11595,7 +11598,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.depth2_const_evc_at` | `MachLib/EMLDepth2InvX.lean:758` | 24→32 | approved_policy→approved_policy | ∀ {c b' X : MachLib.Real}, 0 < X → c.exp.exp < X.exp - b'.log → (∀ (y : MachLib.Real), 0 < y → ((MachLib.EMLTree.const c).eml (MachLib.EMLTree.var.eml (MachLib. … [203 chars; full text in the statements evidence] |
 
-#### G710 — 1 theorem(s), `assumption-foundation`
+#### G710 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -11605,7 +11608,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.eml_depth2_witness_of_expwrapped_family` | `MachLib/WitnessResidualEntireCrossingFamilyClosed.lean:172` | 48→47 | approved_policy→approved_policy | ∀ {c c2 : MachLib.Real}, 1 < c → ∀ {S3 : MachLib.EMLTree}, (∀ (x : MachLib.Real), (c.expWrappedNonMonotonicWitnessC.eml ((MachLib.EMLTree.const c2).eml S3)).eva … [195 chars; full text in the statements evidence] |
 
-#### G711 — 1 theorem(s), `assumption-foundation`
+#### G711 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM)
@@ -11615,7 +11618,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.nestedTarget_not_tailSign` | `MachLib/WitnessResidualNestedTargetTailSign.lean:134` | 39→44 | approved_policy→approved_policy | ∀ (cs : List MachLib.Real), MachLib.nestedWF cs → MachLib.nestedLo cs ≤ 0 → 0 < MachLib.nestedHi cs → ¬MachLib.Real.TailSign (MachLib.nestedTarget cs) |
 
-#### G712 — 1 theorem(s), `assumption-foundation`
+#### G712 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -11655,7 +11658,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.sin_not_in_eml_t1_vc_t2_eml_vc` | `MachLib/SinNotInEMLDepth2FinalVcVc.lean:380` | 45→47 | conditional on 3→conditional on 2 | ∀ (d1 d : MachLib.Real), ¬∀ (x : MachLib.Real), ((MachLib.EMLTree.var.eml (MachLib.EMLTree.const d1)).eml (MachLib.EMLTree.var.eml (MachLib.EMLTree.const d))).e … [173 chars; full text in the statements evidence] |
 
-#### G716 — 1 theorem(s), `assumption-foundation`
+#### G716 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -11685,7 +11688,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.eml_depth2_witness_of_const_le_one_sibling` | `MachLib/EMLSmoothness.lean:2211` | 30→42 | approved_policy→approved_policy | ∀ {T1 S3 : MachLib.EMLTree} {c2 : MachLib.Real}, c2 ≤ 1 → (∀ (x : MachLib.Real), (T1.eml ((MachLib.EMLTree.const c2).eml S3)).eval x = x.sin) → ∃ x0, 0 < S3.eva … [164 chars; full text in the statements evidence] |
 
-#### G719 — 1 theorem(s), `assumption-foundation`
+#### G719 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -11705,7 +11708,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.depth2_no_T1_with_const_B_small` | `MachLib/WitnessResidualDepth2ABConjuncts.lean:51` | 35→42 | approved_policy→approved_policy | ∀ {A : MachLib.EMLTree} {b c2 : MachLib.Real}, 0 < b → 1 < c2 → b * (c2 - 1) ≤ 1 → (∀ (x : MachLib.Real), (A.eml (MachLib.EMLTree.const b)).eval x = (c2 + x.sin … [174 chars; full text in the statements evidence] |
 
-#### G721 — 1 theorem(s), `assumption-foundation`
+#### G721 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM)
@@ -11715,7 +11718,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.nestedTarget_hi_past` | `MachLib/WitnessResidualNestedTargetTailSign.lean:121` | 37→42 | approved_policy→approved_policy | ∀ (cs : List MachLib.Real), MachLib.nestedWF cs → ∀ (R : MachLib.Real), ∃ x, R < x ∧ MachLib.nestedTarget cs x = MachLib.nestedHi cs |
 
-#### G722 — 1 theorem(s), `assumption-foundation`
+#### G722 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.sin_add` (trusted), `MachLib.Real.sin_pi` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM)
@@ -11725,7 +11728,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.sin_one_recurring` | `MachLib/QuantitativeNonApproximation.lean:45` | 42→43 | approved_policy→approved_policy | ∀ (M : MachLib.Real), ∃ x, M < x ∧ x.sin = 1 |
 
-#### G723 — 1 theorem(s), `assumption-foundation`
+#### G723 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos_add` (trusted), `MachLib.Real.cos_pi` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.sup_exists` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_periodic` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -11735,7 +11738,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.sinSq_not_tailSign` | `MachLib/NonRepresentabilityCensusSinSq.lean:29` | 47→45 | approved_policy→approved_policy | ¬MachLib.Real.TailSign fun x => x.sin * x.sin - 0 |
 
-#### G724 — 1 theorem(s), `assumption-foundation`
+#### G724 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -11745,7 +11748,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.T1eval_not_eq_log_c2_plus_sin_given_zero_bound` | `MachLib/WitnessResidualConvexZeroBoundClosure.lean:148` | 35→41 | approved_policy→approved_policy | ∀ (c2 : MachLib.Real), 1 < c2 → ∀ (T1eval : MachLib.Real → MachLib.Real), (∀ (x : MachLib.Real), T1eval x = (c2 + x.sin).log) → ∀ (M : Nat), (∀ (zeros : List Ma … [333 chars; full text in the statements evidence] |
 
-#### G725 — 1 theorem(s), `assumption-foundation`
+#### G725 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos_add` (trusted), `MachLib.Real.divR` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.pythagorean` (trusted), `MachLib.Real.subR` (trusted), `MachLib.Real.sub_def` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -11775,7 +11778,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.no_tree_eq_nested_target_of_BChainNonpos` | `MachLib/WitnessResidualNonposChainClosure.lean:88` | 48→45 | approved_policy→approved_policy | ∀ (T : MachLib.EMLTree), MachLib.Real.BChainNonpos T → ∀ (cs : List MachLib.Real), MachLib.nestedWF cs → (∀ (x : MachLib.Real), T.eval x = MachLib.nestedTarget  … [173 chars; full text in the statements evidence] |
 
-#### G728 — 1 theorem(s), `assumption-foundation`
+#### G728 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.cos_add` (trusted), `MachLib.Real.exp_add` (trusted), `MachLib.Real.pi_lower_bound` (trusted)
 * left: `MachLib.Real.HasDerivAt_sub` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_gt_one` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM), `MachLib.Real.sin_neg` (trusted, now a THEOREM), `MachLib.Real.sin_zero` (trusted, now a THEOREM)
@@ -12295,7 +12298,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.exp_neg_lipschitz` | `MachLib/OperatorBasisTrans.lean:87` | 32→36 | approved_policy→approved_policy | ∀ {a b : MachLib.Real}, 0 ≤ a → 0 ≤ b → ((-a).exp - (-b).exp).abs ≤ (a - b).abs |
 
-#### G780 — 1 theorem(s), `assumption-foundation`
+#### G780 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.divR` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -12305,7 +12308,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.natCast_mul_pi_pos` | `MachLib/EMLPfaffian.lean:496` | 26→31 | approved_policy→approved_policy | ∀ {k : Nat}, 1 ≤ k → 0 < MachLib.Real.natCast k * MachLib.Real.pi |
 
-#### G781 — 1 theorem(s), `assumption-foundation`
+#### G781 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.divR` (trusted), `MachLib.Real.lt_irrefl_ax` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_pos` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_lt_one_ax` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -12545,7 +12548,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.exp_not_affine` | `MachLib/EMLDepth2InvX.lean:2858` | 32→35 | approved_policy→approved_policy | ∀ {c a K : MachLib.Real}, c.exp = a + K → c.exp * c.exp = a + (K + K) → c.exp * c.exp * c.exp = a + (K + K + K) → c = 0 |
 
-#### G805 — 1 theorem(s), `assumption-foundation`
+#### G805 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.subR` (trusted), `MachLib.Real.sub_def` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -12555,7 +12558,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.weierstrassTermK_dom` | `MachLib/WeierstrassTermByTerm.lean:929` | 37→40 | approved_policy→approved_policy | ∀ (t : MachLib.Real) (n k : Nat) (x : MachLib.Real), (t.weierstrassTermK n k x).abs ≤ t.weierstrassAmpK n k |
 
-#### G806 — 1 theorem(s), `assumption-foundation`
+#### G806 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.subR` (trusted), `MachLib.Real.sub_def` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -12565,7 +12568,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.weierstrassTerm2_dom` | `MachLib/WeierstrassTermByTerm.lean:752` | 36→40 | approved_policy→approved_policy | ∀ (t : MachLib.Real) (n : Nat) (x : MachLib.Real), (t.weierstrassTerm2 n x).abs ≤ t.weierstrassAmp2 n |
 
-#### G807 — 1 theorem(s), `assumption-foundation`
+#### G807 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.exp_add` (trusted), `MachLib.Real.exp_surj` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -12655,7 +12658,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.nonMonotonicWitness_D_xb` | `MachLib/WitnessResidualNonMonotonic.lean:252` | 27→33 | approved_policy→approved_policy | MachLib.Real.nonMonotonicWitness_xb.exp - (1 + 1).log = 1 / (1 + 1) |
 
-#### G816 — 1 theorem(s), `assumption-foundation`
+#### G816 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.exp_add` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_comm` (trusted), `MachLib.Real.mul_distrib` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -12825,7 +12828,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.periodic_push_past` | `MachLib/GeneralPeriodicTargetBarrier.lean:72` | 28→32 | approved_policy→approved_policy | ∀ (p : MachLib.Real), 0 < p → ∀ (x0 R : MachLib.Real), ∃ n, R < x0 + MachLib.Real.natCast n * p |
 
-#### G833 — 1 theorem(s), `assumption-foundation`
+#### G833 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.leR` (trusted), `MachLib.Real.le_iff_lt_or_eq` (trusted), `MachLib.Real.lt_total` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -12925,7 +12928,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.invMulDeriv_neg_of_condition` | `MachLib/EMLZeroCrossingBothCompoundDeeperGeneral.lean:51` | 26→29 | approved_policy→approved_policy | ∀ (t2eval t2deriv t2deriv2 : MachLib.Real → MachLib.Real) (z : MachLib.Real), 0 < t2eval z → t2deriv2 z * t2eval z < t2deriv z * t2deriv z → -t2deriv z / (t2eva … [219 chars; full text in the statements evidence] |
 
-#### G843 — 1 theorem(s), `assumption-foundation`
+#### G843 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.lt_total` (trusted), `MachLib.Real.mul_assoc` (trusted), `MachLib.Real.mul_inv` (trusted), `MachLib.Real.mul_one_ax` (trusted), `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted), `propext` (std)
 * left: `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -13285,7 +13288,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.meshPoint_zero` | `MachLib/RiemannIntegralMonotone.lean:65` | 14→13 | approved_policy→approved_policy | ∀ (a b : MachLib.Real) (n : Nat), a.meshPoint b n 0 = a |
 
-#### G880 — 1 theorem(s), `assumption-foundation`
+#### G880 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.sup_exists` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -13295,7 +13298,7 @@ Within a group every theorem has the same entered and left axioms. Old set = new
 |---|---|---|---|---|
 | `MachLib.Real.smoothed_term_eventually_lt_one` | `MachLib/EMLWeierstrassTermBound.lean:357` | 39→35 | approved_policy→approved_policy | ∀ (a b C r : MachLib.Real) (k : Nat), 0 < a → 1 < b → 0 < C → 0 < r → ∀ (mult : Nat → MachLib.Real), (∀ (n : Nat), (mult n).abs ≤ C * MachLib.Real.npow n r) → a … [329 chars; full text in the statements evidence] |
 
-#### G881 — 1 theorem(s), `assumption-foundation`
+#### G881 — 1 theorem(s), `assumption-promoted`
 
 * entered: `MachLib.Real.pi_lower_bound` (trusted), `MachLib.Real.zero_ne_one_ax` (trusted)
 * left: `MachLib.Real.archimedean` (trusted, now a THEOREM), `MachLib.Real.exp_pos` (trusted, now a THEOREM), `MachLib.Real.exp_zero` (trusted, now a THEOREM), `MachLib.Real.mul_lt_mul_of_pos_right` (trusted, now a THEOREM), `MachLib.Real.natCast` (trusted, now a definition), `MachLib.Real.natCast_succ` (trusted, now a THEOREM), `MachLib.Real.natCast_zero` (trusted, now a THEOREM), `MachLib.Real.one_div_nonneg_of_pos` (trusted, now a THEOREM), `MachLib.Real.one_div_pos_of_pos` (trusted, now a THEOREM), `MachLib.Real.pi_pos` (trusted, now a THEOREM)
@@ -13438,6 +13441,614 @@ Accepted against the stale signature set, so never reviewed against a live one. 
 | `MachLib.Real.log_le_sub_one_mvt` | — | AX44 | AX44 | yes |
 | `MachLib.Real.one_add_le_exp_of_mvt` | — | AX42 | AX42 | yes |
 
+## G. Definitions changed under unchanged statements (E3): 19 changed in place, 1183 watched theorems reach one
+
+StatementDigest hashes a theorem's stored type, so a changed DEFINITION under it was invisible until v0.4. These are the constants whose own type or body changed between the revisions (or that changed kind, e.g. an axiom that became a definition), with the number of theorems whose statement reaches each through definition bodies. Every such theorem is in the JSON (`redefined: true`) and in `redefinition.json` with the definitions it reaches.
+
+19 constants exist at both revisions with a different type, body or kind; 327 exist on one side only, of which 5 are reached by a redefined theorem (a changed body can start using a new constant):
+
+| constant | 2026-09-03 | now | theorems reaching it |
+|---|---|---|---:|
+| `MachLib.Real.natCast` | axiom | def | 845 |
+| `MachLib.pconsN` | def | def | 212 |
+| `MachLib.Real.realOfScientific` | axiom | def | 86 |
+| `MachLib.PolynomialRootCount.polyIsZeroConst` | def | def | 50 |
+| `MachLib.PolynomialRootCount.polyIsOneConst` | def | def | 48 |
+| `MachLib.Real.clamp` | def | def | 33 |
+| `MachLib.NormalizedPolynomialRootCount.normalizeCoeff._f` | def | def | 29 |
+| `MachLib.NormalizedPolynomialRootCount.insertUniqueRoot` | def | def | 28 |
+| `MachLib.MultiPolyMod.MultiPoly.multiIsOneConst` | def | def | 7 |
+| `MachLib.MultiPolyMod.MultiPoly.multiIsZeroConst` | def | def | 7 |
+| `MachLib.Real.exp10` | axiom | def | 1 |
+| `Certcom.Prims._sizeOf_1` | def | def | 0 |
+| `Certcom.Prims.mk` | ctor | ctor | 0 |
+| `Certcom.Prims.rec` | rec | rec | 0 |
+| `Certcom.Trans1.cName` | def | def | 0 |
+| `Certcom.emlTreeErrorBound._f` | def | def | 0 |
+| `Certcom.leanPrims` | def | def | 0 |
+| `Certcom.stdI1` | def | def | 0 |
+| `Certcom.stdR1` | def | def | 0 |
+| `MachLib.Real.natCast._f` | absent | def | 845 |
+| `MachLib.Real.natCast.match_1` | absent | def | 845 |
+| `MachLib.Real.instDecEq` | absent | def | 325 |
+| `MachLib.NormalizedPolynomialRootCount.insertUniqueRoot._proof_1` | theorem | absent | 28 |
+| `instLawfulBEq` | absent | theorem | 28 |
+
+The `clamp` change (9802f19e: `min (max x lo) hi` became `max lo (min x hi)`; they differ only when lo > hi) reaches 33 theorems. Each now describes the language's clamp; for an inverted band it says something different from what it said on 2026-09-03:
+
+| theorem | statement |
+|---|---|
+| `MachLib.Real.aerr_clamp` | ∀ {M E v ve lo hi : MachLib.Real}, lo ≤ hi → M.AErr E v ve → (lo.abs.max hi.abs).AErr E (v.clamp lo hi) (ve.clamp lo hi) |
+| `MachLib.Real.aerr_clamp3` | ∀ {Mv Ev v ve Mlo Elo lo loe Mhi Ehi hi hie : MachLib.Real}, Mv.AErr Ev v ve → Mlo.AErr Elo lo loe → Mhi.AErr Ehi hi hie → (Mlo.max Mhi).AErr (Ev + Elo + Ehi) ( … [193 chars; full text in the statements evidence] |
+| `MachLib.Real.clamp_abs_le` | ∀ (x lo hi : MachLib.Real), (x.clamp lo hi).abs ≤ lo.abs.max hi.abs |
+| `MachLib.Real.clamp_guarded_safe` | ∀ {x v w : Nat → MachLib.Real} {a U W X : MachLib.Real}, (∀ (k : Nat), x (k + 1) = a * x k + (v k).clamp (-U) U + w k) → 0 ≤ U → (∀ (k : Nat), (w k).abs ≤ W) →  … [228 chars; full text in the statements evidence] |
+| `MachLib.Real.clamp_guarded_tracking` | ∀ {x xf vc w : Nat → MachLib.Real} {a L E U : MachLib.Real} {C : MachLib.Real → MachLib.Real}, 0 ≤ L → 0 ≤ E → (∀ (p q : MachLib.Real), (C p - C q).abs ≤ L * (p … [458 chars; full text in the statements evidence] |
+| `MachLib.Real.clamp_guarded_ultimately_bounded` | ∀ {x v w : Nat → MachLib.Real} {a U W : MachLib.Real}, (∀ (k : Nat), x (k + 1) = a * x k + (v k).clamp (-U) U + w k) → 0 ≤ U → 0 ≤ W → (∀ (k : Nat), (w k).abs ≤ … [302 chars; full text in the statements evidence] |
+| `MachLib.Real.clamp_le_hi` | ∀ (x lo hi : MachLib.Real), lo ≤ hi → x.clamp lo hi ≤ hi |
+| `MachLib.Real.clamp_lipschitz` | ∀ (a b lo hi : MachLib.Real), (a.clamp lo hi - b.clamp lo hi).abs ≤ (a - b).abs |
+| `MachLib.Real.clamp_lipschitz3` | ∀ (v lo hi v' lo' hi' : MachLib.Real), (v.clamp lo hi - v'.clamp lo' hi').abs ≤ (v - v').abs + (lo - lo').abs + (hi - hi').abs |
+| `MachLib.Real.clamp_lipschitz_fixed` | ∀ (v v' lo hi : MachLib.Real), (v.clamp lo hi - v'.clamp lo hi).abs ≤ (v - v').abs |
+| `MachLib.Real.coupled_two_state_clamp_envelope` | ∀ {x1 x2 v w1 w2 : Nat → MachLib.Real} {a11 a12 a21 a22 b1 b2 U W1 W2 p1 p2 ρ X : MachLib.Real}, 0 ≤ p1 → 0 ≤ p2 → 0 ≤ ρ → 0 ≤ U → (∀ (k : Nat), x1 (k + 1) = a1 … [603 chars; full text in the statements evidence] |
+| `MachLib.Real.fb_clamp` | ∀ (lo hi : MachLib.Real), MachLib.Real.ForwardBoundable fun x => x.clamp lo hi |
+| `MachLib.Real.first_order_clamp_envelope` | ∀ {x v w : Nat → MachLib.Real} {a U W X : MachLib.Real}, (∀ (k : Nat), x (k + 1) = a * x k + (v k).clamp (-U) U + w k) → 0 ≤ a → 0 ≤ U → (∀ (k : Nat), (w k).abs … [232 chars; full text in the statements evidence] |
+| `MachLib.Real.forge_clamp_sq_certified` | ∀ {w x vxx lo hi : MachLib.Real}, 0 ≤ w → w ≤ 1 → lo ≤ hi → w.RoundsW vxx (x * x) → (vxx.clamp lo hi - (x * x).clamp lo hi).abs ≤ MachLib.Real.GExpr.Ebound w (( … [207 chars; full text in the statements evidence] |
+| `MachLib.Real.forge_deadzone_certified` | ∀ {w x thr p : MachLib.Real}, 0 ≤ w → w ≤ 1 → ∀ (c : Bool), w.RoundsW p (x + -thr) → ((bif c then 0 else p) - (MachLib.Real.GExpr.iteO c (MachLib.Real.GExpr.lea … [398 chars; full text in the statements evidence] |
+| `MachLib.Real.fx_fwd_error` | ∀ {s : MachLib.Real}, 0 ≤ s → ∀ {t : MachLib.Real.FxExpr} {v : MachLib.Real}, s.FxRoundedEval t v → t.Valid → (v - t.exact).abs ≤ MachLib.Real.FxExpr.Ebound s t |
+| `MachLib.Real.fx_mac_clamp_certified` | ∀ {s c vc x b p acc lo hi : MachLib.Real}, 0 ≤ s → lo ≤ hi → s.TruncW vc c → s.TruncW p (vc * x) → s.TruncW acc (p + b) → (acc.clamp lo hi - ((((MachLib.Real.Fx … [412 chars; full text in the statements evidence] |
+| `MachLib.Real.fx_sound` | ∀ {s : MachLib.Real}, 0 ≤ s → ∀ {t : MachLib.Real.FxExpr} {v : MachLib.Real}, s.FxRoundedEval t v → t.Valid → t.Mbound.FxErr (MachLib.Real.FxExpr.Ebound s t) v  … [167 chars; full text in the statements evidence] |
+| `MachLib.Real.fxerr_clamp` | ∀ {M E v ve lo hi : MachLib.Real}, lo ≤ hi → M.FxErr E v ve → (lo.abs.max hi.abs).FxErr E (v.clamp lo hi) (ve.clamp lo hi) |
+| `MachLib.Real.fxerr_clamp3` | ∀ {Mv Ev v ve Mlo Elo lo loe Mhi Ehi hi hie : MachLib.Real}, Mv.FxErr Ev v ve → Mlo.FxErr Elo lo loe → Mhi.FxErr Ehi hi hie → (Mlo.max Mhi).FxErr (Ev + Elo + Eh … [197 chars; full text in the statements evidence] |
+| `MachLib.Real.gexpr_cross_target` | ∀ {w1 w2 : MachLib.Real}, 0 ≤ w1 → w1 ≤ 1 → 0 ≤ w2 → w2 ≤ 1 → ∀ {t : MachLib.Real.GExpr} {v1 v2 : MachLib.Real}, w1.GRoundedEval t v1 → w2.GRoundedEval t v2 → t … [248 chars; full text in the statements evidence] |
+| `MachLib.Real.gexpr_fwd_error` | ∀ {w : MachLib.Real}, 0 ≤ w → w ≤ 1 → ∀ {t : MachLib.Real.GExpr} {v : MachLib.Real}, w.GRoundedEval t v → t.Valid → (v - t.exact).abs ≤ MachLib.Real.GExpr.Eboun … [165 chars; full text in the statements evidence] |
+| `MachLib.Real.gexpr_sound` | ∀ {w : MachLib.Real}, 0 ≤ w → w ≤ 1 → ∀ {t : MachLib.Real.GExpr} {v : MachLib.Real}, w.GRoundedEval t v → t.Valid → t.Mbound.AErr (MachLib.Real.GExpr.Ebound w t … [171 chars; full text in the statements evidence] |
+| `MachLib.Real.iterated_kernel_trajectory` | ∀ {w L ε : MachLib.Real} {f : MachLib.Real → MachLib.Real} {g : MachLib.Real → MachLib.Real.GExpr} {xc xe : Nat → MachLib.Real}, 0 ≤ w → w ≤ 1 → 0 ≤ L → 0 ≤ ε → … [560 chars; full text in the statements evidence] |
+| `MachLib.Real.lb_clamp` | ∀ (lo hi : MachLib.Real), MachLib.Real.LocallyBoundable fun x => x.clamp lo hi |
+| `MachLib.Real.lo_le_clamp` | ∀ (x lo hi : MachLib.Real), lo ≤ x.clamp lo hi |
+| `MachLib.Real.mode_step_bound` | ∀ {x v w : Nat → MachLib.Real} {a b U W ρ : MachLib.Real}, (∀ (k : Nat), x (k + 1) = a * x k + b * (v k).clamp (-U) U + w k) → a.abs ≤ ρ → 0 ≤ U → (∀ (k : Nat), … [240 chars; full text in the statements evidence] |
+| `MachLib.Real.nonlinear_abs_drift_safe` | ∀ {x v w : Nat → MachLib.Real} {a U W X : MachLib.Real}, (∀ (k : Nat), x (k + 1) = a * (x k).abs + (v k).clamp (-U) U + w k) → 0 ≤ U → (∀ (k : Nat), (w k).abs ≤ … [238 chars; full text in the statements evidence] |
+| `MachLib.Real.nonlinear_drift_clamp_safe` | ∀ {x v w : Nat → MachLib.Real} {f : MachLib.Real → MachLib.Real} {L c U W X : MachLib.Real}, (∀ (k : Nat), x (k + 1) = f (x k) + (v k).clamp (-U) U + w k) → (∀  … [324 chars; full text in the statements evidence] |
+| `MachLib.Real.pid_fx_fwd_error` | ∀ {s e i d Kp Ki Kd Kp' Ki' Kd' m1 m2 m3 lo hi : MachLib.Real}, (Kp' - Kp).abs ≤ s → (Ki' - Ki).abs ≤ s → (Kd' - Kd).abs ≤ s → (m1 - Kp' * e).abs ≤ s → (m2 - Ki … [319 chars; full text in the statements evidence] |
+| `MachLib.Real.pid_q16_fwd_error` | ∀ {e i d Kp Ki Kd Kp' Ki' Kd' m1 m2 m3 lo hi : MachLib.Real}, (Kp' - Kp).abs ≤ MachLib.Real.q16_step → (Ki' - Ki).abs ≤ MachLib.Real.q16_step → (Kd' - Kd).abs ≤ … [565 chars; full text in the statements evidence] |
+| `MachLib.Real.scaling_iteration_certified` | ∀ {w c B : MachLib.Real} {xc xe : Nat → MachLib.Real}, 0 ≤ w → w ≤ 1 → 0 ≤ c → 0 ≤ B → (∀ (k : Nat), (xc k).abs ≤ B) → (∀ (k : Nat), w.GRoundedEval ((MachLib.Re … [412 chars; full text in the statements evidence] |
+| `MachLib.Real.two_mode_clamp_envelope` | ∀ {x1 x2 v w1 w2 : Nat → MachLib.Real} {a1 a2 b1 b2 U W1 W2 p1 p2 ρ X : MachLib.Real}, 0 ≤ p1 → 0 ≤ p2 → 0 ≤ ρ → (∀ (k : Nat), x1 (k + 1) = a1 * x1 k + b1 * (v  … [513 chars; full text in the statements evidence] |
+
+## H. Axioms restated under the same name (16)
+
+The baseline pinned axiom NAMES until v0.4; a footprint holding one of these looked unchanged. Watched theorems resting on each, before and now:
+
+#### `Certcom.real_abs_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (a : Float),
+  (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.abs a) - (Certcom.realToR a).abs).abs ≤
+    Certcom.real_abs_eps
+```
+
+New statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.abs a) - (Certcom.realToR a).abs).abs ≤
+      Certcom.real_abs_eps
+```
+
+#### `Certcom.real_acos_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  R < 1 →
+    (Certcom.realToR a).abs ≤ R →
+      (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.acos a) - (Certcom.realToR a).arccos).abs ≤
+        MachLib.Real.u * MachLib.Real.pi
+```
+
+New statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  a.isFinite = true →
+    R < 1 →
+      (Certcom.realToR a).abs ≤ R →
+        (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.acos a) - (Certcom.realToR a).arccos).abs ≤
+          MachLib.Real.u * MachLib.Real.pi
+```
+
+#### `Certcom.real_asin_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  R < 1 →
+    (Certcom.realToR a).abs ≤ R →
+      (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.asin a) - (Certcom.realToR a).arcsin).abs ≤
+        MachLib.Real.u * (MachLib.Real.pi / (1 + 1))
+```
+
+New statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  a.isFinite = true →
+    R < 1 →
+      (Certcom.realToR a).abs ≤ R →
+        (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.asin a) - (Certcom.realToR a).arcsin).abs ≤
+          MachLib.Real.u * (MachLib.Real.pi / (1 + 1))
+```
+
+#### `Certcom.real_atan_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (a : Float),
+  (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.atan a) - (Certcom.realToR a).atan).abs ≤
+    Certcom.real_atan_eps
+```
+
+New statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.atan a) - (Certcom.realToR a).atan).abs ≤
+      Certcom.real_atan_eps
+```
+
+#### `Certcom.real_cos_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (a : Float),
+  (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.cos a) - (Certcom.realToR a).cos).abs ≤
+    Certcom.real_cos_eps
+```
+
+New statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.cos a) - (Certcom.realToR a).cos).abs ≤
+      Certcom.real_cos_eps
+```
+
+#### `Certcom.real_cosh_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  (Certcom.realToR a).abs ≤ R →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.cosh a) - (Certcom.realToR a).cosh).abs ≤
+      MachLib.Real.u * R.cosh
+```
+
+New statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.cosh a).isFinite = true →
+    (Certcom.realToR a).abs ≤ R →
+      (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.cosh a) - (Certcom.realToR a).cosh).abs ≤
+        (MachLib.Real.u + MachLib.Real.u + MachLib.Real.u + MachLib.Real.u) * R.cosh
+```
+
+#### `Certcom.real_exp_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (hi : MachLib.Real) (a : Float),
+  Certcom.realToR a ≤ hi →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.exp a) - (Certcom.realToR a).exp).abs ≤
+      MachLib.Real.u * hi.exp
+```
+
+New statement:
+
+```lean
+∀ (hi : MachLib.Real) (a : Float),
+  a.isFinite = true →
+    (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.exp a).isFinite = true →
+      Certcom.dblMin ≤ (Certcom.realToR a).exp →
+        Certcom.realToR a ≤ hi →
+          (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.exp a) - (Certcom.realToR a).exp).abs ≤
+            (MachLib.Real.u + MachLib.Real.u) * hi.exp
+```
+
+#### `Certcom.real_fpbridge`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+Certcom.FPBridge Certcom.realToR
+```
+
+New statement:
+
+```lean
+Certcom.FPBridgeFinite Certcom.realToR
+```
+
+#### `Certcom.real_log10_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (lo hi : MachLib.Real) (a : Float),
+  0 < lo →
+    lo ≤ Certcom.realToR a →
+      Certcom.realToR a ≤ hi →
+        (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.log10 a) - (Certcom.realToR a).log10).abs ≤
+          MachLib.Real.u * (lo.log10.abs + hi.log10.abs)
+```
+
+New statement:
+
+```lean
+∀ (lo hi : MachLib.Real) (a : Float),
+  a.isFinite = true →
+    0 < lo →
+      lo ≤ Certcom.realToR a →
+        Certcom.realToR a ≤ hi →
+          (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.log10 a) - (Certcom.realToR a).log10).abs ≤
+            (MachLib.Real.u + MachLib.Real.u + MachLib.Real.u) * (lo.log10.abs + hi.log10.abs)
+```
+
+#### `Certcom.real_log_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (lo hi : MachLib.Real) (a : Float),
+  0 < lo →
+    lo ≤ Certcom.realToR a →
+      Certcom.realToR a ≤ hi →
+        (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.ln a) - (Certcom.realToR a).log).abs ≤
+          MachLib.Real.u * (lo.log.abs + hi.log.abs)
+```
+
+New statement:
+
+```lean
+∀ (lo hi : MachLib.Real) (a : Float),
+  a.isFinite = true →
+    0 < lo →
+      lo ≤ Certcom.realToR a →
+        Certcom.realToR a ≤ hi →
+          (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.ln a) - (Certcom.realToR a).log).abs ≤
+            (MachLib.Real.u + MachLib.Real.u) * (lo.log.abs + hi.log.abs)
+```
+
+#### `Certcom.real_round_bounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (M x : MachLib.Real), 0 ≤ M → x.abs ≤ M → (Certcom.realToR (Certcom.floatOfR x) - x).abs ≤ MachLib.Real.u * M
+```
+
+New statement:
+
+```lean
+∀ (M x : MachLib.Real),
+  0 ≤ M →
+    M ≤ Certcom.dblMax →
+      x.abs ≤ M → x = 0 ∨ Certcom.dblMin ≤ x.abs → (Certcom.realToR (Certcom.floatOfR x) - x).abs ≤ MachLib.Real.u * M
+```
+
+#### `Certcom.real_sin_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (a : Float),
+  (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.sin a) - (Certcom.realToR a).sin).abs ≤
+    Certcom.real_sin_eps
+```
+
+New statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.sin a) - (Certcom.realToR a).sin).abs ≤
+      Certcom.real_sin_eps
+```
+
+#### `Certcom.real_sinh_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  (Certcom.realToR a).abs ≤ R →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.sinh a) - (Certcom.realToR a).sinh).abs ≤
+      MachLib.Real.u * R.cosh
+```
+
+New statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.sinh a).isFinite = true →
+    (Certcom.realToR a).abs ≤ R →
+      (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.sinh a) - (Certcom.realToR a).sinh).abs ≤
+        (MachLib.Real.u + MachLib.Real.u + MachLib.Real.u + MachLib.Real.u) * R.cosh
+```
+
+#### `Certcom.real_sqrt_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (hi : MachLib.Real) (a : Float),
+  0 ≤ Certcom.realToR a →
+    Certcom.realToR a ≤ hi →
+      (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.sqrt a) - (Certcom.realToR a).sqrt).abs ≤
+        MachLib.Real.u * hi.sqrt
+```
+
+New statement:
+
+```lean
+∀ (hi : MachLib.Real) (a : Float),
+  a.isFinite = true →
+    0 ≤ Certcom.realToR a →
+      Certcom.realToR a ≤ hi →
+        (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.sqrt a) - (Certcom.realToR a).sqrt).abs ≤
+          MachLib.Real.u * hi.sqrt
+```
+
+#### `Certcom.real_tan_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  0 ≤ R →
+    R < MachLib.Real.pi / (1 + 1) →
+      (Certcom.realToR a).abs ≤ R →
+        (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.tan a) - (Certcom.realToR a).tan).abs ≤
+          MachLib.Real.u * R.tan
+```
+
+New statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  a.isFinite = true →
+    0 ≤ R →
+      R < MachLib.Real.pi / (1 + 1) →
+        (Certcom.realToR a).abs ≤ R →
+          (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.tan a) - (Certcom.realToR a).tan).abs ≤
+            (MachLib.Real.u + MachLib.Real.u) * R.tan
+```
+
+#### `Certcom.real_tanh_rounds`
+
+* watched dependents: 0 at 23e0d047, 0 now; class now trusted
+
+Old statement:
+
+```lean
+∀ (R : MachLib.Real) (a : Float),
+  (Certcom.realToR a).abs ≤ R →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.tanh a) - (Certcom.realToR a).tanh).abs ≤
+      MachLib.Real.u
+```
+
+New statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true →
+    (Certcom.realToR (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.tanh a) - (Certcom.realToR a).tanh).abs ≤
+      MachLib.Real.u + MachLib.Real.u
+```
+
+## I. Axioms added since 2026-09-03 (13)
+
+#### `Certcom.float_lit_0_05`
+
+* class now trusted; watched dependents now 0; introduced in: `d50dfe15a7` 2026-09-14 feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families
+
+Statement:
+
+```lean
+5e-2 = Certcom.floatOfR 5e-2
+```
+
+#### `Certcom.float_lit_0_4`
+
+* class now trusted; watched dependents now 0; introduced in: `d50dfe15a7` 2026-09-14 feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families
+
+Statement:
+
+```lean
+0.4 = Certcom.floatOfR 0.4
+```
+
+#### `Certcom.float_lit_1_5`
+
+* class now trusted; watched dependents now 0; introduced in: `d50dfe15a7` 2026-09-14 feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families
+
+Statement:
+
+```lean
+1.5 = Certcom.floatOfR 1.5
+```
+
+#### `Certcom.real_abs_eps_eq_zero`
+
+* class now trusted; watched dependents now 0; introduced in: `bceff6ee8b` 2026-09-14 feat: finite-input float bridge, log at 2u, u <= 2^-52, exact abs
+
+Statement:
+
+```lean
+Certcom.real_abs_eps = 0
+```
+
+#### `Certcom.real_cosh_finite`
+
+* class now trusted; watched dependents now 0; introduced in: `d50dfe15a7` 2026-09-14 feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families
+
+Statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true →
+    (Certcom.realToR a).abs ≤ MachLib.Real.natCast 710 →
+      (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.cosh a).isFinite = true
+```
+
+#### `Certcom.real_exp_finite`
+
+* class now trusted; watched dependents now 0; introduced in: `d50dfe15a7` 2026-09-14 feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families
+
+Statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true →
+    Certcom.realToR a ≤ MachLib.Real.natCast 709 →
+      (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.exp a).isFinite = true
+```
+
+#### `Certcom.real_fpfinite`
+
+* class now trusted; watched dependents now 0; introduced in: `3333c7bf11` 2026-09-14 feat: range axioms (N1, N2, u < 1); instantiate two grounded certificates
+
+Statement:
+
+```lean
+Certcom.FPFiniteOfRange Certcom.realToR
+```
+
+#### `Certcom.real_log_finite`
+
+* class now trusted; watched dependents now 0; introduced in: `d50dfe15a7` 2026-09-14 feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families
+
+Statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true → 0 < Certcom.realToR a → (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.ln a).isFinite = true
+```
+
+#### `Certcom.real_round_finite`
+
+* class now trusted; watched dependents now 0; introduced in: `3333c7bf11` 2026-09-14 feat: range axioms (N1, N2, u < 1); instantiate two grounded certificates
+
+Statement:
+
+```lean
+∀ (x : MachLib.Real), x.abs ≤ Certcom.dblMax → (Certcom.floatOfR x).isFinite = true
+```
+
+#### `Certcom.real_sinh_finite`
+
+* class now trusted; watched dependents now 0; introduced in: `d50dfe15a7` 2026-09-14 feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families
+
+Statement:
+
+```lean
+∀ (a : Float),
+  a.isFinite = true →
+    (Certcom.realToR a).abs ≤ MachLib.Real.natCast 710 →
+      (Certcom.stdI1 Certcom.leanPrims Certcom.Trans1.sinh a).isFinite = true
+```
+
+#### `MachLib.Real.u_le_half`
+
+* class now trusted; watched dependents now 0; introduced in: `d50dfe15a7` 2026-09-14 feat: literal, libm-finiteness and u <= 1/2 axioms; instantiate the PID and eml families
+
+Statement:
+
+```lean
+MachLib.Real.u + MachLib.Real.u ≤ 1
+```
+
+#### `MachLib.Real.u_le_inv_two_pow_52`
+
+* class now trusted; watched dependents now 0; introduced in: `bceff6ee8b` 2026-09-14 feat: finite-input float bridge, log at 2u, u <= 2^-52, exact abs
+
+Statement:
+
+```lean
+MachLib.Real.u ≤ 1 / MachLib.Real.natCast (2 ^ 52)
+```
+
+#### `MachLib.Real.u_lt_one`
+
+* class now trusted; watched dependents now 0; introduced in: `3333c7bf11` 2026-09-14 feat: range axioms (N1, N2, u < 1); instantiate two grounded certificates
+
+Statement:
+
+```lean
+MachLib.Real.u < 1
+```
+
+## J. Axioms promoted into trustedFootprint (E1, E2): 16
+
+A promotion raises trust without any proof changing. The gate (v0.4) pins the policy and FAILS `policy-widened` on any addition until a reviewed rebaseline. Entries into existing footprints:
+
+| axiom | 2026-09-03 class | entered N existing footprints | introduced as an axiom |
+|---|---|---:|---|
+| `Certcom.float_lit_0_05` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.float_lit_0_4` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.float_lit_1_5` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.real_abs_eps_eq_zero` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.real_cosh_finite` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.real_exp_finite` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.real_fpfinite` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.real_log_finite` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.real_round_finite` | undeclared | 0 | since 2026-09-03 |
+| `Certcom.real_sinh_finite` | undeclared | 0 | since 2026-09-03 |
+| `MachLib.Real.pi_lower_bound` | conditional | 181 | before 2026-09-03 |
+| `MachLib.Real.realPow` | conditional | 0 | before 2026-09-03 |
+| `MachLib.Real.realPow_nonneg` | conditional | 0 | before 2026-09-03 |
+| `MachLib.Real.u_le_half` | undeclared | 0 | since 2026-09-03 |
+| `MachLib.Real.u_le_inv_two_pow_52` | undeclared | 0 | since 2026-09-03 |
+| `MachLib.Real.u_lt_one` | undeclared | 0 | since 2026-09-03 |
+
 ## Sign-off
 
 | section | reviewer | verdict | date |
@@ -13449,6 +14060,10 @@ Accepted against the stale signature set, so never reviewed against a live one. 
 | D. sorry / other | | | |
 | E. New conditional theorems | | | |
 | F. c3046961 hand edits | | | |
+| G. Definitions changed under unchanged statements (E3) | | | |
+| H. Axioms restated under the same name | | | |
+| I. Axioms added since 2026-09-03 | | | |
+| J. Axioms promoted into trustedFootprint (E1, E2) | | | |
 
 Evidence:
 
@@ -13462,10 +14077,12 @@ Evidence:
 | `legacy_sigs_23e0d047.jsonl` | `53b9c5d35901aae71409eeaf12138ffc555ec3c924a94637f02c112288d1c9f9` |
 | `policy_23e0d047.json` | `7d9042b46221b43582406a634345d6a781c2f56f04d1bceeaef914cf601cf9f7` |
 | `policy_new.json` | `0cbaf0204be630d055728f6e648be63429263d17c86c23ce4b0fc1fca08b8700` |
-| `sigs_23e0d047.jsonl` | `3666a59434629192b750ae541f0208cb4c09b1aa03a2ddf1b923764e0a680002` |
-| `sigs_new.jsonl` | `a853871a184db58c6b1b9cc630f2993ba812fc57d554b662222624cfdc07b2c9` |
+| `population.json` | `2205476d54ebbba3245e6bb721b8bc2dc52ad3813d9f37d17effa500c87a29a2` |
+| `redefinition.json` | `7ba315e28ac7ec07074e97c3c4225dededb2966bd813c94d57b549b7b00c9ff5` |
+| `sigs_23e0d047.jsonl` | `16736d62b257950843c35818e7c4416b7561db4533a8de09c88cf8069f26606d` |
+| `sigs_new.jsonl` | `abe45f0a56a657835e39d0bf53a05de6f60d090b3665db04cce9ae5fbeea2374` |
 | `stale_local_sigs_20260903.jsonl` | `54032a62ba0052e0f488a5aa24fdbeac835756f39ea52cb6e2e597bd16f51a4e` |
-| `statements_23e0d047.json` | `57ce883f67af573f0f561af8c3d1193c7df12f4aba3a3ec9751cd535a69957a7` |
-| `statements_new.json` | `5435c15e94555a82a41d5d65c34db0490f0a12eb923c83c411dced8ababa42c9` |
-| `targeted.json` | `b0e4bb0e1461e9bcc62f5e17bd8221734e5fbda0dc5f09ca92795498c90d8477` |
-| `trust_baseline.candidate.json` | `6ed2403398784589b42a591943926d7d5986d14f1f42fb790dc83662316759de` |
+| `statements_23e0d047.json` | `db90ce6247bdf7600e1e1354ef2aa56bd75f844239fd990d94e3b14b060727a1` |
+| `statements_new.json` | `1ed1ccf9788d08440358de10e61f0a3cb76835a86f46c682a738fc24b6e01781` |
+| `targeted.json` | `db968b8bd073de42e0b907056ab508823462028afb5d0be295a860439d7b14ce` |
+| `trust_baseline.candidate.json` | `445c6e9901c755160205d470f5177839e145eb6078513ca40c75158515db2b9d` |
