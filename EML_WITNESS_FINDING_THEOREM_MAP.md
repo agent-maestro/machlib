@@ -201,14 +201,18 @@ eml_var_var_certcom_witness_grounded (cont. 84-86)
   — grounded against Certcom's ACTUAL disclosed rounding axioms, then a full retroactive
     audit fixed 10 of 14 primitive rounding axioms that were quietly false/imprecise
     before this round (cont. 86) — no free hypothesis left beyond genuine math quantities
-    or Certcom's own disclosed IEEE-754 trust floor
+    or Certcom's own disclosed IEEE-754 trust floor (as of 2026-07-22; since 2026-09-14
+    it also takes finiteness hypotheses on its floats and B ≤ DBL_MAX, its exp and log
+    rounding terms doubled to 2u, and it cannot be instantiated for binary64: its hMB forces B above 15.5π,
+    where u·exp B is about 1.5e5 — see foundations/docs/what_is_proven.md)
         |
         v
 eml_tree_grounded (cont. 87-88)  ◄── the capstone
   — generalizes from ONE hand-built tree to the FULL EMLTree grammar (const/var/eml, any
     depth/shape) via one structural induction — any tree this arc studies inherits a
     grounded Certcom pipeline connection automatically, with an explicit, machine-computed
-    closed-form error bound
+    closed-form error bound (since 2026-09-14, only on inputs where the tree's floats stay
+    finite and normal: the hypothesis EMLTreeFloatSafe)
 ```
 
 This is the one piece of the whole arc that connects an ABSTRACT non-representability result to an

@@ -6046,6 +6046,13 @@ statement — is machine-checked, `sorryAx`-free, composed from already-proven f
 ## 2026-07-22 (cont. 84) — grounded all the way down: no free hypotheses beyond Certcom's own
 disclosed axioms
 
+> *(2026-10-14, owner ruling R1: no longer true as titled. On 2026-09-14 the float-bridge axioms were restated from a
+> measurement, and the three `EMLCertcomGrounded.lean` theorems built here now also take finiteness hypotheses on their
+> floats (`x`, `exp x` and the output finite; `B ≤ DBL_MAX` for the quantized forms), with `2u` in place of `u` for the
+> `exp` and `log` roundings. `eml_var_var_certcom_witness_grounded` cannot be instantiated for binary64 at all: its
+> `hMB` forces `B` above about `15.5π`, where `u·exp B` is about `1.5·10⁵`. Current statements:
+> `foundations/docs/what_is_proven.md`, "Grounded floating-point certificates".)*
+
 Direct "proceed into that please," reading cont. 83's closing framing of `round`/`hround_q` (and,
 implicitly, `hround_exp`/`hround_ln`) as `FPBridge`-shaped trust boundaries as an invitation to
 finish the parallel, not stop at it — `FPGrounding.lean` already shows this codebase doesn't stop
@@ -6327,6 +6334,11 @@ nested exp/log towers) remains the honestly-scoped, deliberately-deferred next p
 here, flagged clearly, matching this whole arc's standing discipline.
 
 ## 2026-07-22 (cont. 88) — `const` closed: the FULL `EMLTree` grammar, one theorem
+
+> *(2026-10-14, owner ruling R1: since 2026-09-14 `eml_tree_grounded` and both instances below take the hypothesis
+> `EMLTreeFloatSafe`: each constant is `0` or between `DBL_MIN` and `DBL_MAX` in magnitude, and at each `eml` node the
+> floats fed to `exp` and `log` are finite, `exp`'s float result is finite and its exact value at least `DBL_MIN`, and the
+> difference is finite. The bound holds only on such inputs. Current statements: `foundations/docs/what_is_proven.md`.)*
 
 Direct "lets get into this please," picking up the exact deferral cont. 87 flagged: `const`, and the
 recursive constant-quantization propagation through nested `exp`/`log` layers that made it "genuine,

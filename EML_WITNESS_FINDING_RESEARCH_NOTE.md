@@ -133,8 +133,10 @@ frontier this arc had originally expected to need).
 Everything described so far is about `EMLTree.eval`, a mathematical function — it says nothing
 about what happens once a tree is actually compiled and run. The Certcom compositional handshake
 (decision doc cont. 82–88) closes that gap for the FULL grammar this arc studies (`const`/`var`/
-`eml`, any depth or shape): `Certcom.eml_tree_grounded` gives an explicit, machine-computed
-closed-form error bound between (a) `T.eval`, the exact mathematical value, (b) the exact real
+`eml`, any depth or shape): `Certcom.eml_tree_grounded` gives, for every tree whose floats stay finite
+and normal (its hypothesis `EMLTreeFloatSafe`, added 2026-09-14: each constant `0` or between `DBL_MIN` and `DBL_MAX` in
+magnitude, and at each `eml` node the floats fed to `exp` and `log` finite, `exp`'s float result finite, its exact
+value at least `DBL_MIN`, and the difference finite), an explicit, machine-computed closed-form error bound between (a) `T.eval`, the exact mathematical value, (b) the exact real
 value of the compiled expression before rounding, and (c) the actual `Float`-rounded output of a
 Certcom-compiled program — grounded against Certcom's own disclosed IEEE-754 rounding axioms for
 every one of the 14 transcendental primitives it uses (a full retroactive audit, cont. 86, found and
@@ -142,7 +144,7 @@ fixed 10 of those 14 axioms, which had quietly asserted something FALSE of real 
 arc's own external review caught it — see cont. 85's erratum). Nothing about `EMLTree.eval`'s own
 non-representability claims changed; what's new is that the trust chain now reaches all the way from
 "no finite EML tree equals `sin`" down to "and here is the exact, bounded error of a real compiled
-program that tries anyway."
+program that tries anyway", on inputs where that program's floats stay finite and normal.
 
 **The `sin`/`nestedTarget`-specific result generalizes to every nonconstant, continuous, periodic
 target, not just that one family.** `no_tree_eq_periodic_target` (Track C item C9, decision doc
