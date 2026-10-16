@@ -174,6 +174,64 @@ unchanged afterwards.
 
 Cost is a reason a specimen is *hard to write*, not a reason a gate is *validated without one*.
 
+### 4e. A gate must know WHAT it is looking at
+
+*Added 2026-10-13, after the owner's ruling on gate 14.* Everything above is about whether a gate
+**convicts**. Gate 14 convicted perfectly — its fault injection passed every day — while comparing the
+wrong thing: the signature set is generated and gitignored, the copy on disk was extracted on
+2026-09-03, and nothing recorded which tree it described. For forty days and 215 commits the gate read
+that set against the baseline of the same day and printed OK. Regenerated, the same comparison showed
+1,810 growths. The selftest could not see it, because the selftest perturbed the baseline and used the
+very same stale set as its "real subject".
+
+So a gate over a generated artifact must check the artifact's **identity** before its **content**:
+
+* the artifact records what it was derived from (source bytes, extractor, toolchain) — `regen.py`
+  writes it, `sig.py` refuses to write a set without it;
+* the gate recomputes that identity from the live tree and **refuses** on any mismatch, with its own
+  tag and exit code (3), distinct from FAIL (1) and UNAVAILABLE (2);
+* the baseline is the same kind of artifact: committed, unmodified, with provenance, produced by the
+  same extractor as the signatures, and **reviewed** by a named person — `--update` writes
+  `UNREVIEWED`, which the gate refuses, so no rebaseline can make CI green by itself;
+* the blind spot is a regression test: `trust_gate_selftest.py` case B4 extracts a set, commits a
+  Lean change, and requires `[signatures-stale]` naming the file. Forty-one such faults run end to
+  end in a throwaway git repository, and `--mutate` disables each decision in turn (28 mutants) and
+  requires the selftest to notice (4b's tier, applied here). The mutation tier paid at once: an
+  independent review then found that a REVIEWED stamp citing an ABSOLUTE path passed
+  (`Path(root) / "/etc/hostname"` is `/etc/hostname`) and that duplicate records were last-write-wins;
+  both are cases now (B19-B21), the rewritten review check left one mutant STALE rather than MISSED,
+  and splitting it exposed that no case had only the status wrong (B16 now does, B22 the reviewer).
+
+A refusal is not a pass, and it is not a failure of the proofs either. It says: *nothing was compared*.
+
+**The second round (same day).** An independent review then ATTACKED the repaired gate and six of its
+attacks passed: a REVIEWED stamp pasted onto a fresh `--update`; `lakefile.lean` cited as the
+"transition report"; a restatement that let sorryAx in; a theorem moved out of the watched set; an
+axiom restated under its own name; a definition (`clamp`) changed under thirty unchanged statements.
+Each is now a selftest case that must go red, and each check has a mutant the selftest must kill.
+Two lessons worth keeping:
+
+* **INFO is a hole.** "Restated" and "removed" were reported, not judged. Anything a gate merely
+  reports is a door around it; the default is now closed and relaxing it is an owner's decision.
+* **Bind content, not ceremony.** A stamp that only says REVIEWED proves nothing. It must name the
+  digest of the content it accepts, and the report it cites must describe exactly that transition.
+  This still does not authenticate a person, and the gate says so: it makes a stamp impossible to
+  reuse or forget, while that a review happened stays a fact recorded in git.
+
+**The third round: say what the gate is NOT.** The same reviewer then reset the review chain twice
+(re-commit the pre-review origin, or merge a branch forked before the first review) and took over
+the "pinned" judge with a `json.py` placed next to it. The resets are closed (one origin commit; the
+chain computed over the whole commit graph, merges included). The judge now runs from the base
+commit, isolated, on a runner that never builds the change. But the deeper finding stands and is
+written down rather than engineered around: the signature set comes from building the change, and
+building Lean runs the change's code, so a hostile committer can forge it. A gate is evidence
+against mistakes and drift; the boundary against intent is required human review, which is a
+repository setting. Claiming more would be the gate reading as "checked and clean" where it cannot.
+
+A set's identity is self-declared, so a stale set relabelled by hand passes a standalone run. Only a
+run that regenerates the set (check_all.sh, CI: `MACHSIG_RUN_ID`) is evidence; a standalone verdict
+says ADVISORY.
+
 **Audit note (updated 2026-09-04, later).** The suite is now **18 gates** and CI runs **11
 selftests**, up from 2. `soundness`, `machsig-trust`, `hypothesis` and `absence` run their selftest *and* their gate;
 `aggregator-selftest` is a gate in its own right, because `--selftest` there **replaces** the

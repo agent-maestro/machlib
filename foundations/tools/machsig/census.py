@@ -27,13 +27,35 @@ def commit() -> str:
         return "unknown"
 
 
+class MalformedExtraction(Exception):
+    """A raw row the census cannot read faithfully. Fatal: a skipped row is a theorem the trust gate
+    stops watching, and a dropped row reads downstream as a REMOVAL -- which the gate reports as
+    INFO, not as a failure."""
+
+
 def read_rows():
     rows = []
+    bad = []
+    seen = set()
+    total = None
     for ln in RAW.read_text().split("\n"):
+        if ln.startswith("MSIG_TOTAL\t"):
+            total = int(ln.split("\t")[1])
         if not ln.startswith("MSIG\t"):
             continue
         f = ln.split("\t")
-        if len(f) != 11:
+        # 12 columns since MachSig v0.3 (the axiom NAMES). An 11-column row is a pre-v0.3 extraction;
+        # reading it would silently drop the names, so it is refused rather than tolerated.
+        if len(f) != 12:
+            bad.append(f"{len(f)} columns: {ln[:120]}")
+            continue
+        if f[1] in seen:
+            bad.append(f"{f[1]} appears twice")   # sig.py keys by name: the second row would win silently
+            continue
+        seen.add(f[1])
+        names = sorted(a for a in f[11].split(",") if a)
+        if len(names) != int(f[6]) or len(set(names)) != len(names):
+            bad.append(f"axiom names {len(names)} != axiom_count {f[6]}: {f[1]}")
             continue
         rows.append({
             "name": f[1], "kind": f[2], "module": f[3],
@@ -41,7 +63,15 @@ def read_rows():
             "axiom_count": int(f[6]), "depends_on_sorry": f[7] == "true",
             "type_direct_consts": int(f[8]), "value_direct_consts": int(f[9]),
             "has_value": f[10] == "true",
+            "axioms": names,
         })
+    if bad:
+        raise MalformedExtraction(f"{len(bad)} unreadable MSIG row(s) in {RAW.name}; first: {bad[0]}")
+    # The extractor's own trailer. Absent = the run was cut short (killed, disk full); a different
+    # number = rows were lost between Lean and here. Either way the census would under-report.
+    if total is None or total != len(rows):
+        raise MalformedExtraction(f"{RAW.name}: MSIG_TOTAL {total} but {len(rows)} rows read "
+                                  "(truncated or interrupted extraction)")
     return rows
 
 
@@ -71,6 +101,8 @@ def record(r, sha):
         "canonical_views": [],
         "proof_structure": {
             "axiom_dependency_count": r["axiom_count"],
+            # The SET behind the count (v0.3). Sorted by Python string order, so it is canonical.
+            "axiom_dependencies": r["axioms"],
             "depends_on_sorry": r["depends_on_sorry"],
             "type_direct_const_count": r["type_direct_consts"],
             "value_direct_const_count": r["value_direct_consts"] if r["has_value"] else None,
@@ -123,9 +155,17 @@ def stats(vals):
     }
 
 
-def main():
+def main(argv=()):
     sha = commit()
-    rows = read_rows()
+    try:
+        rows = read_rows()
+    except MalformedExtraction as e:
+        print(f"census: REFUSED -- {e}", file=sys.stderr)
+        return 1
+    # --no-report: the regeneration driver (regen.py) must not write the TRACKED
+    # docs/machsig/CENSUS_REPORT.md -- doing so dirtied the worktree on every regeneration and would
+    # trip check_all.sh's tree-freeze fingerprint.
+    write_report = "--no-report" not in argv
     recs = [record(r, sha) for r in rows]
     (FOUND / "artifacts").mkdir(exist_ok=True)
     with open(FOUND / "artifacts" / "machsig_census.jsonl", "w") as f:
@@ -223,11 +263,12 @@ finding. See `PHASE1_ISSUES.md`.
 | `proof_dependency_depth` | `not_computed` | No depth calculation exists. Per the amendment, it is not called `proof_depth` and not guessed. |
 | grammar term features | `not_applicable` | wrong scope — see above. |
 """)
-    (FOUND / "docs" / "machsig").mkdir(parents=True, exist_ok=True)
-    (FOUND / "docs" / "machsig" / "CENSUS_REPORT.md").write_text("\n".join(lines))
+    if write_report:
+        (FOUND / "docs" / "machsig").mkdir(parents=True, exist_ok=True)
+        (FOUND / "docs" / "machsig" / "CENSUS_REPORT.md").write_text("\n".join(lines))
     print(f"census: {len(recs)} records; sorry-dependent {sorry_ct}; kinds {dict(kinds)}")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

@@ -39,7 +39,10 @@ UNAVAIL=()
 PASSED=()
 
 # run NAME COMMAND...
-#   Captures rc immediately. rc 0 = pass, rc 2 = unavailable, anything else = fail.
+#   Captures rc immediately. rc 0 = pass, rc 2 = unavailable, anything else = fail -- except that an rc 0
+#   whose log carries a "MACHSIG-TRUST ADVISORY" line is NOT a pass: the gate said its OK does not stand
+#   for the main line (no main-line ref, or an anchor before the first reviewed baseline; fifth review).
+#   It is listed as UNAVAILABLE, so "all green" cannot be claimed from it.
 run() {
   local name="$1"; shift
   if ! command -v "${1}" >/dev/null 2>&1 && [ ! -e "${1}" ]; then
@@ -49,7 +52,11 @@ run() {
   "$@" >"$OUT/$name.log" 2>&1
   local rc=$?
   case "$rc" in
-    0) PASSED+=("$name") ;;
+    0) if grep -q "^MACHSIG-TRUST ADVISORY" "$OUT/$name.log"; then
+         UNAVAIL+=("$name (rc 0 but ADVISORY: $(grep -m1 -o '^MACHSIG-TRUST ADVISORY [^ ]*' "$OUT/$name.log" | cut -d' ' -f3))")
+       else
+         PASSED+=("$name")
+       fi ;;
     2) UNAVAIL+=("$name (rc 2)") ;;
     *) FAILED+=("$name (rc $rc)") ;;
   esac
@@ -58,7 +65,7 @@ run() {
   # `tail -n 3` window silently dropped them. Cosmetic — SUMMARY decides pass/fail from the captured
   # rc, never from this text — but a comment that overstates what it does is how a gate's scope
   # drifts from its description.
-  grep -hE "OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|THEOREM-LEDGER|check-[a-z]+\]|AxiomLedger" \
+  grep -hE "MACHSIG-TRUST|REGEN |SELFTEST (PASS|FAIL|UNAVAILABLE)|MUTATION (PASS|FAIL)|OBLIGATION-LEDGER|CLAIM-AUDIT|WITNESS-AUDIT|HYPOTHESIS-AUDIT|ABSENCE-AUDIT|SORRY-AUDIT|SOUNDNESS-WITNESS|PROSE-COUNTS|FLOAT-BRIDGE|LEDGER-CANARIES|THEOREM-LEDGER|check-[a-z]+\]|AxiomLedger" \
     "$OUT/$name.log" | tail -n 2 || true
 }
 
@@ -71,6 +78,7 @@ if [ "${1:-}" = "--selftest" ]; then
   echo "=== SELFTEST: an injected failing gate must drive this script's own exit code ==="
   run "canary-pass" true
   run "canary-fail" false
+  run "canary-advisory" echo "MACHSIG-TRUST ADVISORY [canary] an rc-0 run that says ADVISORY must not count as green"
 else
   echo "=== MachLib: all gates + measurement harnesses ==="
   run "build"        lake build
@@ -106,7 +114,23 @@ else
   # so it is safe inside a gated run. Do NOT add --mutate: it writes a temp file into
   # tools/, which mutates the worktree mid-run and voids this run's tree fingerprint.
   run "soundness"    python3 tools/soundness_witness_audit.py --selftest
-  run "machsig-trust" python3 tools/machsig/trust_gate.py --selftest
+  # MachSig trust ratchet (gate 14). Until 2026-10-13 this line was `trust_gate.py --selftest` alone and
+  # nothing extracted signatures: the gate compared a set extracted on 2026-09-03 with the baseline of the
+  # same day and passed for forty days. Now: extract for THIS tree (regen.py, ~9 min, writes only the
+  # gitignored artifacts/), prove the red paths, then run the real comparison on its own line -- the gate
+  # REFUSES (rc 3) a stale/unidentified set, an uncommitted or unreviewed baseline, or one without
+  # provenance, so a missing step reads as a failure, never as green.
+  # MACHSIG_RUN_ID binds the gate to THIS run's extraction: regen.py records it, the gate refuses a set with
+  # another run's id. A set's identity is self-declared (a stale set can be relabelled -- attack 2 of the
+  # 2026-10-13 review), so only regenerating in the same run makes the verdict more than advisory.
+  MACHSIG_RUN_ID="check_all-$(date -u +%Y%m%dT%H%M%SZ)-$$-${RANDOM}"
+  export MACHSIG_RUN_ID
+  run "machsig-extract" python3 tools/machsig/regen.py
+  run "machsig-trust-selftest" python3 tools/machsig/trust_gate.py --selftest-only
+  # DOCTRINE 4b: 49 mutant gates, each must be killed by the selftest. ~10 min; mutants live only in temp dirs.
+  run "machsig-trust-mutate" python3 tools/machsig/trust_gate.py --mutate
+  run "machsig-trust" python3 tools/machsig/trust_gate.py
+  unset MACHSIG_RUN_ID
   run "claims"       python3 tools/claim_audit/claim_audit.py
   # The canaries cost ~8s; `--self-test` looked unwireable only because it ALSO re-runs the full
   # 506-claim audit that the gate above already performs. `--self-test-only` is the canaries alone.

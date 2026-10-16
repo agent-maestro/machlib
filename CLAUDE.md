@@ -448,6 +448,18 @@ behind it is missing — registration is still a human act.
 
 ## Gotchas
 
+- **Gate 14 (`machsig-trust`, live since the step-7 landing, 2026-10-14) has its own landing rules.** Read
+  `foundations/docs/machsig/GATE14_REPAIR.md` before touching `tools/machsig/trust_baseline.json`.
+  - **A baseline change reaches master as ONE stamp, reported NET from the last reviewed baseline.** Only a
+    MERGE commit (`git merge --no-ff`) or the step-7 landing locks a reviewed baseline in. A stamp on a plain
+    commit (a fast-forward, a direct push) passes as HEAD but is never a reference. A second fast-forwarded
+    stamp must therefore report from the last MERGED baseline. Two chained stamps stay red on every run.
+  - **`check_all.sh` lists `machsig-trust` as UNAVAILABLE when the gate prints `MACHSIG-TRUST ADVISORY`.**
+    That happens with no main-line ref (`origin/master`/`master`/...), or one older than the landing. Fetch,
+    then re-run. That run is not green.
+  - **Never `--update` and commit to make it pass.** `--update` writes an UNREVIEWED baseline, which the gate
+    refuses. A rebaseline needs a transition report and a review (`transition.py`, the stamp's `review` block).
+
 - **The theorem ledger (`foundations/tools/theorem_ledger/`, 2026-10-10) learned four things the hard way.**
   - **Lean v4.32's `native_decide` leaves no `Lean.ofReduceBool` in a footprint.** `Lean.Meta.nativeEqTrue` adds
     an axiom per use, `<decl>._native.native_decide.ax_N_M : e = true`. A compiler-trust test that names only

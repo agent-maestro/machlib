@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""Targeted checks for the transition classification (the owner's step 6): a seeded random sample
+from EVERY class, each re-derived through Lean's own `#print axioms` at both revisions.
+
+    python3 tools/machsig/targeted_check.py --evidence DIR --old-root OLD/foundations \
+        --new-root NEW/foundations [--seed 20261013] [--per-class 8]
+
+WHY. The classification is computed from signature sets that extract.lean produced. A check that
+reused extract.lean would only re-run the same code. `#print axioms` is what a reader would type: it
+goes through Lean's command front end and message formatting, and is parsed back here from text. For
+each sampled theorem it must reproduce (a) the old axiom set, (b) the new axiom set, and from those
+(c) the same kind and trust class transition.py assigned. Unchanged theorems are sampled too, as a
+control: a classifier that called everything "changed" would fail there.
+
+The seed, the buckets, every sampled name and every result are written to targeted.json, which the
+report embeds. Rerunning with the same seed and evidence draws the same sample.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import probe  # noqa: E402
+import review_probe  # noqa: E402
+import transition as T  # noqa: E402
+
+
+def buckets(t: dict, old_w: dict, new_w: dict) -> dict:
+    b: dict[str, list[str]] = {}
+    for r in t["rows"]:
+        b.setdefault(f"{r['kind']}|{r.get('trust_class')}", []).append(r["theorem"])
+    changed = {r["theorem"] for r in t["rows"]}
+    b["unchanged|control"] = sorted(k for k in set(old_w) & set(new_w) if k not in changed)
+    out = {k: sorted(v) for k, v in sorted(b.items())}
+    # Not a class but a stratum: every change the discharge mechanism does NOT explain is checked, all of
+    # them, because those are the ones a person has to read.
+    out["stratum:not-explained-by-discharge"] = sorted(r["theorem"] for r in t["rows"]
+                                                       if r.get("explained_by_discharge") is False)
+    return out
+
+
+def main(argv: list[str]) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--evidence", required=True, type=Path)
+    ap.add_argument("--old-root", required=True, type=Path)
+    ap.add_argument("--new-root", required=True, type=Path)
+    ap.add_argument("--seed", type=int, default=20261013)
+    ap.add_argument("--per-class", type=int, default=8)
+    ap.add_argument("--full", action="store_true",
+                    help="also run #print axioms on EVERY watched theorem at both revisions (~1-2 min)")
+    a = ap.parse_args(argv)
+    ev = {k: a.evidence / v for k, v in T.EVIDENCE.items() if (a.evidence / v).is_file() and k != "targeted"}
+    t = T.build(ev)
+    _, all_old = T.load_sigset(ev["sigs_old"])
+    _, all_new = T.load_sigset(ev["sigs_new"])
+    old_w, new_w = T.watched(all_old), T.watched(all_new)
+    p_old = T.prepare_policy(json.loads(ev["policy_old"].read_text()))
+    p_new = T.prepare_policy(json.loads(ev["policy_new"].read_text()))
+    rng = random.Random(a.seed)
+    bk = buckets(t, old_w, new_w)
+    sample = {k: (v if len(v) <= a.per_class or k.startswith("stratum:") else sorted(rng.sample(v, a.per_class)))
+              for k, v in bk.items()}
+    expected = {r["theorem"]: f"{r['kind']}|{r.get('trust_class')}" for r in t["rows"]}
+    names = sorted({n for v in sample.values() for n in v})
+    rows_by = {r["theorem"]: r for r in t["rows"]}
+    # also theorems whose old side is only the committed counts-only baseline (watched on 2026-09-03,
+    # excluded by a later population rule): their old axiom COUNT is checked
+    need_old = [n for n in names if n in old_w or (rows_by.get(n) and rows_by[n]["old"] is not None)]
+    need_new = [n for n in names if n in new_w]
+    pa_old = review_probe.print_axioms_any(a.old_root, need_old)
+    pa_new = review_probe.print_axioms_any(a.new_root, need_new)
+    # `redefined` cannot be seen by #print axioms. For each sampled one, every changed definition the
+    # closure digest says it reaches is checked by two Lean-side means that share no code with
+    # extract_trust.lean: `#print` (pp.explicit) of the definition differs between the revisions, and the
+    # theorem's statement reaches it under Lean's own getUsedConstantsAsSet (which over-approximates).
+    redef = json.loads((a.evidence / T.EVIDENCE["redefinition"]).read_text()) \
+        if (a.evidence / T.EVIDENCE["redefinition"]).is_file() else {"theorem_reaches": {}}
+    rd_names = [n for b, ns in sample.items() if b.startswith("redefined|") for n in ns]
+    rd_pairs = [(n, c) for n in rd_names for c in redef["theorem_reaches"].get(n, [])]
+    rd_defs = sorted({c for _, c in rd_pairs})
+    kinds = {c["name"]: c for c in redef.get("changed", [])}
+    have_old = [c for c in rd_defs if kinds.get(c, {}).get("old_kind")]
+    have_new = [c for c in rd_defs if kinds.get(c, {}).get("new_kind")]
+    pr_old = dict({c: "<absent>" for c in rd_defs}, **(review_probe.print_decls(a.old_root, have_old) if have_old else {}))
+    pr_new = dict({c: "<absent>" for c in rd_defs}, **(review_probe.print_decls(a.new_root, have_new) if have_new else {}))
+    # a constant that exists only at 23e0d047 (e.g. a `_proof_1` a rewrite removed) is reached there
+    old_only = [(n, c) for n, c in rd_pairs if kinds.get(c, {}).get("old_kind") and not kinds.get(c, {}).get("new_kind")]
+    new_side = [p for p in rd_pairs if p not in old_only]
+    reach_new = review_probe.reaches(a.new_root, new_side) if new_side else {}
+    reach_new.update(review_probe.reaches(a.old_root, old_only) if old_only else {})
+    rows = {r["theorem"]: r for r in t["rows"]}
+    results = []
+    for bucket, ns in sample.items():
+        for n in ns:
+            legacy_only = n not in old_w and rows_by.get(n) is not None and rows_by[n]["old"] is not None
+            o_sig = sorted(old_w[n]["axioms"]) if n in old_w else None
+            n_sig = sorted(new_w[n]["axioms"]) if n in new_w else None
+            o_pa, n_pa = pa_old.get(n), pa_new.get(n)
+            # recompute the classification from #print axioms alone
+            old = {"d": old_w[n]["d"], "ax": len(o_pa), "axioms": o_pa} if o_pa is not None and not legacy_only else None
+            new = {"d": new_w[n]["d"], "ax": len(n_pa), "axioms": n_pa} if n_pa is not None else None
+            kind = T.kind_of(old, new)
+            if old is not None and new is not None:
+                cls = T.trust_class(sorted(set(n_pa) - set(o_pa)), sorted(set(o_pa) - set(n_pa)), p_old, p_new)
+            elif new is not None:
+                cls = "new:" + T.tier(n_pa, p_new)[0]
+            elif legacy_only:
+                kind, cls = ("removed", "removed:set-unknown") if new is None else (kind, cls)
+            else:
+                cls = "removed:" + T.tier(o_pa, p_old)[0]
+            got = f"{kind}|{cls}" if kind != "unchanged" else "unchanged|control"
+            if kind == "unchanged" and n in rd_names:
+                defs = redef["theorem_reaches"].get(n, [])
+                if defs and all(pr_old.get(c) != pr_new.get(c) and reach_new.get((n, c)) for c in defs):
+                    got = "redefined|no-axiom-change"
+            want = expected.get(n, "unchanged|control")
+            old_ok = (o_pa is not None and len(o_pa) == rows_by[n]["old"]["ax"]) if legacy_only else (o_pa == o_sig)
+            ok = old_ok and (n_pa == n_sig) and got == want
+            results.append({"theorem": n, "bucket": bucket, "expected": want, "old_set_matches": old_ok,
+                            "new_set_matches": n_pa == n_sig, "reclassified_as": got, "agrees": ok,
+                            "old_ax": None if o_pa is None else len(o_pa),
+                            "new_ax": None if n_pa is None else len(n_pa)})
+    doc = {"seed": a.seed, "per_class": a.per_class, "method": "`#print axioms` via `lake env lean` at each "
+           "revision's built tree, parsed from text; class recomputed with transition.kind_of/trust_class; for "
+           "`redefined`, every changed definition reached must `#print` differently (pp.explicit) at the two "
+           "revisions and be reached under Lean's getUsedConstantsAsSet",
+           "redefinition_checks": {"definitions": len(rd_defs), "pairs": len(rd_pairs),
+                                   "print_differs": sum(1 for c in rd_defs if pr_old.get(c) != pr_new.get(c)),
+                                   "reached": sum(1 for v in reach_new.values() if v)},
+           "bucket_sizes": {k: len(v) for k, v in bk.items()}, "sample": sample, "results": results,
+           "summary": {"checked": len(results), "agree": sum(r["agrees"] for r in results),
+                       "disagree": [r["theorem"] for r in results if not r["agrees"]]}}
+    if a.full:
+        # Beyond the sample: every axiom set both signature sets hold, re-derived through #print axioms.
+        full = {}
+        for side, root, w in (("old", a.old_root, old_w), ("new", a.new_root, new_w)):
+            pa = review_probe.print_axioms_any(root, sorted(w))
+            bad = sorted(k for k in w if pa.get(k) != sorted(w[k]["axioms"]))
+            full[side] = {"theorems": len(w), "match": len(w) - len(bad), "mismatch": bad[:50]}
+        doc["full_sweep"] = full
+        print(f"full sweep: old {full['old']['match']}/{full['old']['theorems']}, "
+              f"new {full['new']['match']}/{full['new']['theorems']} axiom sets reproduced by #print axioms")
+    (a.evidence / T.EVIDENCE["targeted"]).write_text(json.dumps(doc, sort_keys=True, indent=1) + "\n")
+    s = doc["summary"]
+    print(f"targeted: {s['checked']} theorems over {len(sample)} classes (seed {a.seed}); "
+          f"agree {s['agree']}, disagree {len(s['disagree'])}")
+    full_bad = any(v["mismatch"] for v in doc.get("full_sweep", {}).values())
+    return 0 if not s["disagree"] and not full_bad else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
