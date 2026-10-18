@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 087 `.lean` files** (812 top-level + 275 in subdirectories) /
-**259 276 lines**, re-exported through the aggregator
+**259 300 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -28,11 +28,11 @@ every theorem's `#print axioms` footprint (`Lean.collectAxioms`) and classifies 
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 388** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 431** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 430** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 430** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **8 969** | every axiom in the footprint is in `trustedFootprint` |
+| declarations | **12 390** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 433** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 432** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 432** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **8 971** | every axiom in the footprint is in `trustedFootprint` |
 | conditional | **461** | on declared axioms outside it, named per theorem (mostly `HasDerivAt2*`, `hasDerivAt_implicit`, `floor`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
