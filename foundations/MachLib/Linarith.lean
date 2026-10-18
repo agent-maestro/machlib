@@ -503,6 +503,25 @@ theorem affine_remap_nonneg {c x : Real} (hc : 0 ≤ c) (hx : -1 ≤ x) : 0 ≤ 
   rw [sub_def, neg_neg_helper] at h
   exact h
 
+/-- `affine_remap_nonneg` with the product the other way round: `0 ≤ x·c + c` from `0 ≤ c`,
+`-1 ≤ x`. Forge emits a noise octave as `sin(t) * HALF + HALF` (fbm_octaves.eml), and `apply`
+matches syntactically, so `c·x + c` alone never fired on it: every octave failed, and
+`mach_positivity`'s recursive arms backtracked through each other once per failing term --
+exponentially in the depth of the sum (`fbm_8_octaves`: heartbeat timeout at 10 GB; with this
+lemma, 1.3 s). -/
+theorem affine_remap_nonneg_right {c x : Real} (hc : 0 ≤ c) (hx : -1 ≤ x) : 0 ≤ x * c + c := by
+  rw [mul_comm x c]; exact affine_remap_nonneg hc hx
+
+/-- The two-argument Heaviside `step` (Basic.lean) is never negative: it is `1` or `0`. Without it
+`mach_positivity` could not close one `step` term, so a sum of them (shadow PCF's 9-tap filter)
+failed term by term with the same exponential backtracking (`pcf_9tap`: heartbeat timeout at
+6 GB; with this lemma, 1.4 s). -/
+theorem step_nonneg (a b : Real) : 0 ≤ step a b := by
+  unfold step
+  split
+  · exact le_of_lt zero_lt_one_ax
+  · exact le_refl 0
+
 /-- **A monotone affine image is bounded by its value at the lower endpoint.**
 `A ≤ a + b·x` whenever `b ≥ 0`, `lo ≤ x`, and `A` is what `a + b·x` evaluates to at `x = lo`.
 
@@ -697,6 +716,9 @@ macro_rules
       | (apply sub_mul_one_sub_exp_neg_div_nonneg <;> assumption)
       -- Affine remap `0 ≤ c·x + c` ([-1,1]→[0,1], matcap UV).
       | (apply affine_remap_nonneg <;> first | mach_norm_num | assumption)
+      -- The same with `x·c + c` (fbm octaves `sin(t)·HALF + HALF`): `-1 ≤ x` from a sin/cos bound.
+      | (apply affine_remap_nonneg_right <;>
+          first | mach_norm_num | exact neg_one_le_sin _ | exact neg_one_le_cos _ | assumption)
       -- Fractional part bands `0 ≤ z − ⌊z⌋` / `z − ⌊z⌋ ≤ 1` (white-noise hash).
       | exact frac_nonneg _
       | exact frac_le_one _
@@ -711,6 +733,8 @@ macro_rules
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _
+      -- `0 ≤ step a b` (Heaviside, 1 or 0): one term of a shadow-PCF sum.
+      | exact step_nonneg _ _
       -- `1 ≤ cosh x` (hyperbolic cosine floor) — closes the Forge
       -- `cosh_geq_one` obligation. Harmless on non-cosh goals (exact fails).
       | exact cosh_ge_one _

@@ -55,10 +55,10 @@ DISC="MachLib/Discovered"
 #   mul_mat4.lean:37    `mul_mat4_cell_components` has already been declared
 #                       (the same theorem emitted twice)
 #   vec3.lean:140       tactic `simp` failed with a nested error
-#   shadow_pcf.lean:78  (deterministic) timeout at `isDefEq`, 200000 heartbeats
 #   autopilot.lean:45   (deterministic) timeout at `isDefEq`, 200000 heartbeats
-KNOWN_BROKEN="MachLib/Discovered/shadow_pcf.lean \
-MachLib/Discovered/autopilot.lean"
+# shadow_pcf.lean left the list on 2026-10-17: its timeout was `mach_positivity` backtracking
+# exponentially through a sum of `step` terms it could not close, fixed by `step_nonneg`.
+KNOWN_BROKEN="MachLib/Discovered/autopilot.lean"
 
 if [ ! -d "$DISC" ]; then
   echo "[check-discovered] FAIL: $DISC not found — wrong working directory?" >&2
