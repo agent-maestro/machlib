@@ -107,10 +107,23 @@ def checker_stable_tags() -> list[tuple[int, ...]]:
 
 
 def l4l_pin() -> tuple[str, tuple[int, ...] | None]:
+    """`(as written, version)`. A release candidate (`leanprover/lean4:v4.33.0-rc2`) parses to its version
+    and is SHOWN as one: until 2026-10-20 the pattern accepted only `vX.Y.Z` at the end, so master moving to
+    an rc read as "unparsed", and the state file kept the raw toolchain string. The pin is still only
+    where master points: a Lean4Lean commit pinning MachLib's own version is a different fact, and
+    BUMP_PLAN.md Amendment 6 records the one measured (408edad, v4.32.2)."""
     with urllib.request.urlopen(L4L_PIN_URL, timeout=60) as r:
         raw = r.read().decode().strip()
-    m = re.search(r"v(\d+\.\d+(?:\.\d+)?)$", raw)
+    m = re.search(r"v(\d+\.\d+(?:\.\d+)?)(-rc\d+)?$", raw)
     return raw, (ver(m.group(1)) if m else None)
+
+
+def pin_label(raw: str, pin: tuple[int, ...] | None) -> str:
+    """`v4.33.0-rc2` for an rc pin, `v4.29.0` for a stable one, `unparsed` for neither."""
+    if pin is None:
+        return "unparsed"
+    rc = re.search(r"(-rc\d+)$", raw)
+    return fmt(pin) + (rc.group(1) if rc else "")
 
 
 def carries_fix(repo: str) -> tuple[bool, str]:
@@ -175,13 +188,13 @@ def load_state() -> dict:
     return json.load(open(STATE)) if os.path.exists(STATE) else {}
 
 
-def report_movement(prev: dict, checker_max: tuple[int, ...], pin: tuple[int, ...] | None) -> None:
+def report_movement(prev: dict, checker_max: tuple[int, ...], pin: str) -> None:
     if not prev:
         print("no previous observation on file — this run establishes the reference point.")
         return
     print(f"since {prev['observed_at'][:10]}:")
     for label, was, now in (("lean4checker max stable tag", prev.get("checker_max"), fmt(checker_max)),
-                            ("Lean4Lean pin", prev.get("l4l_pin"), fmt(pin) if pin else "unparsed")):
+                            ("Lean4Lean pin", prev.get("l4l_pin"), pin)):
         print(f"  {label:<28} {was} -> {now}" + ("   (moved)" if was != now else "   (unchanged)"))
 
 
@@ -216,18 +229,18 @@ def main() -> int:
     print("   whether it works there. Stop 5: three builds pinning v4.26.0, none replayed Init.Core)")
     print(f"lean4checker  carries it : {'YES' if chk_fix else 'no '}   {chk_ev}")
     print()
-    report_movement(load_state(), checker_max, pin)
+    report_movement(load_state(), checker_max, pin_label(raw_pin, pin))
 
     checker_ok = checker_max >= FIX
     l4l_ok = pin is not None and pin >= FIX
     both = pin is not None and pin in tags and pin >= FIX
 
     print(f"\nlean4checker reaches the fix : {'YES ' + fmt(checker_max) if checker_ok else 'no'}")
-    print(f"Lean4Lean reaches the fix    : {'YES ' + fmt(pin) if l4l_ok else 'no'}")
+    print(f"Lean4Lean reaches the fix    : {'YES ' + pin_label(raw_pin, pin) if l4l_ok else 'no'}")
 
     json.dump({"observed_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                "threshold": fmt(FIX), "checker_max": fmt(checker_max),
-               "checker_tag_count": len(tags), "l4l_pin": fmt(pin) if pin else raw_pin,
+               "checker_tag_count": len(tags), "l4l_pin": pin_label(raw_pin, pin),
                "l4l_carries_fix": l4l_fix, "checker_carries_fix": chk_fix,
                "intersection_open": both},
               open(STATE, "w"), indent=1)
