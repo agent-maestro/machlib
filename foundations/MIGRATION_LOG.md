@@ -478,6 +478,39 @@ the **#14577 kernel fix** that this entire migration was launched to reach.
 **The last externally-certified pin is `v4.28.0`**, sealed and hash-verifiable. Every
 *"was this environment ever independently verified?"* question points there.
 
+### UPGRADE (2026-10-22) — criterion 7 restored at the destination, `BUMP_PLAN.md` Amendment 6
+
+Amendment 5's trigger fired on its Lean4Lean half: `#17` was fixed upstream (`9fc9c83`), and
+`408edad`, the last master commit pinning v4.32.2, replays MachLib. Upgrade recorded the same way the
+downgrade was, never silently:
+
+> **`v4.32.2`: PINNED, PATCHED KERNEL, INTERNALLY GREEN, EXTERNALLY REPLAYED BY A SECOND
+> IMPLEMENTATION, SHARED LINEAGE.** Criterion 7 **PASS** (Lean4Lean `408edad`). Criterion 1 still
+> `CHECKER_VERSION_MISMATCH`, Amendment 5 cited; that half upgrades when lean4checker tags ≥ v4.29.
+
+| | gate `73860d13`, MachLib with `Coordinates` reworked |
+|---|---|
+| 1 — instrument rejects | lean4checker `v4.28.0` `AddFalse`, built at v4.32.2 — **rejected** |
+| 1b — instrument holds fire | `Init.Core`, `MachLib.Sign` — **PASS** |
+| 2 — MachLib replays | **826 / 826 modules clean**, 20,796 declarations, 197 s, 6 at a time, 8 GB cap each, default fuel |
+| cross-derivation | 20,605 (825 modules, 2026-10-20) + 191 (`Coordinates` alone) = **20,796** |
+| `checkpoint.py` | `lean4lean_replay` **exit 0**, other gates green, `kernel_replay` void (Amendment 5) |
+
+**WHY THERE IS NO `snapshots/v4.32.2-r2/`.** The re-capture (`--label v4.32.2-r2 --compare-to
+snapshots/v4.14.0-baseline`) **HALTED, and correctly**: counts 252 → 217 axioms, 57 → 112 headline
+footprints, 5 → 0 derivations; 56 footprints changed, 55 theorems gained, **0 lost**. The pin has not
+moved since 2026-07-30. What moved is the library: three months of proof work after the migration
+ended. The baseline was frozen to attribute *toolchain* drift. Measuring today's library against it
+convicts development as migration, and attributing those 56 rows is not this upgrade's job. The
+halted capture was kept out of `snapshots/`. **Open for the owner:** whether a grade change needs a
+sealed snapshot, which would mean a new baseline at the current library.
+
+**What the first run of the new gate cost (2026-10-21).** It listed the aggregator `MachLib`, and
+Lean4Lean matches a target by PREFIX, so one "per-module" job was the whole library again: 87 GB
+anon-rss. The kernel's OOM killer then took the editor's entire process group with it. Fixed in
+`73860d13`: prefix modules are excluded only when they declare nothing, every module is capped, and
+the gate refuses to run uncapped.
+
 ### What four dark versions actually cost
 
 **21 errors across 11 files, five build rounds, and ZERO deprecation warnings.** The zero is the
