@@ -11,9 +11,14 @@ name: Reproduction walk (x86-64, public artifacts only)
 #
 #   * it runs on GitHub's x86-64 runners, closing the disclosed architecture gap in
 #     REPRODUCING.md -- the reviewer's architecture gets tested before the reviewer does;
-#   * it installs the compiler FROM PyPI, not from a checkout, so a bad release breaks this job;
+#   * it installs the compiler FROM PyPI, not from a checkout -- the exact release the trail was
+#     published with, every artifact pinned by sha256 (reproduction/rb_ekf/requirements.lock), so a
+#     re-uploaded or tampered artifact breaks this job and a newer release cannot silently replace it;
 #   * it clones this repo from the PUBLIC remote rather than using the checked-out workspace, so a
 #     file that exists locally but was never committed cannot make the walk pass.
+#
+# Its staleness is gated too: walk-freshness.yml goes red when this walk has not SUCCEEDED in 8 days
+# (it is weekly). From 2026-09-28 it failed four weeks running and nothing else noticed.
 #
 # The third point is the one that has bitten repeatedly: the manifest generator, the wheel gate and
 # the evidence package each shipped a version that read the working directory instead of the
@@ -52,21 +57,34 @@ jobs:
 
       # NOT actions/checkout. A stranger clones the public remote; anything reachable only from the
       # workspace is not part of what they get.
+      # The EXACT commit this run is for, fetched from the public remote. A plain clone gave the
+      # default branch's head, so a run on a branch or a PR walked master's files instead of its
+      # own, and a fix could not be walked before it merged.
       - name: Clone from the PUBLIC remote, as a stranger would
         run: |
           git clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" stranger-clone
-          cd stranger-clone && echo "cloned $(git rev-parse --short HEAD)"
+          cd stranger-clone
+          git fetch --depth 1 origin "$GITHUB_SHA" && git checkout --quiet --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo "walked $(git rev-parse HEAD), not $GITHUB_SHA"; exit 1; }
+          echo "walking $(git rev-parse --short HEAD), fetched from the public remote"
 
       - name: Package integrity — the shipped files match their manifest
         working-directory: stranger-clone/reproduction/rb_ekf
         run: python3 check_manifest.py
 
-      - name: Install the compiler from PyPI
+      # PINNED, BY HASH. Until 2026-10-23 this was `pip install monogate-forge eml-cost pytest`: the
+      # newest release, whatever it was. Forge 0.15.0 changed this kernel's Verilog, and the walk
+      # failed every week for four weeks against a compiler the trail was never published with.
+      # --require-hashes refuses a missing, newer or altered artifact; --only-binary refuses the
+      # sdist fallback, whose build step would install unhashed build tools.
+      - name: Install the compiler from PyPI, exactly the published release
         run: |
           python -m venv venv
-          ./venv/bin/pip install --upgrade pip >/dev/null
-          ./venv/bin/pip install monogate-forge eml-cost pytest
-          ./venv/bin/pip show monogate-forge | grep ^Version
+          ./venv/bin/pip install --no-cache-dir --only-binary=:all: --require-hashes \
+            -r stranger-clone/reproduction/rb_ekf/requirements.lock
+          ./venv/bin/pip freeze
+          v=$(./venv/bin/pip show monogate-forge | sed -n 's/^Version: //p')
+          test "$v" = "0.14.4" || { echo "monogate-forge $v installed; the trail pins 0.14.4"; exit 1; }
 
       - name: 'Rung 1 — emit the rb kernel and diff against the pinned emission'
         working-directory: stranger-clone/reproduction/rb_ekf
