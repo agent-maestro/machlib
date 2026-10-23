@@ -1,0 +1,74 @@
+CHECKPOINT v4.32.2-r2   pin=leanprover/lean4:v4.32.2   lock=leanprover/lean4:v4.32.2 @ f3b06c705e6c
+
+  [kernel_replay] exit 1   (criterion 1)
+  [lean4lean_replay] exit 0   (criterion 7)
+  [ledger] exit 0   (criterion 3)
+  [derivable] exit 0   (criterion 4)
+  [sorry_audit] exit 0   (criterion 5)
+  [artifact_drift] exit 0   (criterion 6)
+  [toolchain] exit 0
+  [footprints] enumerated 112, captured 112, missing 0   (criterion 2)
+
+counts (each parsed from the gate that derived it):
+  axioms pinned                      217
+  headline footprints (Lean side)    112
+  derivations                        0
+  allowlisted sorryAx decls          1
+  headline count, 3 derivations      112 / 112 / 112  AGREE
+
+==============================================================================
+COMPARE  leanprover/lean4:v4.14.0  ->  leanprover/lean4:v4.32.2
+==============================================================================
+before: leanprover/lean4:v4.14.0   57 footprints
+after : leanprover/lean4:v4.32.2   112 footprints
+CHANGED footprints : 56
+lost theorems      : 0
+gained theorems    : 55
+  ~ Certcom.eml_tree_grounded
+      -['MachLib.Real.HasDerivAt_sub', 'MachLib.Real.exp_pos', 'MachLib.Real.mul_lt_mul_of_pos_right', 'MachLib.Real.one_div_pos_of_pos']
+      +['MachLib.Real.HasDerivAt_add', 'MachLib.Real.HasDerivAt_of_eq', 'MachLib.Real.exp_add', 'MachLib.Real.zero_ne_one_ax']
+  ~ Certcom.eml_var_var_certcom_witness
+      -['MachLib.Real.HasDerivAt_sub', 'MachLib.Real.exp_pos', 'MachLib.Real.exp_zero', 'MachLib.Real.mul_lt_mul_of_pos_right', 'MachLib.Real.natCast', 'MachLib.Real.natCast_succ', 'MachLib.Real.natCast_zero', 'MachLib.Real.one_div_pos_of_pos', 'MachLib.Real.pi_pos']
+      +['MachLib.Real.HasDerivAt_of_eq', 'MachLib.Real.exp_add', 'MachLib.Real.pi_lower_bound']
+  ~ Certcom.eml_var_var_certcom_witness_grounded
+      -['MachLib.Real.HasDerivAt_sub', 'MachLib.Real.exp_pos', 'MachLib.Real.exp_zero', 'MachLib.Real.mul_lt_mul_of_pos_right', 'MachLib.Real.natCast', 'MachLib.Real.natCast_succ', 'MachLib.Real.natCast_zero', 'MachLib.Real.one_div_pos_of_pos', 'MachLib.Real.pi_pos']
+      +['MachLib.Real.HasDerivAt_of_eq', 'MachLib.Real.exp_add', 'MachLib.Real.pi_lower_bound']
+  ~ Certcom.eml_var_var_pipeline
+      -['MachLib.Real.HasDerivAt_neg', 'MachLib.Real.HasDerivAt_sub', 'MachLib.Real.cosh_ge_one', 'MachLib.Real.cosh_pos', 'MachLib.Real.exp_pos', 'MachLib.Real.exp_zero', 'MachLib.Real.mul_lt_mul_of_pos_right', 'MachLib.Real.natCast', 'MachLib.Real.natCast_succ', 'MachLib.Real.natCast_zero', 'MachLib.Real.neg_one_lt_tanh', 'MachLib.Real.one_div_nonneg_of_pos', 'MachLib.Real.one_div_pos_of_pos', 'MachLib.Real.tanh_lt_one']
+      +['MachLib.Real.zero_ne_one_ax']
+  ~ Certcom.pid_abs_grounded
+      -['MachLib.Real.mul_lt_mul_of_pos_right']
+      +['MachLib.Real.divR']
+  ~ Certcom.pid_acos_grounded
+      -['MachLib.Real.HasDerivAt_sub', 'MachLib.Real.mul_lt_mul_of_pos_right', 'MachLib.Real.one_div_pos_of_pos']
+      +['MachLib.Real.HasDerivAt_add', 'MachLib.Real.HasDerivAt_of_eq', 'MachLib.Real.zero_ne_one_ax']
+  ~ Certcom.pid_asin_grounded
+      -['MachLib.Real.HasDerivAt_sub', 'MachLib.Real.mul_lt_mul_of_pos_right', 'MachLib.Real.one_div_pos_of_pos']
+      +['MachLib.Real.HasDerivAt_add', 'MachLib.Real.HasDerivAt_of_eq', 'MachLib.Real.zero_ne_one_ax']
+  ~ Certcom.pid_atan_grounded
+      -['MachLib.Real.HasDerivAt_sub', 'MachLib.Real.mul_lt_mul_of_pos_right', 'MachLib.Real.one_div_nonneg_of_pos']
+      +['MachLib.Real.HasDerivAt_add', 'MachLib.Real.HasDerivAt_of_eq']
+  ~ Certcom.pid_cos_grounded
+      -['MachLib.Real.HasDerivAt_sub', 'MachLib.Real.mul_lt_mul_of_pos_right']
+      +['MachLib.Real.HasDerivAt_add', 'MachLib.Real.HasDerivAt_of_eq', 'MachLib.Real.divR']
+  ~ Certcom.pid_cosh_grounded
+      -['MachLib.Real.HasDerivAt_neg', 'MachLib.Real.HasDerivAt_sub', 'MachLib.Real.cosh_pos', 'MachLib.Real.exp_zero', 'MachLib.Real.mul_lt_mul_of_pos_right']
+      +['MachLib.Real.exp_add', 'MachLib.Real.exp_surj', 'MachLib.Real.mul_inv', 'MachLib.Real.zero_ne_one_ax']
+
+FOOTPRINT EQUALITY: FAIL -- the migration moved a dependency
+
+count equality vs baseline: FAIL
+  ~ axioms_pinned: 252 -> 217  (UNLISTED -- no amendment on file)
+  ~ headline_footprints: 57 -> 112  (UNLISTED -- no amendment on file)
+  ~ derivations: 5 -> 0  (UNLISTED -- no amendment on file)
+gates green: PASS
+gate VOID: kernel_replay — CHECKER_VERSION_MISMATCH   [Amendment-5-destination-externally-unreplayed cited]
+
+==============================================================================
+STOP HALTED — this is a FINDING, not a diff to accept.
+  The step does not advance until every delta above is ATTRIBUTED: which change in
+  which version caused it, written into the migration log. Two intermediates of
+  drift is a searchable window; accepting it silently is how a migration becomes a mess.
+Command exited with non-zero status 1
+checkpoint wall 154.81 s
+exit 1
