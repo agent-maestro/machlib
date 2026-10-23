@@ -70,7 +70,7 @@ error decreases on constant input — and it is what would have caught that defe
 Both need the compiler:
 
 ```bash
-pip install monogate-forge eml-cost
+pip install --only-binary=:all: --require-hashes -r requirements.lock
 python3 -m pytest normalization/ certificate/ -q
 ```
 
@@ -78,8 +78,11 @@ python3 -m pytest normalization/ certificate/ -q
 halved the emitted datapath from Q16.16 to Q8.8 — no error, no warning. That is fixed (it now
 refuses), but the dependency is real.
 
-> **Version note.** `monogate-forge==0.14.0` on PyPI is a **stale build** whose Verilog backend
-> cannot lower this kernel. Use **0.14.1 or later**.
+> **Version note (2026-10-23).** Install from [`requirements.lock`](requirements.lock):
+> `monogate-forge 0.14.4` and its whole dependency closure, every artifact pinned by sha256. Releases
+> from 0.15.0 on emit different Verilog for this kernel, and `0.14.0` was a stale build that could not
+> lower it. This note used to say "0.14.1 or later". That open range is why the public walk failed
+> four weeks running once 0.15.0 shipped.
 
 ## What this package does NOT contain
 
