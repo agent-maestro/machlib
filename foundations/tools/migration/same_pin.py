@@ -286,12 +286,20 @@ run_cmd do
 
 def removal_commit(full: str, since: str) -> str | None:
     """The newest commit in since..HEAD after which no `.lean` file declares `axiom <short>`, and before
-    which one did. None when there is no such single commit."""
-    ere = rf"axiom[[:space:]]+{full.rsplit('.', 1)[-1]}[[:space:]:]"
+    which one did. None when there is no such single commit.
+
+    TWO PATTERNS, because the two searches see different units. The pickaxe matches against whole file
+    contents, where `[[:space:]]` also matches a newline; `git grep` matches LINE BY LINE, where it
+    cannot. A declaration whose signature starts on the next line (`axiom realOfScientific` then
+    `(m : Nat) ...`) is found by the first and missed by the second unless the line pattern also
+    accepts end-of-line. Missing that left 3 of 39 removals "unattributed" on the first run."""
+    short = full.rsplit(".", 1)[-1]
+    blob_ere = rf"axiom[[:space:]]+{short}[[:space:]:]"
+    line_ere = rf"axiom[[:space:]]+{short}([[:space:]:]|$)"
     spec = ["--", "*.lean", f":(exclude){LEDGER}"]
     def declared(rev: str) -> bool:
-        return subprocess.run(["git", "grep", "-q", "-E", "-e", ere, rev, *spec], cwd=FOUND).returncode == 0
-    for c in git("log", "--format=%H", f"-S{ere}", "--pickaxe-regex", f"{since}..HEAD", *spec).split():
+        return subprocess.run(["git", "grep", "-q", "-E", "-e", line_ere, rev, *spec], cwd=FOUND).returncode == 0
+    for c in git("log", "--format=%H", f"-S{blob_ere}", "--pickaxe-regex", f"{since}..HEAD", *spec).split():
         if not declared(c) and declared(f"{c}^"):
             return c
     return None
@@ -406,6 +414,23 @@ def _specimens() -> tuple[dict, dict]:
     return base, cur
 
 
+def history_canaries() -> bool:
+    """`removal_commit` against THIS repository's own history, where the answers are known: the git
+    side cannot be fed synthetic data, so it is held to real cases, including both line shapes."""
+    cases = [("MachLib.Real.realOfScientific", "5841ea60"),       # signature on the NEXT line
+             ("MachLib.Real.mul_lt_mul_of_pos_right", "5841ea60"),  # likewise
+             ("MachLib.Real.cos_neg", "2d2f59c0"),                 # signature on the same line
+             ("MachLib.Real.zero_ne_one_ax", None)]                # still declared: no commit
+    ok = True
+    for name, want in cases:
+        got = removal_commit(name, "ceb9ba32")
+        hit = (got is None) if want is None else bool(got and got.startswith(want))
+        ok &= hit
+        print(f"  history {name.rsplit('.', 1)[-1]:<26} -> {(got or 'None')[:8]:<8} "
+              f"{'as expected' if hit else 'WRONG, expected ' + str(want)}")
+    return ok
+
+
 def selftest() -> int:
     import copy
     canaries = {
@@ -431,6 +456,7 @@ def selftest() -> int:
         fired = any(p.startswith(f"[{tag.strip()}]") for p in problems)
         ok &= fired
         print(f"  canary {tag.strip():<12} {'FIRES' if fired else 'SILENT -- BROKEN'}  {problems[:1]}")
+    ok &= history_canaries()
     print("SAME-PIN SELFTEST " + ("PASS" if ok else "FAIL"))
     return 0 if ok else 1
 
