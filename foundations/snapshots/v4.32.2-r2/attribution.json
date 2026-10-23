@@ -1,0 +1,626 @@
+{
+ "removed_axioms": {
+  "MachLib.Real.HasDerivAt_neg": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.HasDerivAt_sub": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.archimedean": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.cos_neg": {
+   "kind": "theorem",
+   "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+   "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+  },
+  "MachLib.Real.cos_periodic": {
+   "kind": "theorem",
+   "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+   "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+  },
+  "MachLib.Real.cos_zero": {
+   "kind": "theorem",
+   "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+   "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+  },
+  "MachLib.Real.cosh_ge_one": {
+   "kind": "theorem",
+   "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+   "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+  },
+  "MachLib.Real.cosh_pos": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.div_lt_one_of_pos_lt": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.exp10": {
+   "kind": "def",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  },
+  "MachLib.Real.exp10_def": {
+   "kind": "theorem",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  },
+  "MachLib.Real.exp10_log10_inverse": {
+   "kind": "theorem",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  },
+  "MachLib.Real.exp10_zero": {
+   "kind": "theorem",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  },
+  "MachLib.Real.exp_pos": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.exp_zero": {
+   "kind": "theorem",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  },
+  "MachLib.Real.lit_one_eq": {
+   "kind": "theorem",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  },
+  "MachLib.Real.lit_zero_eq": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.mul_lt_mul_of_pos_right": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.natCast": {
+   "kind": "def",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.natCast_succ": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.natCast_zero": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.neg_one_lt_tanh": {
+   "kind": "theorem",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  },
+  "MachLib.Real.one_div_nonneg_of_pos": {
+   "kind": "theorem",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  },
+  "MachLib.Real.one_div_pos_of_pos": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.pi_gt_one": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.pi_gt_three": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.pi_pos": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.realOfScientific": {
+   "kind": "def",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.realOfScientific_clears": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.realOfScientific_le_of_nat": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.realOfScientific_lt_of_nat": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.realOfScientific_one_dot_zero": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.realOfScientific_pos": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.realOfScientific_three_dot_zero": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.realOfScientific_two_dot_zero": {
+   "kind": "theorem",
+   "commit": "5841ea60d479bd174b0d1395f0661523f4d17255",
+   "subject": "feat: provable means proved -- 23 axioms to theorems and definitions"
+  },
+  "MachLib.Real.sin_neg": {
+   "kind": "theorem",
+   "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+   "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+  },
+  "MachLib.Real.sin_periodic": {
+   "kind": "theorem",
+   "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+   "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+  },
+  "MachLib.Real.sin_zero": {
+   "kind": "theorem",
+   "commit": "2d2f59c05e36dca4ba21ca3c1d076f323488c5de",
+   "subject": "feat: seven axioms are theorems; trust lists must name live axioms"
+  },
+  "MachLib.Real.tanh_lt_one": {
+   "kind": "theorem",
+   "commit": "e25e0cd10516ab90216293494e008fe3ecf9d49c",
+   "subject": "feat: prove nine axioms Forge's proofs used; pinned 256 -> 247"
+  }
+ },
+ "added_axioms": [
+  "Certcom.float_lit_0_05",
+  "Certcom.float_lit_0_4",
+  "Certcom.float_lit_1_5",
+  "Certcom.real_abs_eps_eq_zero",
+  "Certcom.real_cosh_finite",
+  "Certcom.real_exp_finite",
+  "Certcom.real_fpfinite",
+  "Certcom.real_log_finite",
+  "Certcom.real_round_finite",
+  "Certcom.real_sinh_finite",
+  "MachLib.Real.u_le_half",
+  "MachLib.Real.u_le_inv_two_pow_52",
+  "MachLib.Real.u_lt_one",
+  "MachLib.eml_tree_analytic_on_interval"
+ ],
+ "derivations": [
+  {
+   "axiom": "MachLib.Real.zero_ne_one_ax",
+   "derivation": "MachLib.Real.zero_ne_one_derivable",
+   "now": "sub-theory primitive, derivation kept and ledger-checked"
+  },
+  {
+   "axiom": "MachLib.Real.archimedean",
+   "derivation": "MachLib.Real.archimedean_derivable",
+   "now": "no longer an axiom (see removed axioms)"
+  },
+  {
+   "axiom": "MachLib.Real.one_div_pos_of_pos",
+   "derivation": "MachLib.Real.one_div_pos_derivable",
+   "now": "no longer an axiom (see removed axioms)"
+  },
+  {
+   "axiom": "MachLib.Real.HasDerivAt_neg",
+   "derivation": "MachLib.Real.hasDerivAt_neg_derivable",
+   "now": "no longer an axiom (see removed axioms)"
+  },
+  {
+   "axiom": "MachLib.Real.HasDerivAt_sub",
+   "derivation": "MachLib.Real.hasDerivAt_sub_derivable",
+   "now": "no longer an axiom (see removed axioms)"
+  }
+ ],
+ "lost_theorems": [],
+ "gained_theorems": [
+  "Certcom.eml_tree_grounded_depth2_instantiated",
+  "Certcom.eml_tree_grounded_depth2_specimen",
+  "Certcom.eml_tree_grounded_eml_const_one_instantiated",
+  "Certcom.eml_tree_grounded_eml_const_one_specimen",
+  "Certcom.eml_tree_grounded_eml_var_var_instantiated",
+  "Certcom.eml_tree_grounded_eml_var_var_specimen",
+  "Certcom.eml_var_var_pipeline_uniform_instantiated",
+  "Certcom.eml_var_var_pipeline_uniform_specimen",
+  "Certcom.eml_var_var_quantized_pointwise_instantiated",
+  "Certcom.eml_var_var_quantized_pointwise_specimen",
+  "Certcom.pid_abs_at_budget_instantiated",
+  "Certcom.pid_abs_at_budget_specimen",
+  "Certcom.pid_abs_grounded_instantiated",
+  "Certcom.pid_abs_grounded_specimen",
+  "Certcom.pid_acos_grounded_instantiated",
+  "Certcom.pid_acos_grounded_specimen",
+  "Certcom.pid_asin_grounded_instantiated",
+  "Certcom.pid_asin_grounded_specimen",
+  "Certcom.pid_atan_at_budget_instantiated",
+  "Certcom.pid_atan_at_budget_specimen",
+  "Certcom.pid_atan_grounded_instantiated",
+  "Certcom.pid_atan_grounded_specimen",
+  "Certcom.pid_cos_at_budget_instantiated",
+  "Certcom.pid_cos_at_budget_specimen",
+  "Certcom.pid_cos_grounded_instantiated",
+  "Certcom.pid_cos_grounded_specimen",
+  "Certcom.pid_cosh_grounded_instantiated",
+  "Certcom.pid_cosh_grounded_specimen",
+  "Certcom.pid_exp_grounded_instantiated",
+  "Certcom.pid_exp_grounded_specimen",
+  "Certcom.pid_grounded_instantiated",
+  "Certcom.pid_grounded_specimen",
+  "Certcom.pid_log10_grounded_instantiated",
+  "Certcom.pid_log10_grounded_specimen",
+  "Certcom.pid_log_cosh_grounded_instantiated",
+  "Certcom.pid_log_cosh_grounded_specimen",
+  "Certcom.pid_log_grounded_instantiated",
+  "Certcom.pid_log_grounded_specimen",
+  "Certcom.pid_sin_at_budget_instantiated",
+  "Certcom.pid_sin_at_budget_specimen",
+  "Certcom.pid_sin_grounded_instantiated",
+  "Certcom.pid_sin_grounded_specimen",
+  "Certcom.pid_sinh_grounded_instantiated",
+  "Certcom.pid_sinh_grounded_specimen",
+  "Certcom.pid_sqrt_grounded_instantiated",
+  "Certcom.pid_sqrt_grounded_specimen",
+  "Certcom.pid_tan_grounded_instantiated",
+  "Certcom.pid_tan_grounded_specimen",
+  "Certcom.pid_tanh_grounded_instantiated",
+  "Certcom.pid_tanh_grounded_specimen",
+  "Certcom.pipeline_arith_grounded_sum_instantiated",
+  "Certcom.pipeline_arith_grounded_sum_specimen",
+  "Certcom.pipeline_det_grounded_instantiated",
+  "Certcom.pipeline_det_grounded_nonzero_specimen",
+  "Certcom.pipeline_det_grounded_specimen"
+ ],
+ "changed_footprints": {
+  "Certcom.eml_tree_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.eml_var_var_certcom_witness": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound"
+  ],
+  "Certcom.eml_var_var_certcom_witness_grounded": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound"
+  ],
+  "Certcom.eml_var_var_pipeline": [
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_abs_grounded": [
+   "MachLib.Real.divR"
+  ],
+  "Certcom.pid_acos_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_asin_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_atan_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq"
+  ],
+  "Certcom.pid_cos_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.divR"
+  ],
+  "Certcom.pid_cosh_grounded": [
+   "MachLib.Real.exp_add",
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.mul_inv",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_exp_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.divR",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.mul_inv",
+   "MachLib.Real.zero_lt_one_ax",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_grounded": [
+   "MachLib.Real.divR"
+  ],
+  "Certcom.pid_log10_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_log_cosh_grounded": [
+   "MachLib.Real.exp_add",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_log_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_sin_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.divR"
+  ],
+  "Certcom.pid_sinh_grounded": [
+   "MachLib.Real.exp_add",
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.mul_inv",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_sqrt_grounded": [
+   "MachLib.Real.zero_lt_one_ax",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_tan_grounded": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.cos_add",
+   "MachLib.Real.sin_add",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_tanhVar_grounded": [
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pid_tanh_grounded": [
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pipeline_arith_grounded": [
+   "MachLib.Real.divR"
+  ],
+  "Certcom.pipeline_det_grounded": [
+   "MachLib.Real.divR"
+  ],
+  "Certcom.tanhVar_controller_tracking": [
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.IterExpDepthN.chainN_khovanskii_bound_explicit": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.mul_pos"
+  ],
+  "MachLib.IterExpDepthN.chainN_khovanskii_bound_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.mul_pos"
+  ],
+  "MachLib.KhovanskiiConcrete.eexp_barrier_zero_count_le_47": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.mul_pos"
+  ],
+  "MachLib.Real.certcom_total_error_floor": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.cos",
+   "MachLib.Real.cos_add",
+   "MachLib.Real.cos_pi",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean",
+   "MachLib.Real.sin_add",
+   "MachLib.Real.sin_pi"
+  ],
+  "MachLib.Real.certcom_total_error_floor_compact_interval": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound"
+  ],
+  "MachLib.Real.continuousAt_attains_max_Icc": [
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.Real.continuousAt_attains_min_Icc": [
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.Real.gaussianImproperIntegral_eq_sqrt_pi_div_two": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.pi_lower_bound"
+  ],
+  "MachLib.Real.jointDensity_conjugacy": [
+   "MachLib.Real.lt_total",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.Real.log_separation": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_mul",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.mul_pos",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.Real.no_continuousAt_eq_unboundedBelowNearRight": [
+   "MachLib.Real.mul_pos",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.Real.no_tree_eps_close_to_sin_compact_interval": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound"
+  ],
+  "MachLib.Real.no_tree_eps_close_to_sin_eventually": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.cos",
+   "MachLib.Real.cos_add",
+   "MachLib.Real.cos_pi",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean",
+   "MachLib.Real.sin_add",
+   "MachLib.Real.sin_pi"
+  ],
+  "MachLib.Real.no_tree_eps_close_to_target_eventually": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add"
+  ],
+  "MachLib.Real.no_tree_eq_cos_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean"
+  ],
+  "MachLib.Real.no_tree_eq_nestedTarget_fully_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.cos_add",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound"
+  ],
+  "MachLib.Real.no_tree_eq_periodic_target": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add"
+  ],
+  "MachLib.Real.no_tree_eq_recurring_target_fully_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add"
+  ],
+  "MachLib.Real.no_tree_eq_sinSq_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.cos_add",
+   "MachLib.Real.cos_pi",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean"
+  ],
+  "MachLib.Real.no_tree_eq_sin_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean"
+  ],
+  "MachLib.Real.no_tree_eq_sin_via_periodic_barrier": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.cos_add",
+   "MachLib.Real.cos_pi",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean",
+   "MachLib.Real.sin_add",
+   "MachLib.Real.sin_pi"
+  ],
+  "MachLib.Real.no_tree_eq_target_of_not_tailSign": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add"
+  ],
+  "MachLib.Real.optimalMSE_tendsto": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_surj",
+   "MachLib.Real.pi_lower_bound"
+  ],
+  "MachLib.cos_not_in_eml_any_depth_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean"
+  ],
+  "MachLib.eml_depth2_witness_of_const_sibling_fully_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.cos_add",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound"
+  ],
+  "MachLib.eml_eval_boundedZeros": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.add_assoc",
+   "MachLib.Real.add_lt_add_left",
+   "MachLib.Real.add_neg",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.lt_total",
+   "MachLib.Real.lt_trans_ax",
+   "MachLib.Real.mul_distrib",
+   "MachLib.Real.zero_lt_one_ax",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.eml_pfaffian_validon_from_cos_equality_proved": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean"
+  ],
+  "MachLib.eml_pfaffian_validon_from_sin_equality_proved": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean"
+  ],
+  "MachLib.exists_emlTree_eq_iterExp": [
+   "MachLib.Real.add_assoc",
+   "MachLib.Real.add_lt_add_left",
+   "MachLib.Real.divR",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.lt_trans_ax",
+   "MachLib.Real.mulR",
+   "MachLib.Real.mul_assoc",
+   "MachLib.Real.mul_comm",
+   "MachLib.Real.mul_distrib",
+   "MachLib.Real.mul_inv",
+   "MachLib.Real.mul_one_ax",
+   "MachLib.Real.mul_pos",
+   "MachLib.Real.zero_lt_one_ax",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.log_implicit_not_explicit": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_mul",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.mul_pos",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.no_tree_eq_log_positive_side_given_validon": [
+   "MachLib.Real.HasDerivAt_add",
+   "MachLib.Real.HasDerivAt_mul",
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.mul_pos",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "MachLib.sin_not_in_eml_any_depth_unconditional": [
+   "MachLib.Real.HasDerivAt_of_eq",
+   "MachLib.Real.exp_add",
+   "MachLib.Real.pi_lower_bound",
+   "MachLib.Real.pythagorean"
+  ]
+ }
+}

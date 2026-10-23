@@ -280,6 +280,47 @@ said — not which kernel carries the fix, which is what the expiry condition is
 
 ---
 
+# AMENDMENT 7 — a grade change needs a **seal**; same-pin re-captures; **STEP 0** (2026-10-22)
+
+**Provenance: the project owner's ruling, 2026-10-22**, on the question Amendment 6's first draft
+left open. It changes what may move a recorded grade and how every future bump starts, so it lives here.
+
+1. **An upgrade rests on a sealed snapshot.** It is a stronger claim than the July downgrade it
+   supersedes, and a stronger claim cannot rest on a lighter record. "Reproduces in three minutes" is
+   a reproduction path, not an artifact: a claim whose evidence is "run it and see" is a listing, not
+   evidence. Downgrades may land on a CI run because they are conservative. Upgrades get the seal.
+2. **`checkpoint.py` has two modes, because there are two cases.** A BUMP is the same library at a new
+   pin: any difference belongs to the toolchain and must be absent (`--compare-to`). A SAME-PIN
+   re-capture is a new library at the same pin: difference is expected and must be ATTRIBUTED
+   (`--same-pin`, `tools/migration/same_pin.py`). It compares against the newest sealed capture on the
+   pin, chosen by the tool, and seals only if the attribution holds mechanically:
+   * identical `lean-toolchain`, `lake-manifest.json` and Lean4Lean commit;
+   * zero theorems lost;
+   * every removed axiom tied to the commit that removed it and to what the kernel says it is now;
+   * every changed footprint's new axioms inside the trusted set.
+
+   "This is library work, not the toolchain" then becomes a checked fact, not the agent's inference.
+   Its first use found the instrument's own defect (`MIGRATION_LOG.md`) and refused to seal until it
+   was fixed.
+3. **A baseline at the current library is overdue, not a concession.** The July baseline stopped
+   measuring anything a bump could use months ago; this grade change only surfaced it. The sealed
+   same-pin capture becomes the pin's current snapshot AND the next bump's baseline.
+
+## STEP 0 — every bump begins with a same-pin re-capture
+
+Before the pin moves:
+
+    python3 tools/migration/checkpoint.py --label <pin>-r<N> --same-pin --freeze [--void-ok GATE=AMENDMENT]
+
+It must end `SAME-PIN ATTRIBUTED` and `FROZEN`. Then the bump is measured against **that** capture
+(`--compare-to snapshots/<pin>-r<N>`), never against whatever happened to be frozen last. A bump
+measured against a stale baseline attributes months of proof work to the toolchain. The halted first
+attempt at `v4.32.2-r2` (`captures/halted/`) is that failure, caught at a grade change instead of at a bump.
+
+**Current baseline for the next bump: `snapshots/v4.32.2-r2/`** (digest `ca6380b8…f9eebf`).
+
+---
+
 # AMENDMENT 6 — **Lean4Lean `408edad` adopted**: criterion 7 returns at the destination (2026-10-20)
 
 **Provenance: authorised in-session by the project owner, 2026-10-20 — "adopt, fix the proof".** It
@@ -338,10 +379,9 @@ sources declare" — **was** the whole-library fan-out that part 1 exists to rem
 
 **Measured 2026-10-22, gate `73860d13`:** 826 of 826 modules replay clean at default fuel, 20,796
 declarations, 197 s. **Cross-derived:** 20,605 (the 825 that passed on 10-20) + 191 (`Coordinates`,
-measured alone) = 20,796. `checkpoint.py` reproduced it (`lean4lean_replay` exit 0, every other gate
-green). **There is no `-r2` snapshot:** a re-capture compared against `v4.14.0-baseline` HALTS on the
-library's own growth since July, not on the toolchain (see `MIGRATION_LOG.md`). The evidence is the
-gate run, which reproduces in about 200 s.
+measured alone) = 20,796. **Sealed as `snapshots/v4.32.2-r2/`** by the same-pin re-capture of
+Amendment 7 (digest `ca6380b8…f9eebf`, `MIGRATION_LOG.md`). An upgrade rests on a seal, not on a
+reproduction path.
 
 | the destination now stands as | |
 |---|---|

@@ -1,0 +1,5 @@
+checker path     : /home/monogate/lean4checker
+checker toolchain: leanprover/lean4:v4.14.0
+ledger  toolchain: leanprover/lean4:v4.32.2
+
+[CHECKER_VERSION_MISMATCH] the checker was built against leanprover/lean4:v4.14.0, we pin leanprover/lean4:v4.32.2. A checker built on a different kernel is a different instrument.

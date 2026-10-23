@@ -494,16 +494,30 @@ downgrade was, never silently:
 | 1b — instrument holds fire | `Init.Core`, `MachLib.Sign` — **PASS** |
 | 2 — MachLib replays | **826 / 826 modules clean**, 20,796 declarations, 197 s, 6 at a time, 8 GB cap each, default fuel |
 | cross-derivation | 20,605 (825 modules, 2026-10-20) + 191 (`Coordinates` alone) = **20,796** |
-| `checkpoint.py` | `lean4lean_replay` **exit 0**, other gates green, `kernel_replay` void (Amendment 5) |
 
-**WHY THERE IS NO `snapshots/v4.32.2-r2/`.** The re-capture (`--label v4.32.2-r2 --compare-to
-snapshots/v4.14.0-baseline`) **HALTED, and correctly**: counts 252 → 217 axioms, 57 → 112 headline
-footprints, 5 → 0 derivations; 56 footprints changed, 55 theorems gained, **0 lost**. The pin has not
-moved since 2026-07-30. What moved is the library: three months of proof work after the migration
-ended. The baseline was frozen to attribute *toolchain* drift. Measuring today's library against it
-convicts development as migration, and attributing those 56 rows is not this upgrade's job. The
-halted capture was kept out of `snapshots/`. **Open for the owner:** whether a grade change needs a
-sealed snapshot, which would mean a new baseline at the current library.
+**SEALED as `snapshots/v4.32.2-r2/`**, same-pin re-capture (Amendment 7), library `50d9c56c`:
+
+```
+snapshots/v4.32.2-r2/   SAME-PIN ATTRIBUTED   digest ca6380b8e228980a786c1b9a69f0100a8e226664b82e4b8558cb4d3e61f9eebf
+```
+
+| against `snapshots/v4.32.2/` (July, library `ceb9ba32`) | |
+|---|---|
+| gates | criterion 7 **exit 0**; 3–6 and toolchain exit 0; criterion 1 void, Amendment 5 cited |
+| identity | `lean-toolchain` **same**, `lake-manifest.json` **same**; Lean4Lean none (cited void) → `408edad`, **ARRIVAL** |
+| headline theorems | 57 → 112: **0 lost**, 55 gained, 56 footprints changed; every added axiom inside `trustedFootprint` |
+| axioms pinned | 242 → 217: **39 removed, every one attributed** (36 now theorems, 3 now definitions: 23 in `5841ea60`, 9 in `e25e0cd1`, 7 in `2d2f59c0`); 14 added |
+| derivations | 5 → 0: **0 lost**. 4 are theorems now (`archimedean`, `one_div_pos_of_pos`, `HasDerivAt_neg`, `HasDerivAt_sub`); `zero_ne_one_ax` is a sub-theory primitive whose derivation is kept and ledger-checked |
+| counts, cross-derived | knownAxioms 217 / ledger 217; trustedFootprint 143 / Lean 143; derivableAxioms 0 / gate 0; July's lists from git at `ceb9ba32`: 242 / 242, 5 / 5 |
+
+**This is the pin's current snapshot, and the baseline the next bump compares against** (step 0).
+
+**Its first attempt HALTED, twice, and both halts are recorded.** (1) Against `v4.14.0-baseline`
+it halted on the library's own growth since July: right halt, wrong comparison. Kept in
+`captures/halted/v4.32.2-r2_2026-10-22T230618/`. That halt is why the owner's Amendment 7 ruling
+exists. (2) The first `--same-pin` run attributed 36 of 39 removals and refused to seal on 3. The
+defect was the instrument's: a line-by-line `git grep` could not see `axiom realOfScientific` when
+its signature starts on the next line. Fixed in `50d9c56c`, with history canaries in `--selftest`.
 
 **What the first run of the new gate cost (2026-10-21).** It listed the aggregator `MachLib`, and
 Lean4Lean matches a target by PREFIX, so one "per-module" job was the whole library again: 87 GB
