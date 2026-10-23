@@ -52,6 +52,12 @@ things this gate did could not work there, each measured on 2026-10-20:
 * THE REPLAY. `lean4lean MachLib` starts one task per matched module at once (Main.lean's own
   fan-out): killed at 32 GB in 32 s, and LEAN_NUM_THREADS=6 did not bound it (24 GB in 16 s). Step 2
   runs ONE process per module, REPLAY_JOBS at a time, over the modules MachLib's sources declare.
+  A target MATCHES BY PREFIX (`target.isPrefixOf m`, Main.lean), so a module that prefixes another is
+  that fan-out again: this gate's first run listed the aggregator `MachLib`, and on 2026-10-21 that
+  one job grew to 87 GB and the box's OOM killer took VS Code with it. Such a module is replayed
+  through the modules it prefixes, and may only be left out when it declares nothing of its own
+  (`declares_nothing`). Every module also runs under tools/capped_lean.sh at MODULE_CAP, so a
+  runaway is one module's INSTRUMENT_OOM, never the desktop.
 * FUEL. One module of 826 stopped at Lean4Lean's default fuel (Geometry/Apollonius/Coordinates, three
   numeral-heavy proofs; it passed at `lazyDelta = 1500`). The proofs were reworked, not the fuel
   raised: this gate passes NO `--config`, and a fuel exhaustion is its own verdict, INSTRUMENT_FUEL --
@@ -66,6 +72,7 @@ import datetime
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -75,6 +82,9 @@ FOUND = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 #: v4.32.2 over all 826: about 1 GB typical; the whole sweep took 196 s at 6.
 REPLAY_JOBS = int(os.environ.get("LEAN4LEAN_JOBS", "6"))
 MODULE_TIMEOUT_S = 1800
+#: Memory per module process (tools/capped_lean.sh). 8x the typical peak; REPLAY_JOBS multiplies it.
+MODULE_CAP = os.environ.get("LEAN4LEAN_MODULE_CAP", "8G")
+CAPPED = os.path.join(FOUND, "tools", "capped_lean.sh")
 #: A sweep that reached nothing reports a clean library. 826 modules on 2026-10-20.
 POPULATION_FLOOR = 800
 SPECIMEN = [("OpenPrivate.lean", "MachLib/ZZZSpecimenOpenPrivate.lean"),
@@ -325,12 +335,26 @@ def main() -> int:
         return 1
 
     print("\n2 ENVIRONMENT REPLAYS through the second implementation, one module per process")
+    if not scope_available():
+        print("    [INSTRUMENT_UNCAPPED] no usable `systemd-run --user --scope`, so no module can be held to a")
+        print("    memory cap -- and an uncapped replay took the desktop down on 2026-10-21. Not run. No verdict.")
+        print("\nLEAN4LEAN-REPLAY GATE: FAIL")
+        return 1
     tracked = replay_population()
-    population = [m for m in tracked if os.path.exists(olean_path(m))]
+    built = [m for m in tracked if os.path.exists(olean_path(m))]
+    prefixes = [m for m in built if any(o.startswith(m + ".") for o in built)]
+    declaring = [m for m in prefixes if not declares_nothing(m)]
+    if declaring:
+        print(f"    [POPULATION] {', '.join(declaring)}: Lean4Lean matches a target by PREFIX, so these cannot")
+        print("    be replayed alone, and each declares something of its own that no other target reaches.")
+        print("\nLEAN4LEAN-REPLAY GATE: FAIL")
+        return 1
+    population = [m for m in built if m not in prefixes]
     print(f"    {len(population)} modules: the {len(tracked)} MachLib sources git tracks, less the "
-          f"{len(tracked) - len(population)} `lake build` does not build (Discovered/, and those "
-          f"scripts/check_aggregator.sh documents as unreachable); {REPLAY_JOBS} at a time, Lean4Lean's "
-          f"DEFAULT fuel (no --config)")
+          f"{len(tracked) - len(built)} `lake build` does not build (Discovered/, and those "
+          f"scripts/check_aggregator.sh documents as unreachable), less {len(prefixes)} imports-only "
+          f"prefix module(s) ({', '.join(prefixes) or 'none'}); {REPLAY_JOBS} at a time, {MODULE_CAP} "
+          f"each, Lean4Lean's DEFAULT fuel (no --config)")
     if len(population) < POPULATION_FLOOR:
         print(f"    [POPULATION] {len(population)} modules, under the floor of {POPULATION_FLOOR}: a sweep "
               f"that reached nothing would report a clean library. No verdict.")
@@ -381,20 +405,52 @@ def olean_path(module: str) -> str:
                         *module.split(".")) + ".olean"
 
 
+def scope_available() -> bool:
+    """capped_lean.sh's own test: without a delegated scope it runs UNCAPPED, which this gate refuses."""
+    r = subprocess.run(["systemd-run", "--user", "--scope", "-p", "MemoryMax=64M", "--quiet", "--", "true"],
+                       capture_output=True)
+    return r.returncode == 0
+
+
+def declares_nothing(module: str) -> bool:
+    """True when the module's source is imports and comments only -- the aggregator's shape.
+
+    Lean block comments NEST, so they are stripped by depth, not by a regex."""
+    src = open(os.path.join(FOUND, *module.split(".")) + ".lean").read()
+    code, i, depth = [], 0, 0
+    while i < len(src):
+        if src.startswith("/-", i):
+            depth, i = depth + 1, i + 2
+        elif depth and src.startswith("-/", i):
+            depth, i = depth - 1, i + 2
+        elif depth:
+            i += 1
+        elif src.startswith("--", i):
+            j = src.find("\n", i)
+            i = len(src) if j < 0 else j
+        else:
+            code.append(src[i])
+            i += 1
+    return all(not ln.strip() or ln.strip().startswith("import ") for ln in "".join(code).splitlines())
+
+
 def replay_module(bin_: str, module: str) -> tuple[str, str, str, int]:
-    """`(module, kind, line, declarations checked)` for ONE module, in a process of its own.
+    """`(module, kind, line, declarations checked)` for ONE module, in a process of its own, under
+    MODULE_CAP.
 
     Launched via Popen, not `run`, for ONE reason: the pid is matched against the kernel's OOM log
     afterwards. Correlating on the process NAME would pick up any other lean4lean the box happened to
-    kill -- including this sweep's own neighbours.
+    kill -- including this sweep's own neighbours. Its own SESSION, so a timeout kills the whole
+    group: killing the direct child alone leaves lean4lean running under it.
     """
     since = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    proc = subprocess.Popen(["lake", "env", bin_, module], cwd=FOUND,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    proc = subprocess.Popen([CAPPED, "--cap", MODULE_CAP, "lake", "env", bin_, module], cwd=FOUND,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                            start_new_session=True)
     try:
         so, se = proc.communicate(timeout=MODULE_TIMEOUT_S)
     except subprocess.TimeoutExpired:
-        proc.kill()
+        os.killpg(proc.pid, signal.SIGKILL)
         proc.communicate()
         return module, "INSTRUMENT_TIMEOUT", f"no answer in {MODULE_TIMEOUT_S} s -- not a verdict", 0
     out = so + se
@@ -422,6 +478,11 @@ def classify(rc: int, out: str, pid: int, since: str) -> tuple[str, str]:
     """
     if rc == 0:
         return PASS, ""
+    if rc in (137, 143) and "capped_lean: KILLED AT THE" in out:
+        # The cgroup's kill, reported by the wrapper that owns the cgroup. The kernel logs it against
+        # lean4lean's pid as "Memory cgroup out of memory", which `oom_evidence` (this gate's pid,
+        # "Out of memory") would never match -- it would call our own cap "something outside".
+        return "INSTRUMENT_OOM", f"killed at the {MODULE_CAP} per-module cap -- a resource verdict, not a proof verdict"
     if rc in (-9, 137):
         oom = oom_evidence(pid, since)
         if oom:
