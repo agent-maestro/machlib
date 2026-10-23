@@ -655,8 +655,65 @@ private theorem four_ne : (((1 + 1) * (1 + 1)) : Real) ≠ 0 :=
   ne_of_gt (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
                     (add_pos zero_lt_one_ax zero_lt_one_ax))
 
-set_option maxHeartbeats 4000000 in
-set_option maxRecDepth 8000 in
+/-- The first tangency of `locus_ioo`. -/
+private theorem locus_ioo_1 (q g : Real)
+    (hq : (1 + 1) * (1 + 1) * (1 + 1) * (q * q) = 1) (hg : (1 + 1) * g = (1 + 1 + 1)) :
+    (q - 0) * (q - 0) + (q - 0) * (q - 0) = (g - 1) * (g - 1) := by
+  refine QuadraticRoots.mul_left_cancel four_ne ?_
+  have l : ((1 + 1) * (1 + 1)) * ((q - 0) * (q - 0) + (q - 0) * (q - 0))
+      = (1 + 1) * (1 + 1) * (1 + 1) * (q * q) := by mach_mpoly [q]
+  have r : ((1 + 1) * (1 + 1)) * ((g - 1) * (g - 1)) = ((1 + 1) * g - (1 + 1)) * ((1 + 1) * g - (1 + 1)) := by mach_mpoly [g]
+  rw [l, r, hq, hg]; mach_ring
+
+/-- `locus_ioo_2` over SYMBOLIC `n` (= 8) and `m` (= 5): the polynomial work sees no numeral but `1`
+and `1 + 1`, and the one closed numeral fact it needs is the hypothesis `hnm`. -/
+private theorem locus_ioo_2_gen {q g n m : Real}
+    (hq : n * (q * q) = 1) (hg : (1 + 1) * g = (1 + 1 + 1))
+    (hnm : ((1 + 1) * (1 + 1)) * ((1 - n) * (1 - n) + 1) = m * m * n)
+    (hm : (1 + 1 + 1) + (1 + 1) = m) :
+    (q - n * q) * (q - n * q) + (q - 0) * (q - 0) = (g + 1) * (g + 1) := by
+  refine QuadraticRoots.mul_left_cancel four_ne ?_
+  have l : ((1 + 1) * (1 + 1)) * ((q - n * q) * (q - n * q) + (q - 0) * (q - 0))
+      = (((1 + 1) * (1 + 1)) * ((1 - n) * (1 - n) + 1)) * (q * q) := by mach_mpoly [q, n]
+  have r : ((1 + 1) * (1 + 1)) * ((g + 1) * (g + 1)) = ((1 + 1) * g + (1 + 1)) * ((1 + 1) * g + (1 + 1)) := by
+    mach_mpoly [g]
+  have e : m * m * n * (q * q) = m * m * (n * (q * q)) := by mach_ring
+  rw [l, r, hnm, e, hq, hg, hm]; mach_ring
+
+/-- `2`, `4`, `5` and `8` as `natCast`, so a closed numeral fact becomes a `Nat` equality the kernel
+decides natively (MachLib/NatCastArith.lean's recipe). -/
+private theorem nc_two : natCast 2 = (1 + 1 : Real) := by
+  rw [natCast_succ, natCast_succ, natCast_zero, zero_add]
+private theorem nc_four : natCast 4 = ((1 + 1) * (1 + 1) : Real) := by
+  rw [show (4 : Nat) = 2 * 2 from rfl, natCast_mul, nc_two]
+private theorem nc_five : natCast 5 = ((1 + 1) * (1 + 1) + 1 : Real) := by
+  rw [show (5 : Nat) = 2 * 2 + 1 from rfl, natCast_succ, natCast_mul, nc_two]
+private theorem nc_eight : natCast 8 = ((1 + 1) * (1 + 1) * (1 + 1) : Real) := by
+  rw [show (8 : Nat) = 2 * 2 * 2 from rfl, natCast_mul, natCast_mul, nc_two]
+
+/-- `4((1 − 8)² + 1) = 5 · 5 · 8`: the closed numeral fact, alone, and never ring-normalised as a
+numeral -- `mach_ring` on it exhausts 4,000,000 heartbeats in `acLt`. `(1 − 8)²` is `7²` over the
+atom `natCast 7`, and `4(7·7 + 1) = 5·5·8` is `Nat` arithmetic. -/
+private theorem two_hundred : ((1 + 1) * (1 + 1)) * ((1 - (1 + 1) * (1 + 1) * (1 + 1)) * (1 - (1 + 1) * (1 + 1) * (1 + 1)) + 1)
+    = ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) * (1 + 1) : Real) := by
+  rw [← nc_eight, ← nc_five, ← nc_four]
+  have hsq : (1 - natCast 8) * (1 - natCast 8) = natCast 7 * natCast 7 := by
+    rw [natCast_succ 7]; mach_mpoly [natCast 7]
+  have l : natCast 4 * (natCast 7 * natCast 7 + 1) = natCast (4 * (7 * 7 + 1)) := by
+    rw [natCast_mul 4 (7 * 7 + 1), natCast_succ (7 * 7), natCast_mul 7 7]
+  have r : natCast 5 * natCast 5 * natCast 8 = natCast (5 * 5 * 8) := by
+    rw [natCast_mul (5 * 5) 8, natCast_mul 5 5]
+  rw [hsq, l, r]
+
+/-- The second tangency of `locus_ioo`. Proved over `8` and `5` themselves it was the third declaration
+of this module Lean4Lean could not replay at its default fuel (`BUMP_PLAN.md` Amendment 6; see
+`prod_one_of_scaled`). -/
+private theorem locus_ioo_2 (q g : Real)
+    (hq : (1 + 1) * (1 + 1) * (1 + 1) * (q * q) = 1) (hg : (1 + 1) * g = (1 + 1 + 1)) :
+    (q - (1 + 1) * (1 + 1) * (1 + 1) * q) * (q - (1 + 1) * (1 + 1) * (1 + 1) * q) + (q - 0) * (q - 0) = (g + 1) * (g + 1) :=
+  locus_ioo_2_gen (n := (1 + 1) * (1 + 1) * (1 + 1)) (m := (1 + 1) * (1 + 1) + 1)
+    hq hg two_hundred (by mach_ring)
+
 /-- Solution 4 of the locus: `r = 3/2`, centre `(√2/4, √2/4)` — the single circle of the class that
 degenerates to linear.
 
@@ -676,27 +733,12 @@ private theorem locus_ioo (q g dd : Real)
     ∧
     ((q - 0) * (q - 0) + (q - dd) * (q - dd) = (g + 1) * (g + 1)) := by
   subst hd
-  have rg : ((1 + 1) * (1 + 1)) * ((g + 1) * (g + 1)) = ((1 + 1) * g + (1 + 1)) * ((1 + 1) * g + (1 + 1)) := by mach_mpoly [g]
-  refine ⟨?_, ?_, ?_⟩
-  · refine QuadraticRoots.mul_left_cancel four_ne ?_
-    have l : ((1 + 1) * (1 + 1)) * ((q - 0) * (q - 0) + (q - 0) * (q - 0))
-        = (1 + 1) * (1 + 1) * (1 + 1) * (q * q) := by mach_mpoly [q]
-    have r : ((1 + 1) * (1 + 1)) * ((g - 1) * (g - 1)) = ((1 + 1) * g - (1 + 1)) * ((1 + 1) * g - (1 + 1)) := by mach_mpoly [g]
-    rw [l, r, hq, hg]; mach_ring
-  · refine QuadraticRoots.mul_left_cancel four_ne ?_
-    have step : (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) * (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) + (q - 0) * (q - 0)
-        = (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) * (q * q) + (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) * (q * q) := by mach_mpoly [q]
-    have l : ((1 + 1) * (1 + 1)) * ((q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) * (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) + (q - 0) * (q - 0))
-        = ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (q * q)) := by
-      rw [step]; mach_mpoly [q]
-    rw [l, rg, hq, hg]; mach_ring
-  · refine QuadraticRoots.mul_left_cancel four_ne ?_
-    have step : (q - 0) * (q - 0) + (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) * (q - ((1 + 1) * (1 + 1) * (1 + 1) * q))
-        = (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) * (q * q) + (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) * (q * q) := by mach_mpoly [q]
-    have l : ((1 + 1) * (1 + 1)) * ((q - 0) * (q - 0) + (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) * (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)))
-        = ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (q * q)) := by
-      rw [step]; mach_mpoly [q]
-    rw [l, rg, hq, hg]; mach_ring
+  refine ⟨locus_ioo_1 q g hq hg, locus_ioo_2 q g hq hg, ?_⟩
+  have h := locus_ioo_2 q g hq hg
+  rw [show (q - 0) * (q - 0) + (q - (1 + 1) * (1 + 1) * (1 + 1) * q) * (q - (1 + 1) * (1 + 1) * (1 + 1) * q)
+      = (q - (1 + 1) * (1 + 1) * (1 + 1) * q) * (q - (1 + 1) * (1 + 1) * (1 + 1) * q) + (q - 0) * (q - 0)
+      from add_comm _ _]
+  exact h
 
 /-! ### The locus solutions, as circles -/
 
@@ -931,19 +973,31 @@ private theorem zero_of_pq (c t : Real) {w : Real}
     (e : w = 1 - (c * c - 1) * (t * t - (1 + 1))) : w = 0 := by
   rw [h] at e; rw [e]; mach_ring
 
+/-- `X·Y = 1` from `aX = b` and `bY = a`, over SYMBOLIC `a` and `b`: no numeral tree reaches a
+normaliser, so neither the elaborator nor a kernel has anything to unfold. -/
+private theorem prod_one_of_cross {a b X Y : Real} (hab : a * b ≠ 0)
+    (hX : a * X = b) (hY : b * Y = a) : X * Y = 1 := by
+  refine QuadraticRoots.mul_left_cancel hab ?_
+  have e : a * b * (X * Y) = (a * X) * (b * Y) := by mach_ring
+  rw [e, hX, hY]; mach_ring
+
 /-- `X·Y = 1` from `16X = 9` and `9Y = 16`, without forming `144` in any goal the normaliser
-must expand. -/
+must expand.
+
+It used to prove the cross-multiplication itself, by `mach_mpoly` and `mach_ring` over the
+unary-numeral trees `(1+1)*(1+1)*(1+1)*(1+1)` and `(1+1+1)*(1+1+1)`. Lean's kernel accepted it, and
+Lean4Lean -- MachLib's second implementation, `BUMP_PLAN.md` Amendment 6 -- stopped with
+`(kernel) deterministic timeout` at its default fuel (it passed at `lazyDelta = 1500`; 1000 is the
+default): the one module of 826 it could not replay (measured 2026-10-20, Lean4Lean 408edad at
+v4.32.2). The identity is now the general `prod_one_of_cross`, instantiated. -/
 private theorem prod_one_of_scaled {X Y : Real} (hX : ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * X = ((1 + 1 + 1) * (1 + 1 + 1))) (hY : ((1 + 1 + 1) * (1 + 1 + 1)) * Y = ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1))) :
-    X * Y = 1 := by
-  refine QuadraticRoots.mul_left_cancel (a := (((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * ((1 + 1 + 1) * (1 + 1 + 1)))) ?_ ?_
-  · refine ne_of_gt (mul_pos ?_ ?_)
-    · exact mul_pos (mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
-        (add_pos zero_lt_one_ax zero_lt_one_ax)) (add_pos zero_lt_one_ax zero_lt_one_ax))
-        (add_pos zero_lt_one_ax zero_lt_one_ax)
-    · exact mul_pos (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax)
-        (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax)
-  · have e : ((((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * ((1 + 1 + 1) * (1 + 1 + 1))) : Real) * (X * Y) = (((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * X) * (((1 + 1 + 1) * (1 + 1 + 1)) * Y) := by mach_mpoly [X, Y]
-    rw [e, hX, hY]; mach_ring
+    X * Y = 1 :=
+  prod_one_of_cross (ne_of_gt (mul_pos
+    (mul_pos (mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+      (add_pos zero_lt_one_ax zero_lt_one_ax)) (add_pos zero_lt_one_ax zero_lt_one_ax))
+      (add_pos zero_lt_one_ax zero_lt_one_ax))
+    (mul_pos (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax)
+      (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax)))) hX hY
 
 set_option maxHeartbeats 1000000 in
 /-- Solution 2: `r = 5√34/12`, centre `(5/4, 5/4 + √34/3)`. -/
@@ -1127,17 +1181,19 @@ private theorem doubled_core (e u w : Real) (he : e * e = (1 + 1)) (hw : w = u *
   have z : ((1 + 1) : Real) - (1 + 1) = 0 := by mach_ring
   rw [z]; mach_ring
 
-set_option maxHeartbeats 1000000 in
-/-- The internal tangency, scaled by `784`. -/
+/-- `2(nu)² = (nw)²` from `w² = 2u²`, over a SYMBOLIC scale `n`: the nines never meet a normaliser. -/
+private theorem scaled_doubling (n u w : Real) (hc : w * w = (1 + 1) * (u * u)) :
+    (1 + 1) * ((n * u) * (n * u)) = (n * w) * (n * w) := by
+  have e1 : (1 + 1) * ((n * u) * (n * u)) = n * (n * ((1 + 1) * (u * u))) := by mach_mpoly [n, u]
+  have e2 : (n * w) * (n * w) = n * (n * (w * w)) := by mach_mpoly [n, w]
+  rw [e1, e2, hc]
+
+/-- The internal tangency, scaled by `784`. `scaled_doubling` at `n = 9`: proving it here, over the
+nines themselves, was the second declaration of this module Lean4Lean could not replay at its default
+fuel (`BUMP_PLAN.md` Amendment 6; see `prod_one_of_scaled`). -/
 private theorem doubled_int (e u w : Real) (he : e * e = (1 + 1)) (hw : w = u * e) :
-    (1 + 1) * ((((1 + 1 + 1) * (1 + 1 + 1)) * u) * (((1 + 1 + 1) * (1 + 1 + 1)) * u)) = (((1 + 1 + 1) * (1 + 1 + 1)) * w) * (((1 + 1 + 1) * (1 + 1 + 1)) * w) := by
-  have hc := doubled_core e u w he hw
-  refine QuadraticRoots.eq_of_sub_eq_zero ?_
-  have ex : (1 + 1) * ((((1 + 1 + 1) * (1 + 1 + 1)) * u) * (((1 + 1 + 1) * (1 + 1 + 1)) * u)) - (((1 + 1 + 1) * (1 + 1 + 1)) * w) * (((1 + 1 + 1) * (1 + 1 + 1)) * w)
-      = ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * (u * u))) - ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1 + 1) * (1 + 1 + 1)) * (w * w)) := by mach_mpoly [u, w]
-  rw [ex, hc]
-  have z : ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * (u * u))) - ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * (u * u))) = 0 := by mach_ring
-  rw [z]
+    (1 + 1) * ((((1 + 1 + 1) * (1 + 1 + 1)) * u) * (((1 + 1 + 1) * (1 + 1 + 1)) * u)) = (((1 + 1 + 1) * (1 + 1 + 1)) * w) * (((1 + 1 + 1) * (1 + 1 + 1)) * w) :=
+  scaled_doubling _ u w (doubled_core e u w he hw)
 
 
 set_option maxHeartbeats 1000000 in

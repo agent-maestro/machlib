@@ -280,6 +280,122 @@ said — not which kernel carries the fix, which is what the expiry condition is
 
 ---
 
+# AMENDMENT 7 — a grade change needs a **seal**; same-pin re-captures; **STEP 0** (2026-10-22)
+
+**Provenance: the project owner's ruling, 2026-10-22**, on the question Amendment 6's first draft
+left open. It changes what may move a recorded grade and how every future bump starts, so it lives here.
+
+1. **An upgrade rests on a sealed snapshot.** It is a stronger claim than the July downgrade it
+   supersedes, and a stronger claim cannot rest on a lighter record. "Reproduces in three minutes" is
+   a reproduction path, not an artifact: a claim whose evidence is "run it and see" is a listing, not
+   evidence. Downgrades may land on a CI run because they are conservative. Upgrades get the seal.
+2. **`checkpoint.py` has two modes, because there are two cases.** A BUMP is the same library at a new
+   pin: any difference belongs to the toolchain and must be absent (`--compare-to`). A SAME-PIN
+   re-capture is a new library at the same pin: difference is expected and must be ATTRIBUTED
+   (`--same-pin`, `tools/migration/same_pin.py`). It compares against the newest sealed capture on the
+   pin, chosen by the tool, and seals only if the attribution holds mechanically:
+   * identical `lean-toolchain`, `lake-manifest.json` and Lean4Lean commit;
+   * zero theorems lost;
+   * every removed axiom tied to the commit that removed it and to what the kernel says it is now;
+   * every changed footprint's new axioms inside the trusted set.
+
+   "This is library work, not the toolchain" then becomes a checked fact, not the agent's inference.
+   Its first use found the instrument's own defect (`MIGRATION_LOG.md`) and refused to seal until it
+   was fixed.
+3. **A baseline at the current library is overdue, not a concession.** The July baseline stopped
+   measuring anything a bump could use months ago; this grade change only surfaced it. The sealed
+   same-pin capture becomes the pin's current snapshot AND the next bump's baseline.
+
+## STEP 0 — every bump begins with a same-pin re-capture
+
+Before the pin moves:
+
+    python3 tools/migration/checkpoint.py --label <pin>-r<N> --same-pin --freeze [--void-ok GATE=AMENDMENT]
+
+It must end `SAME-PIN ATTRIBUTED` and `FROZEN`. Then the bump is measured against **that** capture
+(`--compare-to snapshots/<pin>-r<N>`), never against whatever happened to be frozen last. A bump
+measured against a stale baseline attributes months of proof work to the toolchain. The halted first
+attempt at `v4.32.2-r2` (`captures/halted/`) is that failure, caught at a grade change instead of at a bump.
+
+**Current baseline for the next bump: `snapshots/v4.32.2-r2/`** (digest `ca6380b8…f9eebf`).
+
+---
+
+# AMENDMENT 6 — **Lean4Lean `408edad` adopted**: criterion 7 returns at the destination (2026-10-20)
+
+**Provenance: authorised in-session by the project owner, 2026-10-20 — "adopt, fix the proof".** It
+changes the pass bar (where criterion 7's specimen comes from) and the destination's recorded grade,
+so it lives here. Ordered after Forge's differential stage 2, which landed first.
+
+## The trigger fired, measured rather than reported
+
+Amendment 5's upgrade trigger was *"Lean4Lean's segfault is fixed **or** lean4checker grows a ≥ v4.29
+tag"*. The first half fired. Upstream, `9fc9c83` fixes `digama0/lean4lean#17` (the `Init.Prelude` /
+`Init.Core` SIGSEGV), and **`408edad` is the LAST master commit pinning `v4.32.2`**, per the
+stop-3 rule. It carries `9fc9c83` and `d7e70a5` (the #14577 port). Measured at MachLib `f572de8a`
+before anything was adopted:
+
+| | |
+|---|---|
+| positive controls | `Init.Prelude`, `Init.Core`, `MachLib.Sign` — exit 0 |
+| negative specimen | lean4checker `v4.28.0`'s `AddFalse`, built at v4.32.2 — **rejected**, `(kernel) declaration type mismatch` |
+| MachLib | **825 of 826** modules exit 0, one per process, default fuel (20,605 declarations, 196 s) |
+| the one | `Geometry/Apollonius/Coordinates` — `(kernel) deterministic timeout`; passes with `--config:lazyDelta=1500` and nothing else |
+
+lean4checker's stable tags still stop at v4.28.0, so **criterion 1 stays void at the destination**
+under Amendment 5. The second half of that trigger is still open.
+
+## The ruling, in three parts
+
+1. **One module per process.** `lean4lean MachLib` starts one task per matched module at once.
+   It was killed at 32 GB in 32 s, and `LEAN_NUM_THREADS=6` did not bound it (24 GB in 16 s). Step 2
+   replays each module in its own process, `LEAN4LEAN_JOBS` (6) at a time.
+2. **The specimen comes from the newest stable lean4checker tag at or below the pin.** No v4.32.2
+   lean4checker can exist. The specimens are *sources* compiled here at the pinned toolchain, so the
+   checkout supplies text, not a build. The run names which tag it used. **This is the pass-bar
+   change.**
+3. **Fix the proof, never the fuel.** The gate passes no `--config`. The three numeral-heavy proofs in
+   `Coordinates` are restated over symbolic scales (`prod_one_of_cross`, `locus_ioo_2_gen`,
+   `scaled_doubling`), and the closed numeral fact goes through `natCast`. A fuel exhaustion gets its
+   own verdict, `INSTRUMENT_FUEL`, which is neither an acceptance nor a rejection.
+
+## What the first run of the new gate taught: a target matches by PREFIX
+
+On 2026-10-21 the gate's first end-to-end run ran the machine out of memory: 6 processes, 83 GB, one
+of them 87 GB. The kernel's OOM killer took the editor with it. Lean4Lean resolves a target with
+`target.isPrefixOf m` (`Main.lean`), so `MachLib` — the aggregator, listed among "the modules MachLib's
+sources declare" — **was** the whole-library fan-out that part 1 exists to remove. The fix:
+
+* A module that prefixes another is left out **only if it declares nothing of its own** (imports and
+  comments). Otherwise the gate FAILs `[POPULATION]`, because its declarations would go unreplayed.
+  Today exactly one module qualifies: `MachLib`.
+* Every module runs under `tools/capped_lean.sh` at `LEAN4LEAN_MODULE_CAP` (8 GB). A cap kill is
+  `INSTRUMENT_OOM` for that one module. With no usable scope the gate refuses to run
+  (`INSTRUMENT_UNCAPPED`), rather than falling back to uncapped.
+* A timeout kills the module's whole process group. Killing the direct child left `lean4lean` running
+  beneath it.
+
+## The destination's grade, upgraded — and what it is NOT
+
+**Measured 2026-10-22, gate `73860d13`:** 826 of 826 modules replay clean at default fuel, 20,796
+declarations, 197 s. **Cross-derived:** 20,605 (the 825 that passed on 10-20) + 191 (`Coordinates`,
+measured alone) = 20,796. **Sealed as `snapshots/v4.32.2-r2/`** by the same-pin re-capture of
+Amendment 7 (digest `ca6380b8…f9eebf`, `MIGRATION_LOG.md`). An upgrade rests on a seal, not on a
+reproduction path.
+
+| the destination now stands as | |
+|---|---|
+| **grade** | **pinned, patched kernel, internally green, externally replayed by a SECOND IMPLEMENTATION, SHARED LINEAGE** |
+| criterion 7 | **PASS** — Lean4Lean `408edad` |
+| criterion 1 | still `CHECKER_VERSION_MISMATCH`, Amendment 5 cited. Upgrades when lean4checker tags ≥ v4.29 (`watch_kernel_support.py`) |
+
+**Not "independent kernel"**: Lean4Lean is a port of the C++ kernel, per Amendment 2's finding. **Not a
+replacement for v4.28.0**: v4.28.0 stays the last pin replayed by lean4checker. **And the frozen
+`snapshots/v4.32.2/` is left exactly as it was captured**: its `voids_cited` records what the
+destination was in July, and sealing a different measurement over it would erase that.
+
+---
+
 # AMENDMENT 5 — **v4.29.0 dropped**; v4.28.0 is the near end; the destination's arrival grade is pre-registered (2026-07-30)
 
 **Provenance: authorised in-session by the project owner**, after the finding below. Route change and

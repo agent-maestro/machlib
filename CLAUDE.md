@@ -448,6 +448,14 @@ behind it is missing — registration is still a human act.
 
 ## Gotchas
 
+- **A toolchain bump starts with STEP 0, and a grade change needs a seal** (`BUMP_PLAN.md` Amendment 7).
+  Run `tools/migration/checkpoint.py --label <pin>-rN --same-pin --freeze` first, then compare the bump
+  against THAT capture (current: `snapshots/v4.32.2-r2/`). `--compare-to` an old baseline reads months of
+  proof work as toolchain drift.
+- **`lean4lean <target>` matches by PREFIX and starts every match at once.** `lean4lean MachLib` replays the
+  whole library in one process: 87 GB on 2026-10-21, and the box's OOM kill took VS Code with it.
+  `LEAN_NUM_THREADS` does not bound it. Use `check_lean4lean_replay.py` (one module per process, 8 GB cap
+  each), and run any other heavy Lean job under `tools/capped_lean.sh`.
 - **Gate 14 (`machsig-trust`, live since the step-7 landing, 2026-10-14) has its own landing rules.** Read
   `foundations/docs/machsig/GATE14_REPAIR.md` before touching `tools/machsig/trust_baseline.json`.
   - **A baseline change reaches master as ONE stamp, reported NET from the last reviewed baseline.** Only a
