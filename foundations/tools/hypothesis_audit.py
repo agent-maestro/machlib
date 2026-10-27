@@ -91,17 +91,25 @@ def unproduced(decls):
     return found
 
 
-def ratchet(now, pinned, found, emit=print) -> int:
+def ratchet(now, pinned, found, emit=print, refuted=frozenset()) -> int:
     """The ratchet proper: how `now` differs from the pinned set. Factored out of `main` so the
     selftest can exercise it -- see canary 5. Until 2026-09-04 the selftest covered `unproduced`
     (the DETECTOR) and never this (the thing that turns detection into a gate); a mutation that
-    disabled the NEW branch left the selftest green."""
+    disabled the NEW branch left the selftest green.
+
+    `refuted` (the baseline's `_refuted_statements`, since 2026-10-27) are propositions a theorem refutes:
+    one gaining a producer is not a fix to ratchet in but a proof of False to investigate, and the
+    message says so instead of telling the reader to remove the entry (canary 8)."""
     bad = 0
     for p in sorted(now - pinned):
         emit(f"  NEW    {p}: consumed by {', '.join(found.get(p, ['?']))}, concluded by nothing")
         bad += 1
     for p in sorted(pinned - now):
-        emit(f"  FIXED  {p}: now has a producer — remove it from the baseline")
+        if p in refuted:
+            emit(f"  REFUTED-BUT-PRODUCED  {p}: a theorem now concludes a REFUTED statement — that is a "
+                 f"proof of False or a misread producer; do NOT remove it from the baseline")
+        else:
+            emit(f"  FIXED  {p}: now has a producer — remove it from the baseline")
         bad += 1
     return bad
 
@@ -154,6 +162,14 @@ def self_test(decls) -> int:
     print(f"  canary 7 (control: unchanged set is silent)   {'SILENT' if quiet else 'FIRES'}")
     ok &= quiet
 
+    # 8. A REFUTED statement that gains a producer must not read as a fix (the 2026-10-27 review's
+    #    finding F5: the audit said "remove it from the baseline", which is the wrong repair).
+    said = []
+    fired = (ratchet({"A"}, {"A", "R"}, {}, emit=said.append, refuted={"R"}) == 1
+             and any("REFUTED-BUT-PRODUCED" in m for m in said) and not any("FIXED" in m for m in said))
+    print(f"  canary 8 (a refuted prop produced is no fix)  {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
     print()
     if not ok:
         print("HYPOTHESIS-AUDIT SELF-TEST FAIL — a canary did not fire; the gate is unvalidated")
@@ -204,10 +220,15 @@ def main() -> int:
     if not BASELINE.exists():
         print(f"UNAVAILABLE: {BASELINE} not found — run with --update-baseline", file=sys.stderr)
         return 2
-    pinned = set(json.loads(BASELINE.read_text())["unproduced"])
+    base = json.loads(BASELINE.read_text())
+    pinned = set(base["unproduced"])
+    refuted = set(base.get("_refuted_statements", []))
     now = set(found)
 
-    bad = ratchet(now, pinned, found)
+    bad = ratchet(now, pinned, found, refuted=refuted)
+    for p in sorted(refuted - pinned):
+        print(f"  MISFILED  {p}: listed in _refuted_statements but not in unproduced")
+        bad += 1
 
     print()
     if bad:

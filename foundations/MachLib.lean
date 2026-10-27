@@ -77,6 +77,7 @@ import MachLib.MonotoneFromDeriv
 import MachLib.IntermediateValue
 import MachLib.MonotoneRoot
 import MachLib.BivariateDeriv
+import MachLib.BivariateImplicitControls
 import MachLib.TwoExpCurveCount
 import MachLib.TwoExpCurveValidation
 import MachLib.ArcCount

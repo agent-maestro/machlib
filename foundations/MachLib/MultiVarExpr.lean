@@ -177,13 +177,15 @@ exactly the corollary `khovanskii_rolle_count` (`MultiVarTwoExpRolle.lean`) need
 carries over to the N-ary case with zero new lemmas beyond this one composition. -/
 
 /-- **The curve-tangent / chain-rule bridge for `MultiVarExpr k`.** For two expressions `f, g`, an active
-pair `p ≠ q`, and a curve `yc` implicitly solving `f = 0` along the arc (supplied, not constructed — the
+pair `p ≠ q`, and a curve `yc` implicitly solving `f = 0` along the arc and continuous at `x` (supplied, not
+constructed — the
 IFT/existence gate stays external, exactly as `curve_tangent_and_chain` and `RepresentedCurveArc.yc`
 already treat it): the tangent condition and chain rule needed by `khovanskii_rolle_count` follow, with
 partials computed syntactically by `dVar`. -/
 theorem multiVarExpr_curve_tangent_and_chain {k : Nat} (f g : MultiVarExpr k) (env : Fin k → Real)
     (p q : Fin k) (hpq : p ≠ q) (yc : Real → Real) (x : Real)
     (hfy : denote (dVar q f) (freeze2 env p q x (yc x)) ≠ 0)
+    (hcont : ContinuousAt yc x)
     (hid : ∀ s : Real, denote f (freeze2 env p q s (yc s)) = 0) :
     HasDerivAt yc (-(denote (dVar p f) (freeze2 env p q x (yc x)))
         / denote (dVar q f) (freeze2 env p q x (yc x))) x
@@ -203,7 +205,7 @@ theorem multiVarExpr_curve_tangent_and_chain {k : Nat} (f g : MultiVarExpr k) (e
     yc x
     (hasDerivAt2_of_multiVarExpr f env p q hpq x (yc x))
     (hasDerivAt2_of_multiVarExpr g env p q hpq x (yc x))
-    hfy hid
+    hfy hcont hid
 
 end MultiVarExpr
 end MultiVarMod

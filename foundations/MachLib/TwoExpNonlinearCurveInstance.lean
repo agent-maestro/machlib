@@ -91,9 +91,10 @@ theorem expMul_curve_ift_matches_direct (c x : Real) :
     -(exp x * (c * exp (-x))) / exp x = -(c * exp (-x)) := by
   have hfy : exp x ≠ 0 := ne_of_gt (exp_pos x)
   have h2 := hasDerivAt2_expMul c x (c * exp (-x))
-  have himplicit := hasDerivAt_implicit (fun a b => exp a * b - c) (exp x * (c * exp (-x))) (exp x)
-    (fun t => c * exp (-t)) x h2 hfy (fun s => expMul_curve_id c s)
   have hdirect := hasDerivAt_yc_selfExp c x
+  -- the implicit derivative needs the curve continuous at `x` (2026-10-27); this curve is differentiable
+  have himplicit := hasDerivAt_implicit (fun a b => exp a * b - c) (exp x * (c * exp (-x))) (exp x)
+    (fun t => c * exp (-t)) x h2 hfy (hasDerivAt_continuousAt hdirect) (fun s => expMul_curve_id c s)
   exact HasDerivAt_unique _ _ _ x himplicit hdirect
 
 /-! ## Part 3: the curve's exponential IS `IsExpChain`-representable

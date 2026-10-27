@@ -1,6 +1,11 @@
 {
   "_comment": "Props CONSUMED as hypotheses with no theorem CONCLUDING them. A SET, not a count: a new entry fails, and one that gains a producer must be removed. See the header of tools/hypothesis_audit.py for why this exists and what it cannot see.",
-  "_triage_note": "MOST ENTRIES HERE ARE CORRECT, and the signal is weaker than witness_audit's. Two kinds:\n  (a) NAMED OPEN OBLIGATIONS \u2014 meant to be consumed and unproved; that is what 'open' means.\n  (b) DEFINITIONAL PREDICATES (Lipschitz, MonotoneOn, Periodic, Pos, Rounds, \u2026) \u2014 supplied from outside rather than proved. For these 'no producer' means only that the corpus exhibits no instance, which is worth knowing but is not a defect.\nThe entry this gate was built for, ValueGapBound, was NEITHER: a working hypothesis nobody had satisfied at any depth. That is the shape to watch for \u2014 a NEW name appearing here that is not an obligation you deliberately opened.",
+  "_triage_note": "MOST ENTRIES HERE ARE CORRECT, and the signal is weaker than witness_audit's. Three kinds:\n  (a) NAMED OPEN OBLIGATIONS \u2014 meant to be consumed and unproved; that is what 'open' means.\n  (b) DEFINITIONAL PREDICATES (Lipschitz, MonotoneOn, Periodic, Pos, Rounds, \u2026) \u2014 supplied from outside rather than proved. For these 'no producer' means only that the corpus exhibits no instance, which is worth knowing but is not a defect.\nThe entry this gate was built for, ValueGapBound, was NEITHER: a working hypothesis nobody had satisfied at any depth. That is the shape to watch for \u2014 a NEW name appearing here that is not an obligation you deliberately opened.\n  (c) REFUTED STATEMENTS (since 2026-10-27) \u2014 propositions written down only to be refuted: each is consumed by one theorem concluding False and must NEVER gain a producer, which would be a proof of False. Listed in _refuted_statements.",
+  "_refuted_statements": [
+    "OldCurveCountStatement",
+    "OldImplicitLocalStatement",
+    "OldImplicitStatement"
+  ],
   "_known_obligations": [
     "BipolyDichotomyAlong",
     "Depth3DecayHard",
@@ -28,6 +33,9 @@
     "Lipschitz",
     "MPEvalZero",
     "MonotoneOn",
+    "OldCurveCountStatement",
+    "OldImplicitLocalStatement",
+    "OldImplicitStatement",
     "OneQueryLevelSetResidue",
     "Periodic",
     "PfaffianFunction",

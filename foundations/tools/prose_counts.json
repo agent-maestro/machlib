@@ -309,6 +309,24 @@
    "source": "lean_files_sub"
   },
   {
+   "id": "claude.witnessed",
+   "file": "CLAUDE.md",
+   "pattern": "^\\| witnessed \\| (\\d+) \\| a Mathlib term inhabits the interpreted type",
+   "source": "manifest_witnessed"
+  },
+  {
+   "id": "claude.mapped",
+   "file": "CLAUDE.md",
+   "pattern": "^\\| mapped \\| (\\d+) \\| carrier/function symbols",
+   "source": "manifest_mapped"
+  },
+  {
+   "id": "claude.axioms_pinned_gate_list",
+   "file": "CLAUDE.md",
+   "pattern": "# \"(\\d+) axioms pinned; 112 headline footprints",
+   "source": "axioms_pinned"
+  },
+  {
    "id": "claude.lean_lines",
    "file": "CLAUDE.md",
    "pattern": "\\*\\*([0-9 \\u202f]+) lines\\*\\*, re-exported through the aggregator",
@@ -496,6 +514,12 @@
    "id": "wip.trusted",
    "file": "foundations/docs/what_is_proven.md",
    "pattern": "\\*\\*(\\d+)\\*\\* form the trusted footprint",
+   "source": "manifest_trusted"
+  },
+  {
+   "id": "wip.trusted_every",
+   "file": "foundations/docs/what_is_proven.md",
+   "pattern": "and every one of those (\\d+) is",
    "source": "manifest_trusted"
   },
   {

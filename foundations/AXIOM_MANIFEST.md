@@ -9,12 +9,12 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-143 of them and they are all listed below.
+156 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 96 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
-| mapped | 12 | carrier or function symbol — interpreted, not a proposition |
+| witnessed | 107 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| mapped | 14 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
 | GAP | 0 | witnessable, not yet witnessed — reason given per row |
@@ -128,6 +128,14 @@ decides what a certificate can claim.
 | `MachLib.IsAnalyticOnReals` | mapped | `(f : Real → Real) (S : RealSet) : Prop` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real` | mapped | `: Type` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.HasDerivAt` | mapped | `(f : Real → Real) (f' : Real) (x : Real) : Prop` | carrier / function symbol, interpreted not witnessed |
+| `MachLib.Real.HasDerivAt2` | mapped | `: (Real → Real → Real) → Real → Real → Real → Real → Prop` | carrier / function symbol, interpreted not witnessed |
+| `MachLib.Real.HasDerivAt2_add` | witnessed | `(f g : Real → Real → Real) (fx fy gx gy x y : Real) : HasDerivAt2 f fx fy x y → HasDerivAt2 g gx gy x y → HasDerivAt2 (fun a b => f a b + g a b) (fx +` | MonogateEML.RealModel.hasDerivAt2_add |
+| `MachLib.Real.HasDerivAt2_comp` | witnessed | `(f : Real → Real → Real) (fx fy : Real) (γ₁ γ₂ : Real → Real) (d₁ d₂ t : Real) : HasDerivAt2 f fx fy (γ₁ t) (γ₂ t) → HasDerivAt γ₁ d₁ t → HasDerivAt γ` | MonogateEML.RealModel.hasDerivAt2_comp |
+| `MachLib.Real.HasDerivAt2_const` | witnessed | `(c x y : Real) : HasDerivAt2 (fun _ _ => c) 0 0 x y` | MonogateEML.RealModel.hasDerivAt2_const |
+| `MachLib.Real.HasDerivAt2_mul` | witnessed | `(f g : Real → Real → Real) (fx fy gx gy x y : Real) : HasDerivAt2 f fx fy x y → HasDerivAt2 g gx gy x y → HasDerivAt2 (fun a b => f a b * g a b) (fx *` | MonogateEML.RealModel.hasDerivAt2_mul |
+| `MachLib.Real.HasDerivAt2_projX` | witnessed | `(x y : Real) : HasDerivAt2 (fun a _ => a) 1 0 x y` | MonogateEML.RealModel.hasDerivAt2_projX |
+| `MachLib.Real.HasDerivAt2_projY` | witnessed | `(x y : Real) : HasDerivAt2 (fun _ b => b) 0 1 x y` | MonogateEML.RealModel.hasDerivAt2_projY |
+| `MachLib.Real.HasDerivAt2_scomp` | witnessed | `(φ : Real → Real) (φ' : Real) (u : Real → Real → Real) (ux uy x y : Real) : HasDerivAt φ φ' (u x y) → HasDerivAt2 u ux uy x y → HasDerivAt2 (fun a b =` | MonogateEML.RealModel.hasDerivAt2_scomp |
 | `MachLib.Real.HasDerivAt_add` | witnessed | `(f g : Real → Real) (a b : Real) (x : Real) : HasDerivAt f a x → HasDerivAt g b x → HasDerivAt (fun y => f y + g y) (a + b) x` | fun {f g f' g' x} hf hg => HasDerivAt.add hf hg |
 | `MachLib.Real.HasDerivAt_arccos` | witnessed | `(x : Real) (hx : abs x < 1) : HasDerivAt arccos (-(1 / sqrt (1 - x * x))) x` | fun x hx => by obtain ⟨h1, h2⟩ := abs_lt.mp hx simpa [sq] using Real.hasDerivAt_arccos (ne_of_gt h1) (ne_of_lt h2) |
 | `MachLib.Real.HasDerivAt_arcsin` | witnessed | `(x : Real) (hx : abs x < 1) : HasDerivAt arcsin (1 / sqrt (1 - x * x)) x` | fun x hx => by obtain ⟨h1, h2⟩ := abs_lt.mp hx simpa [sq] using Real.hasDerivAt_arcsin (ne_of_gt h1) (ne_of_lt h2) |
@@ -169,13 +177,18 @@ decides what a certificate can claim.
 | `MachLib.Real.exp_gt_one_plus_self` | witnessed | `(x : Real) (hx : 0 < x) : 1 + x < exp x` | fun x hx => by simpa [add_comm] using Real.add_one_lt_exp (ne_of_gt hx) |
 | `MachLib.Real.exp_lt` | witnessed | `{x y : Real} : x < y → exp x < exp y` | fun h => Real.exp_lt_exp.mpr h |
 | `MachLib.Real.exp_surj` | witnessed | `: ∀ y : Real, 0 < y → ∃ x : Real, exp x = y` | fun y hy => ⟨Real.log y, Real.exp_log hy⟩ |
+| `MachLib.Real.floor` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
+| `MachLib.Real.floor_le` | witnessed | `(x : Real) : floor x ≤ x` | MonogateEML.RealModel.floor_le_witness |
+| `MachLib.Real.floor_zero` | witnessed | `: floor 0 = 0` | MonogateEML.RealModel.floor_zero_witness |
 | `MachLib.Real.hasDerivAt_continuousAt` | witnessed | `{f : Real → Real} {f' x : Real} : HasDerivAt f f' x → ContinuousAt f x` | fun {f f' x} h ε hε => by obtain ⟨δ, hδ, H⟩ := Metric.continuousAt_iff.mp h.continuousAt ε hε exact ⟨δ, hδ, fun y hy => by simpa [Real.dist_eq] using H (by simpa [Real.dist_eq] using hy)⟩ |
+| `MachLib.Real.hasDerivAt_implicit_local` | witnessed | `(f : Real → Real → Real) (fx fy : Real) (yc : Real → Real) (x p q : Real) (hp : p < x) (hq : x < q) : HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → Continuo` | MonogateEML.RealModel.hasDerivAt_implicit_local_witness |
 | `MachLib.Real.leR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a ≤ b) |
 | `MachLib.Real.le_iff_lt_or_eq` | witnessed | `(a b : Real) : a ≤ b ↔ a < b ∨ a = b` | fun {a b} => le_iff_lt_or_eq |
 | `MachLib.Real.le_sqrt_of_sq_le` | witnessed | `{z y : Real} (hz : 0 ≤ z) (h : z * z ≤ y) : z ≤ sqrt y` | fun {z y} hz h => by rw [show z = Real.sqrt (z * z) from (Real.sqrt_mul_self hz).symm]; exact Real.sqrt_le_sqrt h |
 | `MachLib.Real.log10` | mapped | `: Real → Real` | carrier / function symbol, interpreted not witnessed |
 | `MachLib.Real.log10_def` | witnessed | `(x : Real) : 0 < x → exp (log10 x * log (natCast 10)) = x` | fun x hx => by rw [show ((10:ℕ):ℝ) = (10:ℝ) by norm_num, Real.logb, div_mul_cancel₀ _ (by norm_num : Real.log (10:ℝ) ≠ 0)] exact Real.exp_log hx |
 | `MachLib.Real.ltR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a < b) |
+| `MachLib.Real.lt_floor_add_one` | witnessed | `(x : Real) : x < floor x + 1` | MonogateEML.RealModel.lt_floor_add_one_witness |
 | `MachLib.Real.lt_irrefl_ax` | witnessed | `(a : Real) : ¬ a < a` | lt_irrefl |
 | `MachLib.Real.lt_total` | witnessed | `(a b : Real) : a < b ∨ a = b ∨ b < a` | lt_trichotomy |
 | `MachLib.Real.lt_trans_ax` | witnessed | `{a b c : Real} : a < b → b < c → a < c` | fun {a b c} => lt_trans |

@@ -312,6 +312,7 @@ theorem khovanskii_rolle_curve_of_chain2_lower_system
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
@@ -319,7 +320,7 @@ theorem khovanskii_rolle_curve_of_chain2_lower_system
   khovanskii_rolle_curve_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_chain2_lower_system F G A B hAB M c yExpr expXExpr expYExpr
       sep lower)
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Local curve consumer with the explicit chain-2 syntactic Jacobian bound. -/
 theorem khovanskii_rolle_curve_of_chain2_lower_system_khovBound
@@ -344,6 +345,7 @@ theorem khovanskii_rolle_curve_of_chain2_lower_system_khovBound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -355,7 +357,7 @@ theorem khovanskii_rolle_curve_of_chain2_lower_system_khovBound
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F))
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G))
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G))
-    yc a b hab hf2 hg2 hfy_nz hid
+    yc a b hab hf2 hg2 hfy_nz hcont hid
     (ChainExp2NoZeros.khovBound lower.jacobian.poly)
     (fun zeros_J hnd hJlocal =>
       jacobian_count_of_chain2_lower_system_khovBound F G A B hAB M c yExpr expXExpr
@@ -389,6 +391,7 @@ theorem khovanskii_rolle_full_of_chain2_lower_system
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -397,7 +400,7 @@ theorem khovanskii_rolle_full_of_chain2_lower_system
   khovanskii_rolle_full_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_chain2_lower_system F G A B hAB M c yExpr expXExpr expYExpr
       sep lower)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Full global consumer with explicit chain-2 syntactic separator and
 Jacobian bounds. -/
@@ -424,6 +427,7 @@ theorem khovanskii_rolle_full_of_chain2_lower_system_khovBound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -440,7 +444,7 @@ theorem khovanskii_rolle_full_of_chain2_lower_system_khovBound
       (fun z hzlo hzhi => by
         exact ⟨lt_trans_ax (hinside arc harcmem).1 hzlo,
           lt_trans_ax hzhi (hinside arc harcmem).2.2⟩)
-      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hid arc harcmem)
+      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hcont arc harcmem) (hid arc harcmem)
       arc.zeros (hzeros_nd arc harcmem) (hzeros arc harcmem)
   have hchainPairs : ChainSep (fun x => A < x ∧ x < B ∧ sep x) (hd.rep, hd.zeros).1
       ((s.map (fun arc => (arc.rep, arc.zeros))).map (fun pair => pair.1)) := by
@@ -489,6 +493,7 @@ theorem khovanskii_rolle_single_of_chain2_lower_system
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -496,7 +501,7 @@ theorem khovanskii_rolle_single_of_chain2_lower_system
   khovanskii_rolle_single_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_chain2_lower_system F G A B hAB M c yExpr expXExpr expYExpr
       sep lower)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer with explicit chain-2 syntactic separator and
 Jacobian bounds. -/
@@ -522,6 +527,7 @@ theorem khovanskii_rolle_single_of_chain2_lower_system_khovBound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -550,6 +556,10 @@ theorem khovanskii_rolle_single_of_chain2_lower_system_khovBound
       have haeq : a = arc := by simpa using ha
       subst a
       exact hfy_nz z hzlo hzhi)
+    (fun a ha z hzlo hzhi => by
+      have haeq : a = arc := by simpa using ha
+      subst a
+      exact hcont z hzlo hzhi)
     (fun a ha t => by
       have haeq : a = arc := by simpa using ha
       subst a
@@ -1952,12 +1962,13 @@ theorem khovanskii_rolle_curve_of_chain2_boundedCertificate_certificate
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
       zeros_g.length ≤ N + 1 :=
   khovanskii_rolle_curve_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
-    bc.certificateFromBounds yc a b hab hsub hf2 hg2 hfy_nz hid
+    bc.certificateFromBounds yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Local curve consumer for a bounded chain-2 certificate. -/
 theorem khovanskii_rolle_curve_of_chain2_boundedCertificate
@@ -1982,6 +1993,7 @@ theorem khovanskii_rolle_curve_of_chain2_boundedCertificate
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -1993,7 +2005,7 @@ theorem khovanskii_rolle_curve_of_chain2_boundedCertificate
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F))
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G))
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G))
-    yc a b hab hf2 hg2 hfy_nz hid bc.jacobianBound
+    yc a b hab hf2 hg2 hfy_nz hcont hid bc.jacobianBound
     (fun zeros_J hnd hJlocal =>
       bc.jacobianCount zeros_J hnd (fun z hzmem => by
         obtain ⟨hza, hzb, hJac⟩ := hJlocal z hzmem
@@ -2026,6 +2038,7 @@ theorem khovanskii_rolle_full_of_chain2_boundedCertificate
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2040,7 +2053,7 @@ theorem khovanskii_rolle_full_of_chain2_boundedCertificate
       (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G))
       (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G))
       arc.yc arc.lo arc.hi (hinside arc harcmem).2.1
-      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hid arc harcmem)
+      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hcont arc harcmem) (hid arc harcmem)
       bc.jacobianBound
       (fun zeros_J hnd hJlocal =>
         bc.jacobianCount zeros_J hnd (fun z hzmem => by
@@ -2094,13 +2107,14 @@ theorem khovanskii_rolle_full_of_chain2_boundedCertificate_certificate
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat,
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
-    bc.certificateFromBounds hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    bc.certificateFromBounds hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Ordinary full global consumer for a bounded chain-2 certificate with an
 externally supplied separator count. This keeps the bounded certificate's
@@ -2131,6 +2145,7 @@ theorem khovanskii_rolle_full_of_chain2_boundedCertificate_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2138,7 +2153,7 @@ theorem khovanskii_rolle_full_of_chain2_boundedCertificate_and_separator_count
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_descent_certificate_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep bc.certificateFromBounds
-    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a bounded chain-2 certificate. -/
 theorem khovanskii_rolle_single_of_chain2_boundedCertificate
@@ -2163,6 +2178,7 @@ theorem khovanskii_rolle_single_of_chain2_boundedCertificate
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2189,6 +2205,10 @@ theorem khovanskii_rolle_single_of_chain2_boundedCertificate
       have haeq : a = arc := by simpa using ha
       subst a
       exact hfy_nz z hzlo hzhi)
+    (fun a ha z hzlo hzhi => by
+      have haeq : a = arc := by simpa using ha
+      subst a
+      exact hcont z hzlo hzhi)
     (fun a ha t => by
       have haeq : a = arc := by simpa using ha
       subst a
@@ -2223,12 +2243,13 @@ theorem khovanskii_rolle_single_of_chain2_boundedCertificate_certificate
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
-    bc.certificateFromBounds arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    bc.certificateFromBounds arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Ordinary single-arc consumer for a bounded chain-2 certificate with an
 externally supplied separator count. -/
@@ -2257,13 +2278,14 @@ theorem khovanskii_rolle_single_of_chain2_boundedCertificate_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_descent_certificate_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep bc.certificateFromBounds
-    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Bundle a chain-2 descent package as a bounded certificate with the
 package's explicit syntactic bounds. -/
@@ -2469,6 +2491,7 @@ theorem khovanskii_rolle_curve_of_chain2_descentPackage_khovBound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -2477,7 +2500,7 @@ theorem khovanskii_rolle_curve_of_chain2_descentPackage_khovBound
   simpa [Chain2DescentPackage.jacobianBound]
     using khovanskii_rolle_curve_of_chain2_lower_system_khovBound
       F G A B pkg.interval_nonempty M c yExpr expXExpr expYExpr sep pkg.lower
-      yc a b hab hsub hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+      yc a b hab hsub hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
 
 /-- Package-level ordinary local curve consumer, routed through the bounded
 certificate exported by the package. -/
@@ -2503,13 +2526,14 @@ theorem khovanskii_rolle_curve_of_chain2_descentPackage_certificate
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
       zeros_g.length ≤ N + 1 :=
   khovanskii_rolle_curve_of_chain2_boundedCertificate_certificate
     F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Package-level full global consumer with the package's own explicit
 syntactic bound. -/
@@ -2536,6 +2560,7 @@ theorem khovanskii_rolle_full_of_chain2_descentPackage_khovBound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2544,7 +2569,7 @@ theorem khovanskii_rolle_full_of_chain2_descentPackage_khovBound
     Chain2DescentPackage.separatorBound, Chain2DescentPackage.jacobianBound]
     using khovanskii_rolle_full_of_chain2_lower_system_khovBound
       F G A B pkg.interval_nonempty M c yExpr expXExpr expYExpr sep pkg.lower
-      hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+      hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level ordinary full global consumer, routed through the bounded
 certificate exported by the package. -/
@@ -2571,6 +2596,7 @@ theorem khovanskii_rolle_full_of_chain2_descentPackage_certificate
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2578,7 +2604,7 @@ theorem khovanskii_rolle_full_of_chain2_descentPackage_certificate
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_chain2_boundedCertificate_certificate
     F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level full global consumer with an externally supplied separator
 count and the package's compiled Jacobian certificate. -/
@@ -2608,6 +2634,7 @@ theorem khovanskii_rolle_full_of_chain2_descentPackage_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2615,7 +2642,7 @@ theorem khovanskii_rolle_full_of_chain2_descentPackage_and_separator_count
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_chain2_boundedCertificate_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
-    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level single-arc consumer with the package's explicit global
 bound. -/
@@ -2641,6 +2668,7 @@ theorem khovanskii_rolle_single_of_chain2_descentPackage_khovBound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2649,7 +2677,7 @@ theorem khovanskii_rolle_single_of_chain2_descentPackage_khovBound
     Chain2DescentPackage.separatorBound, Chain2DescentPackage.jacobianBound]
     using khovanskii_rolle_single_of_chain2_lower_system_khovBound
       F G A B pkg.interval_nonempty M c yExpr expXExpr expYExpr sep pkg.lower
-      arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+      arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level ordinary single-arc consumer, routed through the bounded
 certificate exported by the package. -/
@@ -2675,13 +2703,14 @@ theorem khovanskii_rolle_single_of_chain2_descentPackage_certificate
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_chain2_boundedCertificate_certificate
     F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level single-arc consumer with an externally supplied separator
 count and the package's compiled Jacobian certificate. -/
@@ -2710,13 +2739,14 @@ theorem khovanskii_rolle_single_of_chain2_descentPackage_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_chain2_boundedCertificate_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
-    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level local curve consumer through the package's solved-descent
 view. This is the construction-shaped endpoint for callers already carrying
@@ -2747,13 +2777,14 @@ theorem khovanskii_rolle_curve_of_chain2_solvedPackage
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
       zeros_g.length ≤ N + 1 :=
   khovanskii_rolle_curve_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedDescent problem hposRank hJrank hSrank)
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Package-level full global consumer through the package's solved-descent
 view. -/
@@ -2784,6 +2815,7 @@ theorem khovanskii_rolle_full_of_chain2_solvedPackage
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2791,7 +2823,7 @@ theorem khovanskii_rolle_full_of_chain2_solvedPackage
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedDescent problem hposRank hJrank hSrank)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level single-arc consumer through the package's solved-descent
 view. -/
@@ -2821,13 +2853,14 @@ theorem khovanskii_rolle_single_of_chain2_solvedPackage
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedDescent problem hposRank hJrank hSrank)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level full global solved-descent consumer with an externally
 supplied separator count. -/
@@ -2861,6 +2894,7 @@ theorem khovanskii_rolle_full_of_chain2_solvedPackage_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2869,7 +2903,7 @@ theorem khovanskii_rolle_full_of_chain2_solvedPackage_and_separator_count
   khovanskii_rolle_full_of_solved_descent_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedDescent problem hposRank hJrank hSrank)
-    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Package-level single-arc solved-descent consumer with an externally
 supplied separator count. -/
@@ -2902,6 +2936,7 @@ theorem khovanskii_rolle_single_of_chain2_solvedPackage_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2909,7 +2944,7 @@ theorem khovanskii_rolle_single_of_chain2_solvedPackage_and_separator_count
   khovanskii_rolle_single_of_solved_descent_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedDescent problem hposRank hJrank hSrank)
-    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package local curve consumer with the underlying chain-2
 package's explicit Jacobian bound. This route uses the solved chain-2 count
@@ -2936,6 +2971,7 @@ theorem khovanskii_rolle_curve_of_chain2_compiledPackage_khovBound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -2943,7 +2979,7 @@ theorem khovanskii_rolle_curve_of_chain2_compiledPackage_khovBound
     zeros_g.length ≤ pkg.jacobianBound + 1 :=
   khovanskii_rolle_curve_of_chain2_descentPackage_khovBound
     F G A B M c yExpr expXExpr expYExpr sep pkg.package
-    yc a b hab hsub hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
 
 /-- Source-ready package full global consumer with the underlying chain-2
 package's explicit global bound. -/
@@ -2970,13 +3006,14 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_khovBound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ pkg.globalBound :=
   khovanskii_rolle_full_of_chain2_descentPackage_khovBound
     F G A B M c yExpr expXExpr expYExpr sep pkg.package
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package single-arc consumer with the underlying chain-2
 package's explicit global bound. -/
@@ -3002,13 +3039,14 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage_khovBound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     arc.zeros.length ≤ pkg.globalBound :=
   khovanskii_rolle_single_of_chain2_descentPackage_khovBound
     F G A B M c yExpr expXExpr expYExpr sep pkg.package
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package ordinary local curve consumer through its
 underlying chain-2 package. -/
@@ -3034,13 +3072,14 @@ theorem khovanskii_rolle_curve_of_chain2_compiledPackage_certificate
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
       zeros_g.length ≤ N + 1 :=
   khovanskii_rolle_curve_of_chain2_descentPackage_certificate
     F G A B M c yExpr expXExpr expYExpr sep pkg.package
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Source-ready package ordinary full global consumer through its
 underlying chain-2 package. -/
@@ -3067,6 +3106,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_certificate
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -3074,7 +3114,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_certificate
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_chain2_descentPackage_certificate
     F G A B M c yExpr expXExpr expYExpr sep pkg.package
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package ordinary single-arc consumer through its underlying
 chain-2 package. -/
@@ -3100,13 +3140,14 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage_certificate
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_chain2_descentPackage_certificate
     F G A B M c yExpr expXExpr expYExpr sep pkg.package
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package full global consumer through its underlying
 chain-2 package, with an externally supplied separator count. -/
@@ -3136,6 +3177,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_certificate_and_separato
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -3143,7 +3185,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_certificate_and_separato
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_chain2_descentPackage_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep pkg.package
-    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package single-arc consumer through its underlying chain-2
 package, with an externally supplied separator count. -/
@@ -3172,13 +3214,14 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage_certificate_and_separa
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_chain2_descentPackage_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep pkg.package
-    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package local curve consumer through the compiled solved
 descent. The caller supplies only the rank-identification equalities needed
@@ -3211,13 +3254,14 @@ theorem khovanskii_rolle_curve_of_chain2_compiledPackage
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
       zeros_g.length ≤ N + 1 :=
   khovanskii_rolle_curve_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent hJrank hSrank)
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Source-ready package full global consumer through the compiled solved
 descent. -/
@@ -3250,6 +3294,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -3257,7 +3302,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent hJrank hSrank)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package single-arc consumer through the compiled solved
 descent. -/
@@ -3289,13 +3334,14 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent hJrank hSrank)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package full global consumer through the compiled solved
 descent, with an externally supplied separator count. -/
@@ -3331,6 +3377,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -3339,7 +3386,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_and_separator_count
   khovanskii_rolle_full_of_solved_descent_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent hJrank hSrank)
-    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package single-arc consumer through the compiled solved
 descent, with an externally supplied separator count. -/
@@ -3374,6 +3421,7 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -3381,7 +3429,7 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage_and_separator_count
   khovanskii_rolle_single_of_solved_descent_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent hJrank hSrank)
-    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package local curve consumer through the compiled solved
 descent, with rank identifications stated for the original chain-2 component
@@ -3414,13 +3462,14 @@ theorem khovanskii_rolle_curve_of_chain2_compiledPackage_of_chain2Ranks
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
       zeros_g.length ≤ N + 1 :=
   khovanskii_rolle_curve_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Source-ready package full global consumer through the compiled solved
 descent, with rank identifications stated for original chain-2 component
@@ -3454,6 +3503,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_of_chain2Ranks
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -3461,7 +3511,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_of_chain2Ranks
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package single-arc consumer through the compiled solved
 descent, with rank identifications stated for original chain-2 component
@@ -3494,13 +3544,14 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage_of_chain2Ranks
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package full global consumer through the compiled solved
 descent, with an externally supplied separator count and rank
@@ -3537,6 +3588,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_of_chain2Ranks_and_separ
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -3545,7 +3597,7 @@ theorem khovanskii_rolle_full_of_chain2_compiledPackage_of_chain2Ranks_and_separ
   khovanskii_rolle_full_of_solved_descent_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
-    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Source-ready package single-arc consumer through the compiled solved
 descent, with an externally supplied separator count and rank
@@ -3581,6 +3633,7 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage_of_chain2Ranks_and_sep
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -3588,7 +3641,7 @@ theorem khovanskii_rolle_single_of_chain2_compiledPackage_of_chain2Ranks_and_sep
   khovanskii_rolle_single_of_solved_descent_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep
     (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
-    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 end TwoExp
 end MultiVarMod

@@ -612,6 +612,7 @@ theorem curve_exp_sum_via_pfaffian_lower_count (c d a b : Real) (hab : a < b) :
       exact hsub)
     (fun z _ _ => hasDerivAt2_exp_sum d z (c - z))
     (fun _ _ _ => one_ne_zero)
+    (fun z _ _ => continuousAt_const_sub c z)
     (fun s => by show s + (c - s) - c = 0; mach_ring)
     N
     (fun zeros_J hnd hJ =>
@@ -995,6 +996,7 @@ theorem curve_exp_sum_via_represented_jacobian (c d a b : Real) (hab : a < b) :
       exact hsub)
     (fun z _ _ => hasDerivAt2_exp_sum d z (c - z))
     (fun _ _ _ => one_ne_zero)
+    (fun z _ _ => continuousAt_const_sub c z)
     (fun s => by show s + (c - s) - c = 0; mach_ring)
     0 (expSumLineChain c)
     expSumOnePoly expSumOnePoly expSumExpXPoly expSumExpCXPoly
@@ -1039,6 +1041,7 @@ theorem curve_exp_sum_via_expr_jacobian (c d a b : Real) (hab : a < b) :
     (fun _ _ _ => by
       unfold expSumFy_expr PfaffianRepExpr.denote
       exact one_ne_zero)
+    (fun z _ _ => continuousAt_const_sub c z)
     (fun s => by show s + (c - s) - c = 0; mach_ring)
 
 /-- The exp-sum curve count through the bivariate-expression layer. The
@@ -1089,6 +1092,7 @@ theorem curve_exp_sum_via_bivar_expr_jacobian (c d a b : Real) (hab : a < b) :
         TwoExpBivarExpr.restrict, TwoExpBivarExpr.restrictDY,
         PfaffianRepExpr.denote,
         show (0 : Real) + 1 - 0 = 1 from by mach_ring] using one_ne_zero)
+    (fun z _ _ => continuousAt_const_sub c z)
     (expSumF_bivar_line_zero c)
 
 /-- **Single-line exp-sum global bound.** This is the concrete no-topology
@@ -1182,6 +1186,8 @@ theorem expSum_global_via_represented_arc_data (c d A B : Real) (hAB : A < B)
       rw [hyc arc harc z]
       exact hbase)
     (fun _ _ _ _ _ => one_ne_zero)
+    (fun arc harc z _ _ =>
+      continuousAt_congr_fun (fun t => (hyc arc harc t).symm) z (continuousAt_const_sub c z))
     (fun arc harc t => by
       rw [hyc arc harc t]
       show t + (c - t) - c = 0
@@ -1246,6 +1252,8 @@ theorem expSum_global_via_bivar_expr_arc_data (c d A B : Real) (hAB : A < B)
       simpa [expSumF_bivar, expSumLineY_expr, TwoExpBivarExpr.restrictDY,
         TwoExpBivarExpr.dY, TwoExpBivarExpr.restrict, PfaffianRepExpr.denote,
         show (0 : Real) + 1 - 0 = 1 from by mach_ring] using one_ne_zero)
+    (fun arc harc z _ _ =>
+      continuousAt_congr_fun (fun t => (hyc arc harc t).symm) z (continuousAt_const_sub c z))
     (fun arc harc t => by
       rw [hyc arc harc t]
       exact expSumF_bivar_line_zero c t)
@@ -1305,6 +1313,8 @@ theorem expSum_global_via_bivar_expr_arc_data_no_fy
       simpa [expSumF_bivar, expSumLineY_expr, TwoExpBivarExpr.restrictDY,
         TwoExpBivarExpr.dY, TwoExpBivarExpr.restrict, PfaffianRepExpr.denote,
         show (0 : Real) + 1 - 0 = 1 from by mach_ring] using one_ne_zero)
+    (fun arc harc z _ _ =>
+      continuousAt_congr_fun (fun t => (hyc arc harc t).symm) z (continuousAt_const_sub c z))
     (fun arc harc t => by
       rw [hyc arc harc t]
       exact expSumF_bivar_line_zero c t)
@@ -1350,6 +1360,7 @@ theorem expSum_global_single_represented_arc_data (c d A B : Real) (hAB : A < B)
       rw [hyc z]
       exact hbase)
     (fun _ _ _ => one_ne_zero)
+    (fun z _ _ => continuousAt_congr_fun (fun t => (hyc t).symm) z (continuousAt_const_sub c z))
     (fun t => by
       rw [hyc t]
       show t + (c - t) - c = 0
@@ -1405,6 +1416,7 @@ theorem expSum_global_single_bivar_expr_arc_data (c d A B : Real) (hAB : A < B)
       simpa [expSumF_bivar, expSumLineY_expr, TwoExpBivarExpr.restrictDY,
         TwoExpBivarExpr.dY, TwoExpBivarExpr.restrict, PfaffianRepExpr.denote,
         show (0 : Real) + 1 - 0 = 1 from by mach_ring] using one_ne_zero)
+    (fun z _ _ => continuousAt_congr_fun (fun t => (hyc t).symm) z (continuousAt_const_sub c z))
     (fun t => by
       rw [hyc t]
       exact expSumF_bivar_line_zero c t)

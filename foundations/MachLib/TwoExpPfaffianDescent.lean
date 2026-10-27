@@ -1131,6 +1131,7 @@ theorem khovanskii_rolle_curve_of_descent_certificate
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
@@ -1143,7 +1144,7 @@ theorem khovanskii_rolle_curve_of_descent_certificate
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F))
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G))
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G))
-    yc a b hab hf2 hg2 hfy_nz hid N
+    yc a b hab hf2 hg2 hfy_nz hcont hid N
     (fun zeros_J hnd hJlocal =>
       hJ zeros_J hnd (fun z hzmem => by
         obtain ⟨hza, hzb, hJac⟩ := hJlocal z hzmem
@@ -1177,6 +1178,7 @@ theorem khovanskii_rolle_full_of_descent_certificate
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1194,7 +1196,7 @@ theorem khovanskii_rolle_full_of_descent_certificate
       (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G))
       arc.yc arc.lo arc.hi
       (hinside arc harcmem).2.1
-      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hid arc harcmem)
+      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hcont arc harcmem) (hid arc harcmem)
       N
       (fun zeros_J hnd hJlocal =>
         hJ zeros_J hnd (fun z hzmem => by
@@ -1254,6 +1256,7 @@ theorem khovanskii_rolle_full_of_descent_certificate_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1270,7 +1273,7 @@ theorem khovanskii_rolle_full_of_descent_certificate_and_separator_count
       (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G))
       arc.yc arc.lo arc.hi
       (hinside arc harcmem).2.1
-      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hid arc harcmem)
+      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hcont arc harcmem) (hid arc harcmem)
       N
       (fun zeros_J hnd hJlocal =>
         hJ zeros_J hnd (fun z hzmem => by
@@ -1325,6 +1328,7 @@ theorem khovanskii_rolle_single_of_descent_certificate
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1351,6 +1355,10 @@ theorem khovanskii_rolle_single_of_descent_certificate
       have haeq : a = arc := by simpa using ha
       subst a
       exact hfy_nz z hzlo hzhi)
+    (fun a ha z hzlo hzhi => by
+      have haeq : a = arc := by simpa using ha
+      subst a
+      exact hcont z hzlo hzhi)
     (fun a ha t => by
       have haeq : a = arc := by simpa using ha
       subst a
@@ -1389,6 +1397,7 @@ theorem khovanskii_rolle_single_of_descent_certificate_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1415,6 +1424,10 @@ theorem khovanskii_rolle_single_of_descent_certificate_and_separator_count
       have haeq : a = arc := by simpa using ha
       subst a
       exact hfy_nz z hzlo hzhi)
+    (fun a ha z hzlo hzhi => by
+      have haeq : a = arc := by simpa using ha
+      subst a
+      exact hcont z hzlo hzhi)
     (fun a ha t => by
       have haeq : a = arc := by simpa using ha
       subst a
@@ -1451,6 +1464,7 @@ theorem khovanskii_rolle_curve_of_descent_result
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
@@ -1458,7 +1472,7 @@ theorem khovanskii_rolle_curve_of_descent_result
   khovanskii_rolle_curve_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
       problem result)
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Full global consumer for a solved descent problem. -/
 theorem khovanskii_rolle_full_of_descent_result
@@ -1485,6 +1499,7 @@ theorem khovanskii_rolle_full_of_descent_result
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1493,7 +1508,7 @@ theorem khovanskii_rolle_full_of_descent_result
   khovanskii_rolle_full_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
       problem result)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a solved descent problem. -/
 theorem khovanskii_rolle_single_of_descent_result
@@ -1519,6 +1534,7 @@ theorem khovanskii_rolle_single_of_descent_result
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1526,7 +1542,7 @@ theorem khovanskii_rolle_single_of_descent_result
   khovanskii_rolle_single_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
       problem result)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Full global consumer for a solved descent result with a sharper
 externally supplied separator count. -/
@@ -1557,6 +1573,7 @@ theorem khovanskii_rolle_full_of_descent_result_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1566,7 +1583,7 @@ theorem khovanskii_rolle_full_of_descent_result_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
       problem result)
-    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a solved descent result with a sharper externally
 supplied separator count. -/
@@ -1596,6 +1613,7 @@ theorem khovanskii_rolle_single_of_descent_result_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1604,7 +1622,7 @@ theorem khovanskii_rolle_single_of_descent_result_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
       problem result)
-    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Local curve consumer for a concrete solved descent. -/
 theorem khovanskii_rolle_curve_of_solved_descent
@@ -1629,12 +1647,13 @@ theorem khovanskii_rolle_curve_of_solved_descent
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
       zeros_g.length ≤ N + 1 :=
   khovanskii_rolle_curve_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
-    solved.problem solved.result yc a b hab hsub hf2 hg2 hfy_nz hid
+    solved.problem solved.result yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Full global consumer for a concrete solved descent. -/
 theorem khovanskii_rolle_full_of_solved_descent
@@ -1660,13 +1679,14 @@ theorem khovanskii_rolle_full_of_solved_descent
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat,
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
-    solved.problem solved.result hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    solved.problem solved.result hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a concrete solved descent. -/
 theorem khovanskii_rolle_single_of_solved_descent
@@ -1691,12 +1711,13 @@ theorem khovanskii_rolle_single_of_solved_descent
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
-    solved.problem solved.result arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    solved.problem solved.result arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Full global consumer for a concrete solved descent with a sharper
 externally supplied separator count. -/
@@ -1726,6 +1747,7 @@ theorem khovanskii_rolle_full_of_solved_descent_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1733,7 +1755,7 @@ theorem khovanskii_rolle_full_of_solved_descent_and_separator_count
       ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_full_of_descent_result_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep solved.problem solved.result
-    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a concrete solved descent with a sharper
 externally supplied separator count. -/
@@ -1762,13 +1784,14 @@ theorem khovanskii_rolle_single_of_solved_descent_and_separator_count
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
   khovanskii_rolle_single_of_descent_result_and_separator_count
     F G A B M c yExpr expXExpr expYExpr sep solved.problem solved.result
-    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Local curve consumer for a descent solver. This is the direct plug-in
 point for the future uniform Pfaffian descent theorem. -/
@@ -1796,6 +1819,7 @@ theorem khovanskii_rolle_curve_of_descent_solver
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
@@ -1803,7 +1827,7 @@ theorem khovanskii_rolle_curve_of_descent_solver
   khovanskii_rolle_curve_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
     problem
     (solver.solve F G A B M c yExpr expXExpr expYExpr sep problem hposRank)
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Full global consumer for a descent solver. -/
 theorem khovanskii_rolle_full_of_descent_solver
@@ -1831,6 +1855,7 @@ theorem khovanskii_rolle_full_of_descent_solver
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1839,7 +1864,7 @@ theorem khovanskii_rolle_full_of_descent_solver
   khovanskii_rolle_full_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
     problem
     (solver.solve F G A B M c yExpr expXExpr expYExpr sep problem hposRank)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a descent solver. -/
 theorem khovanskii_rolle_single_of_descent_solver
@@ -1866,6 +1891,7 @@ theorem khovanskii_rolle_single_of_descent_solver
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1873,7 +1899,7 @@ theorem khovanskii_rolle_single_of_descent_solver
   khovanskii_rolle_single_of_descent_result F G A B M c yExpr expXExpr expYExpr sep
     problem
     (solver.solve F G A B M c yExpr expXExpr expYExpr sep problem hposRank)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 end TwoExp
 end MultiVarMod
