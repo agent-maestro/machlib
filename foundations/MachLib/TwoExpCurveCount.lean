@@ -12,8 +12,9 @@ point: the tangent condition and the chain rule for `g` along the curve are *der
 
 `khovanskii_rolle_count_curve`: the number of intersections of `{f = 0}` and `{g = 0}` on the arc is
 `≤ #{Jacobian zeros} + 1`. This is `khovanskii_rolle_count` with its parametrization hypotheses discharged
-by the IFT bridge — the general-curve form the two-exponential theorem needs (`yc` exists and is unique
-in-model via `exists_unique_root`; differentiable via the bivariate bridge axioms).
+by the IFT bridge — the general-curve form the two-exponential theorem needs (a root `yc x` exists and is unique
+in-model via `exists_unique_root` where `f` is monotone in `y`; the curve's continuity is a hypothesis, which nothing
+proves for that root curve; its derivative comes from the bivariate bridge axioms).
 
 `hcont` (2026-10-27) is not optional: without it the count is FALSE. A curve may jump between solution branches
 of `f = 0` and pick up a zero of `g` on each; `BivariateImplicitControls.old_curve_count_false` refutes the old

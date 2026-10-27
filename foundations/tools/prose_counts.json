@@ -321,6 +321,12 @@
    "source": "manifest_mapped"
   },
   {
+   "id": "claude.axioms_pinned_gate_list",
+   "file": "CLAUDE.md",
+   "pattern": "# \"(\\d+) axioms pinned; 112 headline footprints",
+   "source": "axioms_pinned"
+  },
+  {
    "id": "claude.lean_lines",
    "file": "CLAUDE.md",
    "pattern": "\\*\\*([0-9 \\u202f]+) lines\\*\\*, re-exported through the aggregator",

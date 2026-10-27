@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 088 `.lean` files** (813 top-level + 275 in subdirectories) /
-**259 741 lines**, re-exported through the aggregator
+**259 788 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -29,11 +29,11 @@ the bivariate-derivative and `floor` axioms (see "The implicit-function axiom wa
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 404** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 449** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 448** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 448** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **9 320** | every axiom in the footprint is in `trustedFootprint` |
+| declarations | **12 406** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 452** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 451** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 451** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **9 323** | every axiom in the footprint is in `trustedFootprint` |
 | conditional | **128** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
@@ -63,18 +63,18 @@ frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`**
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **212 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **210 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
-180  MachLib.*   axioms in the environment after `import MachLib`
+178  MachLib.*   axioms in the environment after `import MachLib`
  32  Certcom.*   IEEE-754 floor axioms
 ---
-212  = what the ledger pins
+210  = what the ledger pins
 ```
 
 (Re-derive the split with a `#eval` over `getEnv` partitioning `.axiomInfo` by name prefix — that is
-how these two were measured, not by grep; last on 2026-10-26, after five derivable axioms were proved; before that on 2026-10-05, after the muses' review of E made theorems of
+how these two were measured, not by grep; last on 2026-10-27, after `HasDerivAt2_sub` and `hasDerivAt_implicit` were proved; on 2026-10-26, after five derivable axioms were proved; before that on 2026-10-05, after the muses' review of E made theorems of
 seven more -- see "The muses' review of E" below.)
 
 A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
@@ -104,7 +104,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 
 | class | n | |
 |---|---|---|
-| witnessed | 109 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 107 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 14 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | **float-bridge** | **32** | about IEEE floats — **no Mathlib witness can ever discharge these** |
@@ -112,7 +112,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 | unmodeled | **0** | gate 13 fails if this is ever nonzero |
 
 **Every mathematical axiom in the trusted footprint now has a kernel-checked Mathlib witness.**
-`109 + 14 + 3 + 32 = 158` (2026-10-27, when the bivariate-derivative and `floor` axioms joined; it read `96 + 12 + 3 + 32
+`107 + 14 + 3 + 32 = 156` (2026-10-27, when the bivariate-derivative and `floor` axioms joined; it read `96 + 12 + 3 + 32
 = 143` from 2026-10-05, and `119` and `166` before that, two rounds stale -- gate 13 counts these, and since 2026-10-27
 `prose_counts.json` checks this table's two middle rows). The only axioms without one are the 32 float-bridge rows, which are
 unwitnessable *in principle* rather than pending — see below.
@@ -367,8 +367,9 @@ ledger before and after). `u_le_one` is the conditional half of the owner's ruli
   the review proved it in a scratch file from trusted axioms, same type), and probably `exp_one_lt_three`
   (`e ≤ (6/5)⁶ < 3`, unchecked). Convert them next, through the same reviewed route.
 - **Still conditional, and not derivable from the trusted axioms as far as checked:** the `HasDerivAt2*` family and
-  `hasDerivAt_implicit` (about 140 theorems together), `floor` (63), `eml_tree_analytic_on_interval` (22). The first two
-  were witnessed and admitted on 2026-10-27, after the implicit axiom turned out to be false (next section).
+  `hasDerivAt_implicit` (about 140 theorems together), `floor` (63; 61 of them moved when it was trusted),
+  `eml_tree_analytic_on_interval` (22). The first two were witnessed and admitted on 2026-10-27, after the implicit axiom
+  turned out to be false, and two of them proved derivable after all (next section).
 
 ## The implicit-function axiom was false (2026-10-27)
 
@@ -383,9 +384,11 @@ ledger before and after). `u_le_one` is the conditional half of the owner's ruli
   argument at each call site). The explicit curves discharge it from their own derivative (`hasDerivAt_continuousAt`;
   `continuousAt_const_sub` for the line `c − x`). None of the affected theorems was a registered claim.
 - **Then witnessed, and trusted on the owner's approval**: `HasDerivAt2` (read as Mathlib's `HasFDerivAt` of
-  `(a, b) ↦ f a b`), its eight rules, both implicit forms, and `floor` (`Int.floor` cast to `ℝ`) with its three laws.
-  Fifteen axioms; trusted 143 -> 158; conditional 330 -> 128 (327 before the change, plus the two controls and one helper
-  that the trust then frees). The witnesses are `monogate-lean/MonogateEML/MachLibRealModelBivariate.lean`.
+  `(a, b) ↦ f a b`), its rules, the implicit derivative, and `floor` (`Int.floor` cast to `ℝ`) with its three laws. The
+  owner approved fifteen; the independent review found two of them derivable, and on the owner's ruling
+  `HasDerivAt2_sub` (from `_add`, `_mul`, `_const`) and the global `hasDerivAt_implicit` (from `_local` on `(x − 1, x + 1)`)
+  are theorems instead. Thirteen trusted; trusted 143 -> 156, pinned 212 -> 210; conditional 327 -> 128. Rulings in
+  `docs/machsig/OWNER_RULINGS_2026-10-27_implicit.md`; witnesses in `monogate-lean/MonogateEML/MachLibRealModelBivariate.lean`.
 - **An axiom about "the solution", "the inverse" or "the curve" must say WHICH one** (continuity, uniqueness, a branch),
   or it can be fed a bad one. Nothing inside MachLib would have found this: the opaque `HasDerivAt2` hides it. The Mathlib
   witness attempt did, at once, which is the case for witnessing an axiom before trusting it, not after.
@@ -409,7 +412,7 @@ lake build                                     # 829 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
-lake env lean AxiomLedger.lean                 # "217 axioms pinned; 112 headline footprints ⊆ trusted"
+lake env lean AxiomLedger.lean                 # "210 axioms pinned; 112 headline footprints ⊆ trusted (156)"
 python3 tools/claim_audit/claim_audit.py       # "all 579 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
@@ -442,7 +445,7 @@ Both are "conditional theorem, unvalidated"; only one had a harness until 2026-0
 `ValueGapBound` was introduced, taken as a hypothesis by two theorems, and satisfied by nothing at
 any depth. **A Prop with consumers and no producers is not exercised; it is assumed** — and that is
 the easy half to miss, because the consumers make it look exercised. Baseline
-`tools/hypothesis_baseline.json`, 35 entries, a **set** not a count. Read its triage note before
+`tools/hypothesis_baseline.json`, 36 entries, a **set** not a count. Read its triage note before
 trusting a hit: most entries are correct (named open obligations belong there, and definitional
 predicates like `Lipschitz` are supplied from outside rather than proved). What to watch for is a new
 name that is *neither*.
@@ -916,11 +919,12 @@ proves it conducts a failure to its own exit code; the run prints its own gate c
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
 run (**823 of 1 088 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
-**212 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
+**210 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
 `u_lt_one`; then `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`, `real_exp_finite`, `real_sinh_finite`,
 `real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`), then five proved on
-2026-10-26 (`exp_tangent_line_strict`, `exp_gt_two_x`, `tanh_zero`, `sqrt_one`, `u_le_one`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
+2026-10-26 (`exp_tangent_line_strict`, `exp_gt_two_x`, `tanh_zero`, `sqrt_one`, `u_le_one`) and two on 2026-10-27
+(`HasDerivAt2_sub`, `hasDerivAt_implicit`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,

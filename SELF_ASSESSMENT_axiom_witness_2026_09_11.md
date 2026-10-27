@@ -7,7 +7,7 @@ owed. It is kept because its value does not depend on a reader: **§5 is an hone
 where we think this is weakest.**
 
 If a reviewer does appear, this is the packet to hand them — one mechanism, not the corpus, not the
-compiler, self-contained enough that nobody need read 259 741 lines of Lean.
+compiler, self-contained enough that nobody need read 259 788 lines of Lean.
 
 **The question we would ask, stated so it can be answered "no":**
 
@@ -30,7 +30,7 @@ Answers that would be useful, including the dismissive ones:
 
 **MachLib** is a Lean 4 corpus that does not depend on Mathlib. `MachLib.Real` is an *axiomatised*
 ordered field with `exp`, `log`, `sin`, derivatives, and so on — declared, not constructed. The
-corpus is ≈ 9 449 theorems outside its generated sub-corpus (counted in the Lean environment by the theorem
+corpus is ≈ 9 452 theorems outside its generated sub-corpus (counted in the Lean environment by the theorem
 ledger, `foundations/tools/theorem_ledger/ledger.py`, which also classifies each one's axiom footprint; this
 line read 8 117 until 2026-10-10, a text count of `theorem` lines that could not see `private theorem`).
 
@@ -47,8 +47,8 @@ The live figures, all of which this document's own build gate pins to the corpus
 
 | class | n | meaning |
 |---|---|---|
-| trusted footprint | 158 | axioms any shipped theorem is allowed to touch |
-| witnessed | 109 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| trusted footprint | 156 | axioms any shipped theorem is allowed to touch |
+| witnessed | 107 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 14 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | about IEEE-754 floats — **unwitnessable in principle**, see §5 |
@@ -146,8 +146,8 @@ $EDITOR monogate-lean/MonogateEML/AxiomWitnessBridge.lean
 
 # the classification, live, from machlib/foundations:
 python3 tools/soundness_witness_audit.py
-#   trusted footprint (live ledger) : 158
-#   witnessed against Mathlib       : 109
+#   trusted footprint (live ledger) : 156
+#   witnessed against Mathlib       : 107
 #   UNMODELED (no witness at all)   : 0
 ```
 

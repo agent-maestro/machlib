@@ -9,11 +9,11 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-158 of them and they are all listed below.
+156 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 109 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 107 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 14 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
@@ -136,7 +136,6 @@ decides what a certificate can claim.
 | `MachLib.Real.HasDerivAt2_projX` | witnessed | `(x y : Real) : HasDerivAt2 (fun a _ => a) 1 0 x y` | MonogateEML.RealModel.hasDerivAt2_projX |
 | `MachLib.Real.HasDerivAt2_projY` | witnessed | `(x y : Real) : HasDerivAt2 (fun _ b => b) 0 1 x y` | MonogateEML.RealModel.hasDerivAt2_projY |
 | `MachLib.Real.HasDerivAt2_scomp` | witnessed | `(φ : Real → Real) (φ' : Real) (u : Real → Real → Real) (ux uy x y : Real) : HasDerivAt φ φ' (u x y) → HasDerivAt2 u ux uy x y → HasDerivAt2 (fun a b =` | MonogateEML.RealModel.hasDerivAt2_scomp |
-| `MachLib.Real.HasDerivAt2_sub` | witnessed | `(f g : Real → Real → Real) (fx fy gx gy x y : Real) : HasDerivAt2 f fx fy x y → HasDerivAt2 g gx gy x y → HasDerivAt2 (fun a b => f a b - g a b) (fx -` | MonogateEML.RealModel.hasDerivAt2_sub |
 | `MachLib.Real.HasDerivAt_add` | witnessed | `(f g : Real → Real) (a b : Real) (x : Real) : HasDerivAt f a x → HasDerivAt g b x → HasDerivAt (fun y => f y + g y) (a + b) x` | fun {f g f' g' x} hf hg => HasDerivAt.add hf hg |
 | `MachLib.Real.HasDerivAt_arccos` | witnessed | `(x : Real) (hx : abs x < 1) : HasDerivAt arccos (-(1 / sqrt (1 - x * x))) x` | fun x hx => by obtain ⟨h1, h2⟩ := abs_lt.mp hx simpa [sq] using Real.hasDerivAt_arccos (ne_of_gt h1) (ne_of_lt h2) |
 | `MachLib.Real.HasDerivAt_arcsin` | witnessed | `(x : Real) (hx : abs x < 1) : HasDerivAt arcsin (1 / sqrt (1 - x * x)) x` | fun x hx => by obtain ⟨h1, h2⟩ := abs_lt.mp hx simpa [sq] using Real.hasDerivAt_arcsin (ne_of_gt h1) (ne_of_lt h2) |
@@ -182,7 +181,6 @@ decides what a certificate can claim.
 | `MachLib.Real.floor_le` | witnessed | `(x : Real) : floor x ≤ x` | MonogateEML.RealModel.floor_le_witness |
 | `MachLib.Real.floor_zero` | witnessed | `: floor 0 = 0` | MonogateEML.RealModel.floor_zero_witness |
 | `MachLib.Real.hasDerivAt_continuousAt` | witnessed | `{f : Real → Real} {f' x : Real} : HasDerivAt f f' x → ContinuousAt f x` | fun {f f' x} h ε hε => by obtain ⟨δ, hδ, H⟩ := Metric.continuousAt_iff.mp h.continuousAt ε hε exact ⟨δ, hδ, fun y hy => by simpa [Real.dist_eq] using H (by simpa [Real.dist_eq] using hy)⟩ |
-| `MachLib.Real.hasDerivAt_implicit` | witnessed | `(f : Real → Real → Real) (fx fy : Real) (yc : Real → Real) (x : Real) : HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → ContinuousAt yc x → (∀ s : Real, f s (` | MonogateEML.RealModel.hasDerivAt_implicit_witness |
 | `MachLib.Real.hasDerivAt_implicit_local` | witnessed | `(f : Real → Real → Real) (fx fy : Real) (yc : Real → Real) (x p q : Real) (hp : p < x) (hq : x < q) : HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → Continuo` | MonogateEML.RealModel.hasDerivAt_implicit_local_witness |
 | `MachLib.Real.leR` | witnessed | `: Real → Real → Prop` | (fun a b : ℝ => a ≤ b) |
 | `MachLib.Real.le_iff_lt_or_eq` | witnessed | `(a b : Real) : a ≤ b ↔ a < b ∨ a = b` | fun {a b} => le_iff_lt_or_eq |

@@ -5,12 +5,13 @@ import MachLib.BivariateDeriv
 
 Until 2026-10-27 `hasDerivAt_implicit` and `hasDerivAt_implicit_local` asked nothing of the curve `yc` but the
 curve identity. So `yc` could jump from one solution branch of `f = 0` to another, and the axiom still gave it a
-derivative. This module keeps the two old statements as propositions and refutes each from the trusted axioms and
+derivative. This module keeps the old statements as propositions and refutes each from the trusted axioms and
 the `HasDerivAt2` rules, which Mathlib's `HasFDerivAt` satisfies (`monogate-lean` checks it). The restated
 axioms take `ContinuousAt yc x`. The step function below is not continuous at its jump, so it does not
 refute them.
 
-* `implicit_without_continuity_inconsistent`: the old axiom gives `False`. With `f a b = b (b − 1)` and `yc` the
+* `implicit_without_continuity_inconsistent`: the old axiom gives `False` (and
+  `implicit_local_without_continuity_inconsistent` the old local form, which restricts to it). With `f a b = b (b − 1)` and `yc` the
   step from `0` to `1` at `0`, the identity holds everywhere and `fᵧ = 2 yc − 1 = ±1`, so `yc' = 0` at every
   point. The mean value theorem on `[−1, 0]` then says `yc 0 − yc (−1) = 0`, that is `1 = 0`.
 * `old_curve_count_false`: the old `khovanskii_rolle_count_curve` statement is false, not merely unproved. With
@@ -33,6 +34,12 @@ open Classical
 def OldImplicitStatement : Prop :=
   ∀ (f : Real → Real → Real) (fx fy : Real) (yc : Real → Real) (x : Real),
     HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → (∀ s : Real, f s (yc s) = 0) → HasDerivAt yc (-fx / fy) x
+
+/-- The statement of `hasDerivAt_implicit_local` before 2026-10-27: the identity on `(p, q) ∋ x`, no continuity. -/
+def OldImplicitLocalStatement : Prop :=
+  ∀ (f : Real → Real → Real) (fx fy : Real) (yc : Real → Real) (x p q : Real), p < x → x < q →
+    HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → (∀ s : Real, p < s → s < q → f s (yc s) = 0) →
+    HasDerivAt yc (-fx / fy) x
 
 /-- The statement of `TwoExp.khovanskii_rolle_count_curve` before 2026-10-27, written out. -/
 def OldCurveCountStatement : Prop :=
@@ -109,6 +116,20 @@ theorem implicit_without_continuity_inconsistent (h : OldImplicitStatement) : Fa
   have e : (1 : Real) - 0 = 1 := by mach_ring
   rw [e] at hmvt
   exact zero_ne_one_ax hmvt.symm
+
+/-- **The old local form is inconsistent too**: on `(x − 1, x + 1)` it gives the old global form. -/
+theorem implicit_local_without_continuity_inconsistent (h : OldImplicitLocalStatement) : False := by
+  apply implicit_without_continuity_inconsistent
+  intro f fx fy yc x h2 hfy hid
+  have hlt : x < x + 1 := by
+    have v := add_lt_add_left zero_lt_one_ax x
+    rw [add_zero] at v
+    exact v
+  have hgt : x + -1 < x := by
+    have v := add_lt_add_left neg_one_lt_zero_c x
+    rw [add_zero] at v
+    exact v
+  exact h f fx fy yc x (x + -1) (x + 1) hgt hlt h2 hfy (fun s _ _ => hid s)
 
 /-- **The old curve count is false.** On `(−1, 2)`, `g a b = a − b` along the step at `1` vanishes at `0` and at
 `1`, while the Jacobian against `f a b = b (b − 1)` never vanishes. -/
