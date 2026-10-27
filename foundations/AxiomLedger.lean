@@ -264,7 +264,16 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   `MachLib.Real.u_le_inv_two_pow_52, `Certcom.real_abs_eps_eq_zero, -- Added 2026-10-04 (the owner's axiom audit): the opaque `Real ^ Real` and its sign law at a nonnegative base. No
   -- headline rests on them; Forge's proofs of kernels that call `pow` do, and Forge registers only axioms MachLib
   -- trusts. Witnessed in monogate-lean with `realPow` read as `Real.rpow` (`Real.rpow_nonneg`).
-  `MachLib.Real.realPow, `MachLib.Real.realPow_nonneg]
+  `MachLib.Real.realPow, `MachLib.Real.realPow_nonneg, -- Added 2026-10-27, owner-approved: the bivariate derivative
+  -- (`BivariateDeriv.lean`: the opaque `HasDerivAt2`, its eight rules, and the two implicit-function derivatives AS
+  -- RESTATED that day with `ContinuousAt yc x`; the old statements were false, `BivariateImplicitControls`), and `floor`
+  -- with its three laws (`Forge.lean`). All fifteen witnessed in monogate-lean (`MachLibRealModelBivariate.lean`:
+  -- `HasDerivAt2` read as Mathlib's `HasFDerivAt` of `(a, b) ↦ f a b`, `floor` as `Int.floor` cast to `ℝ`).
+  `MachLib.Real.HasDerivAt2, `MachLib.Real.HasDerivAt2_projX, `MachLib.Real.HasDerivAt2_projY,
+  `MachLib.Real.HasDerivAt2_const, `MachLib.Real.HasDerivAt2_add, `MachLib.Real.HasDerivAt2_sub,
+  `MachLib.Real.HasDerivAt2_mul, `MachLib.Real.HasDerivAt2_scomp, `MachLib.Real.HasDerivAt2_comp,
+  `MachLib.Real.hasDerivAt_implicit, `MachLib.Real.hasDerivAt_implicit_local,
+  `MachLib.Real.floor, `MachLib.Real.floor_le, `MachLib.Real.lt_floor_add_one, `MachLib.Real.floor_zero]
 
 /-- Unwitnessed-but-disclosed axioms + machine-readable reason. Must stay inert.
 

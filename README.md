@@ -111,7 +111,7 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   an arithmetic shift does. `floor` was already an axiom here with the two bracketing facts that
   pin the fractional part to `[0, 1)`, so the truncation side is discharged rather than assumed.
   Conditional on no overflow, and its footprint carries three `floor` axioms the rest of the arc
-  does not.
+  does not; they are trusted since 2026-10-27, witnessed by Mathlib's `Int.floor`.
 - `antiwindup_pi_tracks_exact` (`AntiWindupPITracking`) — tracking **through saturation**, for a PI
   loop whose integrator is clamped to `[κ(−U − Kp·e), κ(U − Kp·e)]`, so the output never leaves
   `[−U, U]`. A perturbed copy tracks the exact loop uniformly in time. A clamped step lies between
@@ -168,8 +168,8 @@ type. The honest headline is **zero unaccounted axioms**, never "zero axioms":
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 96 | a Mathlib term inhabits the interpreted type, kernel-checked |
-| mapped | 12 | carrier or function symbol, interpreted rather than asserted |
+| witnessed | 109 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| mapped | 14 | carrier or function symbol, interpreted rather than asserted |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | IEEE-754 facts with no model in ℝ, validated by measurement |
 
@@ -210,19 +210,19 @@ not a count of proved results). Measured 2026-10-27:
 
 | figure | value | source |
 |---|---|---|
-| declarations in the checked environment | 12 392 | `python3 tools/theorem_ledger/ledger.py` |
-| theorems | 9 440 | the same command: approved-policy + conditional + unchecked |
-| kernel-checked theorems | 9 439 | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited theorems | 9 439 | footprint computed and classified against the policy |
-| approved-policy proofs | 9 112 | every axiom in the footprint is in `trustedFootprint` |
-| conditional proofs | 327 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
+| declarations in the checked environment | 12 404 | `python3 tools/theorem_ledger/ledger.py` |
+| theorems | 9 449 | the same command: approved-policy + conditional + unchecked |
+| kernel-checked theorems | 9 448 | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited theorems | 9 448 | footprint computed and classified against the policy |
+| approved-policy proofs | 9 320 | every axiom in the footprint is in `trustedFootprint` |
+| conditional proofs | 128 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
 | unchecked theorems | 1 | the allowlisted `sorryAx` (`halve_in_unit_sorry`) |
 | Forge `@verify` corpus files, outside the checked environment | 253 | the same command; files only, none of their theorems is counted |
-| `.lean` files under `MachLib/` | 1 087 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
+| `.lean` files under `MachLib/` | 1 088 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
 | axioms pinned by the ledger | 212 | `lake env lean AxiomLedger.lean` |
-| trusted axioms, all accounted for | 143 | `AXIOM_MANIFEST.md` |
+| trusted axioms, all accounted for | 158 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 822 of 1 087 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 823 of 1 088 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 

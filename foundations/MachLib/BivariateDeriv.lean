@@ -1,6 +1,7 @@
 import MachLib.Rolle
 import MachLib.Differentiation
 import MachLib.Ring
+import MachLib.IntermediateValue
 
 /-!
 # Bivariate differentiation + the implicit function derivative (Gate 2d, IFT gate — brick 1.c)
@@ -57,11 +58,21 @@ axiom HasDerivAt2_comp (f : Real → Real → Real) (fx fy : Real) (γ₁ γ₂ 
     HasDerivAt (fun s => f (γ₁ s) (γ₂ s)) (fx * d₁ + fy * d₂) t
 
 /-- **Implicit function derivative** (the IFT bridge). If `f (s, yc s) = 0` along the arc, `f` is jointly
-differentiable at `(x, yc x)` with `fᵧ ≠ 0`, then the implicit function `yc` is differentiable with
-`yc'(x) = −fₓ/fᵧ`. (Existence + uniqueness of `yc` are in-model via `exists_unique_root`; this axiom is only
-the derivative.) -/
+differentiable at `(x, yc x)` with `fᵧ ≠ 0`, and the curve `yc` is CONTINUOUS at `x`, then `yc` is
+differentiable with `yc'(x) = −fₓ/fᵧ`. (Existence + uniqueness of `yc` are in-model via `exists_unique_root`;
+this axiom is only the derivative.)
+
+**The continuity hypothesis was missing until 2026-10-27, and without it this axiom was FALSE and
+inconsistent with the trusted ones.** Nothing stopped `yc` from jumping between solution branches: for
+`f a b = b (b − 1)` a step function from `0` to `1` satisfies the curve identity everywhere with `fᵧ = ±1`,
+so the old statement gave it derivative `0` at every point, and the mean value theorem then gives `1 = 0`.
+`BivariateImplicitControls.implicit_without_continuity_inconsistent` derives `False` from the old statement and
+`BivariateImplicitControls.old_curve_count_false` refutes the old `khovanskii_rolle_count_curve` with it. The
+implicit function theorem's derivative needs exactly this much: Fréchet differentiability at the one point
+(`HasDerivAt2`), `fᵧ ≠ 0`, and a solution curve continuous there. Witnessed in `monogate-lean` against Mathlib's
+`HasFDerivAt`. -/
 axiom hasDerivAt_implicit (f : Real → Real → Real) (fx fy : Real) (yc : Real → Real) (x : Real) :
-    HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → (∀ s : Real, f s (yc s) = 0) →
+    HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → ContinuousAt yc x → (∀ s : Real, f s (yc s) = 0) →
     HasDerivAt yc (-fx / fy) x
 
 /-- **Implicit function derivative, interval-localized.** The standard IFT is inherently local — the
@@ -71,10 +82,14 @@ derivative at `x` depends only on `f`'s behavior near `x`, not on `f (s, yc s) =
 (`multivariate-khovanskii-chainN-scoping.md §9.1`). This axiom weakens the hypothesis to match: `f (s, yc
 s) = 0` only on an open interval `(p, q) ∋ x`. Strictly weaker than `hasDerivAt_implicit` (any global
 witness gives a local one on an arbitrary `(p,q)` by restriction), so this does not replace it — added
-alongside as a separate axiom to avoid touching the existing one and everything built on it. -/
+alongside as a separate axiom to avoid touching the existing one and everything built on it.
+
+It needs `ContinuousAt yc x` for the same reason `hasDerivAt_implicit` does (added 2026-10-27; see there): a
+step between two branches inside `(p, q)` refuted the old statement just as it refuted the global one. -/
 axiom hasDerivAt_implicit_local (f : Real → Real → Real) (fx fy : Real) (yc : Real → Real) (x p q : Real)
     (hp : p < x) (hq : x < q) :
-    HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → (∀ s : Real, p < s → s < q → f s (yc s) = 0) →
+    HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → ContinuousAt yc x →
+    (∀ s : Real, p < s → s < q → f s (yc s) = 0) →
     HasDerivAt yc (-fx / fy) x
 
 /-- **`curve_tangent_and_chain`, interval-localized.** Same conclusion, same proof shape, built from
@@ -83,11 +98,12 @@ axiom hasDerivAt_implicit_local (f : Real → Real → Real) (fx fy : Real) (yc 
 theorem curve_tangent_and_chain_local (f g : Real → Real → Real) (fx fy gx gy : Real) (yc : Real → Real)
     (x p q : Real) (hp : p < x) (hq : x < q)
     (hf2 : HasDerivAt2 f fx fy x (yc x)) (hg2 : HasDerivAt2 g gx gy x (yc x))
-    (hfy : fy ≠ 0) (hid : ∀ s : Real, p < s → s < q → f s (yc s) = 0) :
+    (hfy : fy ≠ 0) (hcont : ContinuousAt yc x) (hid : ∀ s : Real, p < s → s < q → f s (yc s) = 0) :
     HasDerivAt yc (-fx / fy) x
       ∧ fx + fy * (-fx / fy) = 0
       ∧ HasDerivAt (fun s => g s (yc s)) (gx * 1 + gy * (-fx / fy)) x := by
-  have hyc : HasDerivAt yc (-fx / fy) x := hasDerivAt_implicit_local f fx fy yc x p q hp hq hf2 hfy hid
+  have hyc : HasDerivAt yc (-fx / fy) x :=
+    hasDerivAt_implicit_local f fx fy yc x p q hp hq hf2 hfy hcont hid
   refine ⟨hyc, ?_, ?_⟩
   · have h : fy * (-fx / fy) = -fx := by
       rw [div_def (-fx) fy hfy, ← mul_assoc, mul_comm fy (-fx), mul_assoc, mul_inv fy hfy, mul_one_ax]
@@ -96,21 +112,33 @@ theorem curve_tangent_and_chain_local (f g : Real → Real → Real) (fx fy gx g
 
 /-- **The parametrization discharges the Khovanskii–Rolle hypotheses.** Given a curve `{f = 0}`
 parametrized by `y = yc x` (jointly differentiable `f, g` at `(x, yc x)`, `fᵧ ≠ 0`, `f ≡ 0` along the arc),
-the implicit function `yc` yields: (1) the **tangent condition** `fₓ + fᵧ·yc' = 0` and (2) the **chain rule**
+the implicit function `yc`, continuous at `x`, yields: (1) the **tangent condition** `fₓ + fᵧ·yc' = 0` and (2) the **chain rule**
 `HasDerivAt (g along the curve) (gₓ·1 + gᵧ·yc')` — exactly `khovanskii_rolle_count`'s `hcurve` and
 `hGderiv` (with `yc' = −fₓ/fᵧ`). -/
 theorem curve_tangent_and_chain (f g : Real → Real → Real) (fx fy gx gy : Real) (yc : Real → Real)
     (x : Real) (hf2 : HasDerivAt2 f fx fy x (yc x)) (hg2 : HasDerivAt2 g gx gy x (yc x))
-    (hfy : fy ≠ 0) (hid : ∀ s : Real, f s (yc s) = 0) :
+    (hfy : fy ≠ 0) (hcont : ContinuousAt yc x) (hid : ∀ s : Real, f s (yc s) = 0) :
     HasDerivAt yc (-fx / fy) x
       ∧ fx + fy * (-fx / fy) = 0
       ∧ HasDerivAt (fun s => g s (yc s)) (gx * 1 + gy * (-fx / fy)) x := by
-  have hyc : HasDerivAt yc (-fx / fy) x := hasDerivAt_implicit f fx fy yc x hf2 hfy hid
+  have hyc : HasDerivAt yc (-fx / fy) x := hasDerivAt_implicit f fx fy yc x hf2 hfy hcont hid
   refine ⟨hyc, ?_, ?_⟩
   · have h : fy * (-fx / fy) = -fx := by
       rw [div_def (-fx) fy hfy, ← mul_assoc, mul_comm fy (-fx), mul_assoc, mul_inv fy hfy, mul_one_ax]
     rw [h]; exact add_neg fx
   · exact HasDerivAt2_comp g gx gy (fun s => s) yc 1 (-fx / fy) x hg2 (HasDerivAt_id x) hyc
+
+/-- **The line `x ↦ c − x` is continuous everywhere**, being differentiable (`hasDerivAt_continuousAt`). The
+implicit-derivative instances over a line curve discharge their continuity hypothesis with it. -/
+theorem continuousAt_const_sub (c z : Real) : ContinuousAt (fun x => c - x) z :=
+  hasDerivAt_continuousAt
+    (HasDerivAt_sub (fun _ => c) (fun x => x) 0 1 z (HasDerivAt_const c z) (HasDerivAt_id z))
+
+/-- Continuity carries over to a function equal to a continuous one at every point. -/
+theorem continuousAt_congr_fun {f g : Real → Real} (h : ∀ t, f t = g t) (z : Real)
+    (hf : ContinuousAt f z) : ContinuousAt g z := by
+  rw [show g = f from funext (fun t => (h t).symm)]
+  exact hf
 
 /-- **Framework validation.** The joint derivative of `g(x,y) = eˣ + eʸ − d` is `(eˣ, eʸ)`, built entirely
 from the base-case + arithmetic + composition rules — so `HasDerivAt2` is genuinely constructible for a

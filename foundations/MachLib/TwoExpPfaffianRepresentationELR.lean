@@ -57,6 +57,7 @@ theorem khovanskii_rolle_count_curve_of_represented_jacobian_ELR
     (hf2 : ∀ z : Real, a < z → z < b → HasDerivAt2 f (fx z) (fy z) z (yc z))
     (hg2 : ∀ z : Real, a < z → z < b → HasDerivAt2 g (gx z) (gy z) z (yc z))
     (hfy : ∀ z : Real, a < z → z < b → fy z ≠ 0)
+    (hcont : ∀ z : Real, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ s : Real, f s (yc s) = 0)
     (N : Nat) (c : PfaffianChain N)
     (pfx pfy pgx pgy : MultiPoly N)
@@ -75,7 +76,7 @@ theorem khovanskii_rolle_count_curve_of_represented_jacobian_ELR
       zeros_g.length ≤ K + 1 := by
   obtain ⟨K, hK⟩ := combined_descent_3_of_exp_hard a b hab (PfaffianExpHard.exp_hard_proof a b hab)
     N c hexp hcoh hpos hAn (jacobianRepPoly pfx pfy pgx pgy) hne
-  refine ⟨K, khovanskii_rolle_count_curve f g fx fy gx gy yc a b hab hf2 hg2 hfy hid K ?_⟩
+  refine ⟨K, khovanskii_rolle_count_curve f g fx fy gx gy yc a b hab hf2 hg2 hfy hcont hid K ?_⟩
   intro zeros hnd hz
   exact hK zeros hnd (fun z hzmem => by
     obtain ⟨hza, hzb, hJz⟩ := hz z hzmem
@@ -151,6 +152,7 @@ theorem sumC_intersection_finite_ELR (c a b : Real) (hc : 0 ≤ c) (hab : a < b)
       show HasDerivAt2 sumC_g (-(exp z + z * exp z)) (exp z + c) z (sumC_yc c z)
       rw [← sumC_exp_yc c z hc]; exact hasDerivAt2_sumC_g z (sumC_yc c z))
     (fun z _ _ => ne_of_gt (sumC_pos c z hc))
+    (fun z _ _ => hasDerivAt_continuousAt (hasDerivAt_sumC_yc c z hc))
     (fun s => sumC_curve_id c s hc)
     3 repChain
     (MultiPoly.sub (MultiPoly.const 0) (MultiPoly.varY ⟨0, by omega⟩))
