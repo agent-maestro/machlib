@@ -1,7 +1,7 @@
 {
  "binding": {
-  "new_baseline_sha256": "sha256:aab76eb91d3bbb60103bd3e74a05b756d7a7b35ae6abbd0dd04ee69d46298c67",
-  "new_sources_commit": "61f7ac5e2171ab7b346a39be09f7b0e5dafade4b",
+  "new_baseline_sha256": "sha256:21b595e872a46de6973a89935dab39ac1a9f6b8d678b18c36265990607eac58e",
+  "new_sources_commit": "0eef3afa81317dfb49c9df6aefca24cb979a3d69",
   "old_baseline_file": "tools/machsig/trust_baseline.json at f572de8aae1ce2af53779055b1664b252df28d1a (master)",
   "old_baseline_role": "the LAST REVIEWED baseline at the anchor: the step-7 landing, brought onto master by the merge commit 37edde55",
   "old_baseline_sha256": "sha256:c0e60b092aa11fabd8ad5dae465de3c0da23a11f2bbc50196a250daa1eee06cc"
@@ -17,7 +17,8 @@
   "C3": true,
   "C4": true,
   "C5": true,
-  "C6": true
+  "C6": true,
+  "C7": true
  },
  "entered_axioms_count": {
   "MachLib.Real.addR": 1,
@@ -2413,5 +2414,38 @@
    "_private.MachLib.EMLAsymptoticClass.0.MachLib.log_exp_x_plus_M_le_x_plus_M"
   ]
  },
- "schema": "machsig-transition/v3"
+ "schema": "machsig-transition/v3",
+ "statement_identity": {
+  "MachLib.Real.exp_gt_two_x": {
+   "kind": "theorem",
+   "master_axiom_pin": "cbd0e6c79b57fd2071a4031de511de2ceeb6f8edb419f5588c351c6cc1977993",
+   "module": "MachLib.SinNotInEMLDepth2Sweep",
+   "ser_sha256": "cbd0e6c79b57fd2071a4031de511de2ceeb6f8edb419f5588c351c6cc1977993"
+  },
+  "MachLib.Real.sqrt_one": {
+   "kind": "theorem",
+   "master_axiom_pin": "fc88431df02691dab593b3f579be5bae5b2ca0815cbe088fc82c34965d889323",
+   "module": "MachLib.Trig",
+   "ser_sha256": "fc88431df02691dab593b3f579be5bae5b2ca0815cbe088fc82c34965d889323"
+  },
+  "MachLib.Real.tanh_zero": {
+   "kind": "theorem",
+   "master_axiom_pin": "42bfdcc8830ff40573d8ab4555b95d191460ed450490d08903062fb79b9e5009",
+   "module": "MachLib.Hyperbolic",
+   "ser_sha256": "42bfdcc8830ff40573d8ab4555b95d191460ed450490d08903062fb79b9e5009"
+  },
+  "MachLib.Real.u_le_one": {
+   "kind": "theorem",
+   "master_axiom_pin": "0a5d8d1186ff22eab797ae7e1e1d0f3f2b71c0a72806f3126e8f4e1d20dfaf8b",
+   "module": "MachLib.FPModel",
+   "ser_sha256": "0a5d8d1186ff22eab797ae7e1e1d0f3f2b71c0a72806f3126e8f4e1d20dfaf8b"
+  },
+  "MachLib.exp_tangent_line_strict": {
+   "kind": "theorem",
+   "master_axiom_pin": "b99864189c13f743ac911206f3408f7fe5a6e345db267fdcea5e08bfe66f5129",
+   "module": "MachLib.EMLAsymptoticClass",
+   "ser_sha256": "b99864189c13f743ac911206f3408f7fe5a6e345db267fdcea5e08bfe66f5129"
+  }
+ },
+ "statement_probe_sha256": "fa5d125670f0c9e32a3b20341427cbf7028c9c5fa844dea175cd6365ed4c725a"
 }
