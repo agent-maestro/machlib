@@ -43,15 +43,19 @@ namespace MachLib.Real
 Kept abstract; every bound below holds for any `0 ≤ u ≤ 1`. -/
 axiom u : Real
 axiom u_nonneg : (0 : Real) ≤ u
-axiom u_le_one : u ≤ 1
 
 /-- **`u` is strictly below `1`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit roundoff `2⁻⁵³`,
 and `2⁻⁵³ < 1`. `u_le_one` allows `u = 1`, and a rounding within `u = 1` may round any real to `0`, so no float's real
 value could be shown nonzero. This is the smallest statement that rules that out. It gives no lower bound on `1 − u`,
 so it gives no positive lower bound on any float's real value either; `FloatSafeInstances.lean` records what that
 costs. Witnessed against Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`).
-`u_le_one` is left as it was: it follows from this, and every use of it is unchanged. -/
+`u_le_one` follows from this, and is a theorem since 2026-10-26 (just below). -/
 axiom u_lt_one : u < 1
+
+/-- `u ≤ 1`. An axiom until 2026-10-26, when it was proved from `u_lt_one`: the owner's ruling U1
+(`docs/machsig/OWNER_RULINGS_2026-10-14.md`) found the `u` chain "incoherently tiered", with `u_le_one`
+conditional while the stronger `u_lt_one` was trusted. Every use of it is unchanged. -/
+theorem u_le_one : u ≤ 1 := le_of_lt u_lt_one
 
 /-- **`u` is at most one half, stated `u + u ≤ 1`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit
 roundoff `2⁻⁵³`, and `2⁻⁵³ + 2⁻⁵³ = 2⁻⁵² ≤ 1`. `u_lt_one` makes `1 − u` positive and says nothing about how small it is,
