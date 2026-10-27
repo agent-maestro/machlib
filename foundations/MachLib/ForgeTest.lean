@@ -11,6 +11,7 @@ Theorem naming mirrors the forge convention:
 -/
 
 import MachLib.Forge
+import MachLib.Decimal
 
 namespace MachLib
 namespace Real
@@ -38,10 +39,13 @@ theorem halve_in_unit (x : Real)
     (h_x : ((0 : Real) ≤ x) ∧ (x ≤ (1 : Real))) :
     ((0 : Real) ≤ halve x) ∧ (halve x ≤ (1 : Real)) := by
   unfold halve
-  exact interval_scale_unit_lit x (0.5 : Real)
-    (by lit_pos)
-    (interval_scale_unit_lit_le (by lit_pos) (by lit_pos))
-    h_x.1 h_x.2
+  -- `0.5 ≤ 1` is a `Nat` comparison (5·10 ≤ 10·10) since `realOfScientific` is a definition; until 2026-10-27
+  -- it came from `interval_scale_unit_lit_le`, a false axiom (Forge.lean, Class D)
+  have hk1 : (0.5 : Real) ≤ 1 := by
+    have h : realOfScientific 5 true 1 ≤ realOfScientific 10 true 1 := realOfScientific_le_of_nat (by decide)
+    rw [realOfScientific_one_dot_zero] at h
+    exact h
+  exact interval_scale_unit_lit x (0.5 : Real) (by lit_pos) hk1 h_x.1 h_x.2
 
 /-!
 ## T-02  double_upper_bound
@@ -103,11 +107,14 @@ theorem add_halves_in_unit (x y : Real)
     (h_y : ((0 : Real) ≤ y) ∧ (y ≤ (1 : Real))) :
     ((0 : Real) ≤ add_halves x y) ∧ (add_halves x y ≤ (1 : Real)) := by
   unfold add_halves
+  -- the weight sum is the decimal identity `0.5 + 0.5 = 1` (until 2026-10-27, the false `interval_weight_sum_le`)
+  have hjk : (0.5 : Real) + 0.5 ≤ 1 := by
+    rw [show (0.5 : Real) + 0.5 = 1 from by mach_decimal_ofnat]
+    exact le_refl 1
   exact interval_add_scale x y
     (0.5 : Real) (0.5 : Real)
     (by lit_pos) (by lit_pos)
-    (interval_scale_unit_lit_le (by lit_pos) (by lit_pos))
-    (interval_scale_unit_lit_le (by lit_pos) (by lit_pos))
+    hjk
     h_x.1 h_x.2 h_y.1 h_y.2
 
 /-!

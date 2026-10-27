@@ -210,16 +210,16 @@ not a count of proved results). Measured 2026-10-27:
 
 | figure | value | source |
 |---|---|---|
-| declarations in the checked environment | 12 406 | `python3 tools/theorem_ledger/ledger.py` |
+| declarations in the checked environment | 12 404 | `python3 tools/theorem_ledger/ledger.py` |
 | theorems | 9 452 | the same command: approved-policy + conditional + unchecked |
 | kernel-checked theorems | 9 451 | no `sorryAx`, no compiler trust, only declared axioms |
 | axiom-audited theorems | 9 451 | footprint computed and classified against the policy |
-| approved-policy proofs | 9 323 | every axiom in the footprint is in `trustedFootprint` |
-| conditional proofs | 128 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
+| approved-policy proofs | 9 326 | every axiom in the footprint is in `trustedFootprint` |
+| conditional proofs | 125 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
 | unchecked theorems | 1 | the allowlisted `sorryAx` (`halve_in_unit_sorry`) |
 | Forge `@verify` corpus files, outside the checked environment | 253 | the same command; files only, none of their theorems is counted |
 | `.lean` files under `MachLib/` | 1 088 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
-| axioms pinned by the ledger | 210 | `lake env lean AxiomLedger.lean` |
+| axioms pinned by the ledger | 208 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all accounted for | 156 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
 | modules reachable from the aggregator | 823 of 1 088 | `scripts/check_aggregator.sh` |

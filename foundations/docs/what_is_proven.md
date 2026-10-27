@@ -486,8 +486,8 @@ correct (see §6), and grounding of the analytic base in a construction of ℝ
 MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the
 things Mathlib would prove as theorems — the real-number field/order axioms, the
 definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
-model — are **axioms** here. As of 2026-10-27 the ledger pins **210 axioms**
-(`lake env lean AxiomLedger.lean`: 178 `MachLib.*` plus 32 `Certcom.*`), of which
+model — are **axioms** here. As of 2026-10-27 the ledger pins **208 axioms**
+(`lake env lean AxiomLedger.lean`: 176 `MachLib.*` plus 32 `Certcom.*`), of which
 **156** form the trusted footprint of the headline theorems, and every one of those 156 is
 modeled: 107 witnessed by a kernel-checked Mathlib term, 14 interpreted carrier and function
 symbols, 3 standard, 32 IEEE-754 float-bridge facts validated by measurement — see
