@@ -1,0 +1,160 @@
+{
+ "binding": {
+  "new_baseline_sha256": "sha256:3c8563b29747b983384f6ec4b123538977259ded6ca92a19960175a784b0648d",
+  "new_sources_commit": "e1eacf33c94b52920ec57196c42790bafd81b802",
+  "old_baseline_file": "tools/machsig/trust_baseline.json at 89e6855bbe9e13c243b2fd3b2f8527a3f623563b (master)",
+  "old_baseline_role": "the LAST REVIEWED baseline at the anchor: the implicit-function rebaseline, brought onto master by the merge commit 89e6855b (pull request #10)",
+  "old_baseline_sha256": "sha256:0c23b9e554094947012de95dacdacecf1384716264690c33300fcb9135794b07"
+ },
+ "change": "the two false Forge-bridge axioms removed (interval_scale_unit_lit_le, interval_weight_sum_le); interval_add_scale restated with j + k <= 1; ForgeBridgeControls refutes the three old statements",
+ "check_failures": {
+  "C4": [],
+  "C6": []
+ },
+ "checks": {
+  "C1": true,
+  "C2": true,
+  "C3": true,
+  "C4": true,
+  "C5": true,
+  "C6": true,
+  "C7": true
+ },
+ "gate_transition": {
+  "axioms": {
+   "gone": [
+    "MachLib.Real.interval_scale_unit_lit_le",
+    "MachLib.Real.interval_weight_sum_le"
+   ],
+   "new": [],
+   "restated": []
+  },
+  "new_format": "v3",
+  "old_format": "v3",
+  "policy": {
+   "allowed_sorry": {
+    "added": [],
+    "removed": []
+   },
+   "known": {
+    "added": [],
+    "removed": [
+     "MachLib.Real.interval_scale_unit_lit_le",
+     "MachLib.Real.interval_weight_sum_le"
+    ]
+   },
+   "trusted": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "schema": "machsig-gate-transition/v1",
+  "theorems": [
+   [
+    "MachLib.Real.ForgeBridgeControls.old_interval_add_scale_false",
+    "new",
+    null,
+    14,
+    [],
+    []
+   ],
+   [
+    "MachLib.Real.ForgeBridgeControls.unit_lit_le_false",
+    "new",
+    null,
+    12,
+    [],
+    []
+   ],
+   [
+    "MachLib.Real.ForgeBridgeControls.weight_sum_le_false",
+    "new",
+    null,
+    12,
+    [],
+    []
+   ],
+   [
+    "MachLib.Real.add_halves_in_unit",
+    "grew",
+    28,
+    29,
+    [
+     "MachLib.Real.mul_assoc",
+     "Quot.sound",
+     "propext"
+    ],
+    [
+     "MachLib.Real.interval_scale_unit_lit_le",
+     "MachLib.Real.interval_weight_sum_le"
+    ]
+   ],
+   [
+    "MachLib.Real.halve_in_unit",
+    "grew",
+    27,
+    29,
+    [
+     "MachLib.Real.mul_assoc",
+     "Quot.sound",
+     "propext"
+    ],
+    [
+     "MachLib.Real.interval_scale_unit_lit_le"
+    ]
+   ],
+   [
+    "MachLib.Real.interval_add_scale",
+    "restated",
+    20,
+    19,
+    [],
+    [
+     "MachLib.Real.interval_weight_sum_le"
+    ]
+   ],
+   [
+    "_private.MachLib.ForgeBridgeControls.0.MachLib.Real.ForgeBridgeControls.not_two_le_one",
+    "new",
+    null,
+    12,
+    [],
+    []
+   ],
+   [
+    "_private.MachLib.ForgeBridgeControls.0.MachLib.Real.ForgeBridgeControls.one_le_one_c",
+    "new",
+    null,
+    5,
+    [],
+    []
+   ],
+   [
+    "_private.MachLib.ForgeBridgeControls.0.MachLib.Real.ForgeBridgeControls.one_lt_two_c",
+    "new",
+    null,
+    8,
+    [],
+    []
+   ]
+  ]
+ },
+ "new_rows": [
+  "MachLib.Real.ForgeBridgeControls.old_interval_add_scale_false",
+  "MachLib.Real.ForgeBridgeControls.unit_lit_le_false",
+  "MachLib.Real.ForgeBridgeControls.weight_sum_le_false",
+  "_private.MachLib.ForgeBridgeControls.0.MachLib.Real.ForgeBridgeControls.not_two_le_one",
+  "_private.MachLib.ForgeBridgeControls.0.MachLib.Real.ForgeBridgeControls.one_le_one_c",
+  "_private.MachLib.ForgeBridgeControls.0.MachLib.Real.ForgeBridgeControls.one_lt_two_c"
+ ],
+ "restated_theorems": [
+  "MachLib.Real.interval_add_scale"
+ ],
+ "row_kinds": {
+  "grew": 2,
+  "new": 6,
+  "restated": 1
+ },
+ "schema": "machsig-transition/v3",
+ "statement_probe_sha256": "49b3ed9464d61417af3a19f3384c71d6fd7fbf53516ea3de1ab1f22c99f6c74a"
+}
