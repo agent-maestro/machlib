@@ -16,8 +16,9 @@ halves from `u + u ≤ 1`, decimals against `DBL_MIN` and `DBL_MAX`, the three g
 
 ## Staying inside the trusted footprint
 
-Two convenient routes leave it, and this module avoids both. `u_le_one` is an axiom that is neither witnessed nor in the
-trusted footprint (`u_lt_one` is both), so `u ≤ 1` is taken as `le_of_lt u_lt_one`. And `mach_decimal` closes order goals
+Two convenient routes leave it, and this module avoids both. `u_le_one` was an axiom that was neither witnessed nor in the
+trusted footprint (`u_lt_one` is both), so `u ≤ 1` is taken as `le_of_lt u_lt_one` (since 2026-10-26 that is exactly how
+`FPModel.lean` proves `u_le_one`). And `mach_decimal` closes order goals
 with the axioms `realOfScientific_le_of_nat` and `realOfScientific_lt_of_nat`, which are in the same position; the
 `grounded_decimal` tactic below normalises the same way and closes order goals with `decimal_le_of_nat'` and
 `decimal_lt_of_nat'`, proved here from the trusted `realOfScientific_clears`.

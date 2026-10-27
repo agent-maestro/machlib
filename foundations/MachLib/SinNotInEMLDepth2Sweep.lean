@@ -34,12 +34,40 @@ theorem log_lt_self_of_pos (x : Real) (hx : 0 < x) : log x < x := by
 /-- `0 < sin 1`. Follows from `sin_pos_on_open_zero_pi` (0 < 1 < π). -/
 axiom sin_one_pos : (0 : Real) < sin 1
 
+/-- `2x < exp x` for `x < 1`: `x + x < 1 + x ≤ exp x` (the tangent line at `0`). -/
+private theorem two_x_lt_exp_of_lt_one {x : Real} (hx : x < 1) : (1 + 1) * x < exp x := by
+  have h2 : x + x < x + 1 := add_lt_add_left hx x
+  rw [show (1 + 1) * x = x + x from by mach_ring]
+  rw [show x + 1 = 1 + x from by mach_ring] at h2
+  exact lt_of_lt_of_le h2 (one_add_le_exp x)
+
+/-- `2x < exp x` for `x > 0`: `exp x = e · exp (x − 1) ≥ e · x` (the tangent line at `1`), and
+`e > 2`. -/
+private theorem two_x_lt_exp_of_pos {x : Real} (hx : 0 < x) : (1 + 1) * x < exp x := by
+  have he : (1 + 1 : Real) < exp 1 := exp_gt_one_plus_self 1 zero_lt_one_ax
+  have hA : (1 + 1) * x < exp 1 * x := mul_lt_mul_of_pos_right he hx
+  have hB : exp 1 * x ≤ exp x := by
+    have hle : x ≤ exp (x - 1) := by
+      have h := one_add_le_exp (x - 1)
+      rw [show (1 : Real) + (x - 1) = x from by mach_ring] at h
+      exact h
+    have hsplit : exp x = exp 1 * exp (x - 1) := by
+      rw [← exp_add, show (1 : Real) + (x - 1) = x from by mach_ring]
+    rw [hsplit]
+    exact mul_le_mul_of_nonneg_left hle (le_of_lt (exp_pos 1))
+  exact lt_of_lt_of_le hA hB
+
 /-- `exp x > 2x` for all real `x`. Stronger than `exp_gt_one_plus_self`,
 needed to close cases where two-point evaluation forces
-`exp(exp π) - exp π = exp 1 - 1`. Standard fact: `f(x) = exp x - 2x` has
-`f(log 2) = 2 - 2 log 2 > 0` as its minimum (convex function), so `f > 0`
-everywhere. -/
-axiom exp_gt_two_x : ∀ x : Real, (1 + 1) * x < exp x
+`exp(exp π) - exp π = exp 1 - 1`. An axiom until 2026-10-26; it follows from
+the tangent lines at `0` (for `x < 1`) and at `1` (for `x > 0`), so no
+calculus and no division are needed. -/
+theorem exp_gt_two_x : ∀ x : Real, (1 + 1) * x < exp x := by
+  intro x
+  rcases lt_total 0 x with hpos | heq | hneg
+  · exact two_x_lt_exp_of_pos hpos
+  · rw [← heq]; exact two_x_lt_exp_of_lt_one zero_lt_one_ax
+  · exact two_x_lt_exp_of_lt_one (lt_trans_ax hneg zero_lt_one_ax)
 
 /-- `exp 1 > 1 + 1`. Direct corollary. -/
 theorem exp_one_gt_two : (1 + 1 : Real) < exp 1 :=

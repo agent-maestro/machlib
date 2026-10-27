@@ -40,18 +40,24 @@ cancellation) the `f64` result is within the tight relative bound
 namespace MachLib.Real
 
 /-- Unit roundoff. For IEEE-754 binary64 (`f64`), `u = 2⁻⁵³ ≈ 1.1·10⁻¹⁶`.
-Kept abstract; every bound below holds for any `0 ≤ u ≤ 1`. -/
+Kept abstract: the bounds below rest on `0 ≤ u < 1` (`u_nonneg`, `u_lt_one`), which `2⁻⁵³` satisfies. Until
+2026-10-26 the model was `0 ≤ u ≤ 1`, with `u_le_one` an axiom; the owner ruled it derived from `u_lt_one`
+(`docs/machsig/OWNER_RULINGS_2026-10-27.md`, F1), so a bound that used it no longer covers `u = 1`. -/
 axiom u : Real
 axiom u_nonneg : (0 : Real) ≤ u
-axiom u_le_one : u ≤ 1
 
 /-- **`u` is strictly below `1`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit roundoff `2⁻⁵³`,
 and `2⁻⁵³ < 1`. `u_le_one` allows `u = 1`, and a rounding within `u = 1` may round any real to `0`, so no float's real
 value could be shown nonzero. This is the smallest statement that rules that out. It gives no lower bound on `1 − u`,
 so it gives no positive lower bound on any float's real value either; `FloatSafeInstances.lean` records what that
 costs. Witnessed against Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`).
-`u_le_one` is left as it was: it follows from this, and every use of it is unchanged. -/
+`u_le_one` follows from this, and is a theorem since 2026-10-26 (just below). -/
 axiom u_lt_one : u < 1
+
+/-- `u ≤ 1`. An axiom until 2026-10-26, when it was proved from `u_lt_one`: the owner's ruling U1
+(`docs/machsig/OWNER_RULINGS_2026-10-14.md`) found the `u` chain "incoherently tiered", with `u_le_one`
+conditional while the stronger `u_lt_one` was trusted. Every use of it is unchanged. -/
+theorem u_le_one : u ≤ 1 := le_of_lt u_lt_one
 
 /-- **`u` is at most one half, stated `u + u ≤ 1`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit
 roundoff `2⁻⁵³`, and `2⁻⁵³ + 2⁻⁵³ = 2⁻⁵² ≤ 1`. `u_lt_one` makes `1 − u` positive and says nothing about how small it is,
@@ -70,8 +76,8 @@ certificate's own hypotheses force `B > 15.5π`, where `u · exp B` is about `1.
 (`GroundedEMLInstances.lean` says why).
 
 Spelt with a `natCast` power and a division, the way `dblMin` is, because `OfNat Real` has no `2`. Witnessed against
-Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`). `u_le_half`, `u_lt_one` and
-`u_le_one` follow from it and are left as they were. -/
+Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`). `u_le_half` and `u_lt_one`
+follow from it and are left as they were (the rest of the owner's ruling U1); `u_le_one` is a theorem from `u_lt_one`. -/
 axiom u_le_inv_two_pow_52 : u ≤ 1 / natCast (2 ^ 52)
 
 /-- The standard model of floating-point arithmetic: `fl` is a valid

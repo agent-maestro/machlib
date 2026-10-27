@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 // repository's check suite if the corpus drifts from what is printed here.
 // The date is the measurement date; the command that reproduces each figure
 // is in README.md under "Numbers, measured".
-const MEASURED_ON = "2026-10-10";
+const MEASURED_ON = "2026-10-27";
 
 // The four theorem tiles are the theorem ledger's categories (foundations/tools/theorem_ledger), all of them: the
 // owner's ruling of 2026-10-10 -- "Do not simply replace the old number with 8,963 and call everything else
@@ -16,9 +16,9 @@ const MEASURED_ON = "2026-10-10";
 // kernel, resting on declared axioms outside that policy -- proved relative to them. Unchecked: the one allowlisted
 // teaching `sorry`. Until 2026-10-10 the tile was a text count of `theorem` lines, not a count of proved results.
 const TILES: { value: string; label: string }[] = [
-  { value: "9 433", label: "theorems in the Lean environment, each classified by its axioms" },
-  { value: "8 971", label: "theorems kernel-checked, every axiom within the trusted policy" },
-  { value: "461", label: "theorems kernel-checked relative to declared axioms outside the trusted policy" },
+  { value: "9 440", label: "theorems in the Lean environment, each classified by its axioms" },
+  { value: "9 112", label: "theorems kernel-checked, every axiom within the trusted policy" },
+  { value: "327", label: "theorems kernel-checked relative to declared axioms outside the trusted policy" },
   { value: "1", label: "theorem unchecked: the allowlisted teaching sorry (halve_in_unit_sorry)" },
   { value: "143", label: "trusted axioms, none unaccounted" },
   { value: "4", label: "distinct open obligations" },

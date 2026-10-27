@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 087 `.lean` files** (812 top-level + 275 in subdirectories) /
-**259 300 lines**, re-exported through the aggregator
+**259 370 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -24,16 +24,16 @@ python3 tools/theorem_ledger/ledger.py --check theorem_ledger.json # is that led
 
 It reads the environment `AxiomLedger.lean` checks (`import MachLib`, `import MachLib.FPGrounding`), takes
 every theorem's `#print axioms` footprint (`Lean.collectAxioms`) and classifies it against that file's LIVE
-`trustedFootprint` and `knownAxioms`. Measured 2026-10-11, with the derived tangent line (`ExpTangentLine`):
+`trustedFootprint` and `knownAxioms`. Measured 2026-10-26, after five derivable axioms were proved (see that section below):
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 390** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 433** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 432** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 432** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **8 971** | every axiom in the footprint is in `trustedFootprint` |
-| conditional | **461** | on declared axioms outside it, named per theorem (mostly `HasDerivAt2*`, `hasDerivAt_implicit`, `floor`) |
+| declarations | **12 392** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 440** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 439** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 439** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **9 112** | every axiom in the footprint is in `trustedFootprint` |
+| conditional | **327** | on declared axioms outside it, named per theorem (mostly `HasDerivAt2*`, `hasDerivAt_implicit`, `floor`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
 The **265** tracked `.lean` files under `MachLib/` that the environment does not contain (`Discovered/`'s 253 and
@@ -62,18 +62,18 @@ frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`**
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **217 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **212 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
-185  MachLib.*   axioms in the environment after `import MachLib`
+180  MachLib.*   axioms in the environment after `import MachLib`
  32  Certcom.*   IEEE-754 floor axioms
 ---
-217  = what the ledger pins
+212  = what the ledger pins
 ```
 
 (Re-derive the split with a `#eval` over `getEnv` partitioning `.axiomInfo` by name prefix — that is
-how these two were measured, not by grep; last on 2026-10-05, after the muses' review of E made theorems of
+how these two were measured, not by grep; last on 2026-10-26, after five derivable axioms were proved; before that on 2026-10-05, after the muses' review of E made theorems of
 seven more -- see "The muses' review of E" below.)
 
 A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
@@ -330,6 +330,44 @@ order of the work after it (Forge's G -> second verifier -> H -> ...).
   registered claim's; `exp_grow` and `log_le_sub_one` keep theirs.
 - **Do not cite the `_mvt` names from the elementary routes**, and do not move `exp_grow`/`log_le_sub_one` onto
   the derived theorem: either puts calculus into a footprint a claim forbids it in. Run the claim audit first.
+
+## Five derivable axioms proved (2026-10-26)
+
+`exp_tangent_line_strict`, `exp_gt_two_x`, `tanh_zero`, `sqrt_one` and `u_le_one` were axioms that trusted axioms
+prove, the class the owner's "provable means proved" policy (2026-10-04) says must not exist. The 2026-10-04 audit
+covered a named list, so these five were never examined. Each was the only untrusted axiom in many conditional theorems'
+footprints: proving them moved **134 theorems from conditional to approved-policy** (461 -> 327, read off the theorem
+ledger before and after). `u_le_one` is the conditional half of the owner's ruling U1
+(`docs/machsig/OWNER_RULINGS_2026-10-14.md`); its other half, `u_lt_one` and `u_le_half` derivable from
+`u_le_inv_two_pow_52`, is not done.
+
+- **How they were found.** Rank the axioms outside every approved footprint by how many conditional theorems they are
+  the SOLE blocker of (`tools/theorem_ledger/ledger.py --out`, then a set difference). A sole blocker that a trusted
+  axiom proves is free trust.
+- **Two had to move.** `tanh_zero` is in `Hyperbolic.lean` now: `Trig.lean` sits upstream of `sinh_eq` and
+  `tanh_eq_sinh_div_cosh`, and every consumer already imports `Hyperbolic` (through `Forge`). `sqrt_one` moved below
+  `le_sqrt_of_sq_le`/`sqrt_le_of_le_sq` in the same file. Neither file has a ring tactic; the proofs are spelt out from
+  `Basic`'s laws the way `cosh_pos` is.
+- **`exp_gt_two_x` needs no division**: tangent line at `0` for `x < 1`, at `1` (`exp x = e·exp (x−1) ≥ e·x`, `e > 2`)
+  for `x > 0`.
+- **Gate 14 cannot pass this without a reviewed rebaseline, by design.** A dependent theorem's footprint SWAPS (the
+  untrusted axiom leaves, the trusted ones its proof uses enter), and the gate fails on any entering axiom. The route
+  that worked: commit the Lean change, `trust_gate.py --update` (an UNREVIEWED baseline, which the gate refuses),
+  generate a transition report (`docs/machsig/transition_2026-10-26.py` is the template: the machine block from the
+  gate's own `gate_transition`, plus checks C1-C7 that can each fail), an independent review, the owner's sign-off,
+  THEN the stamp, and a `--no-ff` merge. Never stamp a baseline nobody reviewed.
+- **The gate cannot see a conversion that restates.** It sees an axiom "gone" and a theorem "new", under different
+  serializers, so `theorem foo : P'` replacing `axiom foo : P` passes it. C7 closes that for this change: the five
+  theorems' types, serialized by a copy of the gate's `serExpr` (`docs/machsig/evidence-2026-10-26/statement_probe.lean`),
+  equal master's axiom pins, and the copy reproduces four unchanged axioms' pins.
+- **Derivable and NOT yet converted** (found by the 2026-10-26 review, so "provable means proved" is not at zero):
+  `exp_exp_minus_exp_strictly_increasing` (sole blocker of 4 conditional theorems, among them `exp_exp_not_in_eml_1`;
+  the review proved it in a scratch file from trusted axioms, same type), and probably `exp_one_lt_three`
+  (`e ≤ (6/5)⁶ < 3`, unchecked). Convert them next, through the same reviewed route.
+- **Still conditional, and not derivable from the trusted axioms as far as checked:** the `HasDerivAt2*` family and
+  `hasDerivAt_implicit` (about 140 theorems together), `floor` (63), `eml_tree_analytic_on_interval` (22). Admitting
+  them means Mathlib witnesses in `monogate-lean` (none exists for `floor`, whatever the 2026-09-08 changelog entry says)
+  and the owner's approval of each.
 
 ## Where the content comes from
 
@@ -854,10 +892,11 @@ proves it conducts a failure to its own exit code; the run prints its own gate c
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
 run (**822 of 1 087 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
-**217 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
+**212 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
 `u_lt_one`; then `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`, `real_exp_finite`, `real_sinh_finite`,
-`real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
+`real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`), then five proved on
+2026-10-26 (`exp_tangent_line_strict`, `exp_gt_two_x`, `tanh_zero`, `sqrt_one`, `u_le_one`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,
