@@ -1,12 +1,12 @@
 {
  "binding": {
-  "new_baseline_sha256": "sha256:697014002eee4349c648e21a56f16f18c99c3ff08d1fe3ba1b3f5b17b0e85b72",
-  "new_sources_commit": "ee38b6e03d606e56b9c7ad39cdf46be67dae60e5",
+  "new_baseline_sha256": "sha256:0c23b9e554094947012de95dacdacecf1384716264690c33300fcb9135794b07",
+  "new_sources_commit": "1357f71e8fc89bca8a9ca155d2b6ac733ebb7593",
   "old_baseline_file": "tools/machsig/trust_baseline.json at 2431d7056bdc43f4a923544c8d4b0499814acb00 (master)",
   "old_baseline_role": "the LAST REVIEWED baseline at the anchor: the 2026-10-26 rebaseline, brought onto master by the merge commit 2431d705 (pull request #9)",
   "old_baseline_sha256": "sha256:21b595e872a46de6973a89935dab39ac1a9f6b8d678b18c36265990607eac58e"
  },
- "change": "hasDerivAt_implicit and hasDerivAt_implicit_local restated with ContinuousAt yc x (the old statements were false); 110 two-exp theorems gained hcont; fifteen axioms admitted to trustedFootprint on the owner's approval (HasDerivAt2, its eight rules, both implicit forms, floor and its three laws)",
+ "change": "hasDerivAt_implicit_local restated with ContinuousAt yc x and hasDerivAt_implicit made a theorem of it (the old statements were false); 110 two-exp theorems gained hcont; HasDerivAt2_sub made a theorem; thirteen axioms admitted to trustedFootprint on the owner's approval (HasDerivAt2, seven of its rules, the local implicit form, floor and its three laws)",
  "check_failures": {
   "C1": [],
   "C2": [],
@@ -20,29 +20,42 @@
   "C4": true,
   "C5": true,
   "C6": true,
-  "C7": true
+  "C7": true,
+  "C8": true
  },
  "entered_axioms_count": {
   "Classical.choice": 4,
+  "MachLib.Real.HasDerivAt2_add": 8,
+  "MachLib.Real.HasDerivAt2_const": 2,
+  "MachLib.Real.HasDerivAt2_mul": 20,
   "MachLib.Real.HasDerivAt_add": 2,
   "MachLib.Real.HasDerivAt_comp": 1,
   "MachLib.Real.HasDerivAt_const": 2,
   "MachLib.Real.HasDerivAt_log_pos": 2,
   "MachLib.Real.HasDerivAt_mul": 2,
   "MachLib.Real.HasDerivAt_of_eq": 2,
+  "MachLib.Real.add_comm": 3,
+  "MachLib.Real.add_lt_add_left": 16,
+  "MachLib.Real.add_zero": 1,
   "MachLib.Real.hasDerivAt_continuousAt": 20,
+  "MachLib.Real.hasDerivAt_implicit_local": 127,
   "MachLib.Real.leR": 4,
   "MachLib.Real.ltR": 2,
+  "MachLib.Real.mul_comm": 5,
   "MachLib.Real.subR": 2,
-  "Quot.sound": 2,
+  "MachLib.Real.sub_def": 2,
+  "MachLib.Real.zero_lt_one_ax": 17,
+  "Quot.sound": 8,
   "propext": 2
  },
  "gate_transition": {
   "axioms": {
-   "gone": [],
+   "gone": [
+    "MachLib.Real.HasDerivAt2_sub",
+    "MachLib.Real.hasDerivAt_implicit"
+   ],
    "new": [],
    "restated": [
-    "MachLib.Real.hasDerivAt_implicit",
     "MachLib.Real.hasDerivAt_implicit_local"
    ]
   },
@@ -55,7 +68,10 @@
    },
    "known": {
     "added": [],
-    "removed": []
+    "removed": [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    },
    "trusted": {
     "added": [
@@ -67,11 +83,9 @@
      "MachLib.Real.HasDerivAt2_projX",
      "MachLib.Real.HasDerivAt2_projY",
      "MachLib.Real.HasDerivAt2_scomp",
-     "MachLib.Real.HasDerivAt2_sub",
      "MachLib.Real.floor",
      "MachLib.Real.floor_le",
      "MachLib.Real.floor_zero",
-     "MachLib.Real.hasDerivAt_implicit",
      "MachLib.Real.hasDerivAt_implicit_local",
      "MachLib.Real.lt_floor_add_one"
     ],
@@ -81,16 +95,52 @@
   "schema": "machsig-gate-transition/v1",
   "theorems": [
    [
+    "MachLib.MultiVarMod.MultiVarExpr.hasDerivAt2_of_multiVarExpr",
+    "grew",
+    25,
+    27,
+    [
+     "MachLib.Real.add_comm",
+     "MachLib.Real.mul_comm",
+     "MachLib.Real.sub_def"
+    ],
+    [
+     "MachLib.Real.HasDerivAt2_sub"
+    ]
+   ],
+   [
     "MachLib.MultiVarMod.MultiVarExpr.multiVarExpr_curve_tangent_and_chain",
     "restated",
     33,
-    36,
+    39,
     [
      "Classical.choice",
+     "MachLib.Real.add_comm",
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
      "MachLib.Real.leR",
-     "MachLib.Real.ltR"
+     "MachLib.Real.ltR",
+     "MachLib.Real.sub_def",
+     "MachLib.Real.zero_lt_one_ax"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
+   ],
+   [
+    "MachLib.MultiVarMod.TwoExp.branchG_f_sum",
+    "grew",
+    25,
+    27,
+    [
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.mul_comm",
+     "Quot.sound"
+    ],
+    [
+     "MachLib.Real.HasDerivAt2_sub"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.branch_intersection_le_one",
@@ -98,6 +148,7 @@
     50,
     57,
     [
+     "MachLib.Real.HasDerivAt2_mul",
      "MachLib.Real.HasDerivAt_add",
      "MachLib.Real.HasDerivAt_comp",
      "MachLib.Real.HasDerivAt_const",
@@ -106,21 +157,29 @@
      "MachLib.Real.HasDerivAt_of_eq",
      "MachLib.Real.hasDerivAt_continuousAt"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.curve_exp_sum_le_two",
     "grew",
     46,
-    51,
+    52,
     [
+     "MachLib.Real.HasDerivAt2_mul",
      "MachLib.Real.HasDerivAt_add",
      "MachLib.Real.HasDerivAt_const",
      "MachLib.Real.HasDerivAt_mul",
      "MachLib.Real.HasDerivAt_of_eq",
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.curve_exp_sum_via_bivar_expr_jacobian",
@@ -128,9 +187,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.curve_exp_sum_via_expr_jacobian",
@@ -138,9 +202,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.curve_exp_sum_via_pfaffian_lower_count",
@@ -148,9 +217,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.curve_exp_sum_via_represented_jacobian",
@@ -158,9 +232,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expMul_curve_ift_matches_direct",
@@ -169,10 +248,15 @@
     50,
     [
      "Classical.choice",
+     "MachLib.Real.HasDerivAt2_add",
      "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local",
      "MachLib.Real.leR"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_global_line_arc_bound",
@@ -180,9 +264,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_global_single_bivar_expr_arc_data",
@@ -190,9 +279,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_global_single_bivar_expr_arc_data_no_fy",
@@ -200,9 +294,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_global_single_represented_arc_data",
@@ -210,9 +309,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_global_via_bivar_expr_arc_data",
@@ -220,9 +324,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_global_via_bivar_expr_arc_data_no_fy",
@@ -230,9 +339,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_global_via_represented_arc_data",
@@ -240,9 +354,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_sharp_and_global_line_arc_routes",
@@ -250,9 +369,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_sharp_and_pfaffian_routes",
@@ -260,9 +384,14 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.expSum_single_line_global_bound",
@@ -270,17 +399,86 @@
     56,
     57,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
+   ],
+   [
+    "MachLib.MultiVarMod.TwoExp.hasDerivAt2_branchG",
+    "grew",
+    23,
+    27,
+    [
+     "MachLib.Real.HasDerivAt2_add",
+     "MachLib.Real.HasDerivAt2_const",
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.mul_comm",
+     "Quot.sound"
+    ],
+    [
+     "MachLib.Real.HasDerivAt2_sub"
+    ]
+   ],
+   [
+    "MachLib.MultiVarMod.TwoExp.hasDerivAt2_expMul",
+    "grew",
+    26,
+    27,
+    [
+     "MachLib.Real.HasDerivAt2_add",
+     "Quot.sound"
+    ],
+    [
+     "MachLib.Real.HasDerivAt2_sub"
+    ]
+   ],
+   [
+    "MachLib.MultiVarMod.TwoExp.hasDerivAt2_sumC_f",
+    "grew",
+    24,
+    27,
+    [
+     "MachLib.Real.HasDerivAt2_add",
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.mul_comm",
+     "Quot.sound"
+    ],
+    [
+     "MachLib.Real.HasDerivAt2_sub"
+    ]
+   ],
+   [
+    "MachLib.MultiVarMod.TwoExp.hasDerivAt2_sumC_g",
+    "grew",
+    25,
+    27,
+    [
+     "MachLib.Real.HasDerivAt2_add",
+     "MachLib.Real.HasDerivAt2_const",
+     "Quot.sound"
+    ],
+    [
+     "MachLib.Real.HasDerivAt2_sub"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_count_curve",
     "restated",
     35,
-    35,
-    [],
-    []
+    37,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_count_curve_local",
@@ -295,840 +493,1286 @@
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_count_curve_of_expr_jacobian",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_count_curve_of_represented_jacobian",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_count_curve_of_represented_jacobian_ELR",
     "restated",
     52,
     52,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_boundedCertificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_boundedCertificate_certificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_compiledPackage",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_compiledPackage_certificate",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_compiledPackage_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_compiledPackage_of_chain2Ranks",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_descentPackage_certificate",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_descentPackage_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_lower_system",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_lower_system_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_chain2_solvedPackage",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_descent_certificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_descent_result",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_descent_solver",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_lower_reductionWitness",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_lower_reductionWitness_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_descent",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_expFunctionReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_expSDRReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_expSDR_parts_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_functionReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_predicateReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_reductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_reductionWitness",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_reductionWitness_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_curve_of_solved_singleExp_adapter_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_bivar_expr_arc_data",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_boundedCertificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_boundedCertificate_and_separator_count",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_boundedCertificate_certificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_compiledPackage",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_compiledPackage_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_compiledPackage_certificate",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_compiledPackage_certificate_and_separator_count",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_compiledPackage_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_compiledPackage_of_chain2Ranks",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_compiledPackage_of_chain2Ranks_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_descentPackage_and_separator_count",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_descentPackage_certificate",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_descentPackage_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_lower_system",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_lower_system_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_solvedPackage",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_chain2_solvedPackage_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_descent_certificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_descent_certificate_and_separator_count",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_descent_result",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_descent_result_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_descent_solver",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_lower_reductionWitness",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_lower_reductionWitness_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_represented_arc_data",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_represented_arc_data_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_descent",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_descent_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_expFunctionReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_expSDRReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_expSDR_parts_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_functionReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_predicateReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_reductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_reductionWitness",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_reductionWitness_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_full_of_solved_singleExp_adapter_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_bivar_expr_arc_data",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_boundedCertificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_boundedCertificate_and_separator_count",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_boundedCertificate_certificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_compiledPackage",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_compiledPackage_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_compiledPackage_certificate",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_compiledPackage_certificate_and_separator_count",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_compiledPackage_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_compiledPackage_of_chain2Ranks",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_compiledPackage_of_chain2Ranks_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_descentPackage_and_separator_count",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_descentPackage_certificate",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_descentPackage_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_lower_system",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_lower_system_khovBound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_solvedPackage",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_chain2_solvedPackage_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_descent_certificate",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_descent_certificate_and_separator_count",
     "restated",
     36,
-    36,
-    [],
-    []
+    38,
+    [
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.hasDerivAt_implicit_local",
+     "MachLib.Real.zero_lt_one_ax"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_descent_result",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_descent_result_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_descent_solver",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_lower_reductionWitness",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_lower_reductionWitness_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_descent",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_descent_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_expFunctionReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_expSDRReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_expSDR_parts_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_functionReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_predicateReductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_reductionSolver_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_reductionWitness",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_reductionWitness_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_of_solved_singleExp_adapter_bound",
     "restated",
     48,
     48,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.khovanskii_rolle_single_represented_arc_data_and_separator_count",
     "restated",
     49,
     49,
-    [],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit_local"
+    ],
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.sumC_g2_intersection_finite",
@@ -1136,9 +1780,14 @@
     68,
     69,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_add",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.sumC_intersection_finite",
@@ -1146,9 +1795,14 @@
     55,
     56,
     [
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.HasDerivAt2_add",
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
-    []
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.MultiVarMod.TwoExp.sumC_intersection_finite_ELR",
@@ -1156,9 +1810,22 @@
     65,
     67,
     [
+     "MachLib.Real.HasDerivAt2_add",
      "MachLib.Real.HasDerivAt_log_pos",
-     "MachLib.Real.hasDerivAt_continuousAt"
+     "MachLib.Real.hasDerivAt_continuousAt",
+     "MachLib.Real.hasDerivAt_implicit_local"
     ],
+    [
+     "MachLib.Real.HasDerivAt2_sub",
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
+   ],
+   [
+    "MachLib.Real.BivariateImplicitControls.implicit_local_without_continuity_inconsistent",
+    "new",
+    null,
+    40,
+    [],
     []
    ],
    [
@@ -1174,6 +1841,14 @@
     "new",
     null,
     30,
+    [],
+    []
+   ],
+   [
+    "MachLib.Real.HasDerivAt2_sub",
+    "new",
+    null,
+    21,
     [],
     []
    ],
@@ -1197,16 +1872,23 @@
     "MachLib.Real.curve_tangent_and_chain",
     "restated",
     18,
-    24,
+    28,
     [
      "Classical.choice",
+     "MachLib.Real.add_comm",
+     "MachLib.Real.add_lt_add_left",
+     "MachLib.Real.add_zero",
+     "MachLib.Real.hasDerivAt_implicit_local",
      "MachLib.Real.leR",
      "MachLib.Real.ltR",
      "MachLib.Real.subR",
+     "MachLib.Real.zero_lt_one_ax",
      "Quot.sound",
      "propext"
     ],
-    []
+    [
+     "MachLib.Real.hasDerivAt_implicit"
+    ]
    ],
    [
     "MachLib.Real.curve_tangent_and_chain_local",
@@ -1223,6 +1905,28 @@
     []
    ],
    [
+    "MachLib.Real.hasDerivAt2_exp_sum",
+    "grew",
+    25,
+    27,
+    [
+     "MachLib.Real.HasDerivAt2_mul",
+     "MachLib.Real.mul_comm",
+     "Quot.sound"
+    ],
+    [
+     "MachLib.Real.HasDerivAt2_sub"
+    ]
+   ],
+   [
+    "MachLib.Real.hasDerivAt_implicit",
+    "new",
+    null,
+    20,
+    [],
+    []
+   ],
+   [
     "_private.MachLib.BivariateImplicitControls.0.MachLib.Real.BivariateImplicitControls.fy_ne_zero",
     "new",
     null,
@@ -1234,7 +1938,7 @@
     "_private.MachLib.BivariateImplicitControls.0.MachLib.Real.BivariateImplicitControls.hd2_quad",
     "new",
     null,
-    11,
+    22,
     [],
     []
    ],
@@ -1265,10 +1969,13 @@
   ]
  },
  "new_rows": [
+  "MachLib.Real.BivariateImplicitControls.implicit_local_without_continuity_inconsistent",
   "MachLib.Real.BivariateImplicitControls.implicit_without_continuity_inconsistent",
   "MachLib.Real.BivariateImplicitControls.old_curve_count_false",
+  "MachLib.Real.HasDerivAt2_sub",
   "MachLib.Real.continuousAt_congr_fun",
   "MachLib.Real.continuousAt_const_sub",
+  "MachLib.Real.hasDerivAt_implicit",
   "_private.MachLib.BivariateImplicitControls.0.MachLib.Real.BivariateImplicitControls.fy_ne_zero",
   "_private.MachLib.BivariateImplicitControls.0.MachLib.Real.BivariateImplicitControls.hd2_quad",
   "_private.MachLib.BivariateImplicitControls.0.MachLib.Real.BivariateImplicitControls.neg_one_lt_zero_c",
@@ -1388,10 +2095,10 @@
   "MachLib.Real.curve_tangent_and_chain_local"
  ],
  "row_kinds": {
-  "grew": 20,
-  "new": 9,
+  "grew": 27,
+  "new": 12,
   "restated": 110
  },
  "schema": "machsig-transition/v3",
- "statement_probe_sha256": "a0fca508770c44563b072b39a41e4d6bd0ce1d967ac8f0e6f5b932c83c300bd6"
+ "statement_probe_sha256": "aa3e523d09f281c0c80c1596460a9e62b4a4bce6ca00daea336131e103727324"
 }

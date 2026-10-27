@@ -1,7 +1,7 @@
 import MachLib
 open Lean Elab Command
 
-/-! Statement-identity probe for the 2026-10-27 transition (checks C1, C2 and C6 of
+/-! Statement-identity probe for the 2026-10-27 transition (checks C1, C2, C6, C7 and C8 of
 `docs/machsig/transition_2026-10-27.py`).
 
 Run from `foundations/` on the built branch: `tools/capped_lean.sh --cap 16G lake env lean
@@ -15,8 +15,15 @@ It carries byte-for-byte copies of the two serializers gate 14 hashes:
 For every theorem with a leading hypothesis named `hcont` concluding `MachLib.Real.ContinuousAt` (after that
 hypothesis's own leading binders), and every axiom with any such hypothesis, it removes those hypotheses (each must be
 unused by the rest of the type), counts them, and serializes what is left: if the change only ADDED the hypothesis, that hash is the old statement's. It also
-serializes the two control propositions' definitions (`OldImplicitStatement`, `OldCurveCountStatement`), which should
-be EXACTLY the old axiom's and the old theorem's statements, and a few unchanged declarations as serializer controls. -/
+serializes the three control propositions' definitions (`OldImplicitStatement`, `OldImplicitLocalStatement`,
+`OldCurveCountStatement`), which should be EXACTLY the old axioms' and the old theorem's statements; the two converted
+axioms' THEOREM types (`HasDerivAt2_sub`, `hasDerivAt_implicit`), whole and stripped; and a few unchanged declarations
+as serializer controls. -/
+
+def kindOf : ConstantInfo → String
+  | .thmInfo _ => "theorem" | .defnInfo _ => "def" | .axiomInfo _ => "axiom"
+  | .opaqueInfo _ => "opaque" | .ctorInfo _ => "ctor" | .inductInfo _ => "inductive"
+  | .recInfo _ => "rec" | .quotInfo _ => "quot"
 
 partial def serLevel (ps : List Name) : Level → String
   | .zero => "0"
@@ -100,8 +107,17 @@ run_cmd do
     | .thmInfo _ => rows := rows.push s!"STRIP_THM\t{nm}\t{k}\t{u}\t{serT t'}"
     | .axiomInfo _ => rows := rows.push s!"STRIP_AX\t{nm}\t{k}\t{u}\t{serA ci.levelParams t'}"
     | _ => rows := rows.push s!"STRIP_OTHER\t{nm}\t{k}\t{u}\t-"
-  -- the two control propositions: their DEFINITIONS, serialized as an axiom pin and as a theorem digest
+  -- the two converted axioms (owner's ruling F1): their THEOREM types, whole and with every `ContinuousAt` hypothesis
+  -- removed, serialized as axiom pins
+  for nm in [`MachLib.Real.HasDerivAt2_sub, `MachLib.Real.hasDerivAt_implicit] do
+    match env.find? nm with
+    | some ci =>
+      let (t', k, u) := strip (fun _ => true) ci.type
+      rows := rows.push s!"CONV\t{nm}\t{kindOf ci}\t{k}\t{u}\t{serA ci.levelParams ci.type}\t{serA ci.levelParams t'}"
+    | none => rows := rows.push s!"CONV\t{nm}\tABSENT\t0\t0\t-\t-"
+  -- the control propositions: their DEFINITIONS, serialized as an axiom pin and as a theorem digest
   for nm in [`MachLib.Real.BivariateImplicitControls.OldImplicitStatement,
+             `MachLib.Real.BivariateImplicitControls.OldImplicitLocalStatement,
              `MachLib.Real.BivariateImplicitControls.OldCurveCountStatement] do
     match env.find? nm with
     | some (.defnInfo v) => rows := rows.push s!"DEFVAL\t{nm}\t{serA v.levelParams v.value}\t{serT v.value}"
