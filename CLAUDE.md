@@ -351,11 +351,23 @@ ledger before and after). `u_le_one` is the conditional half of the owner's ruli
 - **`exp_gt_two_x` needs no division**: tangent line at `0` for `x < 1`, at `1` (`exp x = e·exp (x−1) ≥ e·x`, `e > 2`)
   for `x > 0`.
 - **Gate 14 cannot pass this without a reviewed rebaseline, by design.** A dependent theorem's footprint SWAPS (the
-  untrusted axiom leaves, the trusted ones its proof uses enter), and the gate fails on any entering axiom. Do not
-  `--update` and commit.
-- **Still conditional, and NOT derivable here:** the `HasDerivAt2*` family and `hasDerivAt_implicit` (about 140
-  theorems together), `floor` (63), `eml_tree_analytic_on_interval` (22). Admitting them means Mathlib witnesses in
-  `monogate-lean` and the owner's approval of each.
+  untrusted axiom leaves, the trusted ones its proof uses enter), and the gate fails on any entering axiom. The route
+  that worked: commit the Lean change, `trust_gate.py --update` (an UNREVIEWED baseline, which the gate refuses),
+  generate a transition report (`docs/machsig/transition_2026-10-26.py` is the template: the machine block from the
+  gate's own `gate_transition`, plus checks C1-C7 that can each fail), an independent review, the owner's sign-off,
+  THEN the stamp, and a `--no-ff` merge. Never stamp a baseline nobody reviewed.
+- **The gate cannot see a conversion that restates.** It sees an axiom "gone" and a theorem "new", under different
+  serializers, so `theorem foo : P'` replacing `axiom foo : P` passes it. C7 closes that for this change: the five
+  theorems' types, serialized by a copy of the gate's `serExpr` (`docs/machsig/evidence-2026-10-26/statement_probe.lean`),
+  equal master's axiom pins, and the copy reproduces four unchanged axioms' pins.
+- **Derivable and NOT yet converted** (found by the 2026-10-26 review, so "provable means proved" is not at zero):
+  `exp_exp_minus_exp_strictly_increasing` (sole blocker of 4 conditional theorems, among them `exp_exp_not_in_eml_1`;
+  the review proved it in a scratch file from trusted axioms, same type), and probably `exp_one_lt_three`
+  (`e ≤ (6/5)⁶ < 3`, unchecked). Convert them next, through the same reviewed route.
+- **Still conditional, and not derivable from the trusted axioms as far as checked:** the `HasDerivAt2*` family and
+  `hasDerivAt_implicit` (about 140 theorems together), `floor` (63), `eml_tree_analytic_on_interval` (22). Admitting
+  them means Mathlib witnesses in `monogate-lean` (none exists for `floor`, whatever the 2026-09-08 changelog entry says)
+  and the owner's approval of each.
 
 ## Where the content comes from
 

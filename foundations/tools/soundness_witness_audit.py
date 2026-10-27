@@ -108,8 +108,8 @@ def analyze(ledger_src, bridge_src, mine, theirs):
     #    excuses an axiom from being witnessed, so if it drifts off the ledger it can later mask
     #    a genuinely unwitnessed one. A witness for an axiom that is no longer in the trusted
     #    footprint is NOT a defect -- it is a witness we happen to still hold (e.g. `tanh_neg`,
-    #    still an axiom in MachLib/Trig.lean, just not in `trustedFootprint`, and `tanh_zero`,
-    #    a theorem in MachLib/Hyperbolic.lean since 2026-10-26).
+    #    still an axiom in MachLib/Trig.lean, just not in `trustedFootprint`; `tanh_zero` was the
+    #    other until it became a theorem on 2026-10-26 and its witness was retired).
     #    Flagging those would convict the innocent and train the next agent to delete evidence.
     stale = sorted((gap | bridge) - trusted)
     if stale:

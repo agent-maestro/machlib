@@ -206,7 +206,7 @@ Every count below is the output of a command, not a memory, and `tools/prose_cou
 fails if the text drifts from the corpus. Proof counts come from the **theorem ledger** and from nothing
 else: it reads the Lean environment `AxiomLedger.lean` checks and classifies every theorem's
 `#print axioms` footprint against that file's declared axiom policy (a text search over the sources is
-not a count of proved results). Measured 2026-10-10:
+not a count of proved results). Measured 2026-10-27:
 
 | figure | value | source |
 |---|---|---|

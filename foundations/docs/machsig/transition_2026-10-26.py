@@ -20,12 +20,18 @@ transition is meant to carry, with each claim stated as a check that can fail:
       new theorems it replaced (so it entered through that proof, and from nowhere else);
   C6  every new row is one of the five theorems, one of their two private helpers, or a theorem that
       already exists at OLD_REV but is missing from the old baseline (added on master after the
-      landing, which the gate accepts as INFO without rebaselining); all of them on trusted axioms.
+      landing, which the gate accepts as INFO without rebaselining); all of them on trusted axioms;
+  C7  each of the five theorems has EXACTLY the type of the axiom it replaces: its type, serialized by a
+      copy of the gate's `serExpr` (evidence-2026-10-26/statement_probe.lean, run on the new tree), hashes
+      to master's pin for that axiom; the copy reproduces four unchanged axioms' pins in the new baseline
+      (so it IS the gate's serializer), and two near-miss names are absent. The gate itself cannot see a
+      conversion that restates: it sees one axiom gone and one theorem new.
 
 Deterministic: no clock, no environment; every collection is sorted.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -48,12 +54,18 @@ HELPERS = {
     "_private.MachLib.SinNotInEMLDepth2Sweep.0.MachLib.Real.two_x_lt_exp_of_lt_one",
     "_private.MachLib.SinNotInEMLDepth2Sweep.0.MachLib.Real.two_x_lt_exp_of_pos",
 }
+PROBE = FOUND / "docs" / "machsig" / "evidence-2026-10-26" / "statement_probe.tsv"
+CONTROLS = ["MachLib.Real.tanh_neg", "MachLib.Real.u_lt_one", "MachLib.Real.sqrt_zero", "MachLib.Real.exp_gt_one_plus_self"]
+ABSENT = ["MachLib.Real.Real.tanh_zero", "MachLib.Real.exp_tangent_line_strict"]
 OUT_JSON = FOUND / "docs" / "machsig" / "transition_2026-10-26.json"
 OUT_MD = FOUND / "docs" / "machsig" / "TRANSITION_2026-10-26.md"
 
 
 def short(a: str) -> str:
-    return "`" + a.split(".")[-1] + "`"
+    for p in ("MachLib.Real.", "MachLib.", "Certcom."):
+        if a.startswith(p):
+            return "`" + a[len(p):] + "`"
+    return "`" + a + "`"
 
 
 def footprint(doc: dict, name: str) -> list[str]:
@@ -103,6 +115,19 @@ def main() -> int:
                     and all(set(footprint(new, n)) <= trusted | {"propext", "Classical.choice", "Quot.sound"}
                             for n in new_rows))
 
+    probe = {}
+    for ln in PROBE.read_text().splitlines():
+        f = ln.split("\t")
+        probe[f[0]] = {"kind": f[1]} if len(f) == 2 else \
+            {"kind": f[1], "module": f[2], "ser_sha256": hashlib.sha256(f[4][len("SER="):].encode()).hexdigest()}
+    c7 = {n: {"kind": probe.get(n, {}).get("kind"), "module": probe.get(n, {}).get("module"),
+              "ser_sha256": probe.get(n, {}).get("ser_sha256"), "master_axiom_pin": old["axiom_statements"].get(n)}
+          for n in sorted(five)}
+    checks["C7"] = (all(v["kind"] == "theorem" and v["ser_sha256"] == v["master_axiom_pin"] for v in c7.values())
+                    and all(probe.get(n, {}).get("kind") == "axiom"
+                            and probe[n]["ser_sha256"] == new["axiom_statements"].get(n) for n in CONTROLS)
+                    and all(probe.get(n, {}).get("kind") == "ABSENT" for n in ABSENT))
+
     by_axiom = {a: sorted(r[0] for r in old_rows if a in r[5]) for a in sorted(five)}
     entered = {}
     for r in old_rows:
@@ -127,6 +152,8 @@ def main() -> int:
         "new_rows": new_rows,
         "new_rows_added_on_master_since_the_landing": since_landing,
         "checks": checks,
+        "statement_identity": c7,
+        "statement_probe_sha256": hashlib.sha256(PROBE.read_bytes()).hexdigest(),
         "check_failures": {"C4": bad4, "C5": bad5},
     }
     OUT_JSON.write_text(json.dumps(doc, indent=1, sort_keys=True) + "\n")
@@ -161,6 +188,7 @@ def main() -> int:
         "C4": "every theorem row lost at least one of the five, and nothing else",
         "C5": "every entered axiom is trusted and in the replacing proof's footprint",
         "C6": "new rows = the five + two private helpers + theorems already at the old revision, all on trusted axioms",
+        "C7": "each of the five has exactly its old axiom's type (gate serializer, master's pins)",
     }
     for k in sorted(checks):
         lines.append(f"| {k} | {desc[k]} | {'yes' if checks[k] else '**NO**'} |")
