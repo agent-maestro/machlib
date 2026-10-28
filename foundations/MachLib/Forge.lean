@@ -475,7 +475,7 @@ theorem min_le_of_right_le {b c : Real} (h : b ≤ c) (a : Real) : min a b ≤ c
 
 /-! ### OfScientific literal positivity (C-240, 2026-05-03)
 
-`realOfScientific_pos` is the underlying axiom in `MachLib.Basic`.
+`realOfScientific_pos` is the underlying theorem in `MachLib.Basic` (an axiom until 2026-10-04).
 The two derived theorems below are the user-facing forms — Lean's
 elaborator desugars `(0.5 : Real)` to `OfScientific.ofScientific 5
 true 1`, which (via `instOfScientific`) reduces to `realOfScientific
@@ -650,12 +650,11 @@ The Forge Lean backend emits unqualified `floor` calls when a kernel
 .eml uses the `floor` builtin (e.g. lattice cell-index computations in
 gaming kernels like `crystal_lattice.eml`, `neon_substrate.eml`). To
 keep MachLib's "axiomatic, sorry-free" character, we expose `floor` as
-a pure `Real → Real` axiom with no defining properties — Forge-emitted
-proofs that use `floor` only need it to type-check, not to reason
-about its value. If a future kernel proof actually requires
-properties of `floor` (idempotence, integer-on-integers, ≤ x, etc.),
-those should be added incrementally as `axiom`s with explicit names,
-not retrofitted into a single mega-axiom.
+an axiomatised `Real → Real` function. It began with no defining
+properties; three laws were added as proofs needed them, each a
+separately named axiom (`floor_le`, `lt_floor_add_one`, `floor_zero`,
+below), and since 2026-10-27 all four are in the trusted footprint,
+witnessed in monogate-lean by Mathlib's `Int.floor` cast to `ℝ`.
 
 The Mathlib analogue is `Int.floor : Real → Int` plus an `Int → Real`
 coercion. We collapse that to `Real → Real` because every Forge-emit

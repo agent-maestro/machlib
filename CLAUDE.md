@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 089 `.lean` files** (814 top-level + 275 in subdirectories) /
-**259 858 lines**, re-exported through the aggregator
+**259 860 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -176,8 +176,8 @@ instantiates `pid_log_cosh_grounded` (on `u ≤ 2⁻⁵²`) and `GroundedBudgetI
 `B > ext 15 ≈ 48.7` (`emlVarVar_combinedBoundE_eq`: the encoder's bound is `14`), so its error is at least `u·exp B`, about
 `1.5·10⁵` at `u = 2⁻⁵³`; no upper bound on `u` helps. Two traps those
 modules avoid: no trusted axiom bounds `exp` from above (they derive `exp n ≤ 4ⁿ` from `1 + x ≤ exp x`), and
-`mach_decimal`'s order arms rest on `realOfScientific_le_of_nat`/`_lt_of_nat`, which are not trusted, so they use
-`grounded_decimal`. Their docstrings say more.
+`mach_decimal`'s order arms rest on `realOfScientific_le_of_nat`/`_lt_of_nat`, which were untrusted axioms when these
+modules were written (theorems on trusted axioms since 2026-10-04), so they use `grounded_decimal`. Their docstrings say more.
 
 > **It went dark once, for 33 days, and nothing said so.** MachLib moved to Lean v4.32.2 on
 > 2026-07-31; `monogate-lean` stayed on v4.14.0. Because it requires MachLib *by path*, it was
@@ -771,8 +771,8 @@ behind it is missing — registration is still a human act.
 
 - **`mach_decimal` PROVES `0.5 + 0.5 = 1.0` AND DOES NOT PROVE `0.5 + 0.5 = 1`.** The two differ
   only in how the right side is spelt: `1.0` is `realOfScientific 10 true 1`, `1` is the `OfNat`
-  literal, and `Basic.lean` bridges them **by axiom** (`realOfScientific_one_dot_zero`) rather than
-  by computation. Nothing in the decimal simp set crosses that line, so the tactic stalls one
+  literal, and `Basic.lean` bridges them by a **theorem** (`realOfScientific_one_dot_zero`, an axiom until
+  2026-10-04) rather than by computation. Nothing in the decimal simp set crosses that line, so the tactic stalls one
   rewrite short and leaves `1 = realOfScientific (5 + 5) true 1` open — which reads exactly like
   "the fact is false" rather than "the tactic stopped". Use **`mach_decimal_ofnat`**
   (`MachLib/Decimal.lean`), which retargets the goal through the bridge first. `OfNat Real` exists

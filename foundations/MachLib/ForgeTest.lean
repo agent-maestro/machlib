@@ -3,8 +3,8 @@ MachLib.ForgeTest — RED/GREEN test suite for forge Phase D obligations.
 
 Each theorem below is the shape forge's `_render_theorem` method emits
 for a function with interval-bound refinements.  The proof bodies show
-the progression from `sorry` (RED) to closed proofs via the new
-`MachLib.Forge.Interval` lemma library (GREEN).
+the progression from `sorry` (RED) to closed proofs via the interval
+lemmas in `MachLib.Forge` (Classes A–H; GREEN).
 
 Theorem naming mirrors the forge convention:
   `<function_name>_spec`
