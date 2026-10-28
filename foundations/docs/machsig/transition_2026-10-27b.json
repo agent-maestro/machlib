@@ -1,7 +1,7 @@
 {
  "binding": {
-  "new_baseline_sha256": "sha256:3c8563b29747b983384f6ec4b123538977259ded6ca92a19960175a784b0648d",
-  "new_sources_commit": "e1eacf33c94b52920ec57196c42790bafd81b802",
+  "new_baseline_sha256": "sha256:5b26c935f09c85e85f50d3bd60c6d4a7926e706da398ef5634ff266b2302694b",
+  "new_sources_commit": "7eb1b859d171a5ab2f72d7b3005ed4669e45638e",
   "old_baseline_file": "tools/machsig/trust_baseline.json at 89e6855bbe9e13c243b2fd3b2f8527a3f623563b (master)",
   "old_baseline_role": "the LAST REVIEWED baseline at the anchor: the implicit-function rebaseline, brought onto master by the merge commit 89e6855b (pull request #10)",
   "old_baseline_sha256": "sha256:0c23b9e554094947012de95dacdacecf1384716264690c33300fcb9135794b07"
