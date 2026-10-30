@@ -94,7 +94,7 @@ def safe (b : FxBox) : FxSym → Bool
   | .lit m => FxNet.inRange m
   | .add p q => safe b p && safe b q &&
       FxNet.inRange (rng b (.add p q)).1 && FxNet.inRange (rng b (.add p q)).2
-  | .cmul m p => safe b p &&
+  | .cmul m p => FxNet.inRange m && safe b p &&
       FxNet.inRange (rng b (.cmul m p)).1 && FxNet.inRange (rng b (.cmul m p)).2
   | .maxc p c => safe b p && FxNet.inRange c
   | .minc p c => safe b p && FxNet.inRange c
@@ -153,7 +153,7 @@ theorem noOverflow_of_safe {b : FxBox} {x1 x2 : Int} (h : b.Has x1 x2) : ∀ t :
       have e : FxNet.word (inst x1 x2 (.cmul m p)) = m * FxNet.word (inst x1 x2 p) / 65536 := rfl
       rw [e] at r
       simp only [inst, FxNet.noOverflow, Bool.and_eq_true]
-      exact ⟨noOverflow_of_safe h p s.1.1, inRange_between s.1.2 s.2 r.1 r.2⟩
+      exact ⟨⟨s.1.1.1, noOverflow_of_safe h p s.1.1.2⟩, inRange_between s.1.2 s.2 r.1 r.2⟩
   | .maxc p c, s => by
       simp only [safe, Bool.and_eq_true] at s
       simp only [inst, FxNet.noOverflow, Bool.and_eq_true]

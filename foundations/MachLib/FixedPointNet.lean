@@ -15,7 +15,7 @@ such as a ReLU network, and it differs in three ways:
 * **`floor` is not used.** MachLib's `floor` is an axiom on `Real` with no integrality law, so it cannot
   be tied to a word. The residue here is a fact about `Int`, and the footprint stays field and order.
 
-`FxNet.Enum` computes the bound as a `Nat`, in units of `2^-32`, so a closed term's bound is `rfl`.
+`FxNet.Enum` computes the bound as a `Nat`, in units of `2^-32`, so the kernel computes a closed term's bound.
 
 **What the main theorem does not say.** `fxnet_eps` is conditional on `noOverflow`, per node and per input:
 the wrap is excluded, not bounded. It relates the term to its own real semantics; that the term is a
@@ -358,13 +358,13 @@ def wrapEval : FxNet → Int
   | .maxc a c => if wrapEval a ≤ c then c else wrapEval a
   | .minc a c => if wrapEval a ≤ c then wrapEval a else c
 
-/-- No node of this evaluation leaves 32 bits. Decidable, and per input: it is checked at a point, not
-over a domain. -/
+/-- No node of this evaluation leaves 32 bits, and no constant or input word does either. Decidable, and per
+input: it is checked at a point, not over a domain. -/
 def noOverflow : FxNet → Bool
   | .input w => inRange w
   | .lit m => inRange m
   | .add a b => noOverflow a && noOverflow b && inRange (word a + word b)
-  | .cmul m a => noOverflow a && inRange (m * word a / 65536)
+  | .cmul m a => inRange m && noOverflow a && inRange (m * word a / 65536)
   | .maxc a c => noOverflow a && inRange c
   | .minc a c => noOverflow a && inRange c
 
@@ -385,7 +385,7 @@ theorem wrapEval_eq_word : ∀ t : FxNet, noOverflow t = true → wrapEval t = w
   | .cmul m a, h => by
       simp only [noOverflow, Bool.and_eq_true] at h
       simp only [wrapEval, word]
-      rw [wrapEval_eq_word a h.1]
+      rw [wrapEval_eq_word a h.1.2]
       exact wrap32_of_inRange h.2
   | .maxc a c, h => by
       simp only [noOverflow, Bool.and_eq_true] at h
