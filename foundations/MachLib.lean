@@ -12,6 +12,7 @@ import MachLib.HyperbolicId
 import MachLib.HyperbolicPreservation
 import MachLib.Forge
 import MachLib.ForgeTest
+import MachLib.ForgeBridgeControls
 import MachLib.Ring
 import MachLib.MultiVar
 import MachLib.MultiVarBezout

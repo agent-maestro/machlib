@@ -925,15 +925,18 @@ macro_rules
 /-! ### `mach_linarith` tactic — v1 stub
 
 The convex-band closer for `0 ≤ a + b*x ∧ a + b*x ≤ 1` shapes
-where `a + b = 1` and `-1 ≤ x ≤ 1`. Wraps the Forge
-interval-arithmetic `interval_add_scale` lemma plus a few
-literal-positivity helpers.
+where `a + b = 1` and `-1 ≤ x ≤ 1`. A `repeat (first …)` over
+order and positivity steps (`add_nonneg`, `add_pos_of_nonneg_pos`,
+`le_trans`, literal positivity, `assumption`). It does not call
+`interval_add_scale`; until 2026-10-27 this docstring said it wrapped it.
 
 This is a deliberately narrow v1 — most of the obligations
 tagged "linarith-blocked" in the engine table are actually
 positivity problems closed by `mach_positivity`. The few
-genuinely-linear cases (Pulse.in_unit_band) reduce to
-`interval_add_scale` once `1/2` literal arithmetic is in scope. -/
+genuinely-linear cases (Pulse.in_unit_band) can apply
+`interval_add_scale` (`Forge.lean`, which takes `j + k ≤ 1`) directly:
+the literal facts it needs are in scope (`realOfScientific_le_of_nat`,
+`mach_decimal_ofnat`; see `ForgeTest.add_halves_in_unit`). -/
 
 macro "mach_linarith" : tactic => `(tactic|
   ((repeat (first

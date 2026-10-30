@@ -4,7 +4,10 @@
   "_refuted_statements": [
     "OldCurveCountStatement",
     "OldImplicitLocalStatement",
-    "OldImplicitStatement"
+    "OldImplicitStatement",
+    "OldIntervalAddScaleStatement",
+    "OldUnitLitLeStatement",
+    "OldWeightSumLeStatement"
   ],
   "_known_obligations": [
     "BipolyDichotomyAlong",
@@ -36,6 +39,9 @@
     "OldCurveCountStatement",
     "OldImplicitLocalStatement",
     "OldImplicitStatement",
+    "OldIntervalAddScaleStatement",
+    "OldUnitLitLeStatement",
+    "OldWeightSumLeStatement",
     "OneQueryLevelSetResidue",
     "Periodic",
     "PfaffianFunction",

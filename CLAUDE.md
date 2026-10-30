@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 088 `.lean` files** (813 top-level + 275 in subdirectories) /
-**259 788 lines**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 089 `.lean` files** (814 top-level + 275 in subdirectories) /
+**259 860 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -29,12 +29,12 @@ the bivariate-derivative and `floor` axioms (see "The implicit-function axiom wa
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 406** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 452** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 451** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 451** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **9 323** | every axiom in the footprint is in `trustedFootprint` |
-| conditional | **128** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
+| declarations | **12 413** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 458** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 457** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 457** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **9 332** | every axiom in the footprint is in `trustedFootprint` |
+| conditional | **125** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
 The **265** tracked `.lean` files under `MachLib/` that the environment does not contain (`Discovered/`'s 253 and
@@ -63,18 +63,18 @@ frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`**
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **210 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **208 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
-178  MachLib.*   axioms in the environment after `import MachLib`
+176  MachLib.*   axioms in the environment after `import MachLib`
  32  Certcom.*   IEEE-754 floor axioms
 ---
-210  = what the ledger pins
+208  = what the ledger pins
 ```
 
 (Re-derive the split with a `#eval` over `getEnv` partitioning `.axiomInfo` by name prefix — that is
-how these two were measured, not by grep; last on 2026-10-27, after `HasDerivAt2_sub` and `hasDerivAt_implicit` were proved; on 2026-10-26, after five derivable axioms were proved; before that on 2026-10-05, after the muses' review of E made theorems of
+how these two were measured, not by grep; last on 2026-10-27, after two false Forge-bridge axioms were removed, and before that the same day after `HasDerivAt2_sub` and `hasDerivAt_implicit` were proved; on 2026-10-26, after five derivable axioms were proved; before that on 2026-10-05, after the muses' review of E made theorems of
 seven more -- see "The muses' review of E" below.)
 
 A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
@@ -176,8 +176,8 @@ instantiates `pid_log_cosh_grounded` (on `u ≤ 2⁻⁵²`) and `GroundedBudgetI
 `B > ext 15 ≈ 48.7` (`emlVarVar_combinedBoundE_eq`: the encoder's bound is `14`), so its error is at least `u·exp B`, about
 `1.5·10⁵` at `u = 2⁻⁵³`; no upper bound on `u` helps. Two traps those
 modules avoid: no trusted axiom bounds `exp` from above (they derive `exp n ≤ 4ⁿ` from `1 + x ≤ exp x`), and
-`mach_decimal`'s order arms rest on `realOfScientific_le_of_nat`/`_lt_of_nat`, which are not trusted, so they use
-`grounded_decimal`. Their docstrings say more.
+`mach_decimal`'s order arms rest on `realOfScientific_le_of_nat`/`_lt_of_nat`, which were untrusted axioms when these
+modules were written (theorems on trusted axioms since 2026-10-04), so they use `grounded_decimal`. Their docstrings say more.
 
 > **It went dark once, for 33 days, and nothing said so.** MachLib moved to Lean v4.32.2 on
 > 2026-07-31; `monogate-lean` stayed on v4.14.0. Because it requires MachLib *by path*, it was
@@ -392,6 +392,14 @@ ledger before and after). `u_le_one` is the conditional half of the owner's ruli
 - **An axiom about "the solution", "the inverse" or "the curve" must say WHICH one** (continuity, uniqueness, a branch),
   or it can be fed a bad one. Nothing inside MachLib would have found this: the opaque `HasDerivAt2` hides it. The Mathlib
   witness attempt did, at once, which is the case for witnessing an axiom before trusting it, not after.
+- **The same flaw, twice more, found by that day's independent review.** `Forge.lean`'s "bridge" axioms
+  `interval_scale_unit_lit_le` (`0 < k → 0 < k → k ≤ 1`: its "k ≤ 1" hypothesis repeated `0 < k`) and
+  `interval_weight_sum_le` (`j + k ≤ 1` from `j, k ≤ 1`) were false; each docstring said the emitter would check the
+  real condition first. Removed on the owner's ruling (a separate change): `interval_add_scale` takes `j + k ≤ 1`, and the
+  two `ForgeTest` theorems prove their literal facts (`0.5 ≤ 1` by `realOfScientific_le_of_nat`, `0.5 + 0.5 = 1` by
+  `mach_decimal_ofnat`). `ForgeBridgeControls` refutes all three old statements (the old `interval_add_scale` was
+  false too: `1·1 + 1·1 ≤ 1`). Pinned 210 -> 208, conditional 128 -> 125. **A condition in a docstring is not in the
+  type.**
 - **Still conditional:** `eml_tree_analytic_on_interval` (22; its witness needs a Mathlib model of `EMLTree` in
   `monogate-lean`), `HasDerivAt_sqrt` (20), the decimal `log`/`exp` bounds, `pi_upper_bound`, and the two derivable
   axioms named above.
@@ -408,11 +416,11 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 829 jobs, ~3 s warm
+lake build                                     # 830 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
-lake env lean AxiomLedger.lean                 # "210 axioms pinned; 112 headline footprints ⊆ trusted (156)"
+lake env lean AxiomLedger.lean                 # "208 axioms pinned; 112 headline footprints ⊆ trusted (156)"
 python3 tools/claim_audit/claim_audit.py       # "all 579 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
@@ -445,7 +453,7 @@ Both are "conditional theorem, unvalidated"; only one had a harness until 2026-0
 `ValueGapBound` was introduced, taken as a hypothesis by two theorems, and satisfied by nothing at
 any depth. **A Prop with consumers and no producers is not exercised; it is assumed** — and that is
 the easy half to miss, because the consumers make it look exercised. Baseline
-`tools/hypothesis_baseline.json`, 36 entries, a **set** not a count. Read its triage note before
+`tools/hypothesis_baseline.json`, 39 entries, a **set** not a count. Read its triage note before
 trusting a hit: most entries are correct (named open obligations belong there, and definitional
 predicates like `Lipschitz` are supplied from outside rather than proved). What to watch for is a new
 name that is *neither*.
@@ -584,7 +592,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**823 of 1088 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**824 of 1089 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -763,8 +771,8 @@ behind it is missing — registration is still a human act.
 
 - **`mach_decimal` PROVES `0.5 + 0.5 = 1.0` AND DOES NOT PROVE `0.5 + 0.5 = 1`.** The two differ
   only in how the right side is spelt: `1.0` is `realOfScientific 10 true 1`, `1` is the `OfNat`
-  literal, and `Basic.lean` bridges them **by axiom** (`realOfScientific_one_dot_zero`) rather than
-  by computation. Nothing in the decimal simp set crosses that line, so the tactic stalls one
+  literal, and `Basic.lean` bridges them by a **theorem** (`realOfScientific_one_dot_zero`, an axiom until
+  2026-10-04) rather than by computation. Nothing in the decimal simp set crosses that line, so the tactic stalls one
   rewrite short and leaves `1 = realOfScientific (5 + 5) true 1` open — which reads exactly like
   "the fact is false" rather than "the tactic stopped". Use **`mach_decimal_ofnat`**
   (`MachLib/Decimal.lean`), which retargets the goal through the bridge first. `OfNat Real` exists
@@ -917,14 +925,15 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**823 of 1 088 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
+run (**824 of 1 089 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
-**210 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
+**208 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
 `u_lt_one`; then `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`, `real_exp_finite`, `real_sinh_finite`,
 `real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`), then five proved on
 2026-10-26 (`exp_tangent_line_strict`, `exp_gt_two_x`, `tanh_zero`, `sqrt_one`, `u_le_one`) and two on 2026-10-27
-(`HasDerivAt2_sub`, `hasDerivAt_implicit`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
+(`HasDerivAt2_sub`, `hasDerivAt_implicit`), then two FALSE ones removed the same day (`interval_scale_unit_lit_le`,
+`interval_weight_sum_le`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,
