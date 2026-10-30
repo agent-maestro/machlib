@@ -41,6 +41,12 @@ structure FxBox where
 def FxBox.Has (b : FxBox) (x1 x2 : Int) : Prop :=
   b.x0 ≤ x1 ∧ x1 ≤ b.x1 ∧ b.y0 ≤ x2 ∧ x2 ≤ b.y1
 
+/-- A word pair is in a box exactly when it is between the box's ends: `Has` is satisfiable, and this is how a caller
+supplies it. -/
+theorem FxBox.has_intro {b : FxBox} {x1 x2 : Int} (h1 : b.x0 ≤ x1) (h2 : x1 ≤ b.x1) (h3 : b.y0 ≤ x2)
+    (h4 : x2 ≤ b.y1) : FxBox.Has b x1 x2 :=
+  ⟨h1, h2, h3, h4⟩
+
 private def imin (a b : Int) : Int := if a ≤ b then a else b
 private def imax (a b : Int) : Int := if a ≤ b then b else a
 
