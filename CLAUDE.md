@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 089 `.lean` files** (814 top-level + 275 in subdirectories) /
-**259 860 lines**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 091 `.lean` files** (816 top-level + 275 in subdirectories) /
+**260 789 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -24,16 +24,16 @@ python3 tools/theorem_ledger/ledger.py --check theorem_ledger.json # is that led
 
 It reads the environment `AxiomLedger.lean` checks (`import MachLib`, `import MachLib.FPGrounding`), takes
 every theorem's `#print axioms` footprint (`Lean.collectAxioms`) and classifies it against that file's LIVE
-`trustedFootprint` and `knownAxioms`. Measured 2026-10-27, after the implicit-function repair and the owner's admission of
+`trustedFootprint` and `knownAxioms`. Measured 2026-10-30, after the fixed-point network lemmas (see "Fixed-point forward error over integer words" below); `conditional` last moved on 2026-10-27, with the implicit-function repair and the owner's admission of
 the bivariate-derivative and `floor` axioms (see "The implicit-function axiom was false" below):
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 413** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 458** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 457** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 457** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **9 332** | every axiom in the footprint is in `trustedFootprint` |
+| declarations | **12 525** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 516** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 515** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 515** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **9 390** | every axiom in the footprint is in `trustedFootprint` |
 | conditional | **125** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
@@ -404,6 +404,22 @@ ledger before and after). `u_le_one` is the conditional half of the owner's ruli
   `monogate-lean`), `HasDerivAt_sqrt` (20), the decimal `log`/`exp` bounds, `pi_upper_bound`, and the two derivable
   axioms named above.
 
+## Fixed-point forward error over integer words (2026-10-30)
+
+`MachLib/FixedPointNet.lean` and `MachLib/FixedPointNetInterval.lean`, written for the owner's neural-feasibility study
+(monogate-research `exploration/neural/`, which holds the concrete network: weights stay out of MachLib). Lemmas only.
+
+- **Why a sibling of `FxExpr`, not a new constructor:** `FxExpr` has no `max`, charges a step on every add (hardware adds
+  are exact) and takes truncation as a hypothesis. A constructor would restate pinned declarations.
+- **The evaluator is `Int`, and `floor` is not used.** `floor` is an axiom on `Real` with no integrality law, so `qtrunc`
+  cannot reach a word without a new axiom. `(m * a) / 65536` on `Int` IS floor, and its residue is an integer fact. So
+  `fxnet_eps` rests on field and order axioms only, and the evaluator can be run against an RTL simulation.
+- **Words only.** Everything quantifies over `Int` inputs. Nothing is claimed between words, and nothing is about an RTL.
+- **`check` needs an affine form, not plain intervals:** a unit whose sign is fixed on a box is exactly affine, so it
+  cancels against an affine law exactly. It is closed by `decide +kernel` (no `native_decide`): the study's 2-8-1 network
+  takes about 75 s and 10 GB under `tools/capped_lean.sh`. `false` proves nothing. It cannot terminate at `T = 0` when a
+  kink line crosses the box, because the line never resolves: prove that case directly.
+
 ## Where the content comes from
 
 Self-contained. EML semantics live in `MachLib/SinNotInEML.lean` (the `EMLTree` type and `eval`);
@@ -416,7 +432,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 830 jobs, ~3 s warm
+lake build                                     # 832 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
@@ -592,7 +608,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**824 of 1089 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**826 of 1091 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -925,7 +941,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**824 of 1 089 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
+run (**826 of 1 091 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **208 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,

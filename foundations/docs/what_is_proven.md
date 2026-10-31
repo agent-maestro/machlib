@@ -481,6 +481,18 @@ correct (see §6), and grounding of the analytic base in a construction of ℝ
 
 ---
 
+### Fixed-point forward error over integer words (2026-10-30)
+
+`MachLib/FixedPointNet.lean` and `FixedPointNetInterval.lean`. For a program of constant multiplies, adds and selects over
+Q16.16 words: `fxnet_eps` bounds a datapath word's distance from the exact value where no node overflows;
+`noOverflow_of_safe` discharges that condition at every word of a box from one range check; `gap_bound` bounds the gap
+between two programs' exact values at every word of a box, from a check the kernel runs. Field and order axioms only:
+`floor` is not used, because the evaluator is `Int` arithmetic.
+
+**What this does not claim.** Words only: nothing between them. Nothing about an RTL: that a term is a given program, and
+that hardware implements it, is outside Lean. The one concrete use, a 2-8-1 network, lives in monogate-research
+`exploration/neural/`, and no count here includes it.
+
 ## 4. What it rests on — the axiom base, honestly
 
 MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the

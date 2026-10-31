@@ -653,6 +653,8 @@ import MachLib.ThreeStateQuadTracking
 import MachLib.SignedLoopEnvelope
 import MachLib.PIDStepIteration
 import MachLib.FixedPointPIDLoop
+import MachLib.FixedPointNet
+import MachLib.FixedPointNetInterval
 import MachLib.AntiWindupPITracking
 import MachLib.CoreModel
 import MachLib.EMLToC

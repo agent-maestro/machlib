@@ -7,7 +7,7 @@ owed. It is kept because its value does not depend on a reader: **§5 is an hone
 where we think this is weakest.**
 
 If a reviewer does appear, this is the packet to hand them — one mechanism, not the corpus, not the
-compiler, self-contained enough that nobody need read 259 860 lines of Lean.
+compiler, self-contained enough that nobody need read 260 789 lines of Lean.
 
 **The question we would ask, stated so it can be answered "no":**
 
@@ -30,7 +30,7 @@ Answers that would be useful, including the dismissive ones:
 
 **MachLib** is a Lean 4 corpus that does not depend on Mathlib. `MachLib.Real` is an *axiomatised*
 ordered field with `exp`, `log`, `sin`, derivatives, and so on — declared, not constructed. The
-corpus is ≈ 9 458 theorems outside its generated sub-corpus (counted in the Lean environment by the theorem
+corpus is ≈ 9 516 theorems outside its generated sub-corpus (counted in the Lean environment by the theorem
 ledger, `foundations/tools/theorem_ledger/ledger.py`, which also classifies each one's axiom footprint; this
 line read 8 117 until 2026-10-10, a text count of `theorem` lines that could not see `private theorem`).
 
