@@ -179,6 +179,7 @@ theorem sumC_intersection_finite (c a b : Real) (hc : 0 ≤ c) (hab : a < b)
       show HasDerivAt2 sumC_g (-(exp z + z * exp z)) (exp z + c) z (sumC_yc c z)
       rw [← sumC_exp_yc c z hc]; exact hasDerivAt2_sumC_g z (sumC_yc c z))
     (fun z _ _ => ne_of_gt (sumC_pos c z hc))
+    (fun z _ _ => hasDerivAt_continuousAt (hasDerivAt_sumC_yc c z hc))
     (fun s => sumC_curve_id c s hc)
     1 repChain
     (MultiPoly.sub (MultiPoly.const 0) (MultiPoly.varY ⟨0, by omega⟩))

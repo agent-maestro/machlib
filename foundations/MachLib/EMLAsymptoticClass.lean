@@ -511,22 +511,21 @@ theorem not_eventually_K_over_x_one_eml_const_var (a : Real) :
     Real.lt_trans_ax h_eval_lt_neg_one h_neg_one_lt_zero
   exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_lt_zero h_one_div_pos)
 
-/-! ## The tangent-line axiom (closes `eml(var, var)`)
+/-! ## The tangent line (closes `eml(var, var)`)
 
 Classical fact: `Real.exp` is strictly convex (second derivative
 positive everywhere). The tangent line at `x = 0` is `y = 1 + x`.
 By strict convexity, `exp(x) > tangent(x) = 1 + x` for `x ≠ 0`.
 In particular, `x + 1 < exp x` for `x > 0`.
 
-Lifted as a classical-citation axiom here following the precedent
-of `log_le_id_at_one` in `EMLAsymptoticBound.lean`. Discharge
-path: ~30 lines via a convexity primitive (`exp_convex`) plus
-the tangent-equation derivation. The existing
-`exp_grows_strictly : x < exp x` is the weaker version (the
-secant-line bound at x = 0 vs. ∞); the tangent-line bound is the
-strict sharper form needed here. -/
-axiom exp_tangent_line_strict (x : Real) (hx : 0 < x) :
-    x + 1 < Real.exp x
+This was a second axiom for the same fact until 2026-10-26: it is
+`Exp.lean`'s trusted `exp_gt_one_plus_self` with the sum commuted
+(CLAUDE.md had recorded the two as "the same content under two
+names"). It is a theorem now, and its name is kept for its callers. -/
+theorem exp_tangent_line_strict (x : Real) (hx : 0 < x) :
+    x + 1 < Real.exp x := by
+  rw [Real.add_comm x 1]
+  exact Real.exp_gt_one_plus_self x hx
 
 /-- **Phase-2: `eml(var, var)` depth-1 case via the tangent-line axiom.**
 Eval x = `exp x - log x`. Hypothesis = 1/x eventually.

@@ -43,6 +43,8 @@ theorem curve_exp_sum_le_two (c d a b : Real) (hab : a < b) :
     (fun z _ _ => hasDerivAt2_exp_sum d z (c - z))
     -- fy = 1 ≠ 0
     (fun _ _ _ => one_ne_zero)
+    -- the curve `c − x` is differentiable, so continuous (the implicit derivative needs it since 2026-10-27)
+    (fun z _ _ => continuousAt_const_sub c z)
     -- curve identity: f(s, c-s) = 0
     (fun s => by show s + (c - s) - c = 0; mach_ring)
     1

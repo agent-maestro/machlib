@@ -38,6 +38,11 @@ They are already pinned and Mathlib-witnessed through `Int.floor`, so the truste
 grow — but these theorems have a strictly larger footprint than `SignedPIDLoop`'s, which rest on
 the plain real spine, and that difference is real.
 
+> **Erratum (2026-10-27).** "Mathlib-witnessed through `Int.floor`" was false when written: no witness existed and
+> none of the three was in `trustedFootprint`, so these theorems were CONDITIONAL on them. The witnesses were built
+> on 2026-10-27 (`monogate-lean`, `MachLibRealModelBivariate.lean`), and the owner then admitted `floor`, its two
+> bracketing laws and `floor_zero` to the trusted footprint.
+
 Aggregator reaches **797 of 1 101**. Ledger unmoved: 23 rows, 7 open, 4 distinct, 243 axioms.
 
 ## [Unreleased] — 2026-09-07 (hg)

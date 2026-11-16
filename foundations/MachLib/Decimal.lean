@@ -174,8 +174,8 @@ macro "mach_decimal" : tactic => `(tactic|
 
 `mach_decimal` proves `0.5 + 0.5 = 1.0` and does NOT prove `0.5 + 0.5 = 1`. The two differ only in
 how the right side is spelt: `1.0` is `realOfScientific 10 true 1`, while `1` is the `OfNat`
-literal, and `MachLib.Basic` bridges them by axiom (`realOfScientific_one_dot_zero`) rather than by
-computation. Nothing in the decimal simp set crosses that line, so the tactic stalls one rewrite
+literal, and `MachLib.Basic` bridges them by a theorem (`realOfScientific_one_dot_zero`, an axiom until
+2026-10-04) rather than by computation. Nothing in the decimal simp set crosses that line, so the tactic stalls one rewrite
 short with the goal `1 = realOfScientific (5 + 5) true 1` still open.
 
 That is exactly the shape a Forge composition obligation produces: a kernel whose `ensures` bound is

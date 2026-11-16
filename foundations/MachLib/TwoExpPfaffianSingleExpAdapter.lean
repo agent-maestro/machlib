@@ -276,6 +276,7 @@ theorem khovanskii_rolle_curve_of_solved_singleExp_adapter_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -287,7 +288,7 @@ theorem khovanskii_rolle_curve_of_solved_singleExp_adapter_bound
   khovanskii_rolle_curve_of_solved_expSDRReductionSolver_bound
     (singleExpPfaffianExpSDRReductionSolver_of_fallback fallback nonzero)
     F G A B M c yExpr expXExpr expYExpr sep solved yc a b hab hsub
-    hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
 
 /-- Full global consumer for a solved descent using the SingleExp reducer
 adapter plus a supplied terminal-nonzero component. -/
@@ -316,6 +317,7 @@ theorem khovanskii_rolle_full_of_solved_singleExp_adapter_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -329,7 +331,7 @@ theorem khovanskii_rolle_full_of_solved_singleExp_adapter_bound
   khovanskii_rolle_full_of_solved_expSDRReductionSolver_bound
     (singleExpPfaffianExpSDRReductionSolver_of_fallback fallback nonzero)
     F G A B M c yExpr expXExpr expYExpr sep solved hd s hchain hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a solved descent using the SingleExp reducer
 adapter plus a supplied terminal-nonzero component. -/
@@ -357,6 +359,7 @@ theorem khovanskii_rolle_single_of_solved_singleExp_adapter_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -370,7 +373,7 @@ theorem khovanskii_rolle_single_of_solved_singleExp_adapter_bound
   khovanskii_rolle_single_of_solved_expSDRReductionSolver_bound
     (singleExpPfaffianExpSDRReductionSolver_of_fallback fallback nonzero)
     F G A B M c yExpr expXExpr expYExpr sep solved arc hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
 
 end TwoExp
 end MultiVarMod

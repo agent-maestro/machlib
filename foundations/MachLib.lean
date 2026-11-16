@@ -12,6 +12,7 @@ import MachLib.HyperbolicId
 import MachLib.HyperbolicPreservation
 import MachLib.Forge
 import MachLib.ForgeTest
+import MachLib.ForgeBridgeControls
 import MachLib.Ring
 import MachLib.MultiVar
 import MachLib.MultiVarBezout
@@ -77,6 +78,7 @@ import MachLib.MonotoneFromDeriv
 import MachLib.IntermediateValue
 import MachLib.MonotoneRoot
 import MachLib.BivariateDeriv
+import MachLib.BivariateImplicitControls
 import MachLib.TwoExpCurveCount
 import MachLib.TwoExpCurveValidation
 import MachLib.ArcCount
@@ -651,6 +653,8 @@ import MachLib.ThreeStateQuadTracking
 import MachLib.SignedLoopEnvelope
 import MachLib.PIDStepIteration
 import MachLib.FixedPointPIDLoop
+import MachLib.FixedPointNet
+import MachLib.FixedPointNetInterval
 import MachLib.AntiWindupPITracking
 import MachLib.CoreModel
 import MachLib.EMLToC
