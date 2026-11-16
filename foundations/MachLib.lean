@@ -503,6 +503,7 @@ import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives
 import MachLib.EMLSignQueryCost
 import MachLib.EMLOneQueryGlobal
+import MachLib.EMLOneQueryResidueRepair
 import MachLib.EMLExpQueryCost
 import MachLib.EMLSizeNineShape
 import MachLib.EMLConstantFree

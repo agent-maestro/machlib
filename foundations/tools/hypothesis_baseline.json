@@ -7,14 +7,15 @@
     "OldImplicitStatement",
     "OldIntervalAddScaleStatement",
     "OldUnitLitLeStatement",
-    "OldWeightSumLeStatement"
+    "OldWeightSumLeStatement",
+    "OneQueryLevelSetResidue"
   ],
   "_known_obligations": [
     "BipolyDichotomyAlong",
     "Depth3DecayHard",
     "LadderInputs",
     "LeadingMonomialFloor",
-    "OneQueryLevelSetResidue",
+    "OneQueryLevelSetResidue'",
     "SignHardNonzero",
     "SignHardUniformZeroBound",
     "TowerLowerBound"
@@ -43,6 +44,7 @@
     "OldUnitLitLeStatement",
     "OldWeightSumLeStatement",
     "OneQueryLevelSetResidue",
+    "OneQueryLevelSetResidue'",
     "Periodic",
     "PfaffianFunction",
     "Pos",

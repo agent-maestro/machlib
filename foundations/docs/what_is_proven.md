@@ -667,7 +667,9 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
 
   **What is open, and precisely where.** `q_F(sign) ≥ 2` reduces to `OneQueryLevelSet`
   (a *new* ledger row — **not** `OneQueryDichotomy`, which is an *eventual* statement
-  and `sign` is eventually constant, so it excludes nothing). `q_F^global(exp) ∈ {1,2}`
+  and `sign` is eventually constant, so it excludes nothing). `OneQueryLevelSet` in turn
+  reduces to `OneQueryLevelSetResidue'`; the residue first stated was false (a constant
+  one-query term, `not_oneQueryLevelSetResidue`, 2026-11-16). `q_F^global(exp) ∈ {1,2}`
   turns on the same bounded region. And `BoundedGermTranscendence` is now known to be
   **out of reach of every instrument in this library**: `polyEnvelope_of_Fbasis_floor`
   and `polyEnvelope_of_Fbasis_decay` prove `F ∘ S` has a polynomial envelope for *every*

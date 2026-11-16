@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 091 `.lean` files** (816 top-level + 275 in subdirectories) /
-**260 789 lines**, re-exported through the aggregator
+**260 807 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -29,12 +29,12 @@ the bivariate-derivative and `floor` axioms (see "The implicit-function axiom wa
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 525** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 516** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 515** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 515** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **9 390** | every axiom in the footprint is in `trustedFootprint` |
-| conditional | **125** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
+| declarations | **12 535** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 523** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 522** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 522** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **9 396** | every axiom in the footprint is in `trustedFootprint` |
+| conditional | **126** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
 The **265** tracked `.lean` files under `MachLib/` that the environment does not contain (`Discovered/`'s 253 and
@@ -420,6 +420,28 @@ ledger before and after). `u_le_one` is the conditional half of the owner's ruli
   takes about 75 s and 10 GB under `tools/capped_lean.sh`. `false` proves nothing. It cannot terminate at `T = 0` when a
   kink line crosses the box, because the line never resolves: prove that case directly.
 
+## The one-query residue was false (2026-11-16)
+
+- **`OneQueryLevelSetResidue` sat in the open column and was false.** Its bounded half asked EVERY one-query term for a
+  finite list holding its level set on a window, and a one-query term can be constant: `constOneQuery c` is
+  `0 · F(x) + c`, one `F` node, value `c` at every real. `not_oneQueryBoundedLevelFinite` and
+  `not_oneQueryLevelSetResidue` (`EMLOneQueryResidueRepair`) use the field and order axioms alone; the same module with
+  multiplier `1` instead of `0` fails to compile. So `OneQueryLevelSet`'s `reduced` row rested on a false statement, and
+  the ledger gate could not see it: it checks that the cited theorem concludes the row and assumes the residue, never
+  that the residue can hold.
+- **The repair comes from the reduction's own proof.** Its last branch consults the bounded half only after both tails
+  have missed the level. `OneQueryBoundedLevelFiniteOffTails` takes those two facts as hypotheses,
+  `OneQueryLevelSetResidue'` is `OneQueryTailRigidity ∧ OneQueryBoundedLevelFiniteOffTails`, and
+  `oneQueryLevelSet_of_residue'` is the same proof. Neither half is proved. The module was supplied by the owner.
+- **Ledger:** `OneQueryLevelSetResidue` refuted, `OneQueryLevelSetResidue'` open, `OneQueryLevelSet` reduced to it --
+  25 rows, 7 open, 4 distinct, as before. The old definition and `oneQueryLevelSet_of_residue` stay, unchanged: deleting
+  or restating a watched theorem fails gate 14 until a reviewed rebaseline. Their docstrings now say refuted and vacuous,
+  and `tools/hypothesis_baseline.json` lists the old residue under `_refuted_statements`.
+- **Found while writing problem statements for outside readers**: the agent writing up this row tried the cheapest term
+  first. The module's docstring had called this half "the easy half" and "assembly rather than discovery". **Try a
+  residue on a constant term before calling any half of it cheap, and remember that no gate checks a `reduced` row's
+  residue can hold.**
+
 ## Where the content comes from
 
 Self-contained. EML semantics live in `MachLib/SinNotInEML.lean` (the `EMLTree` type and `eval`);
@@ -432,7 +454,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 832 jobs, ~3 s warm
+lake build                                     # 833 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
@@ -469,7 +491,7 @@ Both are "conditional theorem, unvalidated"; only one had a harness until 2026-0
 `ValueGapBound` was introduced, taken as a hypothesis by two theorems, and satisfied by nothing at
 any depth. **A Prop with consumers and no producers is not exercised; it is assumed** — and that is
 the easy half to miss, because the consumers make it look exercised. Baseline
-`tools/hypothesis_baseline.json`, 39 entries, a **set** not a count. Read its triage note before
+`tools/hypothesis_baseline.json`, 40 entries, a **set** not a count. Read its triage note before
 trusting a hit: most entries are correct (named open obligations belong there, and definitional
 predicates like `Lipschitz` are supplied from outside rather than proved). What to watch for is a new
 name that is *neither*.
@@ -949,7 +971,7 @@ the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real
 `real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`), then five proved on
 2026-10-26 (`exp_tangent_line_strict`, `exp_gt_two_x`, `tanh_zero`, `sqrt_one`, `u_le_one`) and two on 2026-10-27
 (`HasDerivAt2_sub`, `hasDerivAt_implicit`), then two FALSE ones removed the same day (`interval_scale_unit_lit_le`,
-`interval_weight_sum_le`). Obligations ledger: **24 rows, 7 open rows, 4 distinct open
+`interval_weight_sum_le`). Obligations ledger: **25 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,
@@ -1056,7 +1078,8 @@ The **four** distinct open obligations are: the `DecayFloor` ⇄ `EmlGermApproac
 cycle (**one** obligation, three rows), `TowerLowerBound` ⇄ `TowerReducesToSign` (one obligation, two
 rows, equivalent since `SignHardCase` fell), `BoundedGermTranscendence`, and `OneQueryLevelSet` —
 which does **not** follow from `OneQueryDichotomy`; it reduces to `q_F(sign) ≥ 2`, and
-`EMLOneQueryGlobal` exists to keep the two apart.
+`EMLOneQueryGlobal` exists to keep the two apart. Its residue as first stated was **false** (see
+"The one-query residue was false (2026-11-16)"); the open obligation is the repaired `OneQueryLevelSetResidue'`.
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then
 `s(1/x) ∈ {7,9,11}` proved, `d(1/x)` frozen at `{3,4}`, and a depth- and size-indexed **growth
