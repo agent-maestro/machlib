@@ -478,6 +478,53 @@ the **#14577 kernel fix** that this entire migration was launched to reach.
 **The last externally-certified pin is `v4.28.0`**, sealed and hash-verifiable. Every
 *"was this environment ever independently verified?"* question points there.
 
+### UPGRADE (2026-10-22) — criterion 7 restored at the destination, `BUMP_PLAN.md` Amendment 6
+
+Amendment 5's trigger fired on its Lean4Lean half: `#17` was fixed upstream (`9fc9c83`), and
+`408edad`, the last master commit pinning v4.32.2, replays MachLib. Upgrade recorded the same way the
+downgrade was, never silently:
+
+> **`v4.32.2`: PINNED, PATCHED KERNEL, INTERNALLY GREEN, EXTERNALLY REPLAYED BY A SECOND
+> IMPLEMENTATION, SHARED LINEAGE.** Criterion 7 **PASS** (Lean4Lean `408edad`). Criterion 1 still
+> `CHECKER_VERSION_MISMATCH`, Amendment 5 cited; that half upgrades when lean4checker tags ≥ v4.29.
+
+| | gate `73860d13`, MachLib with `Coordinates` reworked |
+|---|---|
+| 1 — instrument rejects | lean4checker `v4.28.0` `AddFalse`, built at v4.32.2 — **rejected** |
+| 1b — instrument holds fire | `Init.Core`, `MachLib.Sign` — **PASS** |
+| 2 — MachLib replays | **826 / 826 modules clean**, 20,796 declarations, 197 s, 6 at a time, 8 GB cap each, default fuel |
+| cross-derivation | 20,605 (825 modules, 2026-10-20) + 191 (`Coordinates` alone) = **20,796** |
+
+**SEALED as `snapshots/v4.32.2-r2/`**, same-pin re-capture (Amendment 7), library `50d9c56c`:
+
+```
+snapshots/v4.32.2-r2/   SAME-PIN ATTRIBUTED   digest ca6380b8e228980a786c1b9a69f0100a8e226664b82e4b8558cb4d3e61f9eebf
+```
+
+| against `snapshots/v4.32.2/` (July, library `ceb9ba32`) | |
+|---|---|
+| gates | criterion 7 **exit 0**; 3–6 and toolchain exit 0; criterion 1 void, Amendment 5 cited |
+| identity | `lean-toolchain` **same**, `lake-manifest.json` **same**; Lean4Lean none (cited void) → `408edad`, **ARRIVAL** |
+| headline theorems | 57 → 112: **0 lost**, 55 gained, 56 footprints changed; every added axiom inside `trustedFootprint` |
+| axioms pinned | 242 → 217: **39 removed, every one attributed** (36 now theorems, 3 now definitions: 23 in `5841ea60`, 9 in `e25e0cd1`, 7 in `2d2f59c0`); 14 added |
+| derivations | 5 → 0: **0 lost**. 4 are theorems now (`archimedean`, `one_div_pos_of_pos`, `HasDerivAt_neg`, `HasDerivAt_sub`); `zero_ne_one_ax` is a sub-theory primitive whose derivation is kept and ledger-checked |
+| counts, cross-derived | knownAxioms 217 / ledger 217; trustedFootprint 143 / Lean 143; derivableAxioms 0 / gate 0; July's lists from git at `ceb9ba32`: 242 / 242, 5 / 5 |
+
+**This is the pin's current snapshot, and the baseline the next bump compares against** (step 0).
+
+**Its first attempt HALTED, twice, and both halts are recorded.** (1) Against `v4.14.0-baseline`
+it halted on the library's own growth since July: right halt, wrong comparison. Kept in
+`captures/halted/v4.32.2-r2_2026-10-22T230618/`. That halt is why the owner's Amendment 7 ruling
+exists. (2) The first `--same-pin` run attributed 36 of 39 removals and refused to seal on 3. The
+defect was the instrument's: a line-by-line `git grep` could not see `axiom realOfScientific` when
+its signature starts on the next line. Fixed in `50d9c56c`, with history canaries in `--selftest`.
+
+**What the first run of the new gate cost (2026-10-21).** It listed the aggregator `MachLib`, and
+Lean4Lean matches a target by PREFIX, so one "per-module" job was the whole library again: 87 GB
+anon-rss. The kernel's OOM killer then took the editor's entire process group with it. Fixed in
+`73860d13`: prefix modules are excluded only when they declare nothing, every module is capped, and
+the gate refuses to run uncapped.
+
 ### What four dark versions actually cost
 
 **21 errors across 11 files, five build rounds, and ZERO deprecation warnings.** The zero is the

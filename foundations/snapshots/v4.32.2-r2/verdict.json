@@ -1,0 +1,48 @@
+{
+ "label": "v4.32.2-r2",
+ "captured_at": "2026-10-22T23:55:40-0700",
+ "toolchain": "leanprover/lean4:v4.32.2",
+ "lock": [
+  "leanprover/lean4:v4.32.2",
+  "f3b06c705e6c"
+ ],
+ "gates": {
+  "kernel_replay": 1,
+  "lean4lean_replay": 0,
+  "ledger": 0,
+  "derivable": 0,
+  "sorry_audit": 0,
+  "artifact_drift": 0,
+  "toolchain": 0
+ },
+ "counts": {
+  "axioms_pinned": 217,
+  "headline_footprints": 112,
+  "derivations": 0,
+  "sorry_decls": 1
+ },
+ "footprints": {
+  "enumerated": 112,
+  "captured": 112,
+  "missing": []
+ },
+ "instrument_errors": [],
+ "voids": {
+  "kernel_replay": "CHECKER_VERSION_MISMATCH"
+ },
+ "voids_cited": {
+  "kernel_replay": "Amendment-5-destination-externally-unreplayed"
+ },
+ "library_commit": "50d9c56c19b1d658adf2429d8ed7611ea16cbfec",
+ "identity": {
+  "lean-toolchain": "2bdc48adfa58d0017e538a0ad117c5d73d35deec879978f909406a80c8037273",
+  "lake-manifest.json": "a44bfa1e0eabb2ecb02f7f4ff1f17696dccd04eef85d8905cc6d6bcd003cc4b7",
+  "lean4lean": "408edad"
+ },
+ "same_pin": {
+  "base": "v4.32.2",
+  "base_library_commit": "ceb9ba32e04dee5dad783563ba357ebd7c138c66",
+  "result": "ATTRIBUTED",
+  "problems": []
+ }
+}

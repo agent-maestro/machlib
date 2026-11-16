@@ -1,0 +1,23 @@
+lean4lean path   : /home/monogate/lean4lean-v4.32.2
+lean4lean commit : 408edad
+LEAN_NUM_THREADS : (unset -- one task per core)
+lean4lean toolchain: leanprover/lean4:v4.32.2
+ledger toolchain   : leanprover/lean4:v4.32.2
+
+1 INSTRUMENT REJECTS (lean4checker's AddFalse smuggling specimen must FAIL)
+    specimen source: /home/monogate/lean4checker-v4.28.0 -- lean4checker v4.28.0: no stable tag at v4.32.2, so the newest below it (BUMP_PLAN.md Amendment 6), commit 66e11ce
+    PASS -- rejected with a kernel error, naming it
+
+1b INSTRUMENT HOLDS FIRE (known-good specimens must PASS -- both directions, not one)
+    PASS  Init.Core        core   -- can the instrument read Lean itself?
+    PASS  MachLib.Sign     ours   -- can it read our environment's encoding?
+
+2 ENVIRONMENT REPLAYS through the second implementation, one module per process
+    826 modules: the 1088 MachLib sources git tracks, less the 261 `lake build` does not build (Discovered/, and those scripts/check_aggregator.sh documents as unreachable), less 1 imports-only prefix module(s) (MachLib); 6 at a time, 8G each, Lean4Lean's DEFAULT fuel (no --config)
+    826 of 826 modules replay clean, 20796 declarations checked, 143 s
+
+LEAN4LEAN-REPLAY GATE: PASS
+  Grade: SECOND IMPLEMENTATION, SHARED LINEAGE -- not 'independent kernel'. Lean4Lean is
+  a port of the C++ kernel by its author's own statement, and it carried #14576 until
+  2026-07-29. This catches porting divergence and environment manipulation; it does NOT
+  make a shared defect visible. See BUMP_PLAN.md's Amendment 2 finding.

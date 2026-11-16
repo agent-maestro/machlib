@@ -44,9 +44,13 @@ def run_lean(path: str) -> tuple[int, str]:
 def enforce() -> int:
     code, out = run_lean(LEDGER)
     ok = re.search(r"AxiomLedger OK: (\d+) axioms pinned; (\d+) headline", out)
+    # The Lean side's own `trustedFootprint.length`, printed so that a Python parse of the same list
+    # (tools/migration/same_pin.py) has a second derivation to agree with.
+    trusted = re.search(r"⊆ trusted \((\d+)\)", out)
     if code == 0 and ok:
         print(f"{G}{B}AXIOM-LEDGER PASS{RST}  {ok.group(1)} axioms pinned, "
-              f"{ok.group(2)} headline footprints ⊆ trusted.")
+              f"{ok.group(2)} headline footprints ⊆ trusted"
+              + (f" ({trusted.group(1)} names)." if trusted else "."))
         return 0
     print(f"{R}{B}AXIOM-LEDGER FAIL{RST} — the trust boundary drifted:")
     for line in out.splitlines():
