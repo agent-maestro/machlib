@@ -1,0 +1,35 @@
+name: Reproduction walk freshness
+
+# The public reproduction walk (reproduction-walk.yml) runs weekly. From 2026-09-28 it failed four
+# weeks running and nothing else went red, while REPRODUCING.md still called it the check that catches
+# a bad release. A walk that is red is visible only to whoever opens its page; this makes its
+# staleness visible everywhere: it fails, daily and on every push to master, when the walk has not
+# SUCCEEDED in 8 days (one weekly run plus a day of slack).
+#
+# Exit taxonomy (tools/ci/check_workflow_freshness.py): 0 fresh, 1 stale, 2 could not read the API.
+# A 2 fails this job too -- an unread status is not a fresh one.
+
+on:
+  schedule:
+    - cron: "41 7 * * *"          # daily, after Monday's 06:17 walk has had time to finish
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  freshness:
+    name: The public reproduction walk has passed within 8 days
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/ci
+      - name: Check the walk's last success
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/ci/check_workflow_freshness.py reproduction-walk.yml --max-age-days 8
