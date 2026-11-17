@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 091 `.lean` files** (816 top-level + 275 in subdirectories) /
-**260 807 lines**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 092 `.lean` files** (817 top-level + 275 in subdirectories) /
+**260 957 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -442,6 +442,17 @@ ledger before and after). `u_le_one` is the conditional half of the owner's ruli
   residue on a constant term before calling any half of it cheap, and remember that no gate checks a `reduced` row's
   residue can hold.**
 
+## The envelope and the tower, on paper by citation (2026-11-16)
+
+- **Kaiser–Speissegger (arXiv:1708.04496, §2) appears to settle two of the four open obligations on paper**: the
+  `DecayFloor`/`EmlGermApproach`/`GrowthEnvelope` cycle (`k = j` for the decay form, `j + 1` for the other two) and
+  `TowerLowerBound` (level ≤ exponential height ≤ depth). It is a reading only: no specialist has confirmed it, nothing
+  is formalised, and **the ledger does not move**. The steps, the citations and what stays open (the sharp value
+  `j − 2`) are in `exploration/kaiser_speissegger_route_2026_11_16.md`.
+- **Read that note before sending any germ-approach draft.** `exploration/germ_approach_*` now open with a banner.
+- **No hardware claim follows from the tower.** It bounds exact trees, not fixed-point kernels, and in float64 the
+  height-5 tower overflows for `x > −0.4585` and the height-6 tower everywhere.
+
 ## Where the content comes from
 
 Self-contained. EML semantics live in `MachLib/SinNotInEML.lean` (the `EMLTree` type and `eval`);
@@ -630,7 +641,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**826 of 1091 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**827 of 1092 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -963,7 +974,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**826 of 1 091 modules reachable, 12 documented unreachable** as of 2026-09-22); quote it from
+run (**827 of 1 092 modules reachable, 12 documented unreachable** as of 2026-11-16); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **208 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,

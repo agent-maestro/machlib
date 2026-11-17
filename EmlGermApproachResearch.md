@@ -809,6 +809,11 @@ mislabelling as much as a ray-length one.
 
 ## 7. Literature — what is settled and what is not
 
+> **2026-11-16: read `exploration/kaiser_speissegger_route_2026_11_16.md` before this section.** On
+> that reading, Kaiser–Speissegger's exponential height (arXiv:1708.04496, §2) answers the surgical
+> question below and gives `TowerLowerBound`, on paper. No specialist has confirmed it, it is not
+> formalised, and the sharp height is still open. The section below is unchanged until it is confirmed.
+
 Full note with sources and its own limits:
 `monogate-research/exploration/germ_approach_literature_2026_08_27/NOTE.md`.
 

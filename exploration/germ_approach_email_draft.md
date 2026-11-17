@@ -1,5 +1,10 @@
 # Cold-email draft — one specialist, one question
 
+> **Do not send this as an open problem without reading [`kaiser_speissegger_route_2026_11_16.md`](kaiser_speissegger_route_2026_11_16.md) first (added 2026-11-16).**
+> On that reading, Kaiser–Speissegger (arXiv:1708.04496, §2) settles the conjecture on paper at height
+> `j + 1` (`j` for the decay form). No specialist has confirmed this and it is not formalised. What stays
+> open is the sharp value (`j − 2`), plus a specialist's confirmation of the reading.
+
 Intended recipients: Matthias Aschenbrenner, Lou van den Dries, Joris van der Hoeven, or another
 worker on transseries / H-fields. Send to **one** at a time; swap the bracketed sentence naming
 their work. Both links must resolve before sending (the MO post must be live; the repo file must be
