@@ -218,11 +218,11 @@ not a count of proved results). Measured 2026-10-27:
 | conditional proofs | 126 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
 | unchecked theorems | 1 | the allowlisted `sorryAx` (`halve_in_unit_sorry`) |
 | Forge `@verify` corpus files, outside the checked environment | 253 | the same command; files only, none of their theorems is counted |
-| `.lean` files under `MachLib/` | 1 091 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
+| `.lean` files under `MachLib/` | 1 092 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
 | axioms pinned by the ledger | 208 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all accounted for | 156 | `AXIOM_MANIFEST.md` |
 | obligations ledger | 25 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 826 of 1 091 | `scripts/check_aggregator.sh` |
+| modules reachable from the aggregator | 827 of 1 092 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 
