@@ -6,12 +6,13 @@ import MachLib.SinNotInEMLDepth2Sweep
 /-!
 # Iterated Exponential Bounds — analytic infrastructure for depth-2 sin
 
-Adds two small numerical axioms about `π` and `e` and uses them to
-close the last 3 depth-2 sin barrier cases.
-
-Numerical axioms added:
+Two small numerical facts about `π` and `e`, used to close the last 3
+depth-2 sin barrier cases:
 - `pi_gt_three : 3 < π`
 - `exp_one_lt_three : exp 1 < 3`
+
+Both were axioms here once. `pi_gt_three` is a theorem in `Trig.lean` since
+2026-10-04; `exp_one_lt_three` is a theorem below since 2026-11-24.
 
 Combined: `exp 1 < π`, hence `exp(exp 1) < exp π` by strict monotonicity.
 
@@ -27,8 +28,94 @@ namespace Real
 
 -- `pi_gt_three` was an axiom here until 2026-10-04: a theorem in `Trig.lean`, from `pi_lower_bound`.
 
-/-- `exp 1 < 3`. (e < 3.) -/
-axiom exp_one_lt_three : exp 1 < (1 + 1 + 1 : Real)
+/-- `0 ≤ a ≤ b` and `0 ≤ c ≤ d` give `a * c ≤ b * d`. -/
+private theorem e_bound_mul_le {a b c d : Real} (ha : 0 ≤ a) (hab : a ≤ b) (hc : 0 ≤ c) (hcd : c ≤ d) :
+    a * c ≤ b * d := by
+  have h1 : a * c ≤ a * d := mul_le_mul_of_nonneg_left hcd ha
+  have hd : 0 ≤ d := le_trans hc hcd
+  have h2 : a * d ≤ b * d := by
+    rw [mul_comm a d, mul_comm b d]; exact mul_le_mul_of_nonneg_left hab hd
+  exact le_trans h1 h2
+
+private theorem e_bound_natCast_six : natCast 6 = 1 + 1 + 1 + 1 + 1 + 1 := by
+  have e6 : natCast 6 = natCast 5 + 1 := natCast_succ 5
+  have e5 : natCast 5 = natCast 4 + 1 := natCast_succ 4
+  have e4 : natCast 4 = natCast 3 + 1 := natCast_succ 3
+  have e3 : natCast 3 = natCast 2 + 1 := natCast_succ 2
+  have e2 : natCast 2 = natCast 1 + 1 := natCast_succ 1
+  have e1 : natCast 1 = natCast 0 + 1 := natCast_succ 0
+  rw [e6, e5, e4, e3, e2, e1, natCast_zero, zero_add]
+
+private theorem e_bound_natCast_three : natCast 3 = (1 + 1 + 1 : Real) := by
+  have e3 : natCast 3 = natCast 2 + 1 := natCast_succ 2
+  have e2 : natCast 2 = natCast 1 + 1 := natCast_succ 1
+  have e1 : natCast 1 = natCast 0 + 1 := natCast_succ 0
+  rw [e3, e2, e1, natCast_zero, zero_add]
+
+/-- `exp 1 < 3`. (e < 3.) An axiom until 2026-11-24. The tangent line `1 + x ≤ exp x` at `x = -1/6` gives
+`exp (-1/6) ≥ 5/6`, so `exp (-1) ≥ (5/6)⁶`, i.e. `15625 · e ≤ 46656`, and `46656 < 46875 = 3 · 15625`. The bound
+proved is `e ≤ (6/5)⁶ ≈ 2.986`; no smaller step than `1/6` works (`(5/4)⁵ ≈ 3.05`). -/
+theorem exp_one_lt_three : exp 1 < (1 + 1 + 1 : Real) := by
+  have hN : (0 : Real) < natCast 6 := natCast_pos (by decide)
+  have hN0 : natCast 6 ≠ (0 : Real) := ne_of_gt hN
+  let t : Real := 1 / natCast 6
+  have hNt : natCast 6 * t = 1 := mul_inv _ hN0
+  let z : Real := exp (-t)
+  -- the tangent line at 0, read at -t: 1 - t ≤ z, scaled by 6: 5 ≤ 6 z
+  have htan : 1 + -t ≤ z := one_add_le_exp (-t)
+  have h5 : natCast 5 ≤ natCast 6 * z := by
+    have hs := mul_le_mul_of_nonneg_left htan (le_of_lt hN)
+    have he : natCast 6 * (1 + -t) = natCast 5 := by
+      have e1 : natCast 6 * (1 + -t) = natCast 6 + -(natCast 6 * t) := by mach_ring
+      have e6 : natCast 6 = natCast 5 + 1 := natCast_succ 5
+      rw [e1, hNt, e6]
+      mach_ring
+    rw [he] at hs; exact hs
+  have h50 : (0 : Real) ≤ natCast 5 := natCast_nonneg 5
+  -- sixth powers: (5)^6 ≤ (6 z)^6
+  have h2 : natCast 5 * natCast 5 ≤ (natCast 6 * z) * (natCast 6 * z) := e_bound_mul_le h50 h5 h50 h5
+  have h2' : (0 : Real) ≤ natCast 5 * natCast 5 := mul_nonneg h50 h50
+  have h4 : (natCast 5 * natCast 5) * (natCast 5 * natCast 5)
+      ≤ ((natCast 6 * z) * (natCast 6 * z)) * ((natCast 6 * z) * (natCast 6 * z)) :=
+    e_bound_mul_le h2' h2 h2' h2
+  have h4' : (0 : Real) ≤ (natCast 5 * natCast 5) * (natCast 5 * natCast 5) := mul_nonneg h2' h2'
+  have h6 : ((natCast 5 * natCast 5) * (natCast 5 * natCast 5)) * (natCast 5 * natCast 5)
+      ≤ (((natCast 6 * z) * (natCast 6 * z)) * ((natCast 6 * z) * (natCast 6 * z)))
+          * ((natCast 6 * z) * (natCast 6 * z)) :=
+    e_bound_mul_le h4' h4 h2' h2
+  -- z^6 = exp (-1)
+  have hz6 : z * z * z * z * z * z = exp (-1) := by
+    have hsum : -t + -t + -t + -t + -t + -t = -1 := by
+      have e1 : -t + -t + -t + -t + -t + -t = -((1 + 1 + 1 + 1 + 1 + 1) * t) := by mach_ring
+      rw [e1, ← e_bound_natCast_six, hNt]
+    rw [← hsum, exp_add, exp_add, exp_add, exp_add, exp_add]
+  have hL : ((natCast 5 * natCast 5) * (natCast 5 * natCast 5)) * (natCast 5 * natCast 5) = natCast 15625 := by
+    repeat rw [← natCast_mul]
+  have hR : (((natCast 6 * z) * (natCast 6 * z)) * ((natCast 6 * z) * (natCast 6 * z)))
+          * ((natCast 6 * z) * (natCast 6 * z)) = natCast 46656 * exp (-1) := by
+    have e1 : (((natCast 6 * z) * (natCast 6 * z)) * ((natCast 6 * z) * (natCast 6 * z)))
+          * ((natCast 6 * z) * (natCast 6 * z))
+        = (((natCast 6 * natCast 6) * (natCast 6 * natCast 6)) * (natCast 6 * natCast 6))
+          * (z * z * z * z * z * z) := by mach_ring
+    rw [e1, hz6]
+    repeat rw [← natCast_mul]
+  rw [hL, hR] at h6
+  -- multiply by e = exp 1 > 0: 15625 e ≤ 46656
+  have he1 : exp (-1) * exp 1 = 1 := by rw [← exp_add, show (-1 : Real) + 1 = 0 from by mach_ring, exp_zero]
+  have h7 : natCast 15625 * exp 1 ≤ natCast 46656 := by
+    have hs := mul_le_mul_of_nonneg_left h6 (le_of_lt (exp_pos 1))
+    rw [show exp 1 * (natCast 46656 * exp (-1)) = natCast 46656 * (exp (-1) * exp 1) from by mach_ring,
+        he1, mul_one_ax, mul_comm] at hs
+    exact hs
+  have h8 : natCast 46656 < (natCast 15625 : Real) * natCast 3 := by
+    rw [← natCast_mul]; exact natCast_lt_natCast (by decide)
+  have h9 : natCast 15625 * exp 1 < natCast 15625 * natCast 3 := lt_of_le_of_lt h7 h8
+  rw [← e_bound_natCast_three]
+  rcases lt_total (exp 1) (natCast 3) with hlt | heq | hgt
+  · exact hlt
+  · rw [heq] at h9; exact absurd h9 (lt_irrefl_ax _)
+  · have hc := mul_le_mul_of_nonneg_left (le_of_lt hgt) (natCast_nonneg 15625)
+    exact absurd (lt_of_lt_of_le h9 hc) (lt_irrefl_ax _)
 
 theorem exp_one_lt_pi : exp 1 < pi :=
   lt_trans_ax exp_one_lt_three pi_gt_three

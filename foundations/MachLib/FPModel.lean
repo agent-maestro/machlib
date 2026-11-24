@@ -40,32 +40,12 @@ cancellation) the `f64` result is within the tight relative bound
 namespace MachLib.Real
 
 /-- Unit roundoff. For IEEE-754 binary64 (`f64`), `u = 2⁻⁵³ ≈ 1.1·10⁻¹⁶`.
-Kept abstract: the bounds below rest on `0 ≤ u < 1` (`u_nonneg`, `u_lt_one`), which `2⁻⁵³` satisfies. Until
+Kept abstract: the bounds below rest on `0 ≤ u < 1` (`u_nonneg`, `u_lt_one`), which `2⁻⁵³` satisfies; `u_lt_one` is a
+theorem from `u_le_inv_two_pow_52` since 2026-11-24. Until
 2026-10-26 the model was `0 ≤ u ≤ 1`, with `u_le_one` an axiom; the owner ruled it derived from `u_lt_one`
 (`docs/machsig/OWNER_RULINGS_2026-10-27.md`, F1), so a bound that used it no longer covers `u = 1`. -/
 axiom u : Real
 axiom u_nonneg : (0 : Real) ≤ u
-
-/-- **`u` is strictly below `1`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit roundoff `2⁻⁵³`,
-and `2⁻⁵³ < 1`. `u_le_one` allows `u = 1`, and a rounding within `u = 1` may round any real to `0`, so no float's real
-value could be shown nonzero. This is the smallest statement that rules that out. It gives no lower bound on `1 − u`,
-so it gives no positive lower bound on any float's real value either; `FloatSafeInstances.lean` records what that
-costs. Witnessed against Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`).
-`u_le_one` follows from this, and is a theorem since 2026-10-26 (just below). -/
-axiom u_lt_one : u < 1
-
-/-- `u ≤ 1`. An axiom until 2026-10-26, when it was proved from `u_lt_one`: the owner's ruling U1
-(`docs/machsig/OWNER_RULINGS_2026-10-14.md`) found the `u` chain "incoherently tiered", with `u_le_one`
-conditional while the stronger `u_lt_one` was trusted. Every use of it is unchanged. -/
-theorem u_le_one : u ≤ 1 := le_of_lt u_lt_one
-
-/-- **`u` is at most one half, stated `u + u ≤ 1`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit
-roundoff `2⁻⁵³`, and `2⁻⁵³ + 2⁻⁵³ = 2⁻⁵² ≤ 1`. `u_lt_one` makes `1 − u` positive and says nothing about how small it is,
-so a float read back from a nonzero real had no positive lower bound on its magnitude and no product of two such values
-could be shown to be at least `DBL_MIN`. This gives `1 − u ≥ 1/2`: a value within `u·|x|` of `x` is at least `|x|/2` in
-magnitude. It is written without division because `OfNat Real` has no `2`. Witnessed against Mathlib in `monogate-lean`
-(`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`). `u_lt_one` follows from it and is left as it was. -/
-axiom u_le_half : u + u ≤ 1
 
 /-- **`u` is at most `2⁻⁵²`** (added 2026-09-14, owner-approved). `u` stands for binary64's unit roundoff `2⁻⁵³`, so this
 bound is true with a factor `2` to spare. `u + u ≤ 1` leaves `4u` as large as `2`, so a primitive rounding bound such as
@@ -76,9 +56,58 @@ certificate's own hypotheses force `B > 15.5π`, where `u · exp B` is about `1.
 (`GroundedEMLInstances.lean` says why).
 
 Spelt with a `natCast` power and a division, the way `dblMin` is, because `OfNat Real` has no `2`. Witnessed against
-Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`). `u_le_half` and `u_lt_one`
-follow from it and are left as they were (the rest of the owner's ruling U1); `u_le_one` is a theorem from `u_lt_one`. -/
+Mathlib in `monogate-lean` (`AxiomWitnessBridge.lean`, with `u` interpreted as `1 / 2⁵³`). Since 2026-11-24 it is the
+only axiom bounding `u` from above: `u_lt_one` and `u_le_half` below are theorems from it (the rest of the owner's ruling
+U1), and `u_le_one` is a theorem from `u_lt_one`. -/
 axiom u_le_inv_two_pow_52 : u ≤ 1 / natCast (2 ^ 52)
+
+/-- `1 < 2⁵²` as reals: `natCast` is monotone. -/
+private theorem one_lt_natCast_two_pow_52 : (1 : Real) < natCast (2 ^ 52) := by
+  have e1 : natCast 1 = (1 : Real) := by
+    have h : natCast 1 = natCast 0 + 1 := natCast_succ 0
+    rw [h, natCast_zero, zero_add]
+  rw [← e1]; exact natCast_lt_natCast (by decide)
+
+/-- **`u` is strictly below `1`.** `u` stands for binary64's unit roundoff `2⁻⁵³`, and `2⁻⁵³ < 1`. `u_le_one` allows
+`u = 1`, and a rounding within `u = 1` may round any real to `0`, so no float's real value could be shown nonzero. This
+is the smallest statement that rules that out. It gives no lower bound on `1 − u`, so it gives no positive lower bound on
+any float's real value either; `FloatSafeInstances.lean` records what that costs. An axiom from 2026-09-14
+(owner-approved) until 2026-11-24, when the owner's ruling U1 (`docs/machsig/OWNER_RULINGS_2026-10-14.md`) was carried
+out: `u ≤ 1 / 2⁵² < 1`. `u_le_one` follows from this, and is a theorem since 2026-10-26 (just below). -/
+theorem u_lt_one : u < 1 := by
+  have hN : (0 : Real) < natCast (2 ^ 52) := natCast_pos (by decide)
+  exact lt_of_le_of_lt u_le_inv_two_pow_52 (div_lt_one_of_pos_lt hN one_lt_natCast_two_pow_52)
+
+/-- `u ≤ 1`. An axiom until 2026-10-26, when it was proved from `u_lt_one`: the owner's ruling U1
+(`docs/machsig/OWNER_RULINGS_2026-10-14.md`) found the `u` chain "incoherently tiered", with `u_le_one`
+conditional while the stronger `u_lt_one` was trusted. Every use of it is unchanged. -/
+theorem u_le_one : u ≤ 1 := le_of_lt u_lt_one
+
+/-- **`u` is at most one half, stated `u + u ≤ 1`.** `u` stands for binary64's unit roundoff `2⁻⁵³`, and
+`2⁻⁵³ + 2⁻⁵³ = 2⁻⁵² ≤ 1`. `u_lt_one` makes `1 − u` positive and says nothing about how small it is, so a float read back
+from a nonzero real had no positive lower bound on its magnitude and no product of two such values could be shown to be
+at least `DBL_MIN`. This gives `1 − u ≥ 1/2`: a value within `u·|x|` of `x` is at least `|x|/2` in magnitude. It is
+written without division because `OfNat Real` has no `2`. An axiom from 2026-09-14 (owner-approved) until 2026-11-24
+(ruling U1): `u + u ≤ 2 / 2⁵² ≤ 1`. -/
+theorem u_le_half : u + u ≤ 1 := by
+  have hN : (0 : Real) < natCast (2 ^ 52) := natCast_pos (by decide)
+  have hinv : (0 : Real) ≤ 1 / natCast (2 ^ 52) := le_of_lt (one_div_pos_of_pos hN)
+  have h2 : (1 + 1 : Real) ≤ natCast (2 ^ 52) := by
+    have e2 : natCast 2 = (1 + 1 : Real) := by
+      have h1 : natCast 2 = natCast 1 + 1 := natCast_succ 1
+      have h0 : natCast 1 = natCast 0 + 1 := natCast_succ 0
+      rw [h1, h0, natCast_zero, zero_add]
+    rw [← e2]; exact natCast_le_natCast (by decide)
+  have hsum : u + u ≤ 1 / natCast (2 ^ 52) + 1 / natCast (2 ^ 52) :=
+    add_le_add_both u_le_inv_two_pow_52 u_le_inv_two_pow_52
+  have hscale : 1 / natCast (2 ^ 52) * (1 + 1) ≤ 1 / natCast (2 ^ 52) * natCast (2 ^ 52) :=
+    mul_le_mul_of_nonneg_left h2 hinv
+  have hone : 1 / natCast (2 ^ 52) * natCast (2 ^ 52) = (1 : Real) := by
+    rw [mul_comm]; exact mul_inv _ (ne_of_gt hN)
+  have e : 1 / natCast (2 ^ 52) + 1 / natCast (2 ^ 52) = 1 / natCast (2 ^ 52) * (1 + 1) := by mach_ring
+  rw [e] at hsum
+  rw [hone] at hscale
+  exact le_trans hsum hscale
 
 /-- The standard model of floating-point arithmetic: `fl` is a valid
 rounding of the exact real `e` when `fl = e·(1+δ)` for some relative
