@@ -233,12 +233,21 @@ def compute_delta_vs_previous(
 
 
 def carry_history(previous_status: dict | None, this_entry: dict) -> list[dict]:
-    """Carry forward a short history series for trend rendering."""
+    """Carry forward a short history series for trend rendering.
+
+    The workflow also runs on a daily schedule (2026-11-24), so most runs re-measure a commit the last
+    entry already holds. Such a run REPLACES that entry (same sha, same counts; only `ts` moves) instead
+    of appending, so a quiet month does not push the last 30 real changes out of the series.
+    """
     prev_history: list[dict] = []
     if previous_status:
         raw = previous_status.get("sorries", {}).get("history_recent")
         if isinstance(raw, list):
             prev_history = raw
+    counts = ("sha", "total", "discovered", "core")
+    if prev_history and isinstance(prev_history[-1], dict) and all(
+            prev_history[-1].get(k) == this_entry.get(k) for k in counts):
+        prev_history = prev_history[:-1]
     series = prev_history + [this_entry]
     # Cap at 30 most-recent entries so the JSON doesn't grow unbounded.
     return series[-30:]
