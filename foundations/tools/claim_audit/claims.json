@@ -10527,10 +10527,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
-        "MachLib.Real.zero_lt_one_ax"
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.div_def",
+        "MachLib.Real.mul_inv",
+        "MachLib.Real.u_le_inv_two_pow_52",
+        "MachLib.Real.zero_ne_one_ax"
       ],
       "hypotheses_count": 15
     },
@@ -10583,11 +10586,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -10689,10 +10692,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
-        "MachLib.Real.zero_lt_one_ax"
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52",
+        "MachLib.Real.zero_ne_one_ax"
       ],
       "hypotheses_count": 0
     },
@@ -10748,12 +10752,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -10809,12 +10812,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -10890,13 +10892,12 @@
         "MachLib.Real.tanh",
         "MachLib.Real.tanh_eq_sinh_div_cosh",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -10972,13 +10973,12 @@
         "MachLib.Real.tanh",
         "MachLib.Real.tanh_eq_sinh_div_cosh",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -11046,14 +11046,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11121,14 +11120,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -11196,14 +11194,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11271,14 +11268,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -11344,14 +11340,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11417,14 +11412,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -11482,12 +11476,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11545,12 +11538,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -11619,15 +11611,14 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -11696,15 +11687,14 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -11770,14 +11760,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11843,14 +11832,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -11911,12 +11899,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11977,12 +11964,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -12052,14 +12038,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -12129,14 +12114,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -12206,14 +12190,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12283,14 +12266,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -12360,14 +12342,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12437,14 +12418,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -12519,8 +12499,6 @@
         "MachLib.Real.tan",
         "MachLib.Real.tan_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -12529,7 +12507,8 @@
         "MachLib.Real.pi_lower_bound",
         "MachLib.Real.zero_ne_one_ax",
         "MachLib.Real.cos_add",
-        "MachLib.Real.sin_add"
+        "MachLib.Real.sin_add",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12604,8 +12583,6 @@
         "MachLib.Real.tan",
         "MachLib.Real.tan_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -12614,7 +12591,8 @@
         "MachLib.Real.pi_lower_bound",
         "MachLib.Real.zero_ne_one_ax",
         "MachLib.Real.cos_add",
-        "MachLib.Real.sin_add"
+        "MachLib.Real.sin_add",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -12688,13 +12666,12 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12768,13 +12745,12 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -12848,13 +12824,12 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12928,13 +12903,12 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -12987,12 +12961,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -13061,14 +13034,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -13138,14 +13110,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -13214,14 +13185,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -13291,14 +13261,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -13368,14 +13337,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -13445,14 +13413,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -13511,12 +13478,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 5
     },
@@ -13578,12 +13544,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -13653,14 +13618,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 5
     },
@@ -13730,14 +13694,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -13816,9 +13779,7 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
         "MachLib.Real.u_le_inv_two_pow_52",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -13901,9 +13862,7 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
         "MachLib.Real.u_le_inv_two_pow_52",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -13980,8 +13939,6 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -13989,7 +13946,8 @@
         "propext",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -14062,8 +14020,6 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -14071,7 +14027,8 @@
         "propext",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -14145,14 +14102,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -14218,14 +14174,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "Quot.sound",
         "propext",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -14298,8 +14253,6 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -14307,7 +14260,8 @@
         "propext",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -14380,8 +14334,6 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -14389,7 +14341,8 @@
         "propext",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -14463,14 +14416,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -14536,14 +14488,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "Quot.sound",
         "propext",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },

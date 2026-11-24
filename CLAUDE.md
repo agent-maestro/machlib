@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 092 `.lean` files** (817 top-level + 275 in subdirectories) /
-**260 957 lines**, re-exported through the aggregator
+**261 122 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -29,12 +29,12 @@ the bivariate-derivative and `floor` axioms (see "The implicit-function axiom wa
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 535** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 523** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 522** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 522** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **9 396** | every axiom in the footprint is in `trustedFootprint` |
-| conditional | **126** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
+| declarations | **12 540** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 534** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 533** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 533** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **9 426** | every axiom in the footprint is in `trustedFootprint` |
+| conditional | **107** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
 The **265** tracked `.lean` files under `MachLib/` that the environment does not contain (`Discovered/`'s 253 and
@@ -63,7 +63,7 @@ frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`**
 
 ## The axiom count, reconciled (do not re-derive this)
 
-`lake env lean AxiomLedger.lean` reports **208 axioms pinned**. That number decomposes exactly, and
+`lake env lean AxiomLedger.lean` reports **202 axioms pinned**. That number decomposes exactly, and
 grepping the sources will *not* reproduce it:
 
 ```
@@ -104,7 +104,7 @@ Current state — read `foundations/AXIOM_MANIFEST.md`, which is **generated**, 
 
 | class | n | |
 |---|---|---|
-| witnessed | 107 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| witnessed | 105 | a Mathlib term inhabits the interpreted type, kernel-checked |
 | mapped | 14 | carrier/function symbols — interpreted, not propositions |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | **float-bridge** | **32** | about IEEE floats — **no Mathlib witness can ever discharge these** |
@@ -167,7 +167,8 @@ a float is finite, so only a constant leaf of `eml_tree_grounded` was instantiat
 then the literal axioms `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05` (narrow on purpose: Lean's `Float.ofScientific`
 is not correctly rounded in general, and the generic statement is a harness control that fails), the libm finiteness
 axioms `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite`, `real_log_finite`, and `u_le_half` (`u + u ≤ 1`), and last
-`u_le_inv_two_pow_52` (`u ≤ 2⁻⁵²`) and `real_abs_eps_eq_zero`, each measured or witnessed before it was added. `MachLib/GroundedPIDInstances.lean` instantiates `pid_grounded` and fourteen of
+`u_le_inv_two_pow_52` (`u ≤ 2⁻⁵²`) and `real_abs_eps_eq_zero`, each measured or witnessed before it was added
+(`u_lt_one` and `u_le_half` are theorems from `u_le_inv_two_pow_52` since 2026-11-24). `MachLib/GroundedPIDInstances.lean` instantiates `pid_grounded` and fourteen of
 the fifteen primitive forms, and a determinant specimen through the `DBL_MIN` branch; `MachLib/GroundedEMLInstances.lean`
 instantiates `eml_tree_grounded` at three `eml` trees and two of the three `eml_var_var` forms; `GroundedLogCoshInstance.lean`
 instantiates `pid_log_cosh_grounded` (on `u ≤ 2⁻⁵²`) and `GroundedBudgetInstances.lean` the four `LibmBudget` forms (on
@@ -341,7 +342,7 @@ covered a named list, so these five were never examined. Each was the only untru
 footprints: proving them moved **134 theorems from conditional to approved-policy** (461 -> 327, read off the theorem
 ledger before and after). `u_le_one` is the conditional half of the owner's ruling U1
 (`docs/machsig/OWNER_RULINGS_2026-10-14.md`); its other half, `u_lt_one` and `u_le_half` derivable from
-`u_le_inv_two_pow_52`, is not done.
+`u_le_inv_two_pow_52`, was done on 2026-11-24.
 
 - **How they were found.** Rank the axioms outside every approved footprint by how many conditional theorems they are
   the SOLE blocker of (`tools/theorem_ledger/ledger.py --out`, then a set difference). A sole blocker that a trusted
@@ -362,14 +363,35 @@ ledger before and after). `u_le_one` is the conditional half of the owner's ruli
   serializers, so `theorem foo : P'` replacing `axiom foo : P` passes it. C7 closes that for this change: the five
   theorems' types, serialized by a copy of the gate's `serExpr` (`docs/machsig/evidence-2026-10-26/statement_probe.lean`),
   equal master's axiom pins, and the copy reproduces four unchanged axioms' pins.
-- **Derivable and NOT yet converted** (found by the 2026-10-26 review, so "provable means proved" is not at zero):
-  `exp_exp_minus_exp_strictly_increasing` (sole blocker of 4 conditional theorems, among them `exp_exp_not_in_eml_1`;
-  the review proved it in a scratch file from trusted axioms, same type), and probably `exp_one_lt_three`
-  (`e ≤ (6/5)⁶ < 3`, unchecked). Convert them next, through the same reviewed route.
+- **Derivable and NOT yet converted** (found by the 2026-10-26 review): `exp_exp_minus_exp_strictly_increasing` and
+  probably `exp_one_lt_three`. BOTH CONVERTED 2026-11-24 -- see "Six derivable axioms proved (2026-11-24)".
 - **Still conditional, and not derivable from the trusted axioms as far as checked:** the `HasDerivAt2*` family and
   `hasDerivAt_implicit` (about 140 theorems together), `floor` (63; 61 of them moved when it was trusted),
   `eml_tree_analytic_on_interval` (22). The first two were witnessed and admitted on 2026-10-27, after the implicit axiom
   turned out to be false, and two of them proved derivable after all (next section).
+
+## Six derivable axioms proved (2026-11-24)
+
+`sqrt_zero`, `sqrt_neg_zero`, `exp_exp_minus_exp_strictly_increasing`, `exp_one_lt_three`, `u_lt_one`, `u_le_half` are
+theorems of the same names and types (checked by the statement probe, C7 of `docs/machsig/transition_2026-11-24.py`).
+The owner chose the round on 2026-11-24. Axioms pinned 208 -> 202; trusted 156 -> 154 (`u_lt_one`, `u_le_half` were
+trusted); conditional 126 -> 107.
+
+- **The sqrt pair** is one private lemma: `sqrt_le_of_le_sq` at `z = 0` (`y ≤ 0 · 0`) and `sqrt_nonneg` pin `sqrt y = 0`
+  for every `y ≤ 0`. The negative-input convention is now fixed by the order characterisations, not assumed beside them.
+- **`exp_one_lt_three` was never tried before.** The tangent line at `−1/6` gives `exp(−1/6) ≥ 5/6`, so
+  `15625·e ≤ 46656 < 46875 = 3·15625`: `e ≤ (6/5)⁶ ≈ 2.986`. Step `1/5` does not work (`(5/4)⁵ ≈ 3.05`).
+  `natCast` literals do not unfold by `show`; chain `natCast_succ` (`natCast 6 = natCast 5 + 1 := natCast_succ 5`).
+  `repeat rw [← natCast_mul]` closes `natCast 5 * … = natCast 15625` by itself (a trailing `rfl` errors).
+- **`exp_exp_minus_exp_strictly_increasing`** is the 2026-10-26 review's scratch proof, as written;
+  `ExpExpNotInEML1` now imports `MachLib.Ring`.
+- **The u pair moves no theorem's class (both were trusted) and is not free.** `u_le_inv_two_pow_52` moved above them;
+  their proofs bring `divR`, `div_def`, `mul_inv`, `zero_ne_one_ax` into footprints that held `u_lt_one` alone.
+  **54 claims in `tools/claim_audit/claims.json` pin those footprints with `axioms_exact`** and failed the claim audit
+  until re-pinned. Each change was checked to be exactly "the two left, only axioms of their proofs entered". The
+  sqrt and exp conversions touched no claim.
+- **After merge:** retire monogate-lean's witnesses for `u_lt_one` and `u_le_half` (as `tanh_zero`'s, 76835b9), and
+  re-pin monogate.org's lean_claims to the merge commit.
 
 ## The implicit-function axiom was false (2026-10-27)
 
@@ -469,7 +491,7 @@ lake build                                     # 833 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
-lake env lean AxiomLedger.lean                 # "208 axioms pinned; 112 headline footprints ⊆ trusted (156)"
+lake env lean AxiomLedger.lean                 # "202 axioms pinned; 112 headline footprints ⊆ trusted (156)"
 python3 tools/claim_audit/claim_audit.py       # "all 579 claims resolve against #print axioms"
 bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
@@ -976,13 +998,14 @@ proves it conducts a failure to its own exit code; the run prints its own gate c
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
 run (**827 of 1 092 modules reachable, 12 documented unreachable** as of 2026-11-16); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
-**208 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
+**202 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
 `u_lt_one`; then `float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`, `real_exp_finite`, `real_sinh_finite`,
 `real_cosh_finite`, `real_log_finite`, `u_le_half`, `u_le_inv_two_pow_52`, `real_abs_eps_eq_zero`), then five proved on
 2026-10-26 (`exp_tangent_line_strict`, `exp_gt_two_x`, `tanh_zero`, `sqrt_one`, `u_le_one`) and two on 2026-10-27
 (`HasDerivAt2_sub`, `hasDerivAt_implicit`), then two FALSE ones removed the same day (`interval_scale_unit_lit_le`,
-`interval_weight_sum_le`). Obligations ledger: **25 rows, 7 open rows, 4 distinct open
+`interval_weight_sum_le`), then six proved on 2026-11-24 (`sqrt_zero`, `sqrt_neg_zero`,
+`exp_exp_minus_exp_strictly_increasing`, `exp_one_lt_three`, `u_lt_one`, `u_le_half`). Obligations ledger: **25 rows, 7 open rows, 4 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,
