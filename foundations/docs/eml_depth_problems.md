@@ -90,7 +90,8 @@ dips below `k` on a ray does so by at least `exp(−C − e^{eˣ})`.
 
 ## 3. What is open
 
-Four questions. The first is the one I would point a visitor at.
+Four questions, as first written. The third (3.3) is settled since 2026-11-24; three remain. The first is the one
+I would point a visitor at.
 
 ### 3.1 Uniform effective approach (the main one)
 
@@ -149,7 +150,10 @@ Whether the depth-`k` tower function requires depth `k` to express, in a form st
 consumed by the certified-synthesis layer. Equivalent (inside the development) to a statement
 about a reduction to sign, which is why it is one obligation rather than two.
 
-### 3.3 Bounded-germ transcendence
+### 3.3 Bounded-germ transcendence (settled 2026-11-24)
+
+Proved: `boundedGermTranscendence_holds`. A bounded, nonconstant rational germ has a genuine pole in lowest terms, and
+a pole-order count refutes the relation on either sign of the germ. The original statement of the question follows.
 
 Whether a germ of the class that is bounded, and whose reciprocal is also bounded, must be
 algebraic over a suitable subfield. The unbounded rates are theorems; a constant is a

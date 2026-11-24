@@ -5,8 +5,9 @@ import MachLib.EMLGermSign
 /-!
 # Differentiating an `F ∘ S` germ relation
 
-`BoundedGermTranscendence` is the last open obligation whose route is written down in the corpus
-itself: `EMLFTranscendence`'s own docstring says *"the missing step is
+`BoundedGermTranscendence` was, when this was written, the last open obligation whose route is
+written down in the corpus itself. (It was discharged on 2026-11-24 by another route, without
+differentiation: lowest terms and the two pole theorems, `EMLBoundedGermTranscendence`.) `EMLFTranscendence`'s own docstring says *"the missing step is
 differentiation-preserves-algebraicity, not anything about `exp`"*. This module is the first brick of
 that step, and it is the mechanical half.
 

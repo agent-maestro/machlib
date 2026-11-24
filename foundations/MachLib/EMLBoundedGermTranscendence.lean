@@ -9,6 +9,7 @@ import MachLib.PevSignGerm
 import MachLib.PevLeading
 import MachLib.PevSign
 import MachLib.PolyEvZero
+import MachLib.GermClearedSpecimen
 
 /-!
 # `BoundedGermTranscendence`, discharged
@@ -428,5 +429,48 @@ theorem boundedGermTranscendence_holds : BoundedGermTranscendence := by
         rw [e] at h; exact h
       exact germ_relation_impossible hq hchar hqP' hP'n hQ'n hQ'ne hqQ' hQ'ev hagree hrelN
 
+/-! ## The specimen: `S = 1/x`
+
+A theorem whose hypotheses nothing satisfies proves nothing, so the hypotheses are supplied here at
+`S = 1/x`: a rational germ (`[1] / [0, 1]`), bounded by `1` from `x = 1`, and not eventually constant.
+The conclusion is not vacuous either: `constant_germ_is_algebraic` refutes it at a constant `S`. -/
+
+private theorem inv_x_pos_of_one_le {x : Real} (hx : 1 ≤ x) : 0 < x := lt_of_lt_of_le zero_lt_one_ax hx
+
+theorem ratGerm_inv_x : RatGerm (fun x => 1 / x) :=
+  ⟨[1], [0, 1], 1, le_refl 1,
+   fun x hx => by rw [pev_X]; exact ne_of_gt (inv_x_pos_of_one_le hx),
+   fun x _ => by rw [pev_one, pev_X]⟩
+
+theorem inv_x_bounded : ∃ K X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → abs ((fun x => 1 / x) x) ≤ K := by
+  refine ⟨1, 1, le_refl 1, fun x hx => ?_⟩
+  have hpos : 0 < 1 / x := MachLib.Real.one_div_pos_of_pos (inv_x_pos_of_one_le hx)
+  have hle : 1 / x ≤ 1 / 1 := one_div_le_one_div_of_le zero_lt_one_ax hx
+  have h11 : (1 : Real) / 1 = 1 := by
+    have h := mul_inv (1 : Real) zero_ne_one_ax.symm
+    rwa [show (1 : Real) * (1 / 1) = 1 / 1 from by mach_ring] at h
+  rw [h11] at hle
+  show abs (1 / x) ≤ 1
+  unfold abs; rw [if_pos (le_of_lt hpos)]; exact hle
+
+theorem inv_x_not_evConst : ¬ ∃ c : Real, EvZeroF (fun x => (fun x => 1 / x) x - c) := by
+  rintro ⟨c, X, hX, h⟩
+  have hlt : X < X + 1 := by
+    have := add_lt_add_left zero_lt_one_ax X
+    rw [add_zero] at this; exact this
+  have e1 : 1 / X - c = 0 := h X (le_refl X)
+  have e2 : 1 / (X + 1) - c = 0 := h (X + 1) (le_of_lt hlt)
+  have heq : 1 / (X + 1) = 1 / X := by
+    calc 1 / (X + 1) = (1 / (X + 1) - c) + c := by mach_ring
+      _ = (1 / X - c) + c := by rw [e1, e2]
+      _ = 1 / X := by mach_ring
+  have hs : 1 / (X + 1) < 1 / X := one_div_lt_one_div_of_lt (inv_x_pos_of_one_le hX) hlt
+  rw [heq] at hs; exact absurd hs (lt_irrefl_ax _)
+
+/-- **`BoundedGermTranscendence` at `S = 1/x`**, every hypothesis supplied: `exp (1/x) + log (1/x)`
+satisfies no polynomial relation whose leading coefficient `pev A` dominates `c·xᵏ`. -/
+theorem boundedGermTranscendence_inv_x (A : List Real) (Ls : List (List Real)) (hA : EvDom (pev A)) :
+    ¬ ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → bipevLead A Ls x (Fbasis (1 / x)) = 0 :=
+  boundedGermTranscendence_holds _ ratGerm_inv_x inv_x_bounded inv_x_not_evConst A Ls hA
 
 end MachLib

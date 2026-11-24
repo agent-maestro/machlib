@@ -11363,7 +11363,7 @@ this sentence.) Their status, as of the last edit:
 | `PinnedRightChild` | `EMLNegTranslation` | **discharged** | `pinnedRightChild_holds` — the band pins `A₁` to `u ± 1` and the five depth-≤1 forms are exhausted; the two that reach `exp x` die on the `−x` term |
 | `FQueryLowerBound` | `EMLBasisOverhead` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | `EMLOneQueryForm` | **discharged** | `oneQueryDichotomy_holds` (`EMLCtxDivClamp`) — via `divClamp`, which supplies the two div side conditions the obligation omits; rests on `bipolyNoOscillation_holds` and the totalised `a / 0 = 0` |
-| `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
+| `BoundedGermTranscendence` | `EMLFTranscendence` | **discharged** | `boundedGermTranscendence_holds` (`EMLBoundedGermTranscendence`, 2026-11-24) — lowest terms; a bounded polynomial is constant, and a genuine pole splits by sign: `germ_relation_impossible` (negative), `no_proper_cleared_relation` after `expand_shift` (positive); specimen `boundedGermTranscendence_inv_x` |
 | `LogQueryLowerBound` | `EMLRationalGerm` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 | `RatGermTrichotomy` | `EMLRationalGerm` | **discharged** | `ratGermTrichotomy_holds` (`PevLeading`) |
