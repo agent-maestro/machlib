@@ -1,7 +1,7 @@
 {
  "binding": {
-  "new_baseline_sha256": "sha256:b0820dda28f999e7f3928c498ae86bcbf14797351a4c950b8db6313cb86e06e1",
-  "new_sources_commit": "9235112882dffadb371e6f5a734e5cbe96ffb1ab",
+  "new_baseline_sha256": "sha256:d011fd15f7608898c61b3290fc9519b6d5bb5a2abf3a397c972e04bb0a054e66",
+  "new_sources_commit": "af925163716adf163fef50e1f1c1cebef715dde9",
   "old_baseline_file": "tools/machsig/trust_baseline.json at fcc4ae1b0c238d04f217181840749e1cbcb4c152 (master)",
   "old_baseline_role": "the LAST REVIEWED baseline at the anchor: the Forge-bridge rebaseline (a356363b), brought onto master by the merge commit cc90d9b4 and unchanged on master since",
   "old_baseline_sha256": "sha256:5b26c935f09c85e85f50d3bd60c6d4a7926e706da398ef5634ff266b2302694b"
