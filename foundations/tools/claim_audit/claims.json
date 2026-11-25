@@ -3535,7 +3535,7 @@
       "hypotheses_count": 4
     },
     {
-      "_comment": "The sqrt-totalisation firewall. forbid_axioms_exact on sqrt_neg_zero is the actual content: the geometric reading may use sqrt, but never the totalisation branch.",
+      "_comment": "The sqrt-totalisation firewall. forbid_axioms_exact on sqrt_neg_zero is the actual content: the geometric reading may use sqrt, but never the totalisation branch. [2026-11-24] sqrt_neg_zero is a THEOREM since 2026-11-24 (from sqrt_le_of_le_sq at z = 0 and sqrt_nonneg), so it can no longer appear in a footprint; the firewall now also forbids sqrt_le_of_le_sq, the only sqrt axiom bounding sqrt from above, which every derivation of the negative-input convention must use.",
       "id": "tangency-sqrt-free-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -3547,7 +3547,8 @@
         "sorryAx"
       ],
       "forbid_axioms_exact": [
-        "MachLib.Real.sqrt_neg_zero"
+        "MachLib.Real.sqrt_neg_zero",
+        "MachLib.Real.sqrt_le_of_le_sq"
       ],
       "conclusion_mentions": [
         "TangentExt"
@@ -3555,7 +3556,7 @@
       "hypotheses_count": 0
     },
     {
-      "_comment": "The elimination. forbid_axioms_exact on sqrt is the content: the system-to-quadratic reduction is purely algebraic, so no radical enters the trust chain at this layer.",
+      "_comment": "The elimination. forbid_axioms_exact on sqrt is the content: the system-to-quadratic reduction is purely algebraic, so no radical enters the trust chain at this layer. [2026-11-24] sqrt_neg_zero is a THEOREM since 2026-11-24 (from sqrt_le_of_le_sq at z = 0 and sqrt_nonneg), so it can no longer appear in a footprint; the firewall now also forbids sqrt_le_of_le_sq, the only sqrt axiom bounding sqrt from above, which every derivation of the negative-input convention must use.",
       "id": "apollonius-elimination-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -3568,7 +3569,8 @@
       ],
       "forbid_axioms_exact": [
         "MachLib.Real.sqrt",
-        "MachLib.Real.sqrt_neg_zero"
+        "MachLib.Real.sqrt_neg_zero",
+        "MachLib.Real.sqrt_le_of_le_sq"
       ],
       "statement_mentions": [
         "SolvesMode",
@@ -3601,7 +3603,7 @@
       "hypotheses_count": 3
     },
     {
-      "_comment": "The root identity. hypotheses_count 1 -- only the scaled-root equation; NO hypothesis on s, which is the content: the identity is unconditional and isolates the irrationality. forbid_axioms_exact on every sqrt axiom pins that this layer is purely algebraic.",
+      "_comment": "The root identity. hypotheses_count 1 -- only the scaled-root equation; NO hypothesis on s, which is the content: the identity is unconditional and isolates the irrationality. forbid_axioms_exact on every sqrt axiom pins that this layer is purely algebraic. [2026-11-24] sqrt_neg_zero is a THEOREM since 2026-11-24 (from sqrt_le_of_le_sq at z = 0 and sqrt_nonneg), so it can no longer appear in a footprint; the firewall now also forbids sqrt_le_of_le_sq, the only sqrt axiom bounding sqrt from above, which every derivation of the negative-input convention must use.",
       "id": "apollonius-root-identity-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -3615,7 +3617,8 @@
       "forbid_axioms_exact": [
         "MachLib.Real.sqrt",
         "MachLib.Real.sqrt_sq_nonneg",
-        "MachLib.Real.sqrt_neg_zero"
+        "MachLib.Real.sqrt_neg_zero",
+        "MachLib.Real.sqrt_le_of_le_sq"
       ],
       "statement_mentions": [
         "lead",
@@ -3831,7 +3834,7 @@
       "hypotheses_count": 2
     },
     {
-      "_comment": "Attainment for every class. forbid_axioms_exact on sqrt_neg_zero is the point: sqrt DOES enter here, and the claim is that the TOTALISATION branch still cannot. That guard is only meaningful at a site that genuinely uses sqrt.",
+      "_comment": "Attainment for every class. forbid_axioms_exact on sqrt_neg_zero is the point: sqrt DOES enter here, and the claim is that the TOTALISATION branch still cannot. That guard is only meaningful at a site that genuinely uses sqrt. [2026-11-24] sqrt_neg_zero is a THEOREM since 2026-11-24 (from sqrt_le_of_le_sq at z = 0 and sqrt_nonneg), so it can no longer appear in a footprint; the firewall now also forbids sqrt_le_of_le_sq, the only sqrt axiom bounding sqrt from above, which every derivation of the negative-input convention must use.",
       "id": "apollonius-attainment-all-classes-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -3843,7 +3846,8 @@
         "sorryAx"
       ],
       "forbid_axioms_exact": [
-        "MachLib.Real.sqrt_neg_zero"
+        "MachLib.Real.sqrt_neg_zero",
+        "MachLib.Real.sqrt_le_of_le_sq"
       ],
       "statement_mentions": [
         "QM"
@@ -3871,7 +3875,7 @@
       "hypotheses_count": 1
     },
     {
-      "_comment": "The count, both halves. hypotheses_count 0 -- the general-position argument is consumed inside the Circle constructors, so it is a dependent argument and not a top-level antecedent (computed with the auditor's own parser, not guessed).",
+      "_comment": "The count, both halves. hypotheses_count 0 -- the general-position argument is consumed inside the Circle constructors, so it is a dependent argument and not a top-level antecedent (computed with the auditor's own parser, not guessed). [2026-11-24] sqrt_neg_zero is a THEOREM since 2026-11-24 (from sqrt_le_of_le_sq at z = 0 and sqrt_nonneg), so it can no longer appear in a footprint; the firewall now also forbids sqrt_le_of_le_sq, the only sqrt axiom bounding sqrt from above, which every derivation of the negative-input convention must use.",
       "id": "apollonius-exactly-two-per-mode-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -3883,7 +3887,8 @@
         "sorryAx"
       ],
       "forbid_axioms_exact": [
-        "MachLib.Real.sqrt_neg_zero"
+        "MachLib.Real.sqrt_neg_zero",
+        "MachLib.Real.sqrt_le_of_le_sq"
       ],
       "statement_mentions": [
         "SolvesMode",
@@ -10484,7 +10489,7 @@
       "hypotheses_count": 0
     },
     {
-      "_comment": "pipeline_det_grounded instantiated on the range axioms (2026-09-14): FloatSafe discharged on a domain of bounded, floored, finite inputs. Rests on real_fpfinite and u_lt_one besides the certificate's own axioms; witnessed by pipeline_det_grounded_specimen.",
+      "_comment": "pipeline_det_grounded instantiated on the range axioms (2026-09-14): FloatSafe discharged on a domain of bounded, floored, finite inputs. Rests on real_fpfinite and u_lt_one besides the certificate's own axioms; witnessed by pipeline_det_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-det-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -10527,10 +10532,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
-        "MachLib.Real.zero_lt_one_ax"
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.div_def",
+        "MachLib.Real.mul_inv",
+        "MachLib.Real.u_le_inv_two_pow_52",
+        "MachLib.Real.zero_ne_one_ax"
       ],
       "hypotheses_count": 15
     },
@@ -10583,11 +10591,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -10641,7 +10649,7 @@
       "hypotheses_count": 5
     },
     {
-      "_comment": "Specimen with nonzero inputs: B = 2^1022, inputs floatOfR 1, whose real value is positive by u_lt_one, so the exact sum is nonzero.",
+      "_comment": "Specimen with nonzero inputs: B = 2^1022, inputs floatOfR 1, whose real value is positive by u_lt_one, so the exact sum is nonzero. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-sum-specimen",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -10689,15 +10697,16 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
-        "MachLib.Real.zero_lt_one_ax"
+        "MachLib.Real.zero_lt_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52",
+        "MachLib.Real.zero_ne_one_ax"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_grounded_specimen.",
+      "_comment": "pid_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -10748,12 +10757,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -10809,17 +10817,16 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_tanh_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_tanh_grounded_specimen.",
+      "_comment": "pid_tanh_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_tanh_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-tanh-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -10890,13 +10897,12 @@
         "MachLib.Real.tanh",
         "MachLib.Real.tanh_eq_sinh_div_cosh",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -10972,18 +10978,17 @@
         "MachLib.Real.tanh",
         "MachLib.Real.tanh_eq_sinh_div_cosh",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_sin_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_sin_grounded_specimen.",
+      "_comment": "pid_sin_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_sin_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-sin-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -11046,14 +11051,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11121,19 +11125,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_cos_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_cos_grounded_specimen.",
+      "_comment": "pid_cos_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_cos_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-cos-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -11196,14 +11199,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11271,19 +11273,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_atan_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_atan_grounded_specimen.",
+      "_comment": "pid_atan_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_atan_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-atan-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -11344,14 +11345,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11417,19 +11417,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_abs_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_abs_grounded_specimen.",
+      "_comment": "pid_abs_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_abs_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-abs-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -11482,12 +11481,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11545,17 +11543,16 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_exp_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_exp_grounded_specimen.",
+      "_comment": "pid_exp_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_exp_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-exp-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -11619,15 +11616,14 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -11696,20 +11692,19 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_log_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_log_grounded_specimen.",
+      "_comment": "pid_log_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_log_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-log-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -11770,14 +11765,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11843,19 +11837,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_sqrt_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_sqrt_grounded_specimen.",
+      "_comment": "pid_sqrt_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_sqrt_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-sqrt-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -11911,12 +11904,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -11977,17 +11969,16 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_log10_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_log10_grounded_specimen.",
+      "_comment": "pid_log10_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_log10_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-log10-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -12052,14 +12043,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -12129,19 +12119,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_asin_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_asin_grounded_specimen.",
+      "_comment": "pid_asin_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_asin_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-asin-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -12206,14 +12195,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12283,19 +12271,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_acos_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_acos_grounded_specimen.",
+      "_comment": "pid_acos_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_acos_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-acos-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -12360,14 +12347,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12437,19 +12423,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_tan_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_tan_grounded_specimen.",
+      "_comment": "pid_tan_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_tan_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-tan-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -12519,8 +12504,6 @@
         "MachLib.Real.tan",
         "MachLib.Real.tan_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -12529,7 +12512,8 @@
         "MachLib.Real.pi_lower_bound",
         "MachLib.Real.zero_ne_one_ax",
         "MachLib.Real.cos_add",
-        "MachLib.Real.sin_add"
+        "MachLib.Real.sin_add",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12604,8 +12588,6 @@
         "MachLib.Real.tan",
         "MachLib.Real.tan_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -12614,12 +12596,13 @@
         "MachLib.Real.pi_lower_bound",
         "MachLib.Real.zero_ne_one_ax",
         "MachLib.Real.cos_add",
-        "MachLib.Real.sin_add"
+        "MachLib.Real.sin_add",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_sinh_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_sinh_grounded_specimen.",
+      "_comment": "pid_sinh_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_sinh_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-sinh-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -12688,13 +12671,12 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12768,18 +12750,17 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "pid_cosh_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_cosh_grounded_specimen.",
+      "_comment": "pid_cosh_grounded instantiated (2026-09-14) on the PID input domain, on the literal, libm-finiteness and u_le_half axioms; witnessed by pid_cosh_grounded_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-pid-cosh-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -12848,13 +12829,12 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -12928,18 +12908,17 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.exp_surj",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "A nonzero specimen for pipeline_det_grounded_instantiated through ProductsNormal's DBL_MIN branch, using u_le_half.",
+      "_comment": "A nonzero specimen for pipeline_det_grounded_instantiated through ProductsNormal's DBL_MIN branch, using u_le_half. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-det-nonzero-specimen",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -12987,17 +12966,16 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "eml_tree_grounded_eml_var_var instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_tree_grounded_eml_var_var_specimen. hypotheses_count registered 2026-09-14, once statement_resolved stopped reading the word 'error' in emlTreeErrorBound as a build failure.",
+      "_comment": "eml_tree_grounded_eml_var_var instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_tree_grounded_eml_var_var_specimen. hypotheses_count registered 2026-09-14, once statement_resolved stopped reading the word 'error' in emlTreeErrorBound as a build failure. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-eml-tree-grounded-eml-var-var-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -13061,14 +13039,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -13138,19 +13115,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "eml_tree_grounded_depth2 instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_tree_grounded_depth2_specimen. hypotheses_count registered 2026-09-14, once statement_resolved stopped reading the word 'error' in emlTreeErrorBound as a build failure.",
+      "_comment": "eml_tree_grounded_depth2 instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_tree_grounded_depth2_specimen. hypotheses_count registered 2026-09-14, once statement_resolved stopped reading the word 'error' in emlTreeErrorBound as a build failure. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-eml-tree-grounded-depth2-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -13214,14 +13190,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -13291,19 +13266,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "eml_tree_grounded_eml_const_one instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_tree_grounded_eml_const_one_specimen. hypotheses_count registered 2026-09-14, once statement_resolved stopped reading the word 'error' in emlTreeErrorBound as a build failure.",
+      "_comment": "eml_tree_grounded_eml_const_one instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_tree_grounded_eml_const_one_specimen. hypotheses_count registered 2026-09-14, once statement_resolved stopped reading the word 'error' in emlTreeErrorBound as a build failure. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-eml-tree-grounded-eml-const-one-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -13368,14 +13342,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 3
     },
@@ -13445,19 +13418,18 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "eml_var_var_pipeline_uniform instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_var_var_pipeline_uniform_specimen.",
+      "_comment": "eml_var_var_pipeline_uniform instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_var_var_pipeline_uniform_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-eml-var-var-pipeline-uniform-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -13511,12 +13483,11 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 5
     },
@@ -13578,17 +13549,16 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
     {
-      "_comment": "eml_var_var_quantized_pointwise instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_var_var_quantized_pointwise_specimen.",
+      "_comment": "eml_var_var_quantized_pointwise instantiated (2026-09-14) on the libm-finiteness and u_le_half axioms; witnessed by eml_var_var_quantized_pointwise_specimen. [2026-11-24] u_lt_one and u_le_half are THEOREMS since 2026-11-24, proved from u_le_inv_two_pow_52; this footprint carries that axiom in their place (axioms_exact re-pinned the same day).",
       "id": "grounded-eml-var-var-quantized-pointwise-instantiated",
       "source_file": "foundations/docs/what_is_proven.md",
       "claim_text": [
@@ -13653,14 +13623,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 5
     },
@@ -13730,14 +13699,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -13816,9 +13784,7 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
         "MachLib.Real.u_le_inv_two_pow_52",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -13901,9 +13867,7 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
         "MachLib.Real.u_le_inv_two_pow_52",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -13980,8 +13944,6 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -13989,7 +13951,8 @@
         "propext",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -14062,8 +14025,6 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -14071,7 +14032,8 @@
         "propext",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -14145,14 +14107,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -14218,14 +14179,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "Quot.sound",
         "propext",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 1
     },
@@ -14298,8 +14258,6 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -14307,7 +14265,8 @@
         "propext",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -14380,8 +14339,6 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
@@ -14389,7 +14346,8 @@
         "propext",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -14463,14 +14421,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "MachLib.Real.HasDerivAt_add",
         "MachLib.Real.HasDerivAt_of_eq",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },
@@ -14536,14 +14493,13 @@
         "MachLib.Real.subR",
         "MachLib.Real.sub_def",
         "MachLib.Real.u",
-        "MachLib.Real.u_le_half",
-        "MachLib.Real.u_lt_one",
         "MachLib.Real.u_nonneg",
         "MachLib.Real.zeroR",
         "MachLib.Real.zero_lt_one_ax",
         "Quot.sound",
         "propext",
-        "MachLib.Real.zero_ne_one_ax"
+        "MachLib.Real.zero_ne_one_ax",
+        "MachLib.Real.u_le_inv_two_pow_52"
       ],
       "hypotheses_count": 0
     },

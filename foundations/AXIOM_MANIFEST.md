@@ -9,11 +9,11 @@ type** (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The witness is a certi
 never a dependency *of* it.
 
 The honest headline is **"zero unmodeled axioms"**, not "zero axioms". There are
-156 of them and they are all listed below.
+154 of them and they are all listed below.
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 107 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
+| witnessed | 105 | a Mathlib term inhabits the interpreted axiom type, kernel-checked |
 | mapped | 14 | carrier or function symbol — interpreted, not a proposition |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | about IEEE floats, **not modelable in `ℝ`** — empirical; see the note below on what is and is not pinned |
@@ -228,9 +228,7 @@ decides what a certificate can claim.
 | `MachLib.Real.tanh` | witnessed | `: Real → Real` | Real.tanh |
 | `MachLib.Real.tanh_eq_sinh_div_cosh` | witnessed | `(x : Real) : tanh x = sinh x / cosh x` | fun x => Real.tanh_eq_sinh_div_cosh x |
 | `MachLib.Real.u` | witnessed | `: Real` | ((1 : ℝ) / 2 ^ 53) |
-| `MachLib.Real.u_le_half` | witnessed | `: u + u ≤ 1` | (by norm_num : (1 : ℝ) / 2 ^ 53 + 1 / 2 ^ 53 ≤ 1) |
 | `MachLib.Real.u_le_inv_two_pow_52` | witnessed | `: u ≤ 1 / natCast (2 ^ 52)` | (by norm_num : (1 : ℝ) / 2 ^ 53 ≤ 1 / ((2 ^ 52 : ℕ) : ℝ)) |
-| `MachLib.Real.u_lt_one` | witnessed | `: u < 1` | (by norm_num : (1 : ℝ) / 2 ^ 53 < 1) |
 | `MachLib.Real.u_nonneg` | witnessed | `: (0 : Real) ≤ u` | le_of_lt (by norm_num : (0 : ℝ) < 1 / 2 ^ 53) |
 | `MachLib.Real.zeroR` | witnessed | `: Real` | (0 : ℝ) |
 | `MachLib.Real.zero_lt_one_ax` | witnessed | `: (0 : Real) < 1` | zero_lt_one |

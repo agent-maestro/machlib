@@ -17,16 +17,16 @@ halves from `u + u ≤ 1`, decimals against `DBL_MIN` and `DBL_MAX`, the three g
 ## Staying inside the trusted footprint
 
 Two convenient routes leave it, and this module avoids both. `u_le_one` was an axiom that was neither witnessed nor in the
-trusted footprint (`u_lt_one` is both), so `u ≤ 1` is taken as `le_of_lt u_lt_one` (since 2026-10-26 that is exactly how
-`FPModel.lean` proves `u_le_one`). And `mach_decimal` closes order goals
+trusted footprint (`u_lt_one` was both), so `u ≤ 1` is taken as `le_of_lt u_lt_one` (since 2026-10-26 that is exactly how
+`FPModel.lean` proves `u_le_one`; since 2026-11-24 `u_lt_one` is itself a theorem from the trusted `u_le_inv_two_pow_52`). And `mach_decimal` closes order goals
 with the axioms `realOfScientific_le_of_nat` and `realOfScientific_lt_of_nat`, which are in the same position; the
 `grounded_decimal` tactic below normalises the same way and closes order goals with `decimal_le_of_nat'` and
 `decimal_lt_of_nat'`, proved here from the trusted `realOfScientific_clears`.
 
 ## An upper bound on `exp`, from axioms already trusted
 
-No trusted axiom bounds `exp` from above (`exp_one_lt_three` exists, but it is neither witnessed nor in the trusted
-footprint). The bound here needs none: `1 − x ≤ exp (−x)` is `one_add_le_exp` at `−x`, and `exp x · exp (−x) = 1`, so
+No trusted axiom bounds `exp` from above (`exp_one_lt_three` was an axiom outside the trusted footprint until
+2026-11-24, and is now a theorem by this same route at `x = 1/6`, giving `e ≤ (6/5)⁶`). The bound here needs none: `1 − x ≤ exp (−x)` is `one_add_le_exp` at `−x`, and `exp x · exp (−x) = 1`, so
 `exp x · (1 − x) ≤ 1` for every `x`. At `x = 1/2` that is `exp (1/2) ≤ 2`, so `exp 1 ≤ 4` and `exp n ≤ 4ⁿ`. It is crude
 (`e < 2.72`), and it is enough to keep a certificate's float results below `DBL_MAX` on the domains used here.
 -/

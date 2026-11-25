@@ -57,12 +57,13 @@ no arithmetic node and no primitive. Until 2026-09-14 it was all that the axioms
 
 ## What the range axioms changed, and what came after
 
-The overflow rule over `realToR`, a finite `floatOfR x` for `|x| ≤ DBL_MAX`, and `u < 1` are disclosed axioms, and the
+The overflow rule over `realToR`, a finite `floatOfR x` for `|x| ≤ DBL_MAX`, and `u < 1` are disclosed axioms (`u < 1` a
+theorem from `u_le_inv_two_pow_52` since 2026-11-24), and the
 instances they allow are in `FloatSafeInstances.lean`. They did not give the PID kernels the finiteness and real values of
 their literal gains, nor `exp`, `sinh` and `cosh` a finite result from a bounded argument, nor any lower bound on `1 − u`.
 Later on 2026-09-14 the owner approved exactly those facts (`float_lit_1_5`, `float_lit_0_4`, `float_lit_0_05`,
 `real_exp_finite`, `real_sinh_finite`, `real_cosh_finite`, `real_log_finite`, `u_le_half`), each measured or witnessed
-first, and `GroundedPIDInstances.lean` and `GroundedEMLInstances.lean` instantiate what they allow.
+first (`u_le_half` a theorem since 2026-11-24), and `GroundedPIDInstances.lean` and `GroundedEMLInstances.lean` instantiate what they allow.
 -/
 
 namespace Certcom

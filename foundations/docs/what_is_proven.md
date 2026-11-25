@@ -498,10 +498,10 @@ that hardware implements it, is outside Lean. The one concrete use, a 2-8-1 netw
 MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the
 things Mathlib would prove as theorems — the real-number field/order axioms, the
 definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
-model — are **axioms** here. As of 2026-10-27 the ledger pins **208 axioms**
+model — are **axioms** here. As of 2026-10-27 the ledger pins **202 axioms**
 (`lake env lean AxiomLedger.lean`: 176 `MachLib.*` plus 32 `Certcom.*`), of which
-**156** form the trusted footprint of the headline theorems, and every one of those 156 is
-modeled: 107 witnessed by a kernel-checked Mathlib term, 14 interpreted carrier and function
+**154** form the trusted footprint of the headline theorems, and every one of those 154 is
+modeled: 105 witnessed by a kernel-checked Mathlib term, 14 interpreted carrier and function
 symbols, 3 standard, 32 IEEE-754 float-bridge facts validated by measurement — see
 [`AXIOM_MANIFEST.md`](../AXIOM_MANIFEST.md), which is generated, and **(d)** below. (This
 section said **260** from 2026-06-27 until 2026-09-05; that figure was a different count over a
@@ -572,7 +572,7 @@ earned and what is cited never share a count.
 
 **(d) Every trusted axiom has a model, checked outside this library.** Nothing Mathlib-free
 can show its own axioms are satisfiable, so the check lives in the sibling project
-`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 156 trusted axioms,
+`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 154 trusted axioms,
 verifies in the kernel that a Mathlib term inhabits the axiom's *interpreted* type
 (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The result is a certificate *about* MachLib, never a
 dependency *of* it. The 32 float-bridge axioms are the exception by nature — Mathlib has no
@@ -953,7 +953,8 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
     `u_le_half` (`u + u ≤ 1`). `tools/float_bridge/measure.py` measures every float-bridge one, with controls that must
     fail: the literal axioms against Lean's own evaluation of each literal, the finiteness axioms with their ranges widened
     (failing only beyond the measured overflow boundary, `709.7827…` for `exp` and `710.4758…` for `sinh` and `cosh`).
-    `u_lt_one` and `u_le_half` are witnessed against Mathlib at `u = 2⁻⁵³`. The literal axioms are narrow on purpose:
+    `u_lt_one` and `u_le_half` are witnessed against Mathlib at `u = 2⁻⁵³`; since 2026-11-24 both are theorems from
+    `u_le_inv_two_pow_52`, so `u`'s upper bounds rest on that one axiom. The literal axioms are narrow on purpose:
     Lean's `Float.ofScientific` truncates to 64 bits before it rounds, and the generic statement, that every decimal
     literal is `floatOfR` of its decimal, fails at 81 210 of 631 326 decimals.
     Last that day: `u_le_inv_two_pow_52` (`u ≤ 2⁻⁵²`, witnessed at `u = 2⁻⁵³`) and `real_abs_eps_eq_zero` (the runtime `abs`

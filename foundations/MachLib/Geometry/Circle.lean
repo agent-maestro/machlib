@@ -11,7 +11,8 @@ is. A tangency predicate written as `sqrt (distSq …) = r + s` would therefore 
 accident wherever the totalisation fires, and a "solution" manufactured that way would be
 indistinguishable from a real one. Defining tangency as `distSq = (r+s)^2` removes the hazard
 structurally rather than by hypothesis: `sqrt` never appears in `TangentExt` or `TangentInt`, so
-`sqrt_neg_zero` cannot appear in their axiom footprint.
+`sqrt_neg_zero` (an axiom until 2026-11-24, a theorem from `sqrt`'s order characterisations since) cannot enter their
+proofs.
 
 The geometric reading is then a **theorem** (`tangentExt_iff`, `tangentInt_iff`) rather than a
 definition — that is where `sqrt` is allowed, and where it is safe, because those lemmas carry the
