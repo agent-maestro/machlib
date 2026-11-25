@@ -403,6 +403,14 @@ trusted); conditional 126 -> 107.
   (2) stamp, PR, CI green, `--no-ff` merge; (3) pull and rebuild `~/monogate/machlib`; (4) retire monogate-lean's
   witnesses for `u_lt_one`/`u_le_half` (as `tanh_zero`'s, 76835b9); (5) re-pin monogate.org's lean_claims to the
   merge commit; (6) redeploy machlib.org (site figures moved); (7) tighten forge's need-sets to the new axiom only.
+  Done 2026-11-25: (1) forge `4d20298e`; (2) PR #16, merge `42d2a607`; (3) built, 833 jobs; (4) monogate-lean
+  `adf71e6`; (5) monogate `b036daef`, claims GREEN 78/203; (6) the owner's; (7) lands with forge's re-record, below.
+- **The list missed one: pulling `~/monogate/machlib` moves forge's `machlib_sources` binding.** Forge's full suite then
+  fails 13 tests (verification index, evidence delta, clean-clone rebuild, nine publication tests): every kernel's
+  `source_contracts[lean]` reads NOT_ESTABLISHED until forge re-records against the new MachLib master, by the
+  owner's 2026-10-28 ruling (forge `docs/platforms/RULINGS.md`; never against an unmerged branch):
+  `gen_lean_visible_names.py`, `proof_discharge --check` then `--write-baseline`, `verification-index --write`,
+  `vectors --write`, `target_model_report --write`, full suite. Any change to MachLib's sources needs it.
 
 ## The implicit-function axiom was false (2026-10-27)
 
