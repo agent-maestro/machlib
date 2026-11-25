@@ -54,7 +54,8 @@ private theorem e_bound_natCast_three : natCast 3 = (1 + 1 + 1 : Real) := by
 
 /-- `exp 1 < 3`. (e < 3.) An axiom until 2026-11-24. The tangent line `1 + x ≤ exp x` at `x = -1/6` gives
 `exp (-1/6) ≥ 5/6`, so `exp (-1) ≥ (5/6)⁶`, i.e. `15625 · e ≤ 46656`, and `46656 < 46875 = 3 · 15625`. The bound
-proved is `e ≤ (6/5)⁶ ≈ 2.986`; no smaller step than `1/6` works (`(5/4)⁵ ≈ 3.05`). -/
+proved is `e ≤ (6/5)⁶ ≈ 2.986`. No larger step than `1/6` works (at `1/5`, `(5/4)⁵ ≈ 3.05`); smaller ones do
+(`(7/6)⁷ ≈ 2.94`). -/
 theorem exp_one_lt_three : exp 1 < (1 + 1 + 1 : Real) := by
   have hN : (0 : Real) < natCast 6 := natCast_pos (by decide)
   have hN0 : natCast 6 ≠ (0 : Real) := ne_of_gt hN

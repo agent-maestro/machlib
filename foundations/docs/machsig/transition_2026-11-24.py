@@ -21,8 +21,9 @@ transition is meant to carry, with each claim stated as a check that can fail:
   C5  every axiom that entered a footprint is trusted, and is in the footprint of one of the six
       new theorems it replaced (so it entered through that proof, and from nowhere else);
   C6  every new row is one of the six theorems, one of their five private helpers, or a theorem that
-      already exists at OLD_REV (a declaration line naming it, matched on Lean's name syntax) but is missing
-      from the old baseline (added on master after the
+      master's own diff since the old baseline's sources added (declared exactly once at OLD_REV, matched on
+      Lean's name syntax) and this change's diff did not; this change's diff adds exactly the six and the helpers.
+      It is missing from the old baseline (added on master after the
       last reviewed baseline, which the gate accepts as INFO without rebaselining). The six and their helpers rest on
       trusted axioms only; a row master added rests on DECLARED axioms (the gate's INFO rule) and, if any of them is
       outside the trusted policy, is listed by name -- #13's `oneQueryLevelSet_of_residue'` is conditional on
@@ -81,6 +82,67 @@ def short(a: str) -> str:
     return "`" + a + "`"
 
 
+def short_name(n: str) -> str:
+    return n.split(".")[-1]
+
+
+_DECL = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?(?:private |protected )?theorem ([\w'.]+)(?=\s|$)", re.MULTILINE)
+
+
+def _strip_comments(src: str) -> str:
+    """Drop Lean comments (nested `/- -/` and `--` lines), keeping string literals. A docstring line that begins
+    with the word `theorem` is prose, and a diff or a grep cannot tell it from a declaration."""
+    out, i, depth, instr = [], 0, 0, False
+    while i < len(src):
+        c = src[i]
+        if instr:
+            out.append(c)
+            if c == "\\" and i + 1 < len(src):
+                out.append(src[i + 1]); i += 2; continue
+            instr = c != '"'
+            i += 1; continue
+        if not depth and c == '"':
+            instr = True; out.append(c); i += 1; continue
+        if src.startswith("/-", i):
+            depth += 1; i += 2; continue
+        if depth and src.startswith("-/", i):
+            depth -= 1; i += 2; continue
+        if depth:
+            if c == "\n":
+                out.append(c)
+            i += 1; continue
+        if src.startswith("--", i):
+            j = src.find("\n", i); i = len(src) if j < 0 else j; continue
+        out.append(c); i += 1
+    return "".join(out)
+
+
+def declared(rev: str) -> dict[str, int]:
+    """Short name -> number of `theorem` declarations under MachLib/ at `rev`, comments stripped."""
+    ls = subprocess.run(["git", "ls-tree", "-r", "--name-only", rev, "--", "MachLib"], cwd=FOUND,
+                        capture_output=True, text=True, check=True).stdout.split()
+    paths = [p for p in ls if p.endswith(".lean")]
+    blobs = subprocess.run(["git", "cat-file", "--batch"], cwd=FOUND, check=True, capture_output=True,
+                           input="".join(f"{rev}:foundations/{p}\n" for p in paths).encode()).stdout
+    counts: dict[str, int] = {}
+    pos = 0
+    for _ in paths:
+        hdr_end = blobs.index(b"\n", pos)
+        size = int(blobs[pos:hdr_end].split()[2])
+        body = blobs[hdr_end + 1: hdr_end + 1 + size].decode("utf-8")
+        pos = hdr_end + 1 + size + 1
+        for m in _DECL.finditer(_strip_comments(body)):
+            k = short_name(m.group(1))
+            counts[k] = counts.get(k, 0) + 1
+    return counts
+
+
+def declared_net(a: str, b: str) -> set[str]:
+    """Short names declared more often at `b` than at `a`: what the change a..b ADDS (a moved theorem cancels)."""
+    ca, cb = declared(a), declared(b)
+    return {k for k, v in cb.items() if v > ca.get(k, 0)}
+
+
 def footprint(doc: dict, name: str) -> list[str]:
     t = doc["theorems"][name]
     return doc["axiom_sets"][t["set"]]
@@ -132,8 +194,16 @@ def main() -> int:
     declared = set(new["policy"]["known"]) | trusted | core
     since_conditional = {n: sorted(set(footprint(new, n)) - trusted - core) for n in since_landing
                          if set(footprint(new, n)) - trusted - core}
+    # Which side added each new row (the independent review, F3): classify by the DIFFS, not by a name search alone.
+    # master's own additions since the old baseline's sources, and this change's own additions on top of OLD_REV.
+    master_added = declared_net(old["provenance"]["machlib_commit"], OLD_REV)
+    change_added = declared_net(OLD_REV, new["provenance"]["machlib_commit"])
     checks["C6"] = (six | HELPERS <= set(new_rows)
-                    and all(len(v) >= 1 for v in since_landing.values())
+                    # this change adds exactly the six and their helpers, nothing else
+                    and change_added == {short_name(n) for n in six | HELPERS}
+                    # every other new row is one master added, declared exactly once at OLD_REV
+                    and all(short_name(n) in master_added and short_name(n) not in change_added
+                            and len(v) == 1 for n, v in since_landing.items())
                     # this change's own rows: trusted axioms only
                     and all(set(footprint(new, n)) <= trusted | core for n in six | HELPERS)
                     # rows master added since the last reviewed baseline: the gate's own INFO rule, declared axioms
@@ -221,8 +291,9 @@ def main() -> int:
         lines.append(f"| {k} | {desc[k]} | {'yes' if checks[k] else '**NO**'} |")
     lines += ["", "## New rows that are not this change", "",
               "Theorems added on master after the landing. New theorems pass the gate as INFO, so no baseline",
-              "recorded them; a report is NET from the last reviewed baseline, so they appear here. Each is found",
-              f"at `{OLD_REV[:8]}` and rests on trusted axioms only.", ""]
+              "recorded them; a report is NET from the last reviewed baseline, so they appear here. Each is a theorem",
+              f"master's own diff since the old baseline's sources added, declared once at `{OLD_REV[:8]}`; it rests on",
+              "declared axioms, and the ones outside the trusted policy are listed after this list.", ""]
     for n, v in since_landing.items():
         lines.append(f"- `{n}`: {'; '.join(v)}")
     lines += ["", "Of these, resting on a declared axiom outside the trusted policy (conditional on master too):", ""]

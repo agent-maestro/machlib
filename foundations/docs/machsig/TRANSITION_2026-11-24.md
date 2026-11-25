@@ -32,8 +32,9 @@ the other four were outside it, and their dependants move from conditional to ap
 ## New rows that are not this change
 
 Theorems added on master after the landing. New theorems pass the gate as INFO, so no baseline
-recorded them; a report is NET from the last reviewed baseline, so they appear here. Each is found
-at `fcc4ae1b` and rests on trusted axioms only.
+recorded them; a report is NET from the last reviewed baseline, so they appear here. Each is a theorem
+master's own diff since the old baseline's sources added, declared once at `fcc4ae1b`; it rests on
+declared axioms, and the ones outside the trusted policy are listed after this list.
 
 - `MachLib.Real.FxBox.has_intro`: fcc4ae1b0c238d04f217181840749e1cbcb4c152:MachLib/FixedPointNetInterval.lean:46:theorem FxBox.has_intro {b : FxBox} {x1 x2 : Int} (h1 : b.x0 ≤ x1) (h2 : x1 ≤ b.x1) (h3 : b.y0 ≤ x2)
 - `MachLib.Real.FxNet.exact_clamp`: fcc4ae1b0c238d04f217181840749e1cbcb4c152:MachLib/FixedPointNet.lean:407:theorem exact_clamp (a : FxNet) (lo hi : Int) :

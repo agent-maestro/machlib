@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **1 092 `.lean` files** (817 top-level + 275 in subdirectories) /
-**261 122 lines**, re-exported through the aggregator
+**261 125 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -379,8 +379,8 @@ trusted); conditional 126 -> 107.
 
 - **The sqrt pair** is one private lemma: `sqrt_le_of_le_sq` at `z = 0` (`y ≤ 0 · 0`) and `sqrt_nonneg` pin `sqrt y = 0`
   for every `y ≤ 0`. The negative-input convention is now fixed by the order characterisations, not assumed beside them.
-- **`exp_one_lt_three` was never tried before.** The tangent line at `−1/6` gives `exp(−1/6) ≥ 5/6`, so
-  `15625·e ≤ 46656 < 46875 = 3·15625`: `e ≤ (6/5)⁶ ≈ 2.986`. Step `1/5` does not work (`(5/4)⁵ ≈ 3.05`).
+- **`exp_one_lt_three` was never tried before.** The tangent line at `0`, read at `−1/6`, gives `exp(−1/6) ≥ 5/6`, so
+  `15625·e ≤ 46656 < 46875 = 3·15625`: `e ≤ (6/5)⁶ ≈ 2.986`. The larger step `1/5` does not work (`(5/4)⁵ ≈ 3.05`).
   `natCast` literals do not unfold by `show`; chain `natCast_succ` (`natCast 6 = natCast 5 + 1 := natCast_succ 5`).
   `repeat rw [← natCast_mul]` closes `natCast 5 * … = natCast 15625` by itself (a trailing `rfl` errors).
 - **`exp_exp_minus_exp_strictly_increasing`** is the 2026-10-26 review's scratch proof, as written;
@@ -390,8 +390,19 @@ trusted); conditional 126 -> 107.
   **54 claims in `tools/claim_audit/claims.json` pin those footprints with `axioms_exact`** and failed the claim audit
   until re-pinned. Each change was checked to be exactly "the two left, only axioms of their proofs entered". The
   sqrt and exp conversions touched no claim.
-- **After merge:** retire monogate-lean's witnesses for `u_lt_one` and `u_le_half` (as `tanh_zero`'s, 76835b9), and
-  re-pin monogate.org's lean_claims to the merge commit.
+- **The u pair narrows what 87 footprints say (review F5, owner's ruling U1's direction).** Theorems whose proofs use
+  only `u < 1` now show the binary64-specific `u ≤ 2⁻⁵²` in `#print axioms`. Read them as binary64's. The f32 path
+  is parameterised over the unit (`RoundsW`) and never touches this `u`.
+- **A forbid on a name that becomes a theorem goes silent (review F2).** Five geometry claims forbade
+  `sqrt_neg_zero` as the sqrt-totalisation firewall; after the conversion it can never appear in a footprint, and the
+  claim audit does not check that a forbidden name is still an axiom. They now also forbid `sqrt_le_of_le_sq`, which
+  every derivation of the convention uses. Before converting an axiom, grep `claims.json` for it in `forbid_axioms*`.
+- **After merge, IN THIS ORDER (review F6):** (1) forge's `reproduce/verify_grounding.py` need-sets must accept
+  `u_le_inv_two_pow_52` in place of `u_lt_one`/`u_le_half` BEFORE `~/monogate/machlib` moves -- forge's CI links that
+  checkout as `../machlib`, and the strict need-sets fail 54 of 73 certificates on this branch (review F1);
+  (2) stamp, PR, CI green, `--no-ff` merge; (3) pull and rebuild `~/monogate/machlib`; (4) retire monogate-lean's
+  witnesses for `u_lt_one`/`u_le_half` (as `tanh_zero`'s, 76835b9); (5) re-pin monogate.org's lean_claims to the
+  merge commit; (6) redeploy machlib.org (site figures moved); (7) tighten forge's need-sets to the new axiom only.
 
 ## The implicit-function axiom was false (2026-10-27)
 

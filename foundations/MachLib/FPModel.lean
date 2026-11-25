@@ -40,8 +40,10 @@ cancellation) the `f64` result is within the tight relative bound
 namespace MachLib.Real
 
 /-- Unit roundoff. For IEEE-754 binary64 (`f64`), `u = 2⁻⁵³ ≈ 1.1·10⁻¹⁶`.
-Kept abstract: the bounds below rest on `0 ≤ u < 1` (`u_nonneg`, `u_lt_one`), which `2⁻⁵³` satisfies; `u_lt_one` is a
-theorem from `u_le_inv_two_pow_52` since 2026-11-24. Until
+Kept abstract: the bounds below USE only `0 ≤ u < 1` (`u_nonneg`, `u_lt_one`), which `2⁻⁵³` satisfies. Since 2026-11-24
+`u_lt_one` is a theorem from `u_le_inv_two_pow_52`, so their kernel footprints show the binary64-specific `u ≤ 2⁻⁵²`
+(87 theorems moved that way, the direction the owner's ruling U1 ordered): read those footprints as binary64's, not as
+format-generic. The f32 path does not use this `u`; it is parameterised over the unit (`RoundsW`). Until
 2026-10-26 the model was `0 ≤ u ≤ 1`, with `u_le_one` an axiom; the owner ruled it derived from `u_lt_one`
 (`docs/machsig/OWNER_RULINGS_2026-10-27.md`, F1), so a bound that used it no longer covers `u = 1`. -/
 axiom u : Real
