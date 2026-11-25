@@ -4,6 +4,7 @@ import MachLib.EML
 import MachLib.SinNotInEML
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
+import MachLib.Ring
 
 /-!
 # `exp ∘ exp ∉ EML_1` — per-case bounded results
@@ -44,14 +45,40 @@ namespace Real
 forces `exp(exp x) - exp x = constant`, contradicting strict
 monotonicity).
 
-This is a natural analytic property of `f(x) = exp(exp x) - exp x`: its
-derivative is `exp x · exp(exp x) - exp x = exp x · (exp(exp x) - 1)`,
-which is positive for all real `x` because `exp(exp x) > 1` (since
-`exp x > 0`). Added as a direct axiom in MachLib until the convexity /
-monotonicity infrastructure is fully formalized; replaces a more
-specific numerical-bound axiom. -/
-axiom exp_exp_minus_exp_strictly_increasing :
-    ∀ x y : Real, x < y → exp (exp x) - exp x < exp (exp y) - exp y
+Its derivative is `exp x · (exp(exp x) - 1) > 0`. An axiom until 2026-11-24; the proof needs no derivative:
+with `d = exp y - exp x > 0`, the tangent line gives `exp(exp y) = exp(exp x) · exp d ≥ exp(exp x) · (1 + d)`, and
+`exp(exp x) > 1` makes that exceed `exp(exp x) + d`. The independent review of 2026-10-26 (F5) found the proof;
+it rests on trusted axioms only. -/
+theorem exp_exp_minus_exp_strictly_increasing :
+    ∀ x y : Real, x < y → exp (exp x) - exp x < exp (exp y) - exp y := by
+  intro x y h
+  have ha : (0:Real) < exp x := exp_pos x
+  have hab : exp x < exp y := exp_lt h
+  have hd : (0:Real) < exp y - exp x := sub_pos_of_lt hab
+  have he1 : (1:Real) < exp (exp x) := by
+    have h0 := exp_gt_one_plus_self (exp x) ha
+    have h1 : (1:Real) < 1 + exp x := by
+      have h2 := add_lt_add_left ha (1:Real)
+      rw [add_zero] at h2
+      exact h2
+    exact lt_trans_ax h1 h0
+  have hsplit : exp (exp y) = exp (exp x) * exp (exp y - exp x) := by
+    rw [← exp_add, show exp x + (exp y - exp x) = exp y from by mach_ring]
+  have htan : 1 + (exp y - exp x) ≤ exp (exp y - exp x) := one_add_le_exp _
+  have hstep1 : exp (exp x) * (1 + (exp y - exp x)) ≤ exp (exp x) * exp (exp y - exp x) :=
+    mul_le_mul_of_nonneg_left htan (le_of_lt (exp_pos _))
+  have hstep2 : 1 * (exp y - exp x) < exp (exp x) * (exp y - exp x) := mul_lt_mul_of_pos_right he1 hd
+  have h3 : exp (exp x) + (exp y - exp x) < exp (exp x) * (1 + (exp y - exp x)) := by
+    have h5 := add_lt_add_left hstep2 (exp (exp x))
+    rw [show exp (exp x) + 1 * (exp y - exp x) = exp (exp x) + (exp y - exp x) from by mach_ring,
+        show exp (exp x) + exp (exp x) * (exp y - exp x) = exp (exp x) * (1 + (exp y - exp x)) from by mach_ring] at h5
+    exact h5
+  have h4 : exp (exp x) + (exp y - exp x) < exp (exp y) := by
+    rw [hsplit]; exact lt_of_lt_of_le h3 hstep1
+  have h6 := add_lt_add_left h4 (-(exp y))
+  rw [show -(exp y) + (exp (exp x) + (exp y - exp x)) = exp (exp x) - exp x from by mach_ring,
+      show -(exp y) + exp (exp y) = exp (exp y) - exp y from by mach_ring] at h6
+  exact h6
 
 end Real
 end MachLib
