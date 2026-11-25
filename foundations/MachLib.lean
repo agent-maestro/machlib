@@ -384,6 +384,7 @@ import MachLib.FbasisRootUnique
 import MachLib.EMLDepth2Form
 import MachLib.EMLDepth2LogLower
 import MachLib.EMLFTranscendence
+import MachLib.EMLBoundedGermTranscendence
 import MachLib.EMLBipevTrim
 import MachLib.EMLLogNotRational
 import MachLib.PevRoots

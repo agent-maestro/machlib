@@ -156,15 +156,17 @@ is indifferent to whether the region is a ray or bounded — which is exactly th
 **What this does NOT do.** The general one-query germ is `bipev N x (Fbasis (u x))`, a polynomial
 IN `Fbasis` rather than `Fbasis` itself, and this says nothing about it. That lift needs linear
 independence of the powers of `Fbasis ∘ u` over rational germs — which is
-`BoundedGermTranscendence`, itself an OPEN obligation. `OneQueryLevelSet` stays open.
+`BoundedGermTranscendence`, an OPEN obligation when this was written (discharged 2026-11-24 by
+`boundedGermTranscendence_holds`; the lift itself has not been built from it, and whether it now
+follows is unchecked). `OneQueryLevelSet` stays open.
 
 **AMENDED 2026-09-11 — "the powers" overstates it for a ONE-QUERY term.** `ctxFrac_ydeg`
 (`EMLOneQueryMobius`) caps the degree in `Fbasis` at **one** whenever the context has a single
 hole, which is exactly the `fOcc T = 1` case: a rational expression containing one occurrence of
 `y` cannot square it. So the lift needs only the **degree-1 fragment** of
 `BoundedGermTranscendence` — `one_hole_level_is_affine` reduces `C(x,y) = c` to `y·B(x) = A(x)` —
-not independence of all powers. The obligation is still open and the fragment is not claimed to be
-easier; it is simply smaller than this paragraph says, and the two rows are tied together more
+not independence of all powers. The obligation was still open then and the fragment was not claimed
+to be easier; it is simply smaller than this paragraph says, and the two rows are tied together more
 tightly than either records. -/
 theorem fbasis_comp_level_subset (u : Real → Real) (c : Real) :
     ∃ u₁ u₂ : Real, ∀ x : Real, Fbasis (u x) = c → u x = u₁ ∨ u x = u₂ := by

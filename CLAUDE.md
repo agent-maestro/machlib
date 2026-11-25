@@ -7,8 +7,8 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **1 092 `.lean` files** (817 top-level + 275 in subdirectories) /
-**261 125 lines**, re-exported through the aggregator
+material). `foundations/MachLib/` holds **1 093 `.lean` files** (818 top-level + 275 in subdirectories) /
+**261 609 lines**, re-exported through the aggregator
 **`foundations/MachLib.lean`** — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 
@@ -29,11 +29,11 @@ the bivariate-derivative and `floor` axioms (see "The implicit-function axiom wa
 
 | count | value | meaning |
 |---|---|---|
-| declarations | **12 540** | non-auxiliary declarations, every kind, in MachLib's own modules |
-| theorems | **9 534** | = approved-policy + conditional + unchecked |
-| kernel-checked | **9 533** | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited | **9 533** | footprint computed and classified (= kernel-checked by construction) |
-| approved-policy | **9 426** | every axiom in the footprint is in `trustedFootprint` |
+| declarations | **12 558** | non-auxiliary declarations, every kind, in MachLib's own modules |
+| theorems | **9 551** | = approved-policy + conditional + unchecked |
+| kernel-checked | **9 550** | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited | **9 550** | footprint computed and classified (= kernel-checked by construction) |
+| approved-policy | **9 443** | every axiom in the footprint is in `trustedFootprint` |
 | conditional | **107** | on declared axioms outside it, named per theorem (mostly `eml_tree_analytic_on_interval`, `HasDerivAt_sqrt`, the decimal `log`/`exp` bounds, `pi_upper_bound`) |
 | unchecked | **1** | `halve_in_unit_sorry`, the allowlisted `sorryAx` |
 
@@ -403,6 +403,14 @@ trusted); conditional 126 -> 107.
   (2) stamp, PR, CI green, `--no-ff` merge; (3) pull and rebuild `~/monogate/machlib`; (4) retire monogate-lean's
   witnesses for `u_lt_one`/`u_le_half` (as `tanh_zero`'s, 76835b9); (5) re-pin monogate.org's lean_claims to the
   merge commit; (6) redeploy machlib.org (site figures moved); (7) tighten forge's need-sets to the new axiom only.
+  Done 2026-11-25: (1) forge `4d20298e`; (2) PR #16, merge `42d2a607`; (3) built, 833 jobs; (4) monogate-lean
+  `adf71e6`; (5) monogate `b036daef`, claims GREEN 78/203; (6) the owner's; (7) lands with forge's re-record, below.
+- **The list missed one: pulling `~/monogate/machlib` moves forge's `machlib_sources` binding.** Forge's full suite then
+  fails 13 tests (verification index, evidence delta, clean-clone rebuild, nine publication tests): every kernel's
+  `source_contracts[lean]` reads NOT_ESTABLISHED until forge re-records against the new MachLib master, by the
+  owner's 2026-10-28 ruling (forge `docs/platforms/RULINGS.md`; never against an unmerged branch):
+  `gen_lean_visible_names.py`, `proof_discharge --check` then `--write-baseline`, `verification-index --write`,
+  `vectors --write`, `target_model_report --write`, full suite. Any change to MachLib's sources needs it.
 
 ## The implicit-function axiom was false (2026-10-27)
 
@@ -477,7 +485,7 @@ trusted); conditional 126 -> 107.
 
 ## The envelope and the tower, on paper by citation (2026-11-16)
 
-- **Kaiser–Speissegger (arXiv:1708.04496, §2) appears to settle two of the four open obligations on paper**: the
+- **Kaiser–Speissegger (arXiv:1708.04496, §2) appears to settle two of the then four open obligations on paper**: the
   `DecayFloor`/`EmlGermApproach`/`GrowthEnvelope` cycle (`k = j` for the decay form, `j + 1` for the other two) and
   `TowerLowerBound` (level ≤ exponential height ≤ depth). It is a reading only: no specialist has confirmed it, nothing
   is formalised, and **the ledger does not move**. The steps, the citations and what stays open (the sharp value
@@ -485,6 +493,24 @@ trusted); conditional 126 -> 107.
 - **Read that note before sending any germ-approach draft.** `exploration/germ_approach_*` now open with a banner.
 - **No hardware claim follows from the tower.** It bounds exact trees, not fixed-point kernels, and in float64 the
   height-5 tower overflows for `x > −0.4585` and the height-6 tower everywhere.
+
+## `BoundedGermTranscendence` discharged (2026-11-24)
+
+- **`boundedGermTranscendence_holds : BoundedGermTranscendence`** (`MachLib/EMLBoundedGermTranscendence.lean`), no
+  `sorryAx`, 49 axioms, every one in `trustedFootprint`; the module adds none. Open obligations 4 → 3. Specimen
+  `boundedGermTranscendence_inv_x` supplies every hypothesis at `S = 1/x`; `constant_germ_is_algebraic` already showed
+  the conclusion fails without nonconstancy, so neither side is vacuous.
+- **The route was in the corpus, unread.** Lowest terms (`exists_irred_not_dividing`); a bounded polynomial is
+  eventually constant (`pev_evConst_of_bounded`, new), so a bounded nonconstant `S` has a genuine irreducible pole `q`;
+  then by the sign of `S` (`ratGerm_eventual_sign`): negative, `log` totalises away and `germ_relation_impossible`
+  refutes `ProperRel S (Ls ++ [A])`; positive, `expand_shift` (new; Horner in `E + L`, no binomial coefficients)
+  rewrites the relation in powers of `log S` with top coefficient `pev A`, and `no_proper_cleared_relation` refutes it.
+  The corpus had read `no_proper_cleared_relation` only as route B's endpoint, and `what_is_proven` called the
+  obligation "out of reach of every instrument in this library" because every GROWTH instrument fails on a bounded
+  `S`. The pole theorems count poles, not growth. A research agent found the route on 2026-11-16; the proof was built
+  and checked on 2026-11-24.
+- **Not checked:** whether `OneQueryLevelSet`'s degree-1 fragment (`EMLOneQueryMobius`, `FbasisRootUnique`) or
+  anything else that waited on this now follows. Nothing in Lean took it as a hypothesis.
 
 ## Where the content comes from
 
@@ -498,7 +524,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 833 jobs, ~3 s warm
+lake build                                     # 834 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # every Forge @verify file on disk still compiles (~1 min)
@@ -674,7 +700,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**827 of 1092 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**828 of 1093 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **`by_contra` does not exist here either** — reach for the contrapositive lemma instead
@@ -901,7 +927,8 @@ behind it is missing — registration is still a human act.
   would have saved three separate wrong diagnoses in one session.
 
 - **`BoundedGermTranscendence` / route `(fm)`: every NAMED step is a theorem, and the route is NOT
-  closed.** Read `MachLib/LogGermAssembly.lean`'s docstrings for the detail — they sit next to the
+  closed.** (The OBLIGATION is discharged since 2026-11-24 by another route -- see "`BoundedGermTranscendence`
+  discharged (2026-11-24)". Route `(fm)` stays open and is no longer needed for the row.) Read `MachLib/LogGermAssembly.lean`'s docstrings for the detail — they sit next to the
   code and cannot drift from it; this entry is a pointer, not a copy. The chain is
   `not_ratGerm_log_comp_of_pole` → `substituted_coeff_splits` → `crossDiff_log_part_evZero`
   ← `minimal_crossDiff_evZero`, with the algebra in `MachLib/RatGermAlgebra.lean`.
@@ -1007,7 +1034,7 @@ Lean `v4.32.2`, branch `poly-euclid-spine` (`master` is fast-forwarded to it on 
 proves it conducts a failure to its own exit code; the run prints its own gate count). Do **not** assemble a `{ gate1; gate2; … }` block by hand — such a block exits with its
 *last* command's status, which reported `exit 0` over a failing claim audit on 2026-08-30. Same
 disease as `gate | tail` reading `tail`'s status, one level up. The aggregator prints its own coverage on every
-run (**827 of 1 092 modules reachable, 12 documented unreachable** as of 2026-11-16); quote it from
+run (**828 of 1 093 modules reachable, 12 documented unreachable** as of 2026-11-16); quote it from
 the run, not from here. `sorryAx`: 1, allowlisted.
 **202 axioms pinned** — 243 across the whole 2026-08 EML arc, including the `S > 0` repair and
 the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real_fpfinite`, `real_round_finite`,
@@ -1016,7 +1043,7 @@ the entire depth/decay programme below, then thirteen added on 2026-09-14 (`real
 2026-10-26 (`exp_tangent_line_strict`, `exp_gt_two_x`, `tanh_zero`, `sqrt_one`, `u_le_one`) and two on 2026-10-27
 (`HasDerivAt2_sub`, `hasDerivAt_implicit`), then two FALSE ones removed the same day (`interval_scale_unit_lit_le`,
 `interval_weight_sum_le`), then six proved on 2026-11-24 (`sqrt_zero`, `sqrt_neg_zero`,
-`exp_exp_minus_exp_strictly_increasing`, `exp_one_lt_three`, `u_lt_one`, `u_le_half`). Obligations ledger: **25 rows, 7 open rows, 4 distinct open
+`exp_exp_minus_exp_strictly_increasing`, `exp_one_lt_three`, `u_lt_one`, `u_le_half`). Obligations ledger: **25 rows, 6 open rows, 3 distinct open
 obligations** (a reduction cycle and a proved equivalence each carry several rows for one debt).
 
 **The depth-4 rung's `const_left` cell is proved from it** (`depth_four_decay_const_left_tower3`,
@@ -1119,9 +1146,10 @@ the count six → four: `SignHardCase` (`signHardCase_holds`, `d7b8d28c`),
 `NegativeTranslationGrowingLeft` (`negativeTranslationGrowingLeft_holds`, 2026-08-28,
 `EMLNegTranslation`), and `OneQueryDichotomy` (`oneQueryDichotomy_holds`, 2026-08-29,
 `EMLCtxDivClamp` — via `divClamp`, supplying the two `div` side conditions the obligation omits).
-The **four** distinct open obligations are: the `DecayFloor` ⇄ `EmlGermApproach` ⇄ `GrowthEnvelope`
+`BoundedGermTranscendence` closed on 2026-11-24 (`boundedGermTranscendence_holds`), taking it four → three.
+The **three** distinct open obligations are: the `DecayFloor` ⇄ `EmlGermApproach` ⇄ `GrowthEnvelope`
 cycle (**one** obligation, three rows), `TowerLowerBound` ⇄ `TowerReducesToSign` (one obligation, two
-rows, equivalent since `SignHardCase` fell), `BoundedGermTranscendence`, and `OneQueryLevelSet` —
+rows, equivalent since `SignHardCase` fell), and `OneQueryLevelSet` —
 which does **not** follow from `OneQueryDichotomy`; it reduces to `q_F(sign) ≥ 2`, and
 `EMLOneQueryGlobal` exists to keep the two apart. Its residue as first stated was **false** (see
 "The one-query residue was false (2026-11-16)"); the open obligation is the repaired `OneQueryLevelSetResidue'`.

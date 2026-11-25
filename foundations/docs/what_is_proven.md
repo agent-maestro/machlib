@@ -670,10 +670,14 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   and `sign` is eventually constant, so it excludes nothing). `OneQueryLevelSet` in turn
   reduces to `OneQueryLevelSetResidue'`; the residue first stated was false (a constant
   one-query term, `not_oneQueryLevelSetResidue`, 2026-11-16). `q_F^global(exp) ∈ {1,2}`
-  turns on the same bounded region. And `BoundedGermTranscendence` is now known to be
-  **out of reach of every instrument in this library**: `polyEnvelope_of_Fbasis_floor`
-  and `polyEnvelope_of_Fbasis_decay` prove `F ∘ S` has a polynomial envelope for *every*
-  bounded rational `S`, while every exclusion theorem here works by *escaping* one. The
+  turns on the same bounded region. `BoundedGermTranscendence` is **discharged since
+  2026-11-24** (`boundedGermTranscendence_holds`, `EMLBoundedGermTranscendence`). This
+  section had called it **out of reach of every instrument in this library**, and that was
+  wrong: `polyEnvelope_of_Fbasis_floor` and `polyEnvelope_of_Fbasis_decay` do prove `F ∘ S`
+  has a polynomial envelope for *every* bounded rational `S`, so no *growth* theorem can
+  exclude it, but the pole-order theorems below (`germ_relation_impossible`,
+  `no_proper_cleared_relation`) count poles, and a bounded nonconstant rational `S` always
+  has one. The rest of this paragraph is the differential route as it stood. The
   differential route's infrastructure is built (`pderiv`, `y' = S'·y`,
   the germ-derivative transfer, and differentiation of the relation itself). What remains
   was described here on 2026-08-21 as "the transcendence input that rules out the

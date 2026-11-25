@@ -11,7 +11,7 @@ is proven, what it rests on, and what is open, each claim paired with the comman
 
 **Coming from mathematics rather than from compilers?**
 [`foundations/docs/eml_depth_problems.md`](foundations/docs/eml_depth_problems.md) states the
-object and the four open questions from scratch in twenty minutes, with no dependency on anything
+object and the open questions from scratch in twenty minutes, with no dependency on anything
 else here.
 
 ## What is here
@@ -210,19 +210,19 @@ not a count of proved results). Measured 2026-10-27:
 
 | figure | value | source |
 |---|---|---|
-| declarations in the checked environment | 12 540 | `python3 tools/theorem_ledger/ledger.py` |
-| theorems | 9 534 | the same command: approved-policy + conditional + unchecked |
-| kernel-checked theorems | 9 533 | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited theorems | 9 533 | footprint computed and classified against the policy |
-| approved-policy proofs | 9 426 | every axiom in the footprint is in `trustedFootprint` |
+| declarations in the checked environment | 12 558 | `python3 tools/theorem_ledger/ledger.py` |
+| theorems | 9 551 | the same command: approved-policy + conditional + unchecked |
+| kernel-checked theorems | 9 550 | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited theorems | 9 550 | footprint computed and classified against the policy |
+| approved-policy proofs | 9 443 | every axiom in the footprint is in `trustedFootprint` |
 | conditional proofs | 107 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
 | unchecked theorems | 1 | the allowlisted `sorryAx` (`halve_in_unit_sorry`) |
 | Forge `@verify` corpus files, outside the checked environment | 253 | the same command; files only, none of their theorems is counted |
-| `.lean` files under `MachLib/` | 1 092 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
+| `.lean` files under `MachLib/` | 1 093 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
 | axioms pinned by the ledger | 202 | `lake env lean AxiomLedger.lean` |
 | trusted axioms, all accounted for | 154 | `AXIOM_MANIFEST.md` |
-| obligations ledger | 25 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 827 of 1 092 | `scripts/check_aggregator.sh` |
+| obligations ledger | 25 rows, 6 open rows, 3 distinct open obligations | `tools/check_obligations.sh` |
+| modules reachable from the aggregator | 828 of 1 093 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 
@@ -239,7 +239,7 @@ not a count of proved results). Measured 2026-10-27:
 
 Active, single-author, roughly twenty commits a day since April 2026. The verified-numerics lane
 has one external reproduction on record (`reproduction/rb_ekf`, two of five on the first attempt,
-which is why the package exists). The obligations ledger has four distinct open obligations; the
+which is why the package exists). The obligations ledger has three distinct open obligations; the
 prose about them is a copy and the ledger is the source. See [`CLAUDE.md`](CLAUDE.md) for the
 working notes a new session needs and [`CHANGELOG.md`](CHANGELOG.md) for the running narrative.
 
