@@ -1,10 +1,24 @@
 {
- "observed_at": "2026-07-30T15:52:17-0700",
+ "observed_at": "2026-11-27T11:59:54-0800",
  "threshold": "v4.32.2",
  "checker_max": "v4.28.0",
  "checker_tag_count": 23,
- "l4l_pin": "v4.29.0",
+ "l4l_pin": "v4.36.0",
  "l4l_carries_fix": true,
  "checker_carries_fix": false,
- "intersection_open": false
+ "intersection_open": false,
+ "destination": "v4.32.2",
+ "l4l_at_destination": {
+  "set_by": "779c51f",
+  "set_on": "2026-08-04",
+  "last": "408edad",
+  "carries_14577_port": true,
+  "carries_issue17_fix": true
+ },
+ "l4l_issue": {
+  "number": 17,
+  "state": "open",
+  "updated_at": "2026-10-19T23:59:36Z",
+  "comments": 2
+ }
 }

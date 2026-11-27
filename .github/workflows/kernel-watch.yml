@@ -1,0 +1,79 @@
+name: Kernel-support watch
+
+# The expiry watch (foundations/tools/migration/watch_kernel_support.py) behind BUMP_PLAN.md's
+# kernel-configuration decision and the destination's EXTERNALLY UNREPLAYED grade. It was run by hand,
+# last on record on 2026-07-30, and missed four months of upstream movement it exists to catch
+# (MIGRATION_LOG.md, "Kernel watch on record and on a schedule", 2026-11-27). Now it runs weekly.
+#
+# The run writes its observation to a scratch file (--out; the committed record is never touched
+# here) and check_watch_record.py compares it with foundations/tools/migration/watch_state.json:
+#   0 the record holds today's observation      -> green
+#   1 something moved that the record lacks     -> RED until someone reads it and re-records
+#   2 an API could not be read (unobserved)     -> red: UNAVAILABLE IS FAILURE, never "unchanged"
+# The watch's own exit codes (0 still empty, 2 partial, 3 open) are verdicts about the decision, not
+# failures; they are printed in the job summary, and any change of verdict also moves the record.
+#
+# walk-freshness.yml fails, daily and on every push to master, when this has not SUCCEEDED in 8 days,
+# so a watch that stops running (or stays red) cannot go quiet either.
+
+on:
+  schedule:
+    - cron: "23 6 * * 1"          # Mondays 06:23 UTC
+  push:
+    branches: [master]
+    paths:
+      - foundations/tools/migration/watch_kernel_support.py
+      - foundations/tools/migration/check_watch_record.py
+      - foundations/tools/migration/watch_state.json
+      - foundations/lean-toolchain
+      - .github/workflows/kernel-watch.yml
+  pull_request:
+    paths:
+      - foundations/tools/migration/watch_kernel_support.py
+      - foundations/tools/migration/check_watch_record.py
+      - foundations/tools/migration/watch_state.json
+      - foundations/lean-toolchain
+      - .github/workflows/kernel-watch.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    name: The kernel watch's record holds what it observes today
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Cone mode also brings the files directly under foundations/, which holds lean-toolchain.
+          sparse-checkout: foundations/tools/migration
+      - name: Record checker selftest
+        run: python3 foundations/tools/migration/check_watch_record.py --selftest
+      - name: Run the watch (observation to a scratch file; the record is untouched)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          python3 foundations/tools/migration/watch_kernel_support.py --out "$RUNNER_TEMP/observed.json" \
+            > "$RUNNER_TEMP/watch.txt" 2>&1
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/watch.txt"
+          {
+            echo "### Kernel-support watch: exit $rc"
+            echo '```'
+            cat "$RUNNER_TEMP/watch.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          case "$rc" in
+            0|2|3) echo "watch verdict exit $rc (0 still empty, 2 partial or fix ported, 3 open)" ;;
+            *) echo "::error::the watch could not run (exit $rc): UNAVAILABLE IS FAILURE"; exit 1 ;;
+          esac
+          # argparse also exits 2 on a usage error; a verdict always comes with an observation file.
+          test -s "$RUNNER_TEMP/observed.json" || { echo "::error::exit $rc but no observation written"; exit 1; }
+      - name: Compare with the committed record
+        run: |
+          python3 foundations/tools/migration/check_watch_record.py "$RUNNER_TEMP/observed.json" \
+            foundations/tools/migration/watch_state.json
