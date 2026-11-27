@@ -16,8 +16,8 @@ const MEASURED_ON = "2026-10-27";
 // kernel, resting on declared axioms outside that policy -- proved relative to them. Unchecked: the one allowlisted
 // teaching `sorry`. Until 2026-10-10 the tile was a text count of `theorem` lines, not a count of proved results.
 const TILES: { value: string; label: string }[] = [
-  { value: "9 551", label: "theorems in the Lean environment, each classified by its axioms" },
-  { value: "9 443", label: "theorems kernel-checked, every axiom within the trusted policy" },
+  { value: "9 561", label: "theorems in the Lean environment, each classified by its axioms" },
+  { value: "9 453", label: "theorems kernel-checked, every axiom within the trusted policy" },
   { value: "107", label: "theorems kernel-checked relative to declared axioms outside the trusted policy" },
   { value: "1", label: "theorem unchecked: the allowlisted teaching sorry (halve_in_unit_sorry)" },
   { value: "154", label: "trusted axioms, none unaccounted" },
