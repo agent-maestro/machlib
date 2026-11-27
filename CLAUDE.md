@@ -629,6 +629,12 @@ behind it is missing — registration is still a human act.
 
 ## Gotchas
 
+- **The kernel watch rewrites its record when run plainly** (`foundations/tools/migration/watch_kernel_support.py`
+  writes `watch_state.json`). To look without re-recording, pass `--out FILE`. CI does exactly that every Monday
+  (`.github/workflows/kernel-watch.yml`) and `check_watch_record.py` fails the run when anything but the timestamp
+  moved: a red kernel-watch run means "read what moved, re-run without `--out`, commit the record with a
+  MIGRATION_LOG line", not "fix CI". `walk-freshness.yml` goes red too once the watch has not passed in 8 days.
+
 - **Gate 14 (`machsig-trust`, live since the step-7 landing, 2026-10-14) has its own landing rules.** Read
   `foundations/docs/machsig/GATE14_REPAIR.md` before touching `tools/machsig/trust_baseline.json`.
   - **A baseline change reaches master as ONE stamp, reported NET from the last reviewed baseline.** Only a

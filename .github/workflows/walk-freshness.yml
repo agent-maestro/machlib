@@ -8,6 +8,10 @@ name: Reproduction walk freshness
 #
 # Exit taxonomy (tools/ci/check_workflow_freshness.py): 0 fresh, 1 stale, 2 could not read the API.
 # A 2 fails this job too -- an unread status is not a fresh one.
+#
+# Since 2026-11-27 it holds the weekly kernel-support watch (kernel-watch.yml) to the same 8 days, for
+# the same reason: that watch went four months unrun once already, and a schedule nobody notices
+# stopping is the same wish as no schedule.
 
 on:
   schedule:
@@ -33,3 +37,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 tools/ci/check_workflow_freshness.py reproduction-walk.yml --max-age-days 8
+
+  kernel-watch-freshness:
+    name: The kernel-support watch has passed within 8 days
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/ci
+      - name: Check the kernel watch's last success
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/ci/check_workflow_freshness.py kernel-watch.yml --max-age-days 8

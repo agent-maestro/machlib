@@ -149,8 +149,12 @@ stale-comment bug, and it rots in the **reassuring** direction: the record goes 
 python3 tools/migration/watch_kernel_support.py      # exit 3 = the intersection has OPENED
 ```
 
-Re-run **quarterly — next 2026-10-29** — and whenever the toolchain conversation reopens for any
-reason. It reads lean4checker's tags and Lean4Lean's pin from the network and **fails loudly when it
+The plan was to re-run it **quarterly — next 2026-10-29** — and whenever the toolchain conversation
+reopens for any reason. *(2026-11-27: that date passed unrun, and four months went by. Since then it
+runs **weekly in CI**,
+`.github/workflows/kernel-watch.yml`, and a run fails when what it observes differs from the
+committed record `watch_state.json`; see MIGRATION_LOG.md, "Kernel watch on record and on a
+schedule".)* It reads lean4checker's tags and Lean4Lean's pin from the network and **fails loudly when it
 cannot reach them**: an offline run must never be readable as *"still empty"*, which is the reassuring
 direction a third time.
 
