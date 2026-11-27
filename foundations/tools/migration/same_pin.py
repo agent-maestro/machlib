@@ -292,10 +292,21 @@ def removal_commit(full: str, since: str) -> str | None:
     contents, where `[[:space:]]` also matches a newline; `git grep` matches LINE BY LINE, where it
     cannot. A declaration whose signature starts on the next line (`axiom realOfScientific` then
     `(m : Nat) ...`) is found by the first and missed by the second unless the line pattern also
-    accepts end-of-line. Missing that left 3 of 39 removals "unattributed" on the first run."""
+    accepts end-of-line. Missing that left 3 of 39 removals "unattributed" on the first run.
+
+    ANCHORED AT A LINE START (2026-11-27), because a QUOTE is not a declaration. 37ff5477 removed
+    `axiom interval_scale_unit_lit_le` and, in the same commit, wrote a docstring ending in
+    "Until 2026-10-27 this was `axiom interval_scale_unit_lit_le". Unanchored, the line pattern read
+    that quote as the axiom still declared, and the pickaxe saw one occurrence removed and one added,
+    so it never listed the commit at all: both of that commit's removals came back "unattributed" and
+    the r3 seal halted (captures/halted/v4.32.2-r3_2026-11-27T131210). Every real declaration in the
+    corpus starts its line (`axiom NAME`, no modifier, no indent; the three indented ones are a
+    docstring's code block), and git's pickaxe regex is compiled with REG_NEWLINE, so `^` anchors
+    both searches at a line start. Lean modifiers are admitted in case one appears."""
     short = full.rsplit(".", 1)[-1]
-    blob_ere = rf"axiom[[:space:]]+{short}[[:space:]:]"
-    line_ere = rf"axiom[[:space:]]+{short}([[:space:]:]|$)"
+    head = r"^((private|protected|noncomputable|unsafe)[[:space:]]+)*axiom[[:space:]]+"
+    blob_ere = rf"{head}{short}[[:space:]:]"
+    line_ere = rf"{head}{short}([[:space:]:]|$)"
     spec = ["--", "*.lean", f":(exclude){LEDGER}"]
     def declared(rev: str) -> bool:
         return subprocess.run(["git", "grep", "-q", "-E", "-e", line_ere, rev, *spec], cwd=FOUND).returncode == 0
@@ -420,6 +431,9 @@ def history_canaries() -> bool:
     cases = [("MachLib.Real.realOfScientific", "5841ea60"),       # signature on the NEXT line
              ("MachLib.Real.mul_lt_mul_of_pos_right", "5841ea60"),  # likewise
              ("MachLib.Real.cos_neg", "2d2f59c0"),                 # signature on the same line
+             # removed by a commit whose new docstring QUOTES the declaration (anchoring, 2026-11-27)
+             ("MachLib.Real.interval_scale_unit_lit_le", "37ff5477"),
+             ("MachLib.Real.interval_weight_sum_le", "37ff5477"),
              ("MachLib.Real.zero_ne_one_ax", None)]                # still declared: no commit
     ok = True
     for name, want in cases:

@@ -36,3 +36,26 @@ that produced is recorded in `MIGRATION_LOG.md`, DESTINATION, UPGRADE.
 
 The policy behind the 4 conversions is "provable means proved": `derivableAxioms` is empty and must
 stay empty, so a derivation is a reason to convert, not to record.
+
+## `v4.32.2-r3_2026-11-27T131210/`
+
+`checkpoint.py --label v4.32.2-r3 --same-pin --freeze --void-ok
+kernel_replay=Amendment-5-destination-externally-unreplayed`, library `075f6730` (PR #7's branch with
+master `b902cf03` merged in, on the owner's 2026-11-27 ruling to bring PR #7 up to date). Base chosen by
+the tool: `snapshots/v4.32.2-r2` (library `50d9c56c`).
+
+**What it measured.** Every gate green: criterion 7 (Lean4Lean `408edad`) exit 0 (832 / 832 modules,
+21,300 declarations), criterion 1 void under Amendment 5. Identity identical. Theorems 112 -> 112, 0
+lost; axioms 217 -> 202, 15 removed: 13 are theorems now, each tied to the commit that proved it
+(`61f7ac5e`, `97d4c6d8`, `1357f71e`).
+
+**Why it halted.** The other two, `interval_scale_unit_lit_le` and `interval_weight_sum_le`, read as
+UNATTRIBUTED. Both were removed by `37ff5477` (2026-10-27, "remove the two false Forge-bridge
+axioms"), and that commit's new docstrings QUOTE the old declarations ("Until 2026-10-27 this was
+`axiom interval_scale_unit_lit_le"). The attribution's patterns were not anchored, so the quote counted
+as the axiom still declared, and the pickaxe saw one occurrence removed and one added and never listed
+the commit. An instrument defect, the same family as the 3-of-39 halt of 2026-10-22 (`50d9c56c`).
+
+**What it led to.** `same_pin.removal_commit` anchors both patterns at a line start (every real
+declaration in the corpus starts its line; git's pickaxe regex is compiled with REG_NEWLINE), and its
+history canaries gain these two removals, expected at `37ff5477`. The re-run is the sealed `v4.32.2-r3`.
