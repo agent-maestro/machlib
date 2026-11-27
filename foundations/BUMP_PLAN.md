@@ -317,7 +317,15 @@ It must end `SAME-PIN ATTRIBUTED` and `FROZEN`. Then the bump is measured agains
 measured against a stale baseline attributes months of proof work to the toolchain. The halted first
 attempt at `v4.32.2-r2` (`captures/halted/`) is that failure, caught at a grade change instead of at a bump.
 
-**Current baseline for the next bump: `snapshots/v4.32.2-r2/`** (digest `ca6380b8…f9eebf`).
+**Current baseline for the next bump: `snapshots/v4.32.2-r3/`** (digest `ad402917…916493b`, sealed 2026-11-27 at
+library `cc2494de`: PR #7 brought up to master `b902cf03`). Before it, `snapshots/v4.32.2-r2/` (digest
+`ca6380b8…f9eebf`), which r3 was measured against.
+
+**The ARRIVAL reading, confirmed by the owner (2026-11-27).** Amendment 7 asks that the Lean4Lean commit be
+identical between captures; r2's base (July) had none (criterion 7 a cited void), so `same_pin.py` admits exactly
+one asymmetry, an ARRIVAL from a cited void. Asked whether that reading stands, with PR #7 to be brought up to
+date, the owner chose, verbatim: *"Confirm, bring it up to date (Recommended)"*. From r2 on, the Lean4Lean commit
+is held identical (`408edad` → `408edad` at r3).
 
 ---
 

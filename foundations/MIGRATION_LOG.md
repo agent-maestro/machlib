@@ -519,6 +519,27 @@ exists. (2) The first `--same-pin` run attributed 36 of 39 removals and refused 
 defect was the instrument's: a line-by-line `git grep` could not see `axiom realOfScientific` when
 its signature starts on the next line. Fixed in `50d9c56c`, with history canaries in `--selftest`.
 
+### Brought up to date and re-sealed as `snapshots/v4.32.2-r3/` (2026-11-27)
+
+PR #7 sat five weeks on master `f572de8a` while PRs #9-#17 moved the library. On the owner's ruling of
+2026-11-27 (*"Confirm, bring it up to date (Recommended)"*, which also confirms the ARRIVAL reading above;
+`BUMP_PLAN.md`, STEP 0) master `b902cf03` was merged in (no conflicts) and everything re-run on the merged tree:
+
+| | |
+|---|---|
+| `lake build` | 834 jobs, green |
+| criterion 7, Lean4Lean `408edad` | instrument rejects AddFalse; holds fire on `Init.Core`, `MachLib.Sign`; **832 / 832 modules clean**, 21,300 declarations, 312 s, 8 GB cap each |
+| same-pin vs `v4.32.2-r2` (library `50d9c56c`) | identity same (Lean4Lean `408edad` → `408edad`); theorems 112 → 112, **0 lost**, 54 footprints changed; axioms 217 → 202, **15 removed, every one attributed**: 13 now theorems (`61f7ac5e` five, `97d4c6d8` six, `1357f71e` two), 2 deleted as false (`37ff5477`, the Forge-bridge pair); 0 added; derivations 0 → 0 |
+
+```
+snapshots/v4.32.2-r3/   SAME-PIN ATTRIBUTED   digest ad40291792c31cfa240ca9e23507f59d672c28a07f97e217cfba8b3de916493b
+```
+
+**Its first attempt halted, and the halt is kept** (`captures/halted/v4.32.2-r3_2026-11-27T131210/`): the
+Forge-bridge pair read UNATTRIBUTED because `37ff5477`'s new docstrings QUOTE the declarations it removed, and
+the attribution's patterns were not anchored to a line start. An instrument defect again, fixed in `cc2494de`
+with history canaries; the re-run sealed.
+
 **What the first run of the new gate cost (2026-10-21).** It listed the aggregator `MachLib`, and
 Lean4Lean matches a target by PREFIX, so one "per-module" job was the whole library again: 87 GB
 anon-rss. The kernel's OOM killer then took the editor's entire process group with it. Fixed in

@@ -631,7 +631,7 @@ behind it is missing — registration is still a human act.
 
 - **A toolchain bump starts with STEP 0, and a grade change needs a seal** (`BUMP_PLAN.md` Amendment 7).
   Run `tools/migration/checkpoint.py --label <pin>-rN --same-pin --freeze` first, then compare the bump
-  against THAT capture (current: `snapshots/v4.32.2-r2/`). `--compare-to` an old baseline reads months of
+  against THAT capture (current: `snapshots/v4.32.2-r3/`, 2026-11-27; r2 before it). `--compare-to` an old baseline reads months of
   proof work as toolchain drift.
 - **`lean4lean <target>` matches by PREFIX and starts every match at once.** `lean4lean MachLib` replays the
   whole library in one process: 87 GB on 2026-10-21, and the box's OOM kill took VS Code with it.
