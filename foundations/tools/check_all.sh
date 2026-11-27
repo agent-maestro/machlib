@@ -167,6 +167,10 @@ else
   # is safe inside a fingerprinted run; its Lean cross-check goes through capped_lean.sh.
   run "float-bridge" python3 tools/float_bridge/measure.py
   run "float-bridge-selftest" python3 tools/float_bridge/measure.py --self-test
+  # The kernel watch's record checker (2026-11-27). The comparison itself needs the network and runs
+  # weekly in CI (.github/workflows/kernel-watch.yml); its canaries need nothing, so they run here too
+  # and a broken checker cannot sit green in CI's eyes only. Writes only to a temp dir.
+  run "watch-record-selftest" python3 tools/migration/check_watch_record.py --selftest
 fi
 
 FP_END="$(tree_fingerprint)"

@@ -540,6 +540,12 @@ Forge-bridge pair read UNATTRIBUTED because `37ff5477`'s new docstrings QUOTE th
 the attribution's patterns were not anchored to a line start. An instrument defect again, fixed in `cc2494de`
 with history canaries; the re-run sealed.
 
+**The kernel watch, merged from both sides.** This branch had re-recorded the watch on 2026-10-21 (`b7902ac8`:
+release-candidate pins parse and are shown as such, `l4l_pin` then `v4.33.0-rc2`), unmerged, so master's record
+stayed at 2026-07-30. PR #18 put the watch on a weekly schedule against its record and re-recorded it on
+2026-11-27. Merging the two keeps this branch's rc parsing inside #18's script and #18's record (the label is
+unchanged for today's stable pin, v4.36.0; a live `--out` run on the merged tree is CURRENT).
+
 **What the first run of the new gate cost (2026-10-21).** It listed the aggregator `MachLib`, and
 Lean4Lean matches a target by PREFIX, so one "per-module" job was the whole library again: 87 GB
 anon-rss. The kernel's OOM killer then took the editor's entire process group with it. Fixed in
@@ -1081,3 +1087,58 @@ arrives as an ordinary `Exception.error` whose message contains *"deterministic 
 **Crude interim, available at zero risk to the library:** the alternatives can be run individually in a
 scratch file (step 4 of the isolation procedure). That is exactly how `ac_rfl` was cleared and the
 catch-all convicted, and it needs no change to any tactic.
+
+## Kernel watch on record and on a schedule (2026-11-27)
+
+**The watch was run by hand and stopped being run.** Its record (`tools/migration/watch_state.json`)
+said 2026-07-30 until today. monogate.org's accountability page downgraded its *stay informed* row to
+PARTIAL on 2026-11-25 for exactly this, with the upgrade condition *"the watch's current state is on
+record and the watch runs on a schedule rather than when remembered"*. This entry is the record; the
+schedule is `.github/workflows/kernel-watch.yml`.
+
+**What moved while nobody looked** (read today from the GitHub API, not remembered):
+
+| date | upstream | what the watch printed about it |
+|---|---|---|
+| 2026-08-02 | Lean4Lean `9fc9c83` *"fix: SIGSEGV in replayFromImports from freeing regions still in use"*, and `d7e70a5`, the #14577 port as it landed on master (the 07-29 `0c38ab8` the watch's docstring cites has the same title and is not on master) | nothing new: the record already said "carries the fix" |
+| 2026-08-04 | Lean4Lean pins **exactly v4.32.2**, this project's toolchain, from `779c51f` to `408edad`, then moves to v4.33.0-rc2 the same morning | **invisible**: the watch read master's pin only (a session found it by hand on 2026-10-20; below) |
+| 2026-10-19 | a comment on digama0/lean4lean#17: *"9fc9c83 fixes it … Everything passes the tests in v4.33.0-rc2"*; the issue stays OPEN | invisible: the watch read the issue's state only |
+| 2026-11-21 | Lean4Lean master pins v4.33.0 → v4.36.0 | would have printed "moved" — had it run |
+
+**Today's run, recorded** (exit 2, FIX PORTED INTO A CHECKER; the intersection is still empty because
+lean4checker's stable tags stop at v4.28.0 and it carries no #14577 commit in its last 272):
+
+| field | value |
+|---|---|
+| lean4checker | 23 stable tags, newest v4.28.0; does not carry the fix |
+| Lean4Lean master | pins v4.36.0; carries the fix (`d7e70a5`) |
+| Lean4Lean at MachLib's pin v4.32.2 | `779c51f` (2026-08-04) .. `408edad`; `408edad` contains the #14577 port and `9fc9c83` |
+| digama0/lean4lean#17 | open, 2 comments, last activity 2026-10-19 |
+
+**The third blind spot, fixed in the watch.** Lean4Lean's support set was taken to be *the version
+master pins today*. Every commit that ever pinned version V is a buildable instrument at V, and one
+pinned this project's destination for a morning, after both fixes. The watch now lists the Lean4Lean
+commits that pin `foundations/lean-toolchain` exactly and whether the last of them contains the
+#14577 port and `9fc9c83`. It also records #17's last activity and comment count, not only its
+state, so a comment moves the record. Commit histories are read up to 1,000 commits (the old window
+was 100, and the port was the 54th of them).
+
+**Already measured, not yet on master, and this entry changes neither.** The candidate is not new
+to the project. On 2026-10-20 a session found `408edad` by hand, ran the positive controls
+(`Init.Prelude`, `Init.Core` exit 0) and replayed the library through it: 826 / 826 modules clean,
+default fuel, 8 GB cap per module. The owner ruled to adopt it as criterion 7 (`BUMP_PLAN.md`
+Amendments 6 and 7, sealed snapshot `v4.32.2-r2`). That work is PR #7, branch
+`lean4lean-v4.32.2-adoption`, open since 2026-10-22 and not merged, so on master the destination's
+grade is still *EXTERNALLY UNREPLAYED* and the watch records a candidate, not a result. That
+session also noted the watch's blind spot (master's pin only); this entry is its fix.
+
+**How it stays current.** `kernel-watch.yml` runs the watch every Monday with `--out` (the record is
+never written by CI), then `tools/migration/check_watch_record.py` compares that observation with
+the record: any moved field turns the run red until someone reads it, re-runs the watch without
+`--out`, and commits the record with a line here. An API it could not read is UNOBSERVED and red,
+never "unchanged". `walk-freshness.yml` fails when the watch has not passed in 8 days. The watch's own
+exit codes still mean only the expiry condition, with one exception: a plain run that could not read
+every field refuses to rewrite the record and exits 1, so the record never holds a hole (the review
+of this change hit GitHub's 60-an-hour unauthenticated limit on its first local run; set
+GITHUB_TOKEN). The first push to master after this lands shows the freshness job red: it runs in
+seconds, before the watch's first master run has succeeded. Re-run it once the watch is green.
