@@ -558,11 +558,14 @@ Boundedness stands in for "has a finite limit": this corpus has no limits, and f
 the two coincide. Nonconstancy is stated as *not eventually equal to any constant*, which is what
 `constant_germ_is_algebraic` shows cannot be dropped.
 
-**Open.** Both unbounded rates are theorems (`FS_not_algebraic_of_ge_linear`,
-`FS_not_algebraic_of_le_linear`) and the constant case is a counterexample, so this is the whole
+**Discharged 2026-11-24**: `boundedGermTranscendence_holds` (`EMLBoundedGermTranscendence`). Both
+unbounded rates were already theorems (`FS_not_algebraic_of_ge_linear`,
+`FS_not_algebraic_of_le_linear`) and the constant case is a counterexample, so this was the whole
 remaining gap. It is also the one case where growth has no purchase: a bounded `F ∘ S` is
 indistinguishable from an algebraic function by any envelope, which is why the route through
-differentiation is the one on offer. -/
+differentiation looked like the one on offer. The proof took neither: in lowest terms a bounded `S`
+has a genuine pole, and the two pole theorems (`germ_relation_impossible`,
+`no_proper_cleared_relation`) refute the relation by the sign of `S`. -/
 def BoundedGermTranscendence : Prop :=
   ∀ S : Real → Real, RatGerm S →
     (∃ K X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → abs (S x) ≤ K) →

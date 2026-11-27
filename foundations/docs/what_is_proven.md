@@ -419,7 +419,9 @@ discharged from those two facts rather than assumed.
 truncation on an *unbounded* grid, so it models the arithmetic and not the register width; a bound
 proved here is conditional on the design not overflowing. And the footprint grows: these theorems
 depend on `floor`, `floor_le` and `lt_floor_add_one`, where those in `SignedPIDLoop` rest on the
-plain real spine alone. `#print axioms` shows exactly those three and nothing else.
+plain real spine alone. `#print axioms` shows exactly those three and nothing else. All three are in the trusted
+footprint since 2026-10-27, witnessed by Mathlib's `Int.floor` cast to `ℝ`; until then nothing witnessed them, and
+these theorems were conditional on them.
 
 The abstraction is the same one Forge's own fixed-point certifier makes, whose truncation is
 `floor(x/s)·s`, documented there as the typical fixed-point datapath. The two projects now model
@@ -479,15 +481,27 @@ correct (see §6), and grounding of the analytic base in a construction of ℝ
 
 ---
 
+### Fixed-point forward error over integer words (2026-10-30)
+
+`MachLib/FixedPointNet.lean` and `FixedPointNetInterval.lean`. For a program of constant multiplies, adds and selects over
+Q16.16 words: `fxnet_eps` bounds a datapath word's distance from the exact value where no node overflows;
+`noOverflow_of_safe` discharges that condition at every word of a box from one range check; `gap_bound` bounds the gap
+between two programs' exact values at every word of a box, from a check the kernel runs. Field and order axioms only:
+`floor` is not used, because the evaluator is `Int` arithmetic.
+
+**What this does not claim.** Words only: nothing between them. Nothing about an RTL: that a term is a given program, and
+that hardware implements it, is outside Lean. The one concrete use, a 2-8-1 network, lives in monogate-research
+`exploration/neural/`, and no count here includes it.
+
 ## 4. What it rests on — the axiom base, honestly
 
 MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the
 things Mathlib would prove as theorems — the real-number field/order axioms, the
 definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
-model — are **axioms** here. As of 2026-10-05 the ledger pins **217 axioms**
-(`lake env lean AxiomLedger.lean`: 185 `MachLib.*` plus 32 `Certcom.*`), of which
-**143** form the trusted footprint of the headline theorems, and every one of those 143 is
-modeled: 96 witnessed by a kernel-checked Mathlib term, 12 interpreted carrier and function
+model — are **axioms** here. As of 2026-10-27 the ledger pins **202 axioms**
+(`lake env lean AxiomLedger.lean`: 176 `MachLib.*` plus 32 `Certcom.*`), of which
+**154** form the trusted footprint of the headline theorems, and every one of those 154 is
+modeled: 105 witnessed by a kernel-checked Mathlib term, 14 interpreted carrier and function
 symbols, 3 standard, 32 IEEE-754 float-bridge facts validated by measurement — see
 [`AXIOM_MANIFEST.md`](../AXIOM_MANIFEST.md), which is generated, and **(d)** below. (This
 section said **260** from 2026-06-27 until 2026-09-05; that figure was a different count over a
@@ -558,7 +572,7 @@ earned and what is cited never share a count.
 
 **(d) Every trusted axiom has a model, checked outside this library.** Nothing Mathlib-free
 can show its own axioms are satisfiable, so the check lives in the sibling project
-`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 143 trusted axioms,
+`monogate-lean`, which imports both Mathlib and MachLib and, for each of the 154 trusted axioms,
 verifies in the kernel that a Mathlib term inhabits the axiom's *interpreted* type
 (`MachLib.Real ↦ ℝ`, `exp ↦ Real.exp`, …). The result is a certificate *about* MachLib, never a
 dependency *of* it. The 32 float-bridge axioms are the exception by nature — Mathlib has no
@@ -653,11 +667,17 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
 
   **What is open, and precisely where.** `q_F(sign) ≥ 2` reduces to `OneQueryLevelSet`
   (a *new* ledger row — **not** `OneQueryDichotomy`, which is an *eventual* statement
-  and `sign` is eventually constant, so it excludes nothing). `q_F^global(exp) ∈ {1,2}`
-  turns on the same bounded region. And `BoundedGermTranscendence` is now known to be
-  **out of reach of every instrument in this library**: `polyEnvelope_of_Fbasis_floor`
-  and `polyEnvelope_of_Fbasis_decay` prove `F ∘ S` has a polynomial envelope for *every*
-  bounded rational `S`, while every exclusion theorem here works by *escaping* one. The
+  and `sign` is eventually constant, so it excludes nothing). `OneQueryLevelSet` in turn
+  reduces to `OneQueryLevelSetResidue'`; the residue first stated was false (a constant
+  one-query term, `not_oneQueryLevelSetResidue`, 2026-11-16). `q_F^global(exp) ∈ {1,2}`
+  turns on the same bounded region. `BoundedGermTranscendence` is **discharged since
+  2026-11-24** (`boundedGermTranscendence_holds`, `EMLBoundedGermTranscendence`). This
+  section had called it **out of reach of every instrument in this library**, and that was
+  wrong: `polyEnvelope_of_Fbasis_floor` and `polyEnvelope_of_Fbasis_decay` do prove `F ∘ S`
+  has a polynomial envelope for *every* bounded rational `S`, so no *growth* theorem can
+  exclude it, but the pole-order theorems below (`germ_relation_impossible`,
+  `no_proper_cleared_relation`) count poles, and a bounded nonconstant rational `S` always
+  has one. The rest of this paragraph is the differential route as it stood. The
   differential route's infrastructure is built (`pderiv`, `y' = S'·y`,
   the germ-derivative transfer, and differentiation of the relation itself). What remains
   was described here on 2026-08-21 as "the transcendence input that rules out the
@@ -933,7 +953,8 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
     `u_le_half` (`u + u ≤ 1`). `tools/float_bridge/measure.py` measures every float-bridge one, with controls that must
     fail: the literal axioms against Lean's own evaluation of each literal, the finiteness axioms with their ranges widened
     (failing only beyond the measured overflow boundary, `709.7827…` for `exp` and `710.4758…` for `sinh` and `cosh`).
-    `u_lt_one` and `u_le_half` are witnessed against Mathlib at `u = 2⁻⁵³`. The literal axioms are narrow on purpose:
+    `u_lt_one` and `u_le_half` are witnessed against Mathlib at `u = 2⁻⁵³`; since 2026-11-24 both are theorems from
+    `u_le_inv_two_pow_52`, so `u`'s upper bounds rest on that one axiom. The literal axioms are narrow on purpose:
     Lean's `Float.ofScientific` truncates to 64 bits before it rounds, and the generic statement, that every decimal
     literal is `floatOfR` of its decimal, fails at 81 210 of 631 326 decimals.
     Last that day: `u_le_inv_two_pow_52` (`u ≤ 2⁻⁵²`, witnessed at `u = 2⁻⁵³`) and `real_abs_eps_eq_zero` (the runtime `abs`

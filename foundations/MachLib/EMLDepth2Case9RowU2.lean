@@ -113,8 +113,8 @@ theorem mul_lt_mul_pos_left {a b c : Real} (h : a < b) (hc : 0 < c) : c * a < c 
 /-- **`exp (exp 1) > exp 1 + 1`** — the `w4` numeric core.
 
 Chain: `exp 1 > 1+1` ⟹ `exp (exp 1) > exp (1+1) = exp 1 · exp 1 > (1+1) · exp 1 = exp 1 + exp 1 >
-exp 1 + 1`. **Uses `two_lt_exp_one` only** — the `exp_tangent_line_strict` axiom that
-`var_var_not_mx` had to pay for is NOT needed. -/
+exp 1 + 1`. **Uses `two_lt_exp_one` only** — the tangent line `exp_tangent_line_strict` that
+`var_var_not_mx` uses (an axiom until 2026-10-26, a theorem since) is NOT needed. -/
 theorem exp_exp_one_gt_exp_one_add_one : exp 1 + 1 < exp (exp 1) := by
   have h1 : exp (1 + 1 : Real) < exp (exp 1) := exp_lt two_lt_exp_one
   have h2 : exp (1 + 1 : Real) = exp 1 * exp 1 := exp_add 1 1

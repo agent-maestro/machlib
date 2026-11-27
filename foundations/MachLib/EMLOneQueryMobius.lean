@@ -68,6 +68,8 @@ It does not prove `OneQueryLevelSet`, and the gap is not the algebra above. Two 
    So `OneQueryLevelSet` does not need `BoundedGermTranscendence`. It needs its **degree-1
    fragment**, which is a weaker statement, and the two open rows are related more tightly than
    either records. Whether the fragment is easier is not claimed — only that it is smaller.
+   (`BoundedGermTranscendence` is discharged since 2026-11-24, `boundedGermTranscendence_holds`.
+   Whether that now settles what `OneQueryLevelSet` needs from it has not been checked.)
 
 So: the *linearisation* is discharged; the finiteness is not. Stated this way because the
 temptation, having made the equation linear, is to call the row reduced.

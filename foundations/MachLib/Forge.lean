@@ -475,7 +475,7 @@ theorem min_le_of_right_le {b c : Real} (h : b ≤ c) (a : Real) : min a b ≤ c
 
 /-! ### OfScientific literal positivity (C-240, 2026-05-03)
 
-`realOfScientific_pos` is the underlying axiom in `MachLib.Basic`.
+`realOfScientific_pos` is the underlying theorem in `MachLib.Basic` (an axiom until 2026-10-04).
 The two derived theorems below are the user-facing forms — Lean's
 elaborator desugars `(0.5 : Real)` to `OfScientific.ofScientific 5
 true 1`, which (via `instOfScientific`) reduces to `realOfScientific
@@ -517,10 +517,10 @@ Canonical obligation classes
 A  interval_scale_lower       : 0 ≤ x → 0 < k → 0 ≤ x * k
 B  interval_scale_upper       : x ≤ b → 0 < k → x * k ≤ b * k
 C  interval_scale_unit_lit    : 0 ≤ x → x ≤ 1 → 0 < k → k ≤ 1 → 0 ≤ x*k ∧ x*k ≤ 1
-D  interval_scale_unit_lit_le : literal `k ≤ 1` bridge (axiom)
+D  (removed 2026-10-27)         : the literal `k ≤ 1` "bridge" axiom was FALSE; see below
    add_le_add_both             : monotone addition helper
-E  interval_weight_sum_le     : literal weight-sum `j+k ≤ 1` bridge (axiom)
-   interval_add_scale          : x*j + y*k with unit bounds
+E  (removed 2026-10-27)         : the weight-sum `j+k ≤ 1` "bridge" axiom was FALSE; see below
+   interval_add_scale          : x*j + y*k with unit bounds, given j + k ≤ 1
 F  interval_neg_le_zero       : 0 ≤ x → -x ≤ 0
    interval_one_minus          : 0 ≤ x → x ≤ 1 → 0 ≤ 1-x ∧ 1-x ≤ 1
 G  interval_div_unit           : 0 ≤ x → x ≤ 1 → 1 ≤ d → x/d ≤ 1
@@ -541,14 +541,14 @@ theorem interval_scale_upper
     (x k b : Real) (hk : 0 < k) (hxb : x ≤ b) : x * k ≤ b * k :=
   mul_le_mul_of_nonneg_right hxb (le_of_lt hk)
 
-/-- **Class D bridge** — Relates a literal constant `k` to the upper bound `1`.
-Held as an axiom: MachLib's axiomatic `Real` has no decidable evaluator
-for `realOfScientific` arithmetic, so `k ≤ 1` cannot be derived from
-`0 < k` alone without knowing the concrete mantissa/exponent.  The forge
-emitter must only apply this axiom when `k` is statically known ≤ 1
-(verified at annotation parse time). -/
-axiom interval_scale_unit_lit_le
-    {k : Real} (hk_pos : 0 < k) (hk_lit_le_one : 0 < k) : k ≤ 1
+/-! **Class D, and the axiom it used to be.** Until 2026-10-27 this was `axiom interval_scale_unit_lit_le
+{k} (hk_pos : 0 < k) (hk_lit_le_one : 0 < k) : k ≤ 1`, a "bridge" whose docstring said the Forge emitter would
+apply it only to a literal known to be at most `1`. That condition was in the docstring and not in the type: the
+second hypothesis repeated the first, so the axiom said `0 < k → k ≤ 1` for every real `k`, which is false at
+`k = 1 + 1` (found by the 2026-10-27 independent review; the owner ruled to remove it). Nothing in Forge emitted
+it. Its stated reason expired on 2026-10-04: `realOfScientific` is a DEFINITION now, and a literal's `k ≤ 1` is a
+`Nat` comparison, `realOfScientific_le_of_nat (by decide)` (`ForgeTest.halve_in_unit`). Class C below takes
+`k ≤ 1` as a hypothesis. -/
 
 /-- **Class C** — Complete unit-interval propagation through scalar multiplication.
 Discharges both halves of `0 ≤ x * k ∧ x * k ≤ 1` when
@@ -572,22 +572,20 @@ theorem add_le_add_both
   le_trans (add_le_add_left h2 a)
     (by rw [add_comm a d, add_comm b d]; exact add_le_add_left h1 d)
 
-/-- **Class E bridge** — `j + k ≤ 1` for literal weights summing to ≤ 1.
-Same axiomatic status as `interval_scale_unit_lit_le`: no `realOfScientific`
-evaluator in MachLib.  Forge emitter: verify `j + k ≤ 1` at annotation
-parse time and emit this axiom application as a side proof obligation. -/
-axiom interval_weight_sum_le
-    {j k : Real} (hj : 0 < j) (hk : 0 < k) (hj1 : j ≤ 1) (hk1 : k ≤ 1) : j + k ≤ 1
-
 /-- **Class E** — Unit-interval propagation through a weighted sum `x * j + y * k`
-where both weights are in `(0, 1]` and `j + k ≤ 1`.
+where both weights are positive and `j + k ≤ 1`.
 Discharges `0 ≤ x*j + y*k ∧ x*j + y*k ≤ 1`.
 Forge context: convex-combination kernels (alpha-blending, weighted averages).
-For `add_halves` (j = k = 0.5) the weight sum is exactly 1. -/
+For `add_halves` (j = k = 0.5) the weight sum is exactly 1.
+
+Until 2026-10-27 this took `j ≤ 1` and `k ≤ 1` and got `j + k ≤ 1` from `axiom interval_weight_sum_le
+{j k} : 0 < j → 0 < k → j ≤ 1 → k ≤ 1 → j + k ≤ 1`, which is false at `j = k = 1` (its docstring, not its type,
+said the emitter would check the sum first). The sum is a hypothesis now, and for literal weights it is a
+decimal identity or a `Nat` comparison. -/
 theorem interval_add_scale
     (x y j k : Real)
     (hj : 0 < j) (hk : 0 < k)
-    (hj1 : j ≤ 1) (hk1 : k ≤ 1)
+    (hjk : j + k ≤ 1)
     (hx0 : 0 ≤ x) (hx1 : x ≤ 1)
     (hy0 : 0 ≤ y) (hy1 : y ≤ 1) :
     (0 : Real) ≤ x * j + y * k ∧ x * j + y * k ≤ 1 := by
@@ -597,7 +595,7 @@ theorem interval_add_scale
     have hyk : y * k ≤ 1 * k := mul_le_mul_of_nonneg_right hy1 (le_of_lt hk)
     have hsum : x * j + y * k ≤ 1 * j + 1 * k := add_le_add_both hxj hyk
     rw [one_mul_thm j, one_mul_thm k] at hsum
-    exact le_trans hsum (interval_weight_sum_le hj hk hj1 hk1)
+    exact le_trans hsum hjk
 
 /-- Helper — `0 ≤ x → -x ≤ 0`.
 Used by `interval_one_minus` to show `1 - x ≤ 1`. -/
@@ -652,12 +650,11 @@ The Forge Lean backend emits unqualified `floor` calls when a kernel
 .eml uses the `floor` builtin (e.g. lattice cell-index computations in
 gaming kernels like `crystal_lattice.eml`, `neon_substrate.eml`). To
 keep MachLib's "axiomatic, sorry-free" character, we expose `floor` as
-a pure `Real → Real` axiom with no defining properties — Forge-emitted
-proofs that use `floor` only need it to type-check, not to reason
-about its value. If a future kernel proof actually requires
-properties of `floor` (idempotence, integer-on-integers, ≤ x, etc.),
-those should be added incrementally as `axiom`s with explicit names,
-not retrofitted into a single mega-axiom.
+an axiomatised `Real → Real` function. It began with no defining
+properties; three laws were added as proofs needed them, each a
+separately named axiom (`floor_le`, `lt_floor_add_one`, `floor_zero`,
+below), and since 2026-10-27 all four are in the trusted footprint,
+witnessed in monogate-lean by Mathlib's `Int.floor` cast to `ℝ`.
 
 The Mathlib analogue is `Int.floor : Real → Int` plus an `Int → Real`
 coercion. We collapse that to `Real → Real` because every Forge-emit

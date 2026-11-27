@@ -823,7 +823,7 @@ arcs, and a residue that recurs is a residue that should have a name:
    *"unbounded rational germ ⟹ at least linear is exactly the missing fact"*;
 3. tracing `q_F(sign) ≥ 2`: the algebraic instruments for `F ∘ S` come in a growing branch
    (`FS_not_algebraic_of_ge_linear`), a decaying branch (`..._of_le_linear`), a bounded branch
-   (`BoundedGermTranscendence`, open) and a constant counterexample
+   (`BoundedGermTranscendence`, open then, discharged 2026-11-24) and a constant counterexample
    (`constant_germ_is_algebraic`). Dispatching an arbitrary one-query argument onto them needs
    exactly this trichotomy to know which branch applies.
 

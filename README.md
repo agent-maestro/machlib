@@ -11,7 +11,7 @@ is proven, what it rests on, and what is open, each claim paired with the comman
 
 **Coming from mathematics rather than from compilers?**
 [`foundations/docs/eml_depth_problems.md`](foundations/docs/eml_depth_problems.md) states the
-object and the four open questions from scratch in twenty minutes, with no dependency on anything
+object and the open questions from scratch in twenty minutes, with no dependency on anything
 else here.
 
 ## What is here
@@ -111,7 +111,7 @@ interval and affine arithmetic, a bit-level fixed-point datapath, and closed-loo
   an arithmetic shift does. `floor` was already an axiom here with the two bracketing facts that
   pin the fractional part to `[0, 1)`, so the truncation side is discharged rather than assumed.
   Conditional on no overflow, and its footprint carries three `floor` axioms the rest of the arc
-  does not.
+  does not; they are trusted since 2026-10-27, witnessed by Mathlib's `Int.floor`.
 - `antiwindup_pi_tracks_exact` (`AntiWindupPITracking`) — tracking **through saturation**, for a PI
   loop whose integrator is clamped to `[κ(−U − Kp·e), κ(U − Kp·e)]`, so the output never leaves
   `[−U, U]`. A perturbed copy tracks the exact loop uniformly in time. A clamped step lies between
@@ -168,8 +168,8 @@ type. The honest headline is **zero unaccounted axioms**, never "zero axioms":
 
 | class | count | meaning |
 |---|---|---|
-| witnessed | 96 | a Mathlib term inhabits the interpreted type, kernel-checked |
-| mapped | 12 | carrier or function symbol, interpreted rather than asserted |
+| witnessed | 105 | a Mathlib term inhabits the interpreted type, kernel-checked |
+| mapped | 14 | carrier or function symbol, interpreted rather than asserted |
 | standard | 3 | `propext`, `Classical.choice`, `Quot.sound` |
 | float-bridge | 32 | IEEE-754 facts with no model in ℝ, validated by measurement |
 
@@ -206,23 +206,23 @@ Every count below is the output of a command, not a memory, and `tools/prose_cou
 fails if the text drifts from the corpus. Proof counts come from the **theorem ledger** and from nothing
 else: it reads the Lean environment `AxiomLedger.lean` checks and classifies every theorem's
 `#print axioms` footprint against that file's declared axiom policy (a text search over the sources is
-not a count of proved results). Measured 2026-10-10:
+not a count of proved results). Measured 2026-10-27:
 
 | figure | value | source |
 |---|---|---|
-| declarations in the checked environment | 12 390 | `python3 tools/theorem_ledger/ledger.py` |
-| theorems | 9 433 | the same command: approved-policy + conditional + unchecked |
-| kernel-checked theorems | 9 432 | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited theorems | 9 432 | footprint computed and classified against the policy |
-| approved-policy proofs | 8 971 | every axiom in the footprint is in `trustedFootprint` |
-| conditional proofs | 461 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
+| declarations in the checked environment | 12 558 | `python3 tools/theorem_ledger/ledger.py` |
+| theorems | 9 551 | the same command: approved-policy + conditional + unchecked |
+| kernel-checked theorems | 9 550 | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited theorems | 9 550 | footprint computed and classified against the policy |
+| approved-policy proofs | 9 443 | every axiom in the footprint is in `trustedFootprint` |
+| conditional proofs | 107 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
 | unchecked theorems | 1 | the allowlisted `sorryAx` (`halve_in_unit_sorry`) |
 | Forge `@verify` corpus files, outside the checked environment | 253 | the same command; files only, none of their theorems is counted |
-| `.lean` files under `MachLib/` | 1 087 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
-| axioms pinned by the ledger | 217 | `lake env lean AxiomLedger.lean` |
-| trusted axioms, all accounted for | 143 | `AXIOM_MANIFEST.md` |
-| obligations ledger | 24 rows, 7 open rows, 4 distinct open obligations | `tools/check_obligations.sh` |
-| modules reachable from the aggregator | 822 of 1 087 | `scripts/check_aggregator.sh` |
+| `.lean` files under `MachLib/` | 1 093 | `git ls-files -- MachLib \| grep -c '\.lean$'` |
+| axioms pinned by the ledger | 202 | `lake env lean AxiomLedger.lean` |
+| trusted axioms, all accounted for | 154 | `AXIOM_MANIFEST.md` |
+| obligations ledger | 25 rows, 6 open rows, 3 distinct open obligations | `tools/check_obligations.sh` |
+| modules reachable from the aggregator | 828 of 1 093 | `scripts/check_aggregator.sh` |
 
 ## What this does not claim
 
@@ -239,7 +239,7 @@ not a count of proved results). Measured 2026-10-10:
 
 Active, single-author, roughly twenty commits a day since April 2026. The verified-numerics lane
 has one external reproduction on record (`reproduction/rb_ekf`, two of five on the first attempt,
-which is why the package exists). The obligations ledger has four distinct open obligations; the
+which is why the package exists). The obligations ledger has three distinct open obligations; the
 prose about them is a copy and the ledger is the source. See [`CLAUDE.md`](CLAUDE.md) for the
 working notes a new session needs and [`CHANGELOG.md`](CHANGELOG.md) for the running narrative.
 

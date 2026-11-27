@@ -177,5 +177,23 @@ axiom tanh_eq_sinh_div_cosh (x : Real) :
 theorem cosh_ne_zero (x : Real) : cosh x ≠ 0 :=
   ne_of_gt (cosh_pos x)
 
+/-- `tanh 0 = 0`. An axiom in `Trig.lean` until 2026-10-26: `sinh 0 = (exp 0 − exp (−0)) / 2 = 0`,
+so `tanh 0 = sinh 0 / cosh 0 = 0`. Stated here, not in `Trig.lean`, because that file sits upstream
+of `sinh_eq` and `tanh_eq_sinh_div_cosh`; every consumer (`Linarith` through `Forge`,
+`TanhTaylorRemainder`, `HyperbolicPreservation`) already imports this module. No ring tactic here
+either, so `−0 = 0` and `2 ≠ 0` are spelt out as `cosh_pos` does. -/
+theorem tanh_zero : tanh 0 = 0 := by
+  have htwo : (0 : Real) < 1 + 1 := by
+    have h := add_lt_add_left zero_lt_one_ax (1 : Real)
+    rw [add_zero] at h
+    exact lt_trans_ax zero_lt_one_ax h
+  have hneg0 : -(0 : Real) = 0 := by
+    have h := add_neg (0 : Real)
+    rw [zero_add] at h
+    exact h
+  have hsinh : sinh 0 = 0 := by
+    rw [sinh_eq 0, hneg0, sub_def, add_neg, div_def _ _ (ne_of_gt htwo), zero_mul]
+  rw [tanh_eq_sinh_div_cosh 0, hsinh, div_def _ _ (cosh_ne_zero 0), zero_mul]
+
 end Real
 end MachLib

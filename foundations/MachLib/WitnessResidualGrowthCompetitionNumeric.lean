@@ -13,7 +13,8 @@ numeric facts the non-monotonicity argument needs: `quad(E) < 0` at two witnesse
 **Why axioms are needed at all.** `p = log 2.2` and `q = log 2.7` are transcendental — evaluating
 `quad(E)`'s sign at a specific `E` needs SOME numeric handle on them. Two well-justified axioms
 (`log_2_2_bounds`, `log_2_7_bounds`) bracket each to four decimal places — the same "trust the
-well-known numeric fact" status as `exp_one_lt_three`/`pi_gt_three` (`IteratedExpBounds.lean`).
+well-known numeric fact" status `exp_one_lt_three`/`pi_gt_three` had in `IteratedExpBounds.lean` until both were proved
+(`pi_gt_three` 2026-10-04, `exp_one_lt_three` 2026-11-24).
 MachLib has no `nlinarith`-equivalent tactic yet (`Linarith.lean`'s own docstring flags this as
 future work), so turning a 2-variable interval bound into a quadratic's sign needs to happen by
 hand rather than automatically.

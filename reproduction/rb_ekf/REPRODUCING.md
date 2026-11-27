@@ -1,5 +1,15 @@
 # Reproducing the rb-EKF trail
 
+[![Reproduction walk](https://github.com/agent-maestro/machlib/actions/workflows/reproduction-walk.yml/badge.svg?branch=master)](https://github.com/agent-maestro/machlib/actions/workflows/reproduction-walk.yml)
+[![Walk freshness](https://github.com/agent-maestro/machlib/actions/workflows/walk-freshness.yml/badge.svg?branch=master)](https://github.com/agent-maestro/machlib/actions/workflows/walk-freshness.yml)
+
+> **The badges are the walk's live status, not this page's.** If either is red, this trail is **not
+> currently reproduced**: the results below are what the 2026-08-01 container printed, and nothing
+> on this page outranks a red badge. From 2026-09-28 to 2026-10-23 the walk failed every week. It
+> installed whatever Forge release was newest; 0.15.0 and later emit different Verilog for this
+> kernel, so Step 1 could not match. It now installs the exact release the trail was published
+> with, pinned by sha256 (Setup, below).
+
 **One trail, five steps.** A range-bearing radar EKF, from a symbolic Jacobian the compiler derives,
 through a normalized form, a certified fixed-point lowering, emitted RTL, and replay against silicon
 captures.
@@ -17,11 +27,13 @@ consistency with the golden and with the physics, **not** that they came off a d
 
 **This page is a regression check, not a snapshot.** The hand walk ran on arm64; every step is now
 also run weekly on **x86-64** by
-[`reproduction-walk.yml`](../../.github/workflows/reproduction-walk.yml), which clones this repo
-from the *public* remote and installs the compiler from PyPI — so a bad release, a file that was
-never committed, or a silently-rotting artifact breaks the job rather than waiting for you to find
-it. A verified-once claim rots; the stale wheel that started this exercise was correct when it was
-published.
+[`reproduction-walk.yml`](../../.github/workflows/reproduction-walk.yml). It clones this repo from the
+*public* remote, at the exact commit under test, and installs the published compiler from PyPI,
+every artifact pinned by sha256. So a tampered or re-uploaded artifact, a file that was never
+committed, or a silently-rotting artifact breaks the job rather than waiting for you to find it.
+[`walk-freshness.yml`](../../.github/workflows/walk-freshness.yml) goes red when the walk has not
+passed in 8 days. A verified-once claim rots; the stale wheel that started this exercise was correct
+when it was published.
 
 ## What the grades mean
 
@@ -38,16 +50,30 @@ published.
 ```bash
 git clone https://github.com/agent-maestro/machlib.git
 python3 -m venv venv
-./venv/bin/pip install monogate-forge eml-cost pytest
+./venv/bin/pip install --only-binary=:all: --require-hashes -r machlib/reproduction/rb_ekf/requirements.lock
 cd machlib/reproduction/rb_ekf
 ```
+
+> **Changed 2026-10-23: the install line.** The 2026-08-01 container ran
+> `pip install monogate-forge eml-cost pytest`, which then installed 0.14.x. Since Forge 0.15.0
+> (2026-09-22) that unpinned line installs a compiler whose Verilog for this kernel differs: 0.18.0
+> emits 842 lines, sha256 `d6ee20a3…`. Step 1 therefore cannot match, and the walk failed four weeks
+> running. The pinned line above was run on 2026-10-23: on arm64 it installed and reproduced Step 1's
+> 786 lines and `f47f6c81…`; on x86-64 the CI walk runs the whole trail with it (see the badges).
+
+**Pinned: `monogate-forge 0.14.4`**, wheel sha256
+`bddb9fc90c9e23dcd4e2f446059dfe729bc07fbcf6c3ce8af786508812ccfc64`, together with its whole
+dependency closure, in [`requirements.lock`](requirements.lock).
+- `--require-hashes` refuses a missing, newer or altered artifact instead of installing whatever is
+  newest.
+- `--only-binary=:all:` refuses the source-archive fallback, whose build step would install
+  unhashed tools.
+- `0.14.3` emits the same Verilog. `0.14.0` was a stale build whose Verilog backend could not lower
+  this kernel, and `0.14.1` could not compile its own emitted C.
 
 **`eml-cost` is not optional.** Without it the profiler once returned a sentinel that silently halved
 the emitted datapath from Q16.16 to Q8.8 — no error, no warning. That now refuses rather than
 guessing, but the dependency is real.
-
-> **Use `monogate-forge >= 0.14.3`.** `0.14.0` was a stale build whose Verilog backend could not lower
-> this kernel; `0.14.1` could not compile its own emitted C. Both are superseded.
 
 **First, check you got what we published:**
 

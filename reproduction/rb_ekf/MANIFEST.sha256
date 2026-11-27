@@ -13,11 +13,11 @@
 # check_manifest.py excludes itself: a checker cannot record its own hash without a
 # chicken-and-egg edit on every change to itself.
 #
-# 18 files, enumerated and counted by the tool that wrote this line.
+# 19 files, enumerated and counted by the tool that wrote this line.
 
 6f4ff2992c4e2558837e2e09c39ed2bba140658755b22d046aab810ea2c90ca0        34  .gitignore
-6b5176964404c6a0127546159e0e2b37f905fc69a9143552c5adb5b9bcc85afc      5216  README.md
-b1263fce16c520df612b41092711a697a240e6ab2a411cfc75f6cae2deff55e7     11241  REPRODUCING.md
+bca960e27bc64d846bf091703b2eaed31631c6bbdd36f9dd0da9103ed8f1ae66      5535  README.md
+e032c4bd6bd565b54b4e810be0d627c136306f17ab6ccc1bb1c6d3c902449b6b     13429  REPRODUCING.md
 7345527ce605c36e75cb2053dd489d51315b5a97647ed20adbc84b7ededa4a7b     10231  certificate/hardware/modules/transcendental/tests/test_eml_atan_wide_certificate.py
 3174315d008b3b5b01998231490398e498af9cbb1e3fb2dbfe12dcf369e2120c      5052  certificate/tests/qkernels.py
 7c1ca5dba52cacf2ed28fe19a8098362f31ddd3efb10f58758fd1350bb4969f4      6429  certificate/tests/test_ekf.py
@@ -25,6 +25,7 @@ b1263fce16c520df612b41092711a697a240e6ab2a411cfc75f6cae2deff55e7     11241  REPR
 d8665daa3ce09c7c7282ab94c46f5f9acd4c36d77e401676752c91c2bab66996      5917  normalization/test_autodiff_normalisation.py
 86df203555d3053cdeae62a57eb24707cfb7b6a57df2d3c644dba21137d9c5ef      4945  normalization/test_normalise_fallback_chain.py
 e320cc85b3bf4c5bfa4f9a71289a6e6818d1d846a7886823c3b66e7d481c325e      5489  normalization/test_normalize_verify.py
+0276d4422d789b027a8fabec4957ed08460b42b2a419949c9540a9531b492ef8     16328  requirements.lock
 746922a3bbb7c32aeae421606ed32a2260c4d6cdf0de337dfae1e3a16a36716a      1358  silicon/evidence/rb_acceptance_output.txt
 abfb5fddac52630d23b061e9d2726d9423a87ce0cb2656d585c6582f4a87a963      6087  silicon/evidence/rb_ekf_anchor_evidence.json
 1e2b2a2dda58ac06a3518d9f035fadb25a98b055b7e75da8c9b0a84d2983861f     52374  silicon/evidence/rb_ekf_trace.jsonl

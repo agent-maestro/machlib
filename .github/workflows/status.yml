@@ -1,8 +1,8 @@
 name: status
 
 # Re-derives the verification dashboard's numbers on every push to
-# master and publishes a `status.json` to the dedicated `status-data`
-# branch — a surface only this workflow writes. Anyone with the same
+# master, and once a day, and publishes a `status.json` to the dedicated
+# `status-data` branch — a surface only this workflow writes. Anyone with the same
 # commit SHAs in machlib + forge + eml-stdlib + monogate-research can
 # reproduce the JSON byte-for-byte (content_hash_sha256 in the payload
 # is the integrity check).
@@ -32,6 +32,13 @@ on:
       - "foundations/**"
       - "tools/status/**"
       - ".github/workflows/status.yml"
+  # Daily as well (added 2026-11-24). On push only, a quiet week left status.json a week old, and
+  # monogate.net's evidence page warned "may have failed CI" with nothing failed. The daily run makes
+  # the page's freshness threshold (36 h) mean a missed or failed run. It also re-reads forge's
+  # current master, so the @verify figures follow forge between machlib pushes. A run on an
+  # unchanged commit replaces the last history entry (generate_status.carry_history), not appends.
+  schedule:
+    - cron: "17 6 * * *"
   workflow_dispatch:
 
 permissions:

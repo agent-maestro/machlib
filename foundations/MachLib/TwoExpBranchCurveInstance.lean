@@ -32,13 +32,15 @@ open MachLib.Real
 
 /-- **`khovanskii_rolle_count_curve`, interval-localized.** Same shape, built from
 `curve_tangent_and_chain_local` instead — the curve identity `hid` only needs to hold on `(p,q)`, as long as
-the counting interval `(a,b)` sits inside it (`hpa : p ≤ a`, `hbq : b ≤ q`). -/
+the counting interval `(a,b)` sits inside it (`hpa : p ≤ a`, `hbq : b ≤ q`). Like the global form it needs
+`yc` continuous on `(a,b)` (`hcont`, 2026-10-27): see `BivariateImplicitControls`. -/
 theorem khovanskii_rolle_count_curve_local
     (f g : Real → Real → Real) (fx fy gx gy yc : Real → Real) (a b p q : Real)
     (hab : a < b) (hpa : p ≤ a) (hbq : b ≤ q)
     (hf2 : ∀ z : Real, a < z → z < b → HasDerivAt2 f (fx z) (fy z) z (yc z))
     (hg2 : ∀ z : Real, a < z → z < b → HasDerivAt2 g (gx z) (gy z) z (yc z))
     (hfy : ∀ z : Real, a < z → z < b → fy z ≠ 0)
+    (hcont : ∀ z : Real, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ s : Real, p < s → s < q → f s (yc s) = 0)
     (N : Nat)
     (hJ_bound : ∀ zeros_J : List Real, zeros_J.Nodup →
@@ -52,13 +54,13 @@ theorem khovanskii_rolle_count_curve_local
   · intro z hza hzb
     obtain ⟨_, _, hchain⟩ := curve_tangent_and_chain_local f g (fx z) (fy z) (gx z) (gy z) yc z p q
       (lt_of_le_of_lt hpa hza) (lt_of_lt_of_le hzb hbq)
-      (hf2 z hza hzb) (hg2 z hza hzb) (hfy z hza hzb) hid
+      (hf2 z hza hzb) (hg2 z hza hzb) (hfy z hza hzb) (hcont z hza hzb) hid
     rw [show gx z + gy z * (-fx z / fy z) = gx z * 1 + gy z * (-fx z / fy z) from by rw [mul_one_ax]]
     exact hchain
   · intro z hza hzb
     exact (curve_tangent_and_chain_local f g (fx z) (fy z) (gx z) (gy z) yc z p q
       (lt_of_le_of_lt hpa hza) (lt_of_lt_of_le hzb hbq)
-      (hf2 z hza hzb) (hg2 z hza hzb) (hfy z hza hzb) hid).2.1
+      (hf2 z hza hzb) (hg2 z hza hzb) (hfy z hza hzb) (hcont z hza hzb) hid).2.1
   · exact hJ_bound
 
 /-! ## Part 1: the branch curve `yc(x) = log(c−eˣ)`, real only for `x < log c` -/
@@ -139,6 +141,12 @@ theorem branch_intersection_le_one (c a b : Real) (hc : 0 < c) (hab : a < b) (hb
   have hid : ∀ s : Real, a - 1 < s → s < log c → exp s + exp (branchYc c s) - c = 0 := by
     intro s _ hslc
     exact branch_curve_id c hc s hslc
+  -- the branch is differentiable where it is real, so continuous: `log ∘ (c − exp)` with `c − eᶻ > 0`
+  have hcont : ∀ z : Real, a < z → z < b → ContinuousAt (branchYc c) z := by
+    intro z _ hzb
+    exact hasDerivAt_continuousAt (HasDerivAt_comp log (fun y => c - exp y) _ _ z
+      (HasDerivAt_sub (fun _ => c) exp 0 (exp z) z (HasDerivAt_const c z) (HasDerivAt_exp z))
+      (HasDerivAt_log_pos _ (branch_pos c z (lt_trans_ax hzb hbc) hc)))
   have hJb : ∀ zeros_J : List Real, zeros_J.Nodup →
       (∀ z ∈ zeros_J, a < z ∧ z < b ∧
         exp z * (-(c - exp z)) - (c - exp z) * exp z = 0) →
@@ -154,7 +162,7 @@ theorem branch_intersection_le_one (c a b : Real) (hc : 0 < c) (hab : a < b) (hb
   have hres := khovanskii_rolle_count_curve_local
     (fun a b => exp a + exp b - c) branchG (fun z => exp z) (fun z => c - exp z)
     (fun z => exp z) (fun z => -(c - exp z)) (branchYc c) a b (a - 1) (log c) hab
-    (sub_le_self (le_of_lt zero_lt_one_ax)) (le_of_lt hbc) hf2 hg2 hfyne hid 0 hJb
+    (sub_le_self (le_of_lt zero_lt_one_ax)) (le_of_lt hbc) hf2 hg2 hfyne hcont hid 0 hJb
   intro zeros_g hnd hz
   simpa using hres zeros_g hnd hz
 

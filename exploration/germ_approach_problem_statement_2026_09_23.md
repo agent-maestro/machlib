@@ -1,5 +1,10 @@
 # Uniform asymptotic separation for exp–log expression germs of bounded complexity
 
+> **Do not send this as an open problem without reading [`kaiser_speissegger_route_2026_11_16.md`](kaiser_speissegger_route_2026_11_16.md) first (added 2026-11-16).**
+> On that reading, Kaiser–Speissegger (arXiv:1708.04496, §2) settles the conjecture on paper at height
+> `j + 1` (`j` for the decay form). No specialist has confirmed this and it is not formalised. What stays
+> open is the sharp value (`j − 2`), plus a specialist's confirmation of the reading.
+
 **An open problem, stated for a specialist in Hardy fields, transseries, o-minimality or asymptotic
 differential algebra.**
 

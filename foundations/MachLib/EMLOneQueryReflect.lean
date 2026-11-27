@@ -39,6 +39,14 @@ correctly matters, because "finitely many zeros on a compact" was being treated 
 and it is the *easy* half: `OneQueryBoundedLevelFinite` rests on
 `analytic_finite_zeros_compact`, which is already trusted **and** already witnessed.
 
+**CORRECTION, 2026-11-16: as stated, `OneQueryBoundedLevelFinite` is FALSE, and with it the residue.**
+A one-query term can be constant: `0 · F(x) + c` has one `F` node and equals `c` at every real, so its
+level set fills every window and no finite list holds it (`not_oneQueryBoundedLevelFinite`,
+`not_oneQueryLevelSetResidue`, in `EMLOneQueryResidueRepair`). The reduction below is valid and reduces
+nothing. Its last branch only ever consults the bounded half after BOTH tails have missed the level, so
+the repaired residue `OneQueryLevelSetResidue'` assumes exactly that, and `oneQueryLevelSet_of_residue'`
+is the same proof. The paragraph above called this half easy without testing it on a constant term.
+
 Nothing here discharges the ledger row. The reduction is stated as an implication so it cannot be
 mistaken for one.
 -/
@@ -170,8 +178,11 @@ def OneQueryTailRigidity : Prop :=
     ((∀ x : Real, X ≤ x → T.eval x = c) ∨ (∀ x : Real, X ≤ x → T.eval (0 - x) = c)) →
     ∃ E : List Real, ∀ x : Real, x ∉ E → T.eval x = c
 
-/-- **Residue 2 — finiteness on a bounded interval.** The cheap half: `analytic_finite_zeros_compact`
-is already trusted AND witnessed, so this is assembly rather than discovery. -/
+/-- **Residue 2 — finiteness on a bounded interval. FALSE as stated** (2026-11-16): the constant
+one-query term `0 · F(x) + c` fills every window (`not_oneQueryBoundedLevelFinite`,
+`EMLOneQueryResidueRepair`). It was described here as the cheap half, "assembly rather than discovery",
+before anyone tried a constant term. The repaired form is `OneQueryBoundedLevelFiniteOffTails`, which
+assumes both tails miss the level. -/
 def OneQueryBoundedLevelFinite : Prop :=
   ∀ T : FTerm, fOcc T = 1 → ∀ c X : Real, 1 ≤ X →
     ∃ E : List Real, ∀ x : Real, 0 - X ≤ x → x ≤ X → T.eval x = c → x ∈ E
@@ -179,14 +190,20 @@ def OneQueryBoundedLevelFinite : Prop :=
 /-- **The residue, as one proposition**, so it can carry a ledger row of its own. Splitting it
 across two hypotheses would leave the reduction untrackable: the obligations ledger requires a
 `reduced` row to name a residue that is itself a tracked row, which is what stops a reduction from
-quietly discharging anything. -/
+quietly discharging anything.
+
+**Refuted** (2026-11-16): `not_oneQueryLevelSetResidue`. Its ledger row says so, and the repaired
+residue `OneQueryLevelSetResidue'` carries the open obligation now. -/
 def OneQueryLevelSetResidue : Prop :=
   OneQueryTailRigidity ∧ OneQueryBoundedLevelFinite
 
 /-- **The reduction.** `OneQueryLevelSet` follows from the residue and nothing else.
 
 Stated as an implication on purpose: a reduction recorded as an implication cannot be mistaken for a
-discharge, which is the failure mode the obligations ledger exists to prevent. -/
+discharge, which is the failure mode the obligations ledger exists to prevent.
+
+Its hypothesis is FALSE (`not_oneQueryLevelSetResidue`), so this reduces nothing. It is kept, unchanged,
+because the repair is stated beside it: `oneQueryLevelSet_of_residue'` takes the repaired residue. -/
 theorem oneQueryLevelSet_of_residue (hRes : OneQueryLevelSetResidue) : OneQueryLevelSet := by
   obtain ⟨hR, hB⟩ := hRes
   intro T h c

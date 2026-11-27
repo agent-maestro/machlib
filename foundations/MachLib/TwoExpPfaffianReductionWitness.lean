@@ -1011,6 +1011,7 @@ theorem khovanskii_rolle_curve_of_lower_reductionWitness
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
@@ -1018,7 +1019,7 @@ theorem khovanskii_rolle_curve_of_lower_reductionWitness
   khovanskii_rolle_curve_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_lower_reductionWitness F G A B hAB M c yExpr expXExpr expYExpr
       sep lower wit)
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Full global consumer for a lower system equipped with explicit reduction
 witnesses. -/
@@ -1046,6 +1047,7 @@ theorem khovanskii_rolle_full_of_lower_reductionWitness
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1054,7 +1056,7 @@ theorem khovanskii_rolle_full_of_lower_reductionWitness
   khovanskii_rolle_full_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_lower_reductionWitness F G A B hAB M c yExpr expXExpr expYExpr
       sep lower wit)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a lower system equipped with explicit reduction
 witnesses. -/
@@ -1081,6 +1083,7 @@ theorem khovanskii_rolle_single_of_lower_reductionWitness
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1088,7 +1091,7 @@ theorem khovanskii_rolle_single_of_lower_reductionWitness
   khovanskii_rolle_single_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_lower_reductionWitness F G A B hAB M c yExpr expXExpr expYExpr
       sep lower wit)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Local curve consumer with the explicit Jacobian bound carried by the
 reduction witness. -/
@@ -1115,6 +1118,7 @@ theorem khovanskii_rolle_curve_of_lower_reductionWitness_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -1126,7 +1130,7 @@ theorem khovanskii_rolle_curve_of_lower_reductionWitness_bound
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F))
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G))
     (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G))
-    yc a b hab hf2 hg2 hfy_nz hid wit.jacobianBound
+    yc a b hab hf2 hg2 hfy_nz hcont hid wit.jacobianBound
     (fun zeros_J hnd hJlocal =>
       jacobian_count_of_lower_reductionWitness_bound F G A B hAB M c yExpr expXExpr
         expYExpr sep lower wit zeros_J hnd (fun z hzmem => by
@@ -1161,6 +1165,7 @@ theorem khovanskii_rolle_full_of_lower_reductionWitness_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1174,7 +1179,7 @@ theorem khovanskii_rolle_full_of_lower_reductionWitness_bound
       (fun z hzlo hzhi => by
         exact ⟨lt_trans_ax (hinside arc harcmem).1 hzlo,
           lt_trans_ax hzhi (hinside arc harcmem).2.2⟩)
-      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hid arc harcmem)
+      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hcont arc harcmem) (hid arc harcmem)
       arc.zeros (hzeros_nd arc harcmem) (hzeros arc harcmem)
   have hchainPairs : ChainSep (fun x => A < x ∧ x < B ∧ sep x) (hd.rep, hd.zeros).1
       ((s.map (fun arc => (arc.rep, arc.zeros))).map (fun pair => pair.1)) := by
@@ -1224,6 +1229,7 @@ theorem khovanskii_rolle_single_of_lower_reductionWitness_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1250,6 +1256,10 @@ theorem khovanskii_rolle_single_of_lower_reductionWitness_bound
       have haeq : a = arc := by simpa using ha
       subst a
       exact hfy_nz z hzlo hzhi)
+    (fun a ha z hzlo hzhi => by
+      have haeq : a = arc := by simpa using ha
+      subst a
+      exact hcont z hzlo hzhi)
     (fun a ha t => by
       have haeq : a = arc := by simpa using ha
       subst a
@@ -1286,6 +1296,7 @@ theorem khovanskii_rolle_curve_of_solved_reductionWitness
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
@@ -1293,7 +1304,7 @@ theorem khovanskii_rolle_curve_of_solved_reductionWitness
   khovanskii_rolle_curve_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_solved_reductionWitness F G A B M c yExpr expXExpr expYExpr sep
       solved wit)
-    yc a b hab hsub hf2 hg2 hfy_nz hid
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid
 
 /-- Full global consumer for a solved descent whose stored lower systems carry
 explicit reduction witnesses. -/
@@ -1322,6 +1333,7 @@ theorem khovanskii_rolle_full_of_solved_reductionWitness
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1330,7 +1342,7 @@ theorem khovanskii_rolle_full_of_solved_reductionWitness
   khovanskii_rolle_full_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_solved_reductionWitness F G A B M c yExpr expXExpr expYExpr sep
       solved wit)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a solved descent whose stored lower systems carry
 explicit reduction witnesses. -/
@@ -1358,6 +1370,7 @@ theorem khovanskii_rolle_single_of_solved_reductionWitness
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1365,7 +1378,7 @@ theorem khovanskii_rolle_single_of_solved_reductionWitness
   khovanskii_rolle_single_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
     (descentCertificate_of_solved_reductionWitness F G A B M c yExpr expXExpr expYExpr sep
       solved wit)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Local curve consumer for a solved descent with the explicit Jacobian
 bound carried by its reduction witness. -/
@@ -1393,6 +1406,7 @@ theorem khovanskii_rolle_curve_of_solved_reductionWitness_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -1400,7 +1414,7 @@ theorem khovanskii_rolle_curve_of_solved_reductionWitness_bound
     zeros_g.length ≤ wit.jacobianBound + 1 :=
   khovanskii_rolle_curve_of_lower_reductionWitness_bound
     F G A B solved.problem.interval_nonempty M c yExpr expXExpr expYExpr sep
-    solved.result.lower wit yc a b hab hsub hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    solved.result.lower wit yc a b hab hsub hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
 
 /-- Full global consumer for a solved descent with the explicit bounds
 carried by its reduction witnesses. -/
@@ -1429,6 +1443,7 @@ theorem khovanskii_rolle_full_of_solved_reductionWitness_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1436,7 +1451,7 @@ theorem khovanskii_rolle_full_of_solved_reductionWitness_bound
       (wit.separatorBound + 1) * (wit.jacobianBound + 1) :=
   khovanskii_rolle_full_of_lower_reductionWitness_bound
     F G A B solved.problem.interval_nonempty M c yExpr expXExpr expYExpr sep
-    solved.result.lower wit hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    solved.result.lower wit hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a solved descent with the explicit bounds carried
 by its reduction witnesses. -/
@@ -1464,13 +1479,14 @@ theorem khovanskii_rolle_single_of_solved_reductionWitness_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
     arc.zeros.length ≤ (wit.separatorBound + 1) * (wit.jacobianBound + 1) :=
   khovanskii_rolle_single_of_lower_reductionWitness_bound
     F G A B solved.problem.interval_nonempty M c yExpr expXExpr expYExpr sep
-    solved.result.lower wit arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    solved.result.lower wit arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Local curve consumer for a solved descent plus a two-exp lower reduction
 solver, exposing the solver-produced Jacobian bound. -/
@@ -1497,6 +1513,7 @@ theorem khovanskii_rolle_curve_of_solved_reductionSolver_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -1506,7 +1523,7 @@ theorem khovanskii_rolle_curve_of_solved_reductionSolver_bound
   khovanskii_rolle_curve_of_solved_reductionWitness_bound F G A B M c yExpr expXExpr
     expYExpr sep solved
     (solver.reduce F G A B M c yExpr expXExpr expYExpr sep solved.result.lower)
-    yc a b hab hsub hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    yc a b hab hsub hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
 
 /-- Full global consumer for a solved descent plus a two-exp lower reduction
 solver, exposing the solver-produced separator and Jacobian bounds. -/
@@ -1534,6 +1551,7 @@ theorem khovanskii_rolle_full_of_solved_reductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1543,7 +1561,7 @@ theorem khovanskii_rolle_full_of_solved_reductionSolver_bound
   khovanskii_rolle_full_of_solved_reductionWitness_bound F G A B M c yExpr expXExpr
     expYExpr sep solved
     (solver.reduce F G A B M c yExpr expXExpr expYExpr sep solved.result.lower)
-    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a solved descent plus a two-exp lower reduction
 solver, exposing the solver-produced separator and Jacobian bounds. -/
@@ -1570,6 +1588,7 @@ theorem khovanskii_rolle_single_of_solved_reductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1579,7 +1598,7 @@ theorem khovanskii_rolle_single_of_solved_reductionSolver_bound
   khovanskii_rolle_single_of_solved_reductionWitness_bound F G A B M c yExpr expXExpr
     expYExpr sep solved
     (solver.reduce F G A B M c yExpr expXExpr expYExpr sep solved.result.lower)
-    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Local curve consumer for a solved descent plus a uniform predicate-level
 reduction solver, exposing the predicate solver's Jacobian bound directly. -/
@@ -1606,6 +1625,7 @@ theorem khovanskii_rolle_curve_of_solved_predicateReductionSolver_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -1614,7 +1634,7 @@ theorem khovanskii_rolle_curve_of_solved_predicateReductionSolver_bound
   have h := khovanskii_rolle_curve_of_solved_reductionSolver_bound
     (twoExpLowerReductionSolver_of_predicateSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved yc a b hab hsub
-    hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
   simpa [twoExpLowerReductionSolver_of_predicateSolver_jacobianBound] using h
 
 /-- Full global consumer for a solved descent plus a uniform predicate-level
@@ -1644,6 +1664,7 @@ theorem khovanskii_rolle_full_of_solved_predicateReductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1653,7 +1674,7 @@ theorem khovanskii_rolle_full_of_solved_predicateReductionSolver_bound
   have h := khovanskii_rolle_full_of_solved_reductionSolver_bound
     (twoExpLowerReductionSolver_of_predicateSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved hd s hchain hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
   simpa [twoExpLowerReductionSolver_of_predicateSolver_jacobianBound,
     twoExpLowerReductionSolver_of_predicateSolver_separatorBound] using h
 
@@ -1683,6 +1704,7 @@ theorem khovanskii_rolle_single_of_solved_predicateReductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1692,7 +1714,7 @@ theorem khovanskii_rolle_single_of_solved_predicateReductionSolver_bound
   have h := khovanskii_rolle_single_of_solved_reductionSolver_bound
     (twoExpLowerReductionSolver_of_predicateSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved arc hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
   simpa [twoExpLowerReductionSolver_of_predicateSolver_jacobianBound,
     twoExpLowerReductionSolver_of_predicateSolver_separatorBound] using h
 
@@ -1721,6 +1743,7 @@ theorem khovanskii_rolle_curve_of_solved_functionReductionSolver_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -1731,7 +1754,7 @@ theorem khovanskii_rolle_curve_of_solved_functionReductionSolver_bound
   have h := khovanskii_rolle_curve_of_solved_predicateReductionSolver_bound
     (pfaffianPredicateReductionSolver_of_functionSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved yc a b hab hsub
-    hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
   simpa [pfaffianPredicateReductionSolver_of_functionSolver,
     PfaffianPredicateReductionWitness.ofFunctionWitness_bound] using h
 
@@ -1762,6 +1785,7 @@ theorem khovanskii_rolle_full_of_solved_functionReductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1773,7 +1797,7 @@ theorem khovanskii_rolle_full_of_solved_functionReductionSolver_bound
   have h := khovanskii_rolle_full_of_solved_predicateReductionSolver_bound
     (pfaffianPredicateReductionSolver_of_functionSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved hd s hchain hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
   simpa [pfaffianPredicateReductionSolver_of_functionSolver,
     PfaffianPredicateReductionWitness.ofFunctionWitness_bound] using h
 
@@ -1803,6 +1827,7 @@ theorem khovanskii_rolle_single_of_solved_functionReductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1814,7 +1839,7 @@ theorem khovanskii_rolle_single_of_solved_functionReductionSolver_bound
   have h := khovanskii_rolle_single_of_solved_predicateReductionSolver_bound
     (pfaffianPredicateReductionSolver_of_functionSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved arc hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
   simpa [pfaffianPredicateReductionSolver_of_functionSolver,
     PfaffianPredicateReductionWitness.ofFunctionWitness_bound] using h
 
@@ -1843,6 +1868,7 @@ theorem khovanskii_rolle_curve_of_solved_expFunctionReductionSolver_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -1854,7 +1880,7 @@ theorem khovanskii_rolle_curve_of_solved_expFunctionReductionSolver_bound
   have h := khovanskii_rolle_curve_of_solved_predicateReductionSolver_bound
     (pfaffianPredicateReductionSolver_of_expFunctionSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved yc a b hab hsub
-    hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
   simpa [pfaffianPredicateReductionSolver_of_expFunctionSolver,
     PfaffianPredicateReductionWitness.ofFunctionWitness_bound] using h
 
@@ -1885,6 +1911,7 @@ theorem khovanskii_rolle_full_of_solved_expFunctionReductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1898,7 +1925,7 @@ theorem khovanskii_rolle_full_of_solved_expFunctionReductionSolver_bound
   have h := khovanskii_rolle_full_of_solved_predicateReductionSolver_bound
     (pfaffianPredicateReductionSolver_of_expFunctionSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved hd s hchain hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
   simpa [pfaffianPredicateReductionSolver_of_expFunctionSolver,
     PfaffianPredicateReductionWitness.ofFunctionWitness_bound] using h
 
@@ -1928,6 +1955,7 @@ theorem khovanskii_rolle_single_of_solved_expFunctionReductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1941,7 +1969,7 @@ theorem khovanskii_rolle_single_of_solved_expFunctionReductionSolver_bound
   have h := khovanskii_rolle_single_of_solved_predicateReductionSolver_bound
     (pfaffianPredicateReductionSolver_of_expFunctionSolver solver)
     F G A B M c yExpr expXExpr expYExpr sep solved arc hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
   simpa [pfaffianPredicateReductionSolver_of_expFunctionSolver,
     PfaffianPredicateReductionWitness.ofFunctionWitness_bound] using h
 
@@ -1970,6 +1998,7 @@ theorem khovanskii_rolle_curve_of_solved_expSDRReductionSolver_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -1981,7 +2010,7 @@ theorem khovanskii_rolle_curve_of_solved_expSDRReductionSolver_bound
   have h := khovanskii_rolle_curve_of_solved_expFunctionReductionSolver_bound
     (pfaffianExpFunctionReductionSolver_of_sdr solver)
     F G A B M c yExpr expXExpr expYExpr sep solved yc a b hab hsub
-    hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
   simpa [pfaffianExpFunctionReductionSolver_of_sdr_bound] using h
 
 /-- Full global consumer for a solved descent plus an SDR-level exp-chain
@@ -2010,6 +2039,7 @@ theorem khovanskii_rolle_full_of_solved_expSDRReductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2023,7 +2053,7 @@ theorem khovanskii_rolle_full_of_solved_expSDRReductionSolver_bound
   have h := khovanskii_rolle_full_of_solved_expFunctionReductionSolver_bound
     (pfaffianExpFunctionReductionSolver_of_sdr solver)
     F G A B M c yExpr expXExpr expYExpr sep solved hd s hchain hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
   simpa [pfaffianExpFunctionReductionSolver_of_sdr_bound] using h
 
 /-- Single-arc consumer for a solved descent plus an SDR-level exp-chain
@@ -2051,6 +2081,7 @@ theorem khovanskii_rolle_single_of_solved_expSDRReductionSolver_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2064,7 +2095,7 @@ theorem khovanskii_rolle_single_of_solved_expSDRReductionSolver_bound
   have h := khovanskii_rolle_single_of_solved_expFunctionReductionSolver_bound
     (pfaffianExpFunctionReductionSolver_of_sdr solver)
     F G A B M c yExpr expXExpr expYExpr sep solved arc hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
   simpa [pfaffianExpFunctionReductionSolver_of_sdr_bound] using h
 
 /-- Local curve consumer for a solved descent plus the split SDR inputs. -/
@@ -2092,6 +2123,7 @@ theorem khovanskii_rolle_curve_of_solved_expSDR_parts_bound
         z (yc z))
     (hfy_nz : ∀ z, a < z → z < b →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
     (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
     (hzeros : ∀ z ∈ zeros_g,
@@ -2103,7 +2135,7 @@ theorem khovanskii_rolle_curve_of_solved_expSDR_parts_bound
   khovanskii_rolle_curve_of_solved_expSDRReductionSolver_bound
     (PfaffianExpSDRReductionSolver.of_parts reducer nonzero)
     F G A B M c yExpr expXExpr expYExpr sep solved yc a b hab hsub
-    hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+    hf2 hg2 hfy_nz hcont hid zeros_g hzeros_nd hzeros
 
 /-- Full global consumer for a solved descent plus the split SDR inputs. -/
 theorem khovanskii_rolle_full_of_solved_expSDR_parts_bound
@@ -2131,6 +2163,7 @@ theorem khovanskii_rolle_full_of_solved_expSDR_parts_bound
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2144,7 +2177,7 @@ theorem khovanskii_rolle_full_of_solved_expSDR_parts_bound
   khovanskii_rolle_full_of_solved_expSDRReductionSolver_bound
     (PfaffianExpSDRReductionSolver.of_parts reducer nonzero)
     F G A B M c yExpr expXExpr expYExpr sep solved hd s hchain hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
 
 /-- Single-arc consumer for a solved descent plus the split SDR inputs. -/
 theorem khovanskii_rolle_single_of_solved_expSDR_parts_bound
@@ -2171,6 +2204,7 @@ theorem khovanskii_rolle_single_of_solved_expSDR_parts_bound
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -2184,7 +2218,7 @@ theorem khovanskii_rolle_single_of_solved_expSDR_parts_bound
   khovanskii_rolle_single_of_solved_expSDRReductionSolver_bound
     (PfaffianExpSDRReductionSolver.of_parts reducer nonzero)
     F G A B M c yExpr expXExpr expYExpr sep solved arc hinside hzeros_nd
-    hf2 hg2 hfy_nz hid hzeros
+    hf2 hg2 hfy_nz hcont hid hzeros
 
 end TwoExp
 end MultiVarMod

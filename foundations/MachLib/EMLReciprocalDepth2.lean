@@ -541,9 +541,10 @@ theorem const_left_pins_child {u w : EMLTree} {a f x : Real}
 
 /-! ## `var`/`var`, closed — with both costs paid explicitly
 
-**Cost 1: an axiom.** `exp_tangent_line_strict` (`EMLAsymptoticClass.lean:528`) is a
-classical-citation axiom, not a theorem. **It is used here and nowhere else in this file**, so
-`#print axioms` separates the theorems that depend on it from the ones that do not.
+**Cost 1: the tangent line.** `exp_tangent_line_strict` (`EMLAsymptoticClass.lean`) was a
+classical-citation axiom until 2026-10-26; it is a theorem now, `Exp.lean`'s trusted
+`exp_gt_one_plus_self` with the sum commuted, so it no longer separates footprints. It is still
+used here and nowhere else in this file.
 
 **Cost 2: one numeric fact, isolated rather than smuggled.** The chain needs `e²(e−2) > 1`, which
 `2 < e` does not give (it yields only `> 0`). It is carried as the hypothesis `he`, **stated

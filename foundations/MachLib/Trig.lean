@@ -265,22 +265,21 @@ axiom erf_le_one     (x : Real) : erf x ≤ 1
 
 /-! ### Defining properties (minimal set) -/
 
--- tanh: zero at zero, odd. Its range bounds `tanh_lt_one` and `neg_one_lt_tanh` were
+-- tanh: odd. Its range bounds `tanh_lt_one` and `neg_one_lt_tanh` were
 -- axioms here until 2026-10-04; they are THEOREMS in `MachLib/Linarith.lean` now, derived
 -- from `Hyperbolic.lean`'s linking axiom `tanh_eq_sinh_div_cosh` and the defining
 -- equations of `sinh`/`cosh` (the owner's axiom audit: a law the others prove is not
--- assumed).
-axiom tanh_zero     : tanh 0 = 0
+-- assumed). `tanh_zero` was an axiom here until 2026-10-26; it is a theorem in
+-- `Hyperbolic.lean` now, from the same linking axiom (this file sits upstream of it).
 axiom tanh_neg      (x : Real) : tanh (-x) = -(tanh x)
 
--- sqrt: non-negative, fixed at 0 and 1, multiplicative on
+-- sqrt: non-negative, fixed at 0, multiplicative on
 -- non-negatives. We follow the GNU/IEEE convention of returning 0
--- on negative input rather than NaN.
-axiom sqrt_zero       : sqrt 0 = 0
-axiom sqrt_one        : sqrt 1 = 1
+-- on negative input rather than NaN. `sqrt 1 = 1`, `sqrt 0 = 0` and the
+-- negative-input convention are theorems below, from `sqrt_nonneg` and
+-- the two order characterisations.
 axiom sqrt_nonneg     (x : Real) : 0 ≤ sqrt x
 axiom sqrt_sq_nonneg  (x : Real) : 0 ≤ x → sqrt x * sqrt x = x
-axiom sqrt_neg_zero   (x : Real) : x < 0 → sqrt x = 0
 -- Order characterisation (one direction): a nonneg lower bound whose square
 -- is ≤ y is itself ≤ sqrt y. Sound for the real square root (z ≥ 0, z² ≤ y ⇒
 -- z = sqrt(z²) ≤ sqrt y by monotonicity). Held as an axiom alongside the
@@ -291,6 +290,43 @@ axiom le_sqrt_of_sq_le {z y : Real} (hz : 0 ≤ z) (h : z * z ≤ y) : z ≤ sqr
 -- above (z ≥ 0, y ≤ z² ⇒ sqrt y ≤ sqrt(z²) = z). Closes the `v − sqrt(clamped)`
 -- numerators where the radicand is min-clamped below v² (tof constant-decel).
 axiom sqrt_le_of_le_sq {z y : Real} (hz : 0 ≤ z) (h : y ≤ z * z) : sqrt y ≤ z
+
+/-- `sqrt 1 = 1`. An axiom until 2026-10-26: both order characterisations at `z = y = 1` give
+`sqrt 1 ≤ 1` and `1 ≤ sqrt 1`. No ring tactic here (this file sits upstream of `Ring`), so the
+antisymmetry is spelt out from `le_iff_lt_or_eq`. -/
+theorem sqrt_one : sqrt 1 = 1 := by
+  have h01 : (0 : Real) ≤ 1 := (le_iff_lt_or_eq 0 1).mpr (Or.inl zero_lt_one_ax)
+  have h11 : (1 : Real) ≤ 1 * 1 := by
+    rw [mul_one_ax]; exact (le_iff_lt_or_eq 1 1).mpr (Or.inr rfl)
+  have h11' : (1 : Real) * 1 ≤ 1 := by
+    rw [mul_one_ax]; exact (le_iff_lt_or_eq 1 1).mpr (Or.inr rfl)
+  have hle : sqrt 1 ≤ 1 := sqrt_le_of_le_sq h01 h11
+  have hge : 1 ≤ sqrt 1 := le_sqrt_of_sq_le h01 h11'
+  rcases (le_iff_lt_or_eq _ _).mp hle with hlt | heq
+  · rcases (le_iff_lt_or_eq _ _).mp hge with hlt' | heq'
+    · exact absurd (lt_trans_ax hlt hlt') (lt_irrefl_ax _)
+    · rw [← heq'] at hlt; exact absurd hlt (lt_irrefl_ax _)
+  · exact heq
+
+/-- `sqrt y = 0` for every `y ≤ 0`: `sqrt_le_of_le_sq` at `z = 0` (as `y ≤ 0 * 0`) gives `sqrt y ≤ 0`, and
+`sqrt_nonneg` gives the other side. The two theorems below are its two cases. -/
+private theorem sqrt_eq_zero_of_nonpos (y : Real) (hy : y ≤ 0) : sqrt y = 0 := by
+  have h00 : (0 : Real) ≤ 0 := (le_iff_lt_or_eq 0 0).mpr (Or.inr rfl)
+  have hy' : y ≤ 0 * 0 := by rw [mul_zero]; exact hy
+  rcases (le_iff_lt_or_eq _ _).mp (sqrt_le_of_le_sq h00 hy') with hlt | heq
+  · rcases (le_iff_lt_or_eq _ _).mp (sqrt_nonneg y) with hlt' | heq'
+    · exact absurd (lt_trans_ax hlt hlt') (lt_irrefl_ax _)
+    · exact heq'.symm
+  · exact heq
+
+/-- `sqrt 0 = 0`. An axiom until 2026-11-24: `sqrt_le_of_le_sq` and `sqrt_nonneg` prove it. -/
+theorem sqrt_zero : sqrt 0 = 0 :=
+  sqrt_eq_zero_of_nonpos 0 ((le_iff_lt_or_eq 0 0).mpr (Or.inr rfl))
+
+/-- `sqrt x = 0` for `x < 0`, the GNU/IEEE convention above. An axiom until 2026-11-24: `sqrt_le_of_le_sq` and
+`sqrt_nonneg` prove it, so the convention is fixed by the two order characterisations, not assumed beside them. -/
+theorem sqrt_neg_zero (x : Real) : x < 0 → sqrt x = 0 := fun hx =>
+  sqrt_eq_zero_of_nonpos x ((le_iff_lt_or_eq x 0).mpr (Or.inl hx))
 
 -- arcsin / arccos: principal-value inverses, bounded.
 axiom arcsin_zero  : arcsin 0 = 0

@@ -492,6 +492,7 @@ theorem khovanskii_rolle_count_curve_of_represented_jacobian
     (hf2 : ∀ z : Real, a < z → z < b → HasDerivAt2 f (fx z) (fy z) z (yc z))
     (hg2 : ∀ z : Real, a < z → z < b → HasDerivAt2 g (gx z) (gy z) z (yc z))
     (hfy : ∀ z : Real, a < z → z < b → fy z ≠ 0)
+    (hcont : ∀ z : Real, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ s : Real, f s (yc s) = 0)
     (M : Nat) (c : PfaffianChain (M + 2))
     (pfx pfy pgx pgy : MultiPoly (M + 2))
@@ -510,7 +511,7 @@ theorem khovanskii_rolle_count_curve_of_represented_jacobian
   obtain ⟨N, hJ⟩ := pfaffian_jacobian_count_of_represented a b hab M c
     pfx pfy pgx pgy fx fy gx gy hexp hcoh hpos hne hfx hfy_rep hgx hgy
   exact ⟨N, khovanskii_rolle_count_curve f g fx fy gx gy yc a b hab
-    hf2 hg2 hfy hid N hJ⟩
+    hf2 hg2 hfy hcont hid N hJ⟩
 
 /-- **Reusable curve-count interface from expression-compiled partials.**
 This is the DSL-facing version of
@@ -532,6 +533,7 @@ theorem khovanskii_rolle_count_curve_of_expr_jacobian
     (hg2 : ∀ z : Real, a < z → z < b →
       HasDerivAt2 g (PfaffianRepExpr.denote c egx z) (PfaffianRepExpr.denote c egy z) z (yc z))
     (hfy : ∀ z : Real, a < z → z < b → PfaffianRepExpr.denote c efy z ≠ 0)
+    (hcont : ∀ z : Real, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ s : Real, f s (yc s) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ g z (yc z) = 0) →
@@ -541,7 +543,7 @@ theorem khovanskii_rolle_count_curve_of_expr_jacobian
   exact ⟨N, khovanskii_rolle_count_curve f g
     (PfaffianRepExpr.denote c efx) (PfaffianRepExpr.denote c efy)
     (PfaffianRepExpr.denote c egx) (PfaffianRepExpr.denote c egy)
-    yc a b hab hf2 hg2 hfy hid N hJ⟩
+    yc a b hab hf2 hg2 hfy hcont hid N hJ⟩
 
 /-- **Curve-count interface from bivariate two-exp syntax.** Given two
 syntactic expressions `F` and `G`, this theorem forms their formal partials,
@@ -581,6 +583,7 @@ theorem khovanskii_rolle_count_curve_of_bivar_expr_jacobian
     (hfy : ∀ z : Real, a < z → z < b →
       PfaffianRepExpr.denote c
         (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z : Real, a < z → z < b → ContinuousAt yc z)
     (hid : ∀ s : Real, TwoExpBivarExpr.denote F s (yc s) = 0) :
     ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
       (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
@@ -592,7 +595,7 @@ theorem khovanskii_rolle_count_curve_of_bivar_expr_jacobian
     (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F)
     (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G)
     (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G)
-    hexp hcoh hpos hne hf2 hg2 hfy hid
+    hexp hcoh hpos hne hf2 hg2 hfy hcont hid
 
 /-- **Global assembly with Pfaffian-produced separators.** This is the
 global counterpart to `khovanskii_rolle_count_curve_of_represented_jacobian`.
@@ -681,6 +684,7 @@ theorem khovanskii_rolle_full_of_represented_arc_data
     (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       HasDerivAt2 g (gx z) (gy z) z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → fy z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, f t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ g z (arc.yc z) = 0) :
@@ -694,7 +698,7 @@ theorem khovanskii_rolle_full_of_represented_arc_data
     intro arc harcmem
     have hcurve := khovanskii_rolle_count_curve f g fx fy gx gy arc.yc arc.lo arc.hi
       (hinside arc harcmem).2.1
-      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hid arc harcmem)
+      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hcont arc harcmem) (hid arc harcmem)
       N
       (fun zeros_J hnd hJlocal =>
         hJ zeros_J hnd (fun z hzmem => by
@@ -770,6 +774,7 @@ theorem khovanskii_rolle_full_of_bivar_expr_arc_data
         z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -790,7 +795,7 @@ theorem khovanskii_rolle_full_of_bivar_expr_arc_data
       (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G))
       arc.yc arc.lo arc.hi
       (hinside arc harcmem).2.1
-      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hid arc harcmem)
+      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hcont arc harcmem) (hid arc harcmem)
       N
       (fun zeros_J hnd hJlocal =>
         hJ zeros_J hnd (fun z hzmem => by
@@ -852,6 +857,7 @@ theorem khovanskii_rolle_full_of_represented_arc_data_and_separator_count
     (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
       HasDerivAt2 g (gx z) (gy z) z (arc.yc z))
     (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → fy z ≠ 0)
+    (hcont : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ arc ∈ (hd :: s), ∀ t, f t (arc.yc t) = 0)
     (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ g z (arc.yc z) = 0) :
@@ -863,7 +869,7 @@ theorem khovanskii_rolle_full_of_represented_arc_data_and_separator_count
     intro arc harcmem
     have hcurve := khovanskii_rolle_count_curve f g fx fy gx gy arc.yc arc.lo arc.hi
       (hinside arc harcmem).2.1
-      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hid arc harcmem)
+      (hf2 arc harcmem) (hg2 arc harcmem) (hfy_nz arc harcmem) (hcont arc harcmem) (hid arc harcmem)
       N
       (fun zeros_J hnd hJlocal =>
         hJ zeros_J hnd (fun z hzmem => by
@@ -922,6 +928,7 @@ theorem khovanskii_rolle_single_represented_arc_data_and_separator_count
     (hf2 : ∀ z, arc.lo < z → z < arc.hi → HasDerivAt2 f (fx z) (fy z) z (arc.yc z))
     (hg2 : ∀ z, arc.lo < z → z < arc.hi → HasDerivAt2 g (gx z) (gy z) z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi → fy z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, f t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros, arc.lo < z ∧ z < arc.hi ∧ g z (arc.yc z) = 0) :
     ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) := by
@@ -949,6 +956,10 @@ theorem khovanskii_rolle_single_represented_arc_data_and_separator_count
       have haeq : a = arc := by simpa using ha
       subst a
       exact hfy_nz z hzlo hzhi)
+    (fun a ha z hzlo hzhi => by
+      have haeq : a = arc := by simpa using ha
+      subst a
+      exact hcont z hzlo hzhi)
     (fun a ha t => by
       have haeq : a = arc := by simpa using ha
       subst a
@@ -997,6 +1008,7 @@ theorem khovanskii_rolle_single_bivar_expr_arc_data
         z (arc.yc z))
     (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
       PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hcont : ∀ z, arc.lo < z → z < arc.hi → ContinuousAt arc.yc z)
     (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
     (hzeros : ∀ z ∈ arc.zeros,
       arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
@@ -1024,6 +1036,10 @@ theorem khovanskii_rolle_single_bivar_expr_arc_data
       have haeq : a = arc := by simpa using ha
       subst a
       exact hfy_nz z hzlo hzhi)
+    (fun a ha z hzlo hzhi => by
+      have haeq : a = arc := by simpa using ha
+      subst a
+      exact hcont z hzlo hzhi)
     (fun a ha t => by
       have haeq : a = arc := by simpa using ha
       subst a
