@@ -1,0 +1,247 @@
+{
+ "removed_axioms": {
+  "MachLib.Real.HasDerivAt2_sub": {
+   "kind": "theorem",
+   "commit": "1357f71e8fc89bca8a9ca155d2b6ac733ebb7593",
+   "subject": "refactor: prove HasDerivAt2_sub and hasDerivAt_implicit (owner's ruling F1); act on the independent review"
+  },
+  "MachLib.Real.exp_exp_minus_exp_strictly_increasing": {
+   "kind": "theorem",
+   "commit": "97d4c6d82522244def3a17d75c45b01a86234dd2",
+   "subject": "feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u x2)"
+  },
+  "MachLib.Real.exp_gt_two_x": {
+   "kind": "theorem",
+   "commit": "61f7ac5e2171ab7b346a39be09f7b0e5dafade4b",
+   "subject": "feat: prove five derivable axioms; 134 theorems leave the conditional class"
+  },
+  "MachLib.Real.exp_one_lt_three": {
+   "kind": "theorem",
+   "commit": "97d4c6d82522244def3a17d75c45b01a86234dd2",
+   "subject": "feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u x2)"
+  },
+  "MachLib.Real.hasDerivAt_implicit": {
+   "kind": "theorem",
+   "commit": "1357f71e8fc89bca8a9ca155d2b6ac733ebb7593",
+   "subject": "refactor: prove HasDerivAt2_sub and hasDerivAt_implicit (owner's ruling F1); act on the independent review"
+  },
+  "MachLib.Real.interval_scale_unit_lit_le": {
+   "kind": "absent",
+   "commit": null,
+   "subject": null
+  },
+  "MachLib.Real.interval_weight_sum_le": {
+   "kind": "absent",
+   "commit": null,
+   "subject": null
+  },
+  "MachLib.Real.sqrt_neg_zero": {
+   "kind": "theorem",
+   "commit": "97d4c6d82522244def3a17d75c45b01a86234dd2",
+   "subject": "feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u x2)"
+  },
+  "MachLib.Real.sqrt_one": {
+   "kind": "theorem",
+   "commit": "61f7ac5e2171ab7b346a39be09f7b0e5dafade4b",
+   "subject": "feat: prove five derivable axioms; 134 theorems leave the conditional class"
+  },
+  "MachLib.Real.sqrt_zero": {
+   "kind": "theorem",
+   "commit": "97d4c6d82522244def3a17d75c45b01a86234dd2",
+   "subject": "feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u x2)"
+  },
+  "MachLib.Real.tanh_zero": {
+   "kind": "theorem",
+   "commit": "61f7ac5e2171ab7b346a39be09f7b0e5dafade4b",
+   "subject": "feat: prove five derivable axioms; 134 theorems leave the conditional class"
+  },
+  "MachLib.Real.u_le_half": {
+   "kind": "theorem",
+   "commit": "97d4c6d82522244def3a17d75c45b01a86234dd2",
+   "subject": "feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u x2)"
+  },
+  "MachLib.Real.u_le_one": {
+   "kind": "theorem",
+   "commit": "61f7ac5e2171ab7b346a39be09f7b0e5dafade4b",
+   "subject": "feat: prove five derivable axioms; 134 theorems leave the conditional class"
+  },
+  "MachLib.Real.u_lt_one": {
+   "kind": "theorem",
+   "commit": "97d4c6d82522244def3a17d75c45b01a86234dd2",
+   "subject": "feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u x2)"
+  },
+  "MachLib.exp_tangent_line_strict": {
+   "kind": "theorem",
+   "commit": "61f7ac5e2171ab7b346a39be09f7b0e5dafade4b",
+   "subject": "feat: prove five derivable axioms; 134 theorems leave the conditional class"
+  }
+ },
+ "added_axioms": [],
+ "derivations": [],
+ "lost_theorems": [],
+ "gained_theorems": [],
+ "changed_footprints": {
+  "Certcom.eml_tree_grounded_depth2_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_tree_grounded_depth2_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_tree_grounded_eml_const_one_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_tree_grounded_eml_const_one_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_tree_grounded_eml_var_var_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_tree_grounded_eml_var_var_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_var_var_pipeline_uniform_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_var_var_pipeline_uniform_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_var_var_quantized_pointwise_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.eml_var_var_quantized_pointwise_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_abs_at_budget_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_abs_at_budget_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_abs_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_abs_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_acos_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_acos_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_asin_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_asin_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_atan_at_budget_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_atan_at_budget_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_atan_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_atan_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_cos_at_budget_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_cos_at_budget_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_cos_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_cos_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_cosh_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_cosh_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_exp_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_exp_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_log10_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_log10_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_log_cosh_grounded_instantiated": [],
+  "Certcom.pid_log_cosh_grounded_specimen": [],
+  "Certcom.pid_log_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_log_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_sin_at_budget_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_sin_at_budget_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_sin_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_sin_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_sinh_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_sinh_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_sqrt_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_sqrt_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_tan_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_tan_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_tanh_grounded_instantiated": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pid_tanh_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pipeline_arith_grounded_sum_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pipeline_det_grounded_instantiated": [
+   "MachLib.Real.div_def",
+   "MachLib.Real.mul_inv",
+   "MachLib.Real.u_le_inv_two_pow_52",
+   "MachLib.Real.zero_ne_one_ax"
+  ],
+  "Certcom.pipeline_det_grounded_nonzero_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ],
+  "Certcom.pipeline_det_grounded_specimen": [
+   "MachLib.Real.u_le_inv_two_pow_52"
+  ]
+ }
+}

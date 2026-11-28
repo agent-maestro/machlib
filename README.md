@@ -210,11 +210,11 @@ not a count of proved results). Measured 2026-10-27:
 
 | figure | value | source |
 |---|---|---|
-| declarations in the checked environment | 12 558 | `python3 tools/theorem_ledger/ledger.py` |
-| theorems | 9 551 | the same command: approved-policy + conditional + unchecked |
-| kernel-checked theorems | 9 550 | no `sorryAx`, no compiler trust, only declared axioms |
-| axiom-audited theorems | 9 550 | footprint computed and classified against the policy |
-| approved-policy proofs | 9 443 | every axiom in the footprint is in `trustedFootprint` |
+| declarations in the checked environment | 12 568 | `python3 tools/theorem_ledger/ledger.py` |
+| theorems | 9 561 | the same command: approved-policy + conditional + unchecked |
+| kernel-checked theorems | 9 560 | no `sorryAx`, no compiler trust, only declared axioms |
+| axiom-audited theorems | 9 560 | footprint computed and classified against the policy |
+| approved-policy proofs | 9 453 | every axiom in the footprint is in `trustedFootprint` |
 | conditional proofs | 107 | proved on declared axioms outside `trustedFootprint`, each named in the ledger |
 | unchecked theorems | 1 | the allowlisted `sorryAx` (`halve_in_unit_sorry`) |
 | Forge `@verify` corpus files, outside the checked environment | 253 | the same command; files only, none of their theorems is counted |

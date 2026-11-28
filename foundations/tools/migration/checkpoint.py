@@ -57,6 +57,9 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import same_pin  # noqa: E402  (BUMP_PLAN.md Amendment 7)
+
 FOUND = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SNAPS = os.path.join(FOUND, "snapshots")
 PY = sys.executable
@@ -366,8 +369,15 @@ def main() -> int:
     ap.add_argument("--void-ok", action="append", default=[], metavar="GATE=AMENDMENT",
                     help="accept a gate's INSTRUMENT VOID, citing the amendment that authorises it. "
                          "Cannot apply to a subject-defect verdict (REPLAY_FAIL, footprint drift).")
+    # BUMP_PLAN.md Amendment 7: same pin, new library -- attribute the drift instead of forbidding it,
+    # against the newest sealed capture on this pin (chosen by same_pin.py, never named here).
+    ap.add_argument("--same-pin", action="store_true",
+                    help="re-capture at an unchanged pin: attribute every difference from the newest "
+                         "sealed capture on this pin; seal only if the attribution holds")
     a = ap.parse_args()
     void_ok = dict(kv.split("=", 1) for kv in a.void_ok if "=" in kv)
+    if a.same_pin and a.compare_to:
+        ap.error("--same-pin picks its own base (the newest sealed capture on this pin); drop --compare-to")
 
     if a.verify:
         return verify(a.verify)
@@ -378,6 +388,11 @@ def main() -> int:
             return 1
         if os.path.exists(os.path.join(t, "SHA256SUMS")):
             print(f"[ALREADY FROZEN] {t}")
+            return 1
+        sp = json.load(open(os.path.join(t, "verdict.json"))).get("same_pin")
+        if sp and sp.get("result") != "ATTRIBUTED":
+            print(f"[NOT ATTRIBUTED] {t} is a same-pin capture whose attribution halted; Amendment 7 seals")
+            print("  a same-pin capture only on a mechanical attribution, and this path would skip it.")
             return 1
         digest = write_hashes(t)
         # Count the manifest's own lines, not the directory: walking it after write_hashes() counts
@@ -439,17 +454,28 @@ def main() -> int:
             print(f"  * {e}")
         return 1
 
-    rc = compare(verdict, a.compare_to, void_ok) if a.compare_to else 0
-    if a.compare_to is None:
-        print("\nno --compare-to: captured as a reference point, nothing accepted or rejected.")
+    if a.same_pin:
+        rc = same_pin.run(verdict, target, outs, void_ok)
+    else:
+        rc = compare(verdict, a.compare_to, void_ok) if a.compare_to else 0
+        if a.compare_to is None:
+            print("\nno --compare-to: captured as a reference point, nothing accepted or rejected.")
 
-    if a.freeze:
+    if a.freeze and a.same_pin and rc != 0:
+        # Amendment 7: a same-pin capture is SEALED only when its attribution holds. A bump capture is
+        # frozen either way, because its halt is the finding; here the seal IS the claim.
+        print(f"\nNOT SEALED  {target}\n  the attribution did not hold; the capture stays editable evidence.")
+    elif a.freeze:
         h = write_hashes(target)
         freeze(target)
         print(f"\nFROZEN  {target}\n  SHA256SUMS digest: {h}")
-        print("  read-only on disk; `--verify` re-checks it. Note that later stops diff against the")
-        print("  v4.14.0 BASELINE, not against this -- chaining comparisons through intermediates")
-        print("  would let a drift launder itself across two of them.")
+        if a.same_pin:
+            print("  read-only on disk; `--verify` re-checks it. This is now the pin's current snapshot and")
+            print("  the BASELINE the next bump compares against (BUMP_PLAN.md step 0, Amendment 7).")
+        else:
+            print("  read-only on disk; `--verify` re-checks it. Within one route, later stops diff against")
+            print("  the route's baseline, not against this -- chaining comparisons through intermediates")
+            print("  would let a drift launder itself across two of them.")
     return rc
 
 

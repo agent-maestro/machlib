@@ -1,0 +1,2 @@
+derivableAxioms: 0 entries
+DERIVABLE-AXIOM GATE: PASS -- no axiom is declared derivable (provable means proved: the count is zero and stays there)

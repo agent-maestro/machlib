@@ -1,0 +1,49 @@
+CHECKPOINT v4.32.2-r3   pin=leanprover/lean4:v4.32.2   lock=leanprover/lean4:v4.32.2 @ f3b06c705e6c
+
+  [kernel_replay] exit 1   (criterion 1)
+  [lean4lean_replay] exit 0   (criterion 7)
+  [ledger] exit 0   (criterion 3)
+  [derivable] exit 0   (criterion 4)
+  [sorry_audit] exit 0   (criterion 5)
+  [artifact_drift] exit 0   (criterion 6)
+  [toolchain] exit 0
+  [footprints] enumerated 112, captured 112, missing 0   (criterion 2)
+
+counts (each parsed from the gate that derived it):
+  axioms pinned                      202
+  headline footprints (Lean side)    112
+  derivations                        0
+  allowlisted sorryAx decls          1
+  headline count, 3 derivations      112 / 112 / 112  AGREE
+
+==============================================================================
+SAME-PIN ATTRIBUTION  leanprover/lean4:v4.32.2
+==============================================================================
+base: snapshots/v4.32.2-r2  (library 50d9c56c19b1)
+identity: lean-toolchain same, lake-manifest.json same, Lean4Lean 408edad -> 408edad
+theorems: 112 -> 112  lost 0, gained 0, footprints changed 54
+axioms: 217 -> 202  removed 15 {'absent': 2, 'theorem': 13}, added 0
+  - MachLib.Real.HasDerivAt2_sub                         theorem  1357f71e8f  refactor: prove HasDerivAt2_sub and hasDerivAt_implicit (own
+  - MachLib.Real.exp_exp_minus_exp_strictly_increasing   theorem  97d4c6d825  feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u
+  - MachLib.Real.exp_gt_two_x                            theorem  61f7ac5e21  feat: prove five derivable axioms; 134 theorems leave the co
+  - MachLib.Real.exp_one_lt_three                        theorem  97d4c6d825  feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u
+  - MachLib.Real.hasDerivAt_implicit                     theorem  1357f71e8f  refactor: prove HasDerivAt2_sub and hasDerivAt_implicit (own
+  - MachLib.Real.interval_scale_unit_lit_le              absent   NO COMMIT  
+  - MachLib.Real.interval_weight_sum_le                  absent   NO COMMIT  
+  - MachLib.Real.sqrt_neg_zero                           theorem  97d4c6d825  feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u
+  - MachLib.Real.sqrt_one                                theorem  61f7ac5e21  feat: prove five derivable axioms; 134 theorems leave the co
+  - MachLib.Real.sqrt_zero                               theorem  97d4c6d825  feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u
+  - MachLib.Real.tanh_zero                               theorem  61f7ac5e21  feat: prove five derivable axioms; 134 theorems leave the co
+  - MachLib.Real.u_le_half                               theorem  97d4c6d825  feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u
+  - MachLib.Real.u_le_one                                theorem  61f7ac5e21  feat: prove five derivable axioms; 134 theorems leave the co
+  - MachLib.Real.u_lt_one                                theorem  97d4c6d825  feat: prove six derivable axioms (sqrt x2, e < 3, exp-exp, u
+  - MachLib.exp_tangent_line_strict                      theorem  61f7ac5e21  feat: prove five derivable axioms; 134 theorems leave the co
+derivations: 0 in the base, lost 0
+
+==============================================================================
+SAME-PIN HALTED -- not sealed:
+  * [UNATTRIBUTED] axiom MachLib.Real.interval_scale_unit_lit_le removed, and no single commit removed its declaration
+  * [UNATTRIBUTED] axiom MachLib.Real.interval_weight_sum_le removed, and no single commit removed its declaration
+
+NOT SEALED  <worktree>/foundations/snapshots/v4.32.2-r3
+  the attribution did not hold; the capture stays editable evidence.
